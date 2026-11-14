@@ -135,6 +135,7 @@ with sync_playwright() as p:
     ctx.close()
     # ---------------- 360 px ----------------
     ctx = br.new_context(viewport={"width": 360, "height": 800}, device_scale_factor=2, is_mobile=True, has_touch=True)
+    ctx.add_init_script("try{if(localStorage.getItem('attune:test:quiet')===null)localStorage.setItem('attune:test:quiet','1')}catch(e){}")   # v9.9.35: no new Home cards / tips in older tests
     ctx.add_init_script(env.mock); ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1');localStorage.setItem('attune:start','chat')}catch(e){}"); ctx.add_init_script(INIT)
     page = ctx.new_page(); page.goto(env.url); open_money(page)
     wide360 = page.evaluate("() => [...document.querySelectorAll('[data-testid=money-calm] *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1 && !e.closest('[aria-hidden=true]')).map(e => (e.dataset.testid || e.tagName) + ':' + Math.round(e.getBoundingClientRect().right)).slice(0, 5)")

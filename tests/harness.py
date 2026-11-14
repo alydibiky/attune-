@@ -140,6 +140,9 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     # v6.34: lessons written ahead in the background would take canned answers meant for the test; a test turns it on itself
     ctx.add_init_script("try{if(localStorage.getItem('attune:learn:ahead')===null)localStorage.setItem('attune:learn:ahead','0')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
+    # v9.9.34–35: the new Home cards (Set up your life, the Pro line, the Friday card) and the one-time tips stay out of the older tests —
+    # a test of them sets attune:test:quiet to '0' itself
+    ctx.add_init_script("try{if(localStorage.getItem('attune:test:quiet')===null)localStorage.setItem('attune:test:quiet','1')}catch(e){}")
     if not release: ctx.add_init_script("try{if(localStorage.getItem('attune:dev')===null)localStorage.setItem('attune:dev','1')}catch(e){}")   # tests run in developer mode (the testing box in Plan etc.); release=True = a customer's phone
     # v6.12: the app adds the engineering skill once on a first start; tests start from no skills unless they ask (seed=…)
     ctx.add_init_script("try{if(!localStorage.getItem('attune:skills:seeded:v612'))localStorage.setItem('attune:skills:seeded:v612','1')}catch(e){}")

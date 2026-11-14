@@ -7,6 +7,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
+import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost } from "./setup-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import { NotifAsk } from "./notifask-ui.jsx";
@@ -7827,7 +7828,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.34";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.35";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10560,7 +10561,7 @@ export default function App() {
         ) : mode === "home" && !wide && dayset.simple ? (
           <SimpleHome navTo={navTo} openMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} />
         ) : mode === "home" && !wide ? (
-          <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), pro: isPro(tier) || testingPro(), open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
+          <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })(), bought: isPro(tier), pro: isPro(tier) || testingPro() || bonusUntil() > 0, open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
@@ -11171,6 +11172,8 @@ export default function App() {
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "privacy" ? (
           <PrivacyPage flash={flash} readNet={NATIVE && NATIVE.netLog ? () => nativeJSON("netLog") : null} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
+        ) : mode === "setup" ? (
+          <SetupPage back={() => navTo("home")} />
         ) : mode === "guide" ? (
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
@@ -11640,6 +11643,8 @@ export default function App() {
       <div className="calm" style={{ display: "contents" }}>
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
+      <Guard name="setup"><SetupDriver trial={{ left: trialLeft, bought: isPro(tier), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })() }} /></Guard>   {/* v9.9.35 the "Set up your life" interview */}
+      <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} /></Guard>   {/* v9.9.35 GD-5 one-time tips */}
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
       </div>
       <Guard name="notifmind"><MindRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 220, temperature: 0, think: false })} /></Guard>
@@ -11708,6 +11713,8 @@ export default function App() {
               {/* v6.34 (Ali: "I don't want this More page"): without the bottom bar this sheet is Settings only — every tool is in
                   the sidebar's 6 places (How to use is in Tools → Help) */}
               {LEGACY_NAV ? <>
+              <button onClick={() => { setMoreOpen(false); navTo("setup"); }} className="w-full min-h-[56px] mb-2 flex items-center gap-3 rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-setup">
+                <Sparkles size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Set up your life")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Attune sets up your money, papers, people and week with you")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] mb-4 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-guide">
                 <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               {groupsHere.map(([title, ids], gi) => (

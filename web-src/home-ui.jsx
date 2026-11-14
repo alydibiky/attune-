@@ -4,6 +4,7 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import { SetupHomeCard, quiet as quietTests } from "./setup-ui.jsx";
 import { pricesFor } from "./billing.js";
 import * as P from "./plan.js";
 import { loadReminders } from "./actions.js";
@@ -359,6 +360,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
       {!rep ? <MonthCard /> : null}
       {!rep && trial ? <TrialLine trial={trial} /> : null}
+      {!rep ? <SetupHomeCard trial={trial} /> : null}
       {!rep ? <ProNotes trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
@@ -512,6 +514,7 @@ function MonthCard() {
    is due, "Not now" = 14 quiet days (plan.js). */
 function ProNotes({ trial }) {
   const [, bump] = useState(0);
+  if (quietTests()) return null;   // (the older browser tests)
   const now = Date.now(), L = (() => { try { return loadLedger(); } catch (e) { return null; } })();
   const rem = loadReminders(), dueToday = rem.filter((r) => r && !r.done && r.at && new Date(r.at).toDateString() === new Date(now).toDateString()).length;
   const w = P.weekStats(L, rem, now), pro = P.proNow();

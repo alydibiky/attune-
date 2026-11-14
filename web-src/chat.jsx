@@ -21,6 +21,7 @@ import { directionsOf } from "./gomaps.js";
 import { numWords } from "./sense.js";   // v9.9.17
 import { readable, negatedOrder } from "./wrapclean.js";   // v9.9.32
 import { quickAction } from "./actions.js";
+import { setupAnswer } from "./setup-ui.jsx";   // v9.9.35
 import { checkPhotoNumbers } from "./photocheck.js";
 // v9.0 the Home box's actions Chat does itself (the others have their own cards in Chat)
 // v9.9.11 A4: "teach me your notifications" / «علمني اشعاراتي» / "what don't you understand in my notifications?"
@@ -615,6 +616,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const c = e.detail || {};
       if (c.op === "rename" && c.title) patchChat(c.id, (x) => ({ ...x, title: c.title }));
       if (c.op === "delete") { setChats((l) => l.filter((x) => x.id !== c.id)); setActiveId((a) => (a === c.id ? null : a)); }
+      // v9.9.35 "Set up your life": the guide's questions and ✓ appear in the open chat (a new one when none is open)
+      if (c.op === "say" && c.card) { const cid = sayRef.current ? sayRef.current() : null; if (cid) patchChat(cid, (x) => ({ ...x, updated: Date.now(), messages: [...x.messages, { id: newId(), role: "assistant", card: c.card }] })); }
     };
     window.addEventListener("attune-chat-cmd", f); return () => window.removeEventListener("attune-chat-cmd", f);
   }, []);
@@ -707,6 +710,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, [text]);
 
   const patchChat = (id, fn) => setChats((list) => list.map((c) => (c.id === id ? fn(c) : c)));
+  const sayRef = useRef(null);
   const patchMsg = (cid, mid, fields) => patchChat(cid, (c) => ({ ...c, messages: c.messages.map((m) => (m.id === mid ? { ...m, ...fields } : m)) }));
 
   const ensureChat = (firstText) => {
@@ -717,6 +721,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     setActiveId(id);
     return id;
   };
+  sayRef.current = () => ensureChat(tr("Set up your life"));
+
 
   function stop() {
     runRef.current++;
@@ -833,6 +839,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // learned. Only the picked reader may answer (understand.js).
     // v9.0 (the sentence bank): Franco — "fakarny bokra el sa3a 9 akalem mama" — is read as Arabic when the Arabic is something the
     // app does (a reminder, money, a debt, a date…); otherwise it goes to the AI as it was typed
+    // v9.9.35 "Set up your life": the salary answer is saved as a repeating income in Money (one payment is not a salary)
+    if (route && !img) { const sc = setupAnswer(typed); if (sc) { const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", card: sc }] })); setText(""); return; } }
     if (route && !img && UND.looksFranco(typed)) {
       const arT = UND.francoToArabic(typed);
       if (arT !== typed && ((api.looksLikeAction && api.looksLikeAction(arT)) || (api.doKinds && api.doKinds(arT).length) || myMoneyIntent(arT) || chatLifeIntent(arT)
@@ -2156,6 +2165,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "money") api.sendToMoney(m.payText);
     else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("Got it"), detail: m.whereSet ? m.whereSet.thing + " — " + m.whereSet.place : "", actions: [] } }); }
     else if (act === "where-no") patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("OK — nothing changed."), detail: "", actions: [] } });
+    else if (act.startsWith("setup:")) { try { window.dispatchEvent(new CustomEvent("attune-setup-act", { detail: act.slice(6) })); } catch (e) {} }   // v9.9.35 the guide's buttons
     else if (act.startsWith("rec:")) { if (api.openRecord) api.openRecord(act.slice(4)); }
     else if (act.startsWith("person:")) { try { localStorage.setItem("attune:people:open", act.slice(7)); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "people" } })); }
     else if (act.startsWith("who:")) {   // v8.8 "Which Ahmed?" → this one: remembered, and the question answered for him

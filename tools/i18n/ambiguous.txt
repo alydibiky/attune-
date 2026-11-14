@@ -235,6 +235,7 @@ agents-ui.jsx: <div className="flex gap-2"><button onClick={() => start(planDraf
 attune.jsx: <div className="flex gap-2"><button onClick={start} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
 cv-ui.jsx: <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><
 focus-ui.jsx: <button className={btnP + " w-full"} disabled={!pick.task.trim()} onClick={() => { const t = pick.task.trim(), pl = pick.plan; setPick(null)
+setup-ui.jsx: <div className="flex gap-2">{p.next ? <button onClick={() => startSetup()} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" s
 
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
@@ -341,10 +342,10 @@ agents-ui.jsx: <CardActions primary={{ label: x.canReply ? tr("Send") : tr("Copy
 b5-ui.jsx: <button onClick={() => hide(occ.id)} className="min-h-[40px] px-3.5 rounded-[12px] font-bold text-[13px] c-sub" data-testid="home-occasion-l
 b5-ui.jsx: <button onClick={() => hide("touch")} className="min-h-[38px] px-3 rounded-[12px] font-bold text-[13px] c-sub" data-testid="home-touch-later
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
+setup-ui.jsx: <button onClick={() => { try { localStorage.setItem(HIDE, String(Date.now() + 86400000)); } catch (e) {} bump((x) => x + 1); }} className="h
 slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
 timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
 timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
-weekplan-ui.jsx: <button className={btnS} disabled={off >= 4} onClick={() => setOff(off + 3)} aria-label={tr("Later")} data-testid="weekplan-next">›</button>
 
 ## Reply
 agents-ui.jsx: </div> : <button onClick={() => pick(x)} className="text-[13px] font-extrabold c-acc min-h-[36px]" data-testid="reply-open">{draft ? tr("Dra
@@ -557,6 +558,7 @@ chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
 chat.jsx: else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title
+setup-ui.jsx: <div className="flex gap-4 font-extrabold text-[13px]" style={{ color: "#f2b6c8" }}><button onClick={() => done(false)} className="min-h-[36
 
 ## Ready
 attune.jsx: const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading
@@ -746,6 +748,10 @@ noteteach-ui.jsx: <button onClick={skip} className="min-h-[36px] px-3 rounded-fu
 attune.jsx: <div><span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] c-sub mb-2">{tr("Your country")}</span>
 attune.jsx: <span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
 country-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Your country")}</span>
+
+## Do it
+attune.jsx: : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] f
+setup-ui.jsx: : <button onClick={() => startSetup(s.id)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)
 
 ## Save
 attune.jsx: <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-bt
@@ -1096,6 +1102,7 @@ paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{op
 daily-ui.jsx: <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} da
 home-ui.jsx: <button className={UbtnS + " h-10! min-h-[40px]!"} onClick={() => { notYet(a.id, a.i); onDone(tr("I'll ask again tomorrow")); }} data-testid
 lesson-ui.jsx: {result === "wrong" ? <p className="c-neg text-[13px] m-0" data-testid="lesson-wrong"><X size={13} className="inline -mt-0.5" /> {tr("Not ye
+setup-ui.jsx: <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : t
 timeline-ui.jsx: ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.cu
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
@@ -1179,6 +1186,11 @@ guardian-ui.jsx: <span className="min-w-0 flex-1"><span className="block font-bo
 home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toUpperCase() + x.c.title.slice(1) : x.c.person || tr("Payment"), sub: x
 life.js: const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
 salary-ui.jsx: .map((c) => ({ id: "l" + c.id, name: c.kind === "rent" ? tr("Rent") : c.title || c.person || tr("Payment"), amount: c.amount }));
+
+## Tip
+guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
+guide-ui.jsx: <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:
+setup-ui.jsx: <b className="block text-[12px] uppercase tracking-[0.08em] opacity-80">{tr("Tip")}</b>
 
 ## Cranes out
 home-now.js: try { if (fleet && live(fleet.cranes || []).length) { const k = fleetKpis(fleet); out.push({ k: "cranes", label: tr("Cranes out"), value: `$
@@ -1318,6 +1330,9 @@ radar-ui.jsx: <button className={U.btnP} onClick={() => { if (saveOne(s)) { put(
 mind-ui.jsx: <button onClick={openPlan} className="text-[var(--c-acc)] font-bold underline ms-1 min-h-[36px]">{tr("See Pro")}</button>
 photogate.js: box.append(p, mk(tr("See Pro"), "photo-pro-see", () => { close(); try { window.dispatchEvent(new CustomEvent("attune-show-plan")); } catch (
 plan-ui.jsx: <button type="button" onClick={openPlan} className="min-h-[44px] h-11 rounded-[12px] px-4 font-extrabold text-[14px] bg-[var(--c-btn,var(--c
+setup-ui.jsx: else { setRun(null); say(!pro && p.done < 8 ? { tone: "emerald", title: tr("Free sets up the first 3 steps. Pro sets up the rest with you.")
+setup-ui.jsx: : <button onClick={openPlan} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "va
+setup-ui.jsx: {s.done ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-
 
 ## Pinned
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px

@@ -11,7 +11,7 @@ today = datetime.date.today()
 TX = [{"id": "t%d" % i, "type": "expense", "amount": 50 + i, "currency": "USD", "cat": "food", "note": "lunch", "date": (today - datetime.timedelta(days=i % 3)).isoformat(), "account": "c"} for i in range(6)]
 LED = {"currency": "USD", "accounts": [{"id": "c", "name": "Cash", "currency": "USD", "start": 0}], "txns": TX, "budgets": {"overall": 0, "cats": {}}, "recurring": []}
 def init(pro):
-    s = "try{localStorage.setItem('attune:start','home');localStorage.setItem('ledger.v3',%s);localStorage.setItem('attune:onboarded','1');" % json.dumps(json.dumps(LED))
+    s = "try{localStorage.setItem('attune:test:quiet','0');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));localStorage.setItem('attune:setup:hide',String(Date.now()+9e9));localStorage.setItem('attune:start','home');localStorage.setItem('ledger.v3',%s);localStorage.setItem('attune:onboarded','1');" % json.dumps(json.dumps(LED))
     if not pro: s += "localStorage.setItem('attune:first-run','1');localStorage.setItem('attune:testing-pro','off');localStorage.setItem('attune:trial-end-seen','1');"
     return s + "}catch(e){}"
 with sync_playwright() as p:
