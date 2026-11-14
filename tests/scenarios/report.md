@@ -1,9 +1,9 @@
-# Scenario run — 2500 sentences, 2481 right (99.2%)
+# Scenario run — 2500 sentences, 2482 right (99.3%)
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
-| mission | 5 | 2 | 60.0 |
 | moneyask | 20 | 4 | 80.0 |
+| mission | 5 | 1 | 80.0 |
 | gk_ar | 19 | 3 | 84.2 |
 | notmoney | 21 | 2 | 90.5 |
 | deadline | 12 | 1 | 91.7 |
@@ -61,5 +61,4 @@
 - **→ where** × 2: «the meeting is on the 3rd floor room 250» · «my flight is at 9»
 
 ### mission
-- **→ chat** × 1: «read 12 books before December 2027»
 - **→ pot** × 1: «save 100k by the end of 2027»
