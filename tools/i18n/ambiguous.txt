@@ -174,7 +174,7 @@ attune.jsx: <button onClick={() => { setView("calm"); setPaneRaw("home"); }} ari
 attune.jsx: ) : wide ? null : LEGACY_NAV ? <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! 
 attune.jsx: : <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn h-11! min-w-[44px]! -ms-1.5 rounded-full! border-transparent! bg-
 attune.jsx: {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-
-brain-ui.jsx: <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] px-2 text-[18px]" aria-label={tr("Back")}>‹<
+brain-ui.jsx: <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] min-w-[44px] px-2 text-[18px]" aria-label={t
 
 ## Resume
 agents-ui.jsx: <button onClick={() => toggle(a)} className={U.btnS + " flex-1"} data-testid="agent-auto-toggle">{a.on === false ? tr("Resume") : tr("Pause"
