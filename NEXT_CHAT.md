@@ -13,9 +13,16 @@
 > Done (each with 10,000 cases + held-out, all 100%): **AP-1** web-src/waexport.js (WhatsApp export reader, EN/AR) ·
 > **AP-2** web-src/chats.js (chat / writer / group / noise) + RecallLog v2 keeps who/convo/grp (Kotlin: check the branch APK build
 > run 43643886809 compiled) · **AP-4 part 1** web-src/shoplist.js (items from a message; "I bought …" all / except / only).
-> Next: AP-3 chat roles + "What I understood" (model + code) · AP-4 part 2 (list chat → Shopping list on Home, SL-1) · AP-5 Autopilot
-> decides by role, Done for you with full message (DN-1, K4), Kept quietly line (NS-2) · AP-6 ask about a chat (AS-2, K5) · AP-7
-> computer second look (K6) + sync free & automatic · all UI in 20 languages · full suite · main · APK.
+> Also done (pure, each 10,000 + held-out 100%): **AP-3** web-src/chatroles.js (your words → role/topics/"mentions me"; guessRole;
+> understood() lines; confirmedRole — a guess is never acted on) · **AP-5 decisions** web-src/autopilot2.js decide() → keep / ask /
+> items / bought / alert / todo, each with from + why; 10,000 conversations, ACTIONS ON NOISE 0 · **AP-6** web-src/chatask.js askChat()
+> (chat named before "discuss / اتكلموا عن", topic after; days, who, ids of every message) · shoplist.js rejects sentences as items.
+> Next (the screens — nothing visible yet): wire decide() into the Autopilot card + Home (K2: Shopping line, Done for you lines that
+> open the full message K4, "Kept quietly today: N" NS-2), the K1 "What I understood — Right / Change / say it" card (saveRole ok:true),
+> the export share target (Android intent → readExport → keep by chat → guessRole), K3 "I bought…" in the Home box/Chat → tick the
+> list with Undo, K5 Chat answer from askChat + "Show all N messages" + the AI's "Decided:" line, a message store by chat
+> (IndexedDB — exports are big), every new line in 20 languages, then AP-7 (computer re-check K6; sync free + automatic), full suite,
+> main, APK.
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
