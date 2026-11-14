@@ -1,17 +1,14 @@
-# 100,000-sentence run — 100000 sentences, 99858 right (99.86%)
+# 100,000-sentence run — 100000 sentences, 99897 right (99.90%)
 
 Every sentence is different (checked). Each is a hard.mjs sentence typed the way people really type (wake word, filler, thanks, emoji, caps, double spaces) and is checked for WHAT the app does and for the details (amount, direction, hour, person).
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
 | multi_spend | 4000 | 32 | 99.20 |
-| edits_cancels | 1400 | 11 | 99.21 |
 | lists_todos | 3500 | 24 | 99.31 |
-| debt_en | 4500 | 25 | 99.44 |
 | spend_franco | 4000 | 21 | 99.47 |
 | spend_story_ar | 4500 | 13 | 99.71 |
-| debt_ar | 4000 | 9 | 99.78 |
-| world_questions | 3500 | 7 | 99.80 |
+| debt_en | 4500 | 13 | 99.71 |
 | spend_story_en | 4500 | 0 | 100.00 |
 | spend_short_mix | 4500 | 0 | 100.00 |
 | spend_words | 3000 | 0 | 100.00 |
@@ -21,6 +18,7 @@ Every sentence is different (checked). Each is a hard.mjs sentence typed the way
 | remind_ar_time | 5000 | 0 | 100.00 |
 | remind_mixed | 2000 | 0 | 100.00 |
 | remind_repeat | 3000 | 0 | 100.00 |
+| debt_ar | 4000 | 0 | 100.00 |
 | repay | 3000 | 0 | 100.00 |
 | plans | 4500 | 0 | 100.00 |
 | deadlines | 2500 | 0 | 100.00 |
@@ -31,9 +29,11 @@ Every sentence is different (checked). Each is a hard.mjs sentence typed the way
 | goals | 1500 | 0 | 100.00 |
 | calc | 3500 | 0 | 100.00 |
 | my_money_questions | 3000 | 0 | 100.00 |
+| world_questions | 3500 | 0 | 100.00 |
 | smalltalk | 600 | 0 | 100.00 |
 | numbers_not_money | 2500 | 0 | 100.00 |
 | two_orders | 2000 | 0 | 100.00 |
+| edits_cancels | 1400 | 0 | 100.00 |
 
 ## What went wrong (examples of each)
 
@@ -50,16 +50,6 @@ Every sentence is different (checked). Each is a hard.mjs sentence typed the way
 
 ### debt_en
 - **person “…” ≠ my friend Ali** × 13: «btw borrowed 25000 from my friend ali for clothes pls» · «hi! borrowed 6500 from my friend ali for the plumber ok?» · «ok i'm in debt to my friend ali for 2000!!» · «attune i took 25000 from my friend ali and will return it next month» · «i owe my friend ali 1200, paying 100 a month thanks» · «ok i gave my friend ali 4000 as a loan ok?»
-- **every null ≠ month** × 12: «my dad owes me 500, 500 a month thanks» · «attune I owe Omar 500, paying 500 a month» · «attune: i owe my brother 500, paying 500 a month 🙏» · «priya owes me 500, 500 a month!!» · «BTW I OWE MARIA 500, PAYING 500 A MONTH 👍» · «yo I owe Hana 500, paying 500 a month»
-
-### debt_ar
-- **→ chat** × 9: «اديت ابن عمي 15000 سلف ❤️» · «يا عم اديت ابن عمي 15000 سلف» · «اديت ابن عمي ٢٠٠٠ سلف ❤️» · «يا اتيون اديت ابن عمي 2000 سلف لو سمحت» · «يا اتيون اديت ابن عمي ١٠٠٠ سلف ميرسي» · «اسمع اديت ابن عمي 10000 سلف...»
 
 ### lists_todos
 - **→ chat** × 24: «بص لازم ادفع للشغالة.» · «لازم  ادفع للشغالة 🙏» · «يا اتيون لازم ادفع للشغالة...» · «لازم ادفع فاتورة الكهربا 🙏» · «يا  عم لازم ادفع للشغالة ❤️» · «طيب لازم ادفع للشغالة!!»
-
-### world_questions
-- **→ ask:money** × 7: «attune is an Apple Watch worth 3500?» · «pls is an Apple Watch worth 5500? ty» · «so, is an Apple Watch worth 3000?» · «hi! is an Apple Watch worth 9600? thanks» · «yo is an Apple Watch worth 12000? thanks» · «ok so is an Apple Watch worth 1500?.»
-
-### edits_cancels
-- **→ reminder** × 11: «yo cancel my reminder to call the bank» · «cancel  my reminder to call Tom.» · «um, cancel my reminder to call the bank.» · «ok so cancel my reminder to call the bank thx!» · «pls cancel my reminder to call Ahmed...» · «yo cancel my reminder to call Aisha thx!»
