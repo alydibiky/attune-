@@ -86,12 +86,12 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
       await Promise.race([call, stalled]);
       if (p.legacy) await K.removeKnowPack(knowledge, p.id);            // the old in-page copy, if any
       setPhonePacks(readPacks());
-      flash && flash(tr("“{n}” is ready", { n: ar ? p.name_ar : p.name }));
+      flash && flash(tr("“{n}” is ready", { n: ar ? p.name_ar : tr(p.name) }));
     } catch (e) { const msg = String((e && e.message) || e).slice(0, 160); setPackErr({ id: p.id, msg }); }
     finally { clearInterval(timer); setPackBusy(null); refresh(); }
   };
   const dropPack = (p) => {
-    if (!window.confirm(tr("Remove “{t}” from Knowledge?", { t: ar ? p.name_ar : p.name }))) return;
+    if (!window.confirm(tr("Remove “{t}” from Knowledge?", { t: ar ? p.name_ar : tr(p.name) }))) return;
     try { N.knowRemove(p.id); } catch (e) {}
     setPhonePacks(readPacks());
   };
@@ -179,11 +179,11 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
           return (
             <div key={p.id} className="space-y-1.5 border-t border-[var(--c-ln)] pt-3" data-testid={"kn-pack-" + p.id}>
               <div className="flex items-center gap-2"><Globe size={15} className="text-[var(--c-acc)]" />
-                <p className="flex-1 text-[13.5px] font-bold tabular-nums text-[var(--c-ink)]">{ar ? p.name_ar : p.name}{got ? " · " + mb(got.size || 0) : ""}</p>
+                <p className="flex-1 text-[13.5px] font-bold tabular-nums text-[var(--c-ink)]">{ar ? p.name_ar : tr(p.name)}{got ? " · " + mb(got.size || 0) : ""}</p>
                 {got ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-pos)] border border-[var(--c-pos)]/30">{tr("ready")}</span> : null}</div>
               <p data-intro="" className="text-[12px] text-[var(--c-mut)]">{ar ? p.about_ar : p.about}</p>
               <p className="text-[11px] text-[var(--c-mut)]" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size}{got && got.built ? " · " + tr("updated {d}", { d: got.built }) : ""}</p>
-              {p.notice ? <p className="text-[11px] text-[var(--c-warn)]">{ar ? p.notice_ar : p.notice}</p> : null}
+              {p.notice ? <p className="text-[11px] text-[var(--c-warn)]">{ar ? p.notice_ar : tr(p.notice)}</p> : null}
               {b ? (
                 <div data-testid={"kn-pack-progress-" + p.id}><div className="h-2 rounded-full bg-[var(--c-ln)] overflow-hidden"><div className="h-full bg-[var(--c-acc)] transition-[width]" style={{ width: Math.max(3, b.pct || 0) + "%" }} /></div>
                   <p className="text-[11px] text-[var(--c-mut)] mt-1 tabular-nums">{b.detail ? (b.pct || 0) + "% · " + b.detail : tr("Connecting…")}</p></div>
@@ -200,7 +200,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
         <details className="pt-2 border-t border-[var(--c-ln)]" data-testid="kn-credits">
           <summary className="min-h-[44px] flex items-center text-[12px] font-bold text-[var(--c-mut)] cursor-pointer select-none">{tr("Sources & licences")}</summary>
           <ul className="mt-2 space-y-1">
-            {K.CATALOG.map((p) => <li key={p.id} className="text-[11px] text-[var(--c-mut)] leading-relaxed"><span className="text-[var(--c-mut)]">{ar ? p.name_ar : p.name}</span> — {ar ? p.license_ar : p.license}</li>)}
+            {K.CATALOG.map((p) => <li key={p.id} className="text-[11px] text-[var(--c-mut)] leading-relaxed"><span className="text-[var(--c-mut)]">{ar ? p.name_ar : tr(p.name)}</span> — {ar ? p.license_ar : p.license}</li>)}
           </ul>
         </details>
       </div>

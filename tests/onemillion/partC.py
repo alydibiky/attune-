@@ -79,7 +79,7 @@ with sync_playwright() as p:
             except Exception as e:
                 rows.append({"screen": sc, "lang": lg, "theme": th, "dev": dev, "pos": "open", "n": 1, "fails": [["c03 crash", "could not open: " + str(e)[:80]]]}); continue
             try:
-                is_home = sc != "home" and home_sig is not None and page.evaluate("(document.querySelector('main')||document.body).innerText.slice(0,80)") == home_sig
+                is_home = sc != "home" and page.evaluate("(() => { const e = document.querySelector('[data-testid=home-ask]'); return !!(e && e.getBoundingClientRect().height); })()")
             except Exception: is_home = False
             if is_home: page.evaluate("window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: 'home' } }))"); continue   # an old name that opens Home: not a screen
             if sc == "home": home_sig = page.evaluate("(document.querySelector('main')||document.body).innerText.slice(0,80)")

@@ -262,7 +262,7 @@ export function BookLibPage({ llm, modelReady, openEngine, nativeCall, flash, na
       </div>
       {chat.length ? <button onClick={() => setChat([])} className="text-[12px] underline text-[var(--c-mut)]" data-testid="booklib-new">{tr("New question (clear the chat)")}</button> : null}
       <div className="flex flex-wrap gap-1.5"><button onClick={() => setDeep(false)} aria-pressed={!deep} className={U.chip(!deep)} data-testid="booklib-fast">{tr("Fast answer")}</button>
-        <button onClick={() => setDeep(true)} aria-pressed={deep} className={U.chip(deep)} data-testid="booklib-deep">{tr("Read deeper (more pages, slower)")}</button></div>
+        <button onClick={() => setDeep(true)} aria-pressed={deep} className={U.chip(deep) + " max-w-full whitespace-normal! h-auto! py-2 text-start"} data-testid="booklib-deep">{tr("Read deeper (more pages, slower)")}</button></div>
       {only ? <div className="flex items-center gap-2 text-[13px]" data-testid="booklib-only"><span className="c-sub">{tr("Asking only:")}</span><b className="truncate" dir="auto">{only.title}</b>
         <button onClick={() => setOnly(null)} className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12px] font-bold" data-testid="booklib-only-clear">{tr("All files")}</button></div> : null}
       {chat.length ? askForm(true) : null}

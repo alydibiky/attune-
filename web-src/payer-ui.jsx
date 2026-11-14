@@ -116,7 +116,7 @@ export function PayerRow({ c, onChange }) {
   return <div className="mt-2" data-testid="payer-row">
     {!open ? <div className="flex items-center gap-2 text-[12.5px]">
       <Wallet size={14} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 min-w-0 truncate font-bold" dir="auto" data-testid="payer-line">{payerLine(c)}</span>
-      <button onClick={() => setOpen(true)} className="min-h-[36px] px-2 text-[12.5px] font-extrabold text-[var(--c-acc)]" data-testid="payer-change">{tr("Change")}</button></div>
+      <button onClick={() => setOpen(true)} className="min-h-[36px] min-w-[44px] px-2 text-[12.5px] font-extrabold text-[var(--c-acc)]" data-testid="payer-change">{tr("Change")}</button></div>
     : <PayerPicker c={c} onCancel={() => setOpen(false)} onSave={(who) => { savePayer(c.id, who); setOpen(false); onChange && onChange(); }} />}
   </div>;
 }

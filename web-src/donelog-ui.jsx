@@ -30,7 +30,7 @@ export function DoneForYouPage({ flash }) {
           <label className="block text-[13px] font-bold">{tr("Actions a day")}<input type="number" inputMode="numeric" value={lim.perDay} onChange={(e) => setLim({ ...lim, perDay: e.target.value })} className={inp + " mt-1"} data-testid="donefor-perday" /></label>
           <div className="flex gap-2"><button className={btnP} onClick={() => { const n = D.setLimits(D.load(), lim); D.save(n); setSt(n); setLim(null); flash && flash(tr("Saved")); }} data-testid="donefor-limits-save">{tr("Save")}</button><button className={btnS} onClick={() => setLim(null)}>{tr("Cancel")}</button></div>
         </div> : <>
-          <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleString() })}</span><button className="text-[13px] font-extrabold text-[var(--c-acc)] min-h-[40px]" onClick={() => setLim({ ...st.limits })} data-testid="donefor-change">{tr("Change")}</button></div>
+          <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleString() })}</span><button className="text-[13px] font-extrabold text-[var(--c-acc)] min-h-[40px] min-w-[44px]" onClick={() => setLim({ ...st.limits })} data-testid="donefor-change">{tr("Change")}</button></div>
           <div className="text-[14px]">{tr("Up to {n} actions a day · {u} used today", { n: st.limits.perDay, u: used })}</div></>}
       </div>
       <div className={card + " space-y-1"} data-testid="donefor-today">

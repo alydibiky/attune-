@@ -861,7 +861,7 @@ vault-ui.jsx: {way === "bio" ? <button className={U.btnP} onClick={ask} data-tes
 vault-ui.jsx: <button className={U.btnP + " w-full"} onClick={tryPin} disabled={pin.length < 4} data-testid="vault-pin-go">{tr("Unlock")}</button>
 
 ## Forget
-brain-ui.jsx: <button onClick={() => act(F.forget(loadMem(), f.id))} className="min-h-[36px] font-bold underline c-sub" data-testid="brain-forget">{tr("Fo
+brain-ui.jsx: <button onClick={() => act(F.forget(loadMem(), f.id))} className="min-h-[36px] min-w-[44px] font-bold underline c-sub" data-testid="brain-fo
 library-ui.jsx: <button onClick={() => remove(s)} aria-label={tr("Forget")} className="w-11 h-11 rounded-[12px] grid place-items-center c-sub hover:text-[va
 lookback-ui.jsx: {open.kind === "note" ? <button onClick={() => forget(open)} data-testid="recall-forget" className={btnDanger}><Trash2 size={15} />{tr("Forg
 mind-ui.jsx: className={btnS + " !text-[var(--c-mut)] hover:!border-[var(--c-neg)] hover:!text-[var(--c-neg)] ms-auto"}><Trash2 size={12} className="inli
