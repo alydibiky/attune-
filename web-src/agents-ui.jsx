@@ -837,6 +837,8 @@ function AgentRules({ a, setRules, understand, flash, open, setOpen }) {
 
 function Ico({ k }) { return <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)] shrink-0">{React.createElement(KIND_ICON[k] || AppWindow, { size: 18 })}</span>; }
 
+// v9.9.39: "10 stores" in the person's language (an agent's site is a store's name, or "N stores" for the country's whole list)
+const storesLabel = (site) => { const m = /^(\d+) stores$/.exec(String(site || "")); return m ? tr("{n} stores", { n: +m[1] }) : site || ""; };
 /** v8.6 a buy agent: its plan, what it found, and the person's decision (Order it / Not this one) — nothing is bought without it. */
 function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, toggle, openApp, openBest, setRules, understand, flash }) {
   const [ro, setRo] = useState(false);
@@ -846,8 +848,9 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
     <AgentHead a={a} kind="buy" title={a.said || a.what} toggle={toggle} remove={remove} onRules={() => setRo(true)} />
     <div className="min-w-0">
       {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
-      <p className="m-0 text-[12.5px] c-sub" dir="auto">{a.site}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
-      <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v)}</span></p>)}</div>
+      <p className="m-0 text-[12.5px] c-sub" dir="auto">{storesLabel(a.site)}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
+      {(a.tries || []).length > 3 ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-buy-stores">{a.tries.map((x) => x.site).join(" · ")}</p> : null}
+      <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v && s.v.site ? { ...s.v, site: storesLabel(s.v.site) } : s.v)}</span></p>)}</div>
     </div>
     <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={ro} setOpen={setRo} />
     {p && a.step !== "ordered" ? <div className="rounded-[20px] border-2 border-[var(--c-acc)] p-3 space-y-2" data-testid="agent-buy-confirm">

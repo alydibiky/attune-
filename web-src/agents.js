@@ -212,7 +212,7 @@ export function parseAgent(text, opts = {}) {
       // v9.0 (Ali: "Amazon, noon, Jumia … everywhere"): every store of the country, one after another (or only the one named)
       const pe = productEnglish(what), q = pe.left ? what : pe.en;   // v9.0: an Arabic name is searched and matched in English
       const use = storeTries(q, country, store ? store.label : "").map((l) => ({ url: l.url, site: l.site }));
-      return { kind: "buy", what: pe.left ? what : pe.match, ...(pe.changed ? { said: what, q } : {}), below: lim, currency: curIn(t, country), url: use[0].url, site: use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
+      return { kind: "buy", what: pe.left ? what : pe.match, ...(pe.changed ? { said: what, q } : {}), below: lim, currency: curIn(t, country), url: use[0].url, site: use.length > 3 ? use.length + " stores" : use.map((x) => x.site).join(" · "), tries: use, title: (lim ? "Buy · " : "Find & buy · ") + what };
     }
     return { kind: "buy", what: "", ask: "What should I buy? (the exact product, e.g. AirPods Pro 2, or iPhone 16 128GB black)" };
   }
@@ -302,7 +302,9 @@ export function loadAgents(s = typeof localStorage !== "undefined" ? localStorag
  *  version, before accessories and too-cheap prices were refused): a saved find, best price or best-3 list is checked again with
  *  today's rules each time the agents load, and what fails is dropped (the agent keeps watching). */
 export function recheckSaved(a) {
-  if (!a || a.kind !== "watch" || !(a.what || a.said)) return a;
+  // v9.9.39 (Ali's phone, 14 Nov: the FreeClips agent still said "Amazon · noon" and "Found one under your price: EGP 120"): a BUY
+  // agent is checked the same way — the country's full store list, and a too-cheap / accessory find or offer dropped
+  if (!a || (a.kind !== "watch" && a.kind !== "buy") || !(a.what || a.said)) return a;
   const ok = (o) => o && o.price > 0 && believable({ ...o, currency: o.currency || a.currency }, a) && !(a.below > 0 && o.price < a.below * 0.3)
     && !(!ACC_RE.test(String(a.what || "") + " " + String(a.said || "")) && ACC_RE.test(String(o.name || "") + " " + String(o.text || "").slice(0, 120)));
   let b = a;
@@ -319,6 +321,8 @@ export function recheckSaved(a) {
   if (b.found && !ok(b.found)) { const { found, ...rest } = b; b = rest; }
   if (b.best && b.best.price > 0 && !ok(b.best)) { const { best, ...rest } = b; b = rest; }
   if (Array.isArray(b.best3) && b.best3.some((o) => !ok(o))) b = { ...b, best3: b.best3.filter(ok) };
+  if (b.kind === "buy" && b.pending && !ok(b.pending)) { const { pending, ...rest } = b; b = { ...rest, step: "search" }; }
+  if (b.kind === "buy" && b.nearest && !ok(b.nearest)) { const { nearest, ...rest } = b; b = rest; }
   return b;
 }
 export function saveAgents(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(AGENTS_KEY, JSON.stringify(st)); } catch (e) {} return st; }
