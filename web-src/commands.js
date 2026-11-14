@@ -157,7 +157,9 @@ export function cleanTodo(text) {
   t = t.replace(/^(?:hey |ya )?(?:attune[,: ]+)?(?:please |pls )?(?:can you |could you )?(?:remind me (?:to|that i (?:need|have) to|about)|don'?t let me forget (?:to|about)|make sure i|i (?:need|have|must|gotta|got) to|note to self:?|to-?do:?)\s+/i, "")
        .replace(/^(?:فكرني|فكّرني|ذكرني|افتكرلي|متنسانيش|ماتنسانيش|متخلينيش انسى)\s+(?:اني |إني |ان |إن |ب)?/, "")
        .replace(/[.!]+$/, "").trim();
-  return t ? t.charAt(0).toUpperCase() + t.slice(1) : String(text || "").trim();
+  const orig = String(text || "").replace(/\s+/g, " ").trim().replace(/[.!]+$/, "");
+  if (!t) return String(text || "").trim();
+  return t === orig ? t : t.charAt(0).toUpperCase() + t.slice(1);   // the person's own words as typed; capitalised only after "remind me to"
 }
 export function todoText(text) {
   let t = String(text || "").trim();
