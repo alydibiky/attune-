@@ -1,6 +1,7 @@
 /* ---- v9.3 "Your day" on Home + its Settings (Ali, 5 Nov 2026: D1 A — prayers only when turned on in Settings; A2 A — Ramadan, also
    switched on in Settings, with a box to write anything; notifications → the day; D5 A simple mode; D2 B "safe to spend" on the widget).
    The logic is in yourday.js / daynotes.js / dayset.js (pure, tested); this file only shows it. */
+import { allowed } from "./plan.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Moon, ListChecks, MessageCircle, Package, Plus, X, Bell, Radar, CalendarDays } from "lucide-react";
 import { tr, dateLocale } from "./i18n.js";
@@ -67,7 +68,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
   const news = useMemo(() => Y.agentNews(loadAgents().agents || [], now), [Math.floor(now / 60000)]);
   const pr = ds.prayers ? Y.prayersToday(prayerCity(), now) : null;
   const evening = Y.isEvening(now, ds.evening);
-  const rem = loadReminders(), close = evening ? Y.closeDay(rem, records, now) : null;
+  const rem = loadReminders(), close = evening && allowed("closeDay") ? Y.closeDay(rem, records, now) : null;   // v9.9.34 FP-4: Close the day is Pro
   const move = () => { const next = Y.moveToTomorrow(loadReminders(), close.movable, now); saveReminders(next); try { syncToPhone(N(), next); } catch (e) {}
     try { window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} bump((x) => x + 1); flash && flash(tr("{n} moved to tomorrow", { n: close.movable.length })); };
   const showNotes = ds.notes && (day.people.length || asks.length || day.arriving.length || fam.length);

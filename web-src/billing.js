@@ -105,18 +105,18 @@ export function region(tz, lang) {
 export function pricesFor(tz, lang) { return regionPrices(region(tz, lang)); }
 
 /** What Pro gives — the reasons to pay, in the order people care about. */
-export const PRO_BENEFITS = [   // v9.9.15 (Ali: "the billing plan has things from the past"): only what today's app has — no Studio, Fit & Food, Business
-  "Agents that find, watch and buy for you (you confirm every order)",
-  "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
-  "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
-  "Unlimited file conversions, including scanned paper → editable Word",
-  "Unlimited presentations (PowerPoint) and reports (Word / PDF)",
-  "Expert review: strong models check and improve their own answers",
-  "Deep web research: several searches, more pages, cross-checked facts",
-  "Memory that remembers everything and can search it",
-];
+export const PRO_BENEFITS = [   // v9.9.34 FP-4 (Ali's pick): Pro = Attune does it for you, everywhere
+  "Bank and wallet messages saved by themselves, with Undo",
+  "Automations, phone rules and agents — as many as you need",
+  "Close the day, week plan and scheduled messages",
+  "Phone and computer always the same, Money for two",
+  "Every year of Money kept, with PDF and Excel",
+  "Unlimited photo reads, Chat X-Rays, conversions and slides",
+  "The whole “Set up your life” guide and a monthly check-up",
+  "Expert review and deep web research",
+]
 // v8.7 (Ali picked persona 3's point 2): Free answers are unlimited; one agent to try
-export const FREE_LIMITS = { answersPerDay: Infinity, picturesPerDay: 3, agents: 1 };
+export const FREE_LIMITS = { answersPerDay: Infinity, picturesPerDay: 3, agents: 1 };   // (v9.9.34: the full FP-4 limits are in plan.js LIMITS)
 /** v6.16c (Ali: "I won't take money from people for the Dorar service"): a hadith question — answered with الدرر السنية's live
  *  search — never counts toward a daily limit, on any plan. Whatever enforces FREE_LIMITS.answersPerDay asks this first. */
 export function countsTowardLimit(question, isHadithQuestion) {
@@ -124,27 +124,32 @@ export function countsTowardLimit(question, isHadithQuestion) {
 }
 
 /** v6.10 — Plans & billing page: what Pro gives, grouped by the app it belongs to (Money is included in Pro). */
-export const BILLING_GROUPS = [
-  { id: "chat", icon: "💬", title: "Chat & answers", items: [
-    "Agents that find, watch and buy for you (you confirm every order)", "Expert review: strong models check and improve their own answers",
-    "Deep web research: several searches, more pages, cross-checked facts", "Mind: remembers everything and searches it" ] },
-  { id: "tools", icon: "🧰", title: "Tools", items: [
-    "Deal Check: the real cost, the market price and scam signs before you pay", "Chat X-Ray: who owes you, promises and unanswered questions in WhatsApp chats",
-    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)" ] },
+export const BILLING_GROUPS = [   // v9.9.34 FP-4: what Attune does for you with Pro, place by place
   { id: "money", icon: "💰", title: "Money", items: [
-    "Receipt photos on transactions", "Sync, PDF export and projects", "Every Money Premium feature — included, no second plan" ] },
-];
+    "Bank and wallet messages saved by themselves, with Undo", "Every year of Money kept, with PDF and Excel", "Money for two: one budget with your partner" ] },
+  { id: "day", icon: "📅", title: "Your day", items: [
+    "Automations and phone rules — as many as you need", "Close the day, week plan and scheduled messages", "The whole “Set up your life” guide and a monthly check-up" ] },
+  { id: "tools", icon: "🧰", title: "Tools", items: [
+    "Agents that find, watch and buy for you (you confirm every order)", "Unlimited photo reads, Chat X-Rays, conversions and slides", "As many papers with dates as you need" ] },
+  { id: "chat", icon: "💬", title: "Chat & answers", items: [
+    "Expert review and deep web research", "Phone and computer always the same" ] },
+]
 /** Free / Pro / Business columns for the compare table. */
-export const COMPARE_ROWS = [   // v9.9.15: Free and Pro only (Business is its own product now)
-  ["Answers", "Unlimited", "Unlimited"],
+export const COMPARE_ROWS = [   // v9.9.34 FP-4: Free = you do it, Attune keeps it · Pro = Attune does it for you, everywhere
+  ["Chat, voice and answers, offline", "Unlimited", "+ expert review, deep research"],
+  ["Money, reminders, debts, lists, dates — just say it", "Unlimited", "Unlimited"],
+  ["Money history", "Last 3 months", "Every year + PDF and Excel"],
+  ["Bank messages → Money", "Asks you each time", "By itself, with Undo"],
+  ["Automations and phone rules", "1 rule", "Unlimited"],
   ["Agents that find, watch and buy", "1 agent", "Unlimited"],
-  ["Hadith search (Dorar)", "Free, unlimited", "Free, unlimited"],
-  ["Deal Check", "3 a day", "Unlimited"],
-  ["Chat X-Ray", "1 a day", "Unlimited"],
-  ["File conversions", "5 a day", "Unlimited"],
-  ["Presentations & reports", "2 a day", "Unlimited"],
-  ["Money: receipt photos, sync, PDF, projects", "—", "✓"],
-];
+  ["Morning brief", "✓", "✓"],
+  ["Close the day, week plan, scheduled messages", "—", "✓"],
+  ["Papers with dates", "10", "Unlimited"],
+  ["Photo reads, Chat X-Ray, conversions, slides", "3 a day each", "Unlimited"],
+  ["Sync with your computer, Money for two", "—", "✓"],
+  ["“Set up your life” guide", "First 3 steps", "Everything + monthly check-up"],
+  ["Hadith search (Dorar), prayers, emergency card", "Free, unlimited", "Free, unlimited"],
+]
 
 /** The phone's Pro request code, from its install id: "PRO-" + 8 letters/digits. */
 export function requestCode(deviceId) {

@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from "react";
 import { tr } from "./i18n.js";
 import * as RS from "./rulestore.js";
+import { ruleRoom } from "./plan.js";
+import { openPlan } from "./plan-ui.jsx";
 import { RecipesGallery } from "./recipes-ui.jsx";
 import { card as kCard, btnP, btnS, inp, label } from "./ui-kit.jsx";
 const card = kCard + " p-4";
@@ -13,7 +15,8 @@ export function RulesSection({ native, flash, schedule, unschedule, lang }) {
   useEffect(() => { const f = () => { setDraft(RS.loadDraft()); setRules(RS.loadRules()); }; window.addEventListener("attune-rules", f); return () => window.removeEventListener("attune-rules", f); }, []);
   const ctx = RS.ruleCtx();
   const pick = (field, value) => { const n = RS.answer(draft, field, value); RS.saveDraft(n); setDraft(n); };
-  const save = () => { const r = RS.saveRule(draft, { schedule, native, lang }); RS.saveDraft(null); setDraft(null); setRules(RS.loadRules()); flash && flash(r.live ? tr("Rule saved — it's on") : tr("Rule saved — it starts working when the phone part arrives")); };
+  const save = () => { if (!ruleRoom(1)) { flash && flash(tr("Free includes 1 rule — Pro runs as many as you need")); openPlan(); return; }   // v9.9.34 FP-4
+    const r = RS.saveRule(draft, { schedule, native, lang }); RS.saveDraft(null); setDraft(null); setRules(RS.loadRules()); flash && flash(r.live ? tr("Rule saved — it's on") : tr("Rule saved — it starts working when the phone part arrives")); };
   const tryNow = () => { const L = RS.ruleLines(draft, ctx); flash && flash(tr("Test: {x}", { x: L.dos.join(" · ") })); };
   const read = () => { const r = RS.ruleFor(text, ctx); if (!r) { flash && flash(tr("I couldn't read a rule in that — try “when …, …”")); return; } RS.saveDraft(r); setDraft(r); setEdit(false); setText(""); };
   // v9.9.26 (R2-A): on the phone the device comes from the paired list (its address), so the old "which device" question steps aside

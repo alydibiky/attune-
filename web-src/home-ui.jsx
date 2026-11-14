@@ -4,6 +4,9 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import { pricesFor } from "./billing.js";
+import * as P from "./plan.js";
+import { loadReminders } from "./actions.js";
 import { JobsHomeCard } from "./aijobs-ui.jsx";
 import { FlightDayCard, nextFlight } from "./trip-ui.jsx";
 import { loadTrip } from "./travel.js";
@@ -356,6 +359,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
       {!rep ? <MonthCard /> : null}
       {!rep && trial ? <TrialLine trial={trial} /> : null}
+      {!rep ? <ProNotes trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
       {now1 && !rep ? <div className="rounded-[20px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
@@ -503,6 +507,33 @@ function MonthCard() {
   </div>;
 }
 
+/* v9.9.34 PM-1 + PM-2 (Ali picked): Pro shown at the moment of effort (after the 5th payment typed by hand this week, Free only) and
+   in a Friday card ("Your week with Attune" — what Pro saved, or would have saved). At most one of them a day, never on a day something
+   is due, "Not now" = 14 quiet days (plan.js). */
+function ProNotes({ trial }) {
+  const [, bump] = useState(0);
+  const now = Date.now(), L = (() => { try { return loadLedger(); } catch (e) { return null; } })();
+  const rem = loadReminders(), dueToday = rem.filter((r) => r && !r.done && r.at && new Date(r.at).toDateString() === new Date(now).toDateString()).length;
+  const w = P.weekStats(L, rem, now), pro = P.proNow();
+  const open = () => { try { window.dispatchEvent(new CustomEvent("attune-show-plan")); } catch (e) {} };
+  const done = (kind, notNow) => { P.noteShown(kind, { now, notNow }); bump((x) => x + 1); };
+  if (P.showTypedNudge({ typed: w.typed, dueToday, now })) return <div className="c-card space-y-1.5" style={{ background: "var(--c-soft)" }} data-testid="pro-typed">
+    <p className="m-0 text-[13.5px]" dir="auto">{tr("That's {n} payments you typed by hand this week.", { n: w.typed })} <b className="text-[var(--c-acc)]">{tr("Pro saves the ones your bank messages report by itself.")}</b></p>
+    <div className="flex gap-2"><button onClick={() => { done("typed"); open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="pro-typed-see">{tr("Show me")}</button>
+      <button onClick={() => done("typed", true)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-typed-later">{tr("Not now")}</button></div></div>;
+  if (P.showWeekCard({ dueToday, now }) && (w.fromMsgs || w.typed || w.reminders)) {
+    const payments = pro ? w.fromMsgs : w.typed, mins = P.minutesFor(payments);
+    return <div className="c-card space-y-1.5" style={{ background: "var(--c-soft)" }} data-testid="pro-week" data-pro={pro ? "1" : "0"}>
+      <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr("Your week with Attune")}</span>
+      {mins > 0 ? <p className="m-0"><b className="text-[26px] tabular-nums">{tr("{n} min", { n: mins })}</b> <span className="text-[13px] c-sub">{pro ? tr("saved this week") : tr("Pro would have saved you this week")}</span></p> : null}
+      {payments ? <p className="m-0 text-[13px]" dir="auto">{pro ? tr("{n} payments saved from your messages", { n: payments }) : tr("{n} payments you typed by hand", { n: payments })}</p> : null}
+      {w.reminders ? <p className="m-0 text-[13px]" dir="auto">{tr("{n} reminders made", { n: w.reminders })}</p> : null}
+      <div className="flex gap-2">{pro ? null : <button onClick={() => { done("week"); open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="pro-week-try">{tr("Try Pro")}</button>}
+        <button onClick={() => done("week", !pro)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-week-close">{pro ? tr("OK") : tr("Not now")}</button></div></div>;
+  }
+  return null;
+}
+
 // v8.7 (Ali picked persona 3's P3-A and point 6): the trial on Home — from day 5 "2 days of Pro left · you used it for …",
 // and once when it ends "Money, Follow-ups and unlimited answers stay free" — each with Keep Pro
 function TrialLine({ trial }) {
@@ -511,10 +542,15 @@ function TrialLine({ trial }) {
   const note = trialNote({ ...trial, seenEnd: seen }, ar ? "ar" : "en");
   if (!note) return null;
   const close = () => { if (note.kind === "ended") { try { localStorage.setItem("attune:trial-end-seen", "1"); } catch (e) {} setSeen(true); } };
+  const fromMsgs = (() => { try { const L = loadLedger(); return ((L && L.txns) || []).filter((t) => t && t.source === "notification").length; } catch (e) { return 0; } })();
+  const yearPrice = (() => { try { return pricesFor(Intl.DateTimeFormat().resolvedOptions().timeZone, (navigator.language || "")).year; } catch (e) { return ""; } })();
   return <div className="c-card space-y-1.5" data-testid="home-trial" data-kind={note.kind}>
     <p className="m-0 text-[14px] font-extrabold" dir="auto">{note.kind === "ending" ? tr(note.left === 1 ? "1 day of Pro left" : "{n} days of Pro left", { n: note.left }) : tr("Your Pro trial ended")}</p>
     <p className="m-0 text-[13px] c-sub" dir="auto">{note.used ? tr("You used it for {x}.", { x: note.used }) + " " : ""}{note.kind === "ended" ? tr("Money, Follow-ups and unlimited answers stay free.") : ""}</p>
-    <div className="flex gap-2"><button onClick={() => { close(); trial.open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-trial-keep">{tr("Keep Pro")}</button>
+    {/* v9.9.34 PM-4 (Ali picked): what Pro did by itself, and that nothing made is lost */}
+    {note.kind === "ended" && fromMsgs ? <p className="m-0 text-[13px]" dir="auto" data-testid="home-trial-msgs">{tr("{n} payments saved from your messages", { n: fromMsgs })}</p> : null}
+    {note.kind === "ended" ? <p className="m-0 text-[13px] c-sub" dir="auto">{tr("From today Attune stops doing these by itself. Everything you made stays yours.")}</p> : null}
+    <div className="flex gap-2"><button onClick={() => { close(); trial.open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="home-trial-keep">{note.kind === "ended" && yearPrice ? tr("Keep Pro · {p} a year", { p: yearPrice }) : tr("Keep Pro")}</button>
       {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</button> : null}</div>
   </div>;
 }

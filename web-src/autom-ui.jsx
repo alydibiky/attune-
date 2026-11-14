@@ -6,6 +6,8 @@ import { tr, getLang } from "./i18n.js";
 import { parseAutomation, ruleText, loadAuto, saveAuto, addRule, applyEvents, takeOut, READY, readyOn, parseMany } from "./autom.js";
 import { readNotification } from "./paylog.js";
 import { RulesSection } from "./rules-ui.jsx";
+import { ruleRoom } from "./plan.js";
+import { openPlan } from "./plan-ui.jsx";
 import { Zap, Trash2, Wallet, Bell } from "lucide-react";
 import { card as kCard, btnP, btnS, inp, area, label } from "./ui-kit.jsx";
 
@@ -50,7 +52,7 @@ export function AutomationsPage({ native, flash, schedule, unschedule }) {
           <div key={id} className="flex items-center gap-3 min-h-[56px] border-t border-[var(--c-ln)] first-of-type:border-t-0" data-testid="auto-ready-rule" data-id={id}>
             <span className="w-10 h-10 rounded-[12px] grid place-items-center bg-[var(--c-soft)] shrink-0 text-[18px]" aria-hidden="true">{icon}</span>
             <span className="flex-1 min-w-0 text-[13.5px] font-bold" dir="auto">{ar ? arT : tr(en)}</span>
-            <button onClick={() => { if (on) put({ ...s, rules: s.rules.filter((x) => x.id !== on.id) }); else { put(addRule(s, parseAutomation(ar ? arT : en))); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); } }}
+            <button onClick={() => { if (on) put({ ...s, rules: s.rules.filter((x) => x.id !== on.id) }); else { if (!ruleRoom(1)) { flash && flash(tr("Free includes 1 rule — Pro runs as many as you need")); openPlan(); return; } put(addRule(s, parseAutomation(ar ? arT : en))); flash && flash(tr("Automation on — it runs on the phone, no AI needed")); } }}
               aria-pressed={!!on} data-testid="auto-ready-toggle"
               className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extrabold border shrink-0 " + (on ? "bg-[var(--c-acc)] border-[var(--c-acc)] text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-ink)]")}>{on ? tr("On") : tr("Turn on")}</button>
           </div>); })}
@@ -63,7 +65,7 @@ export function AutomationsPage({ native, flash, schedule, unschedule }) {
         {text.trim() ? (draft ? <div className="space-y-1.5">{many.rules.map((r, i) => <div key={i} className="text-[13px] font-semibold rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] px-3 py-2" data-testid="auto-draft" dir="auto">{ruleText(r, /[\u0600-\u06ff]/.test(r.text))}</div>)}
             {many.bad.length ? <p className="text-[12px] text-[var(--c-warn)] m-0" data-testid="auto-unknown" dir="auto">{tr("Not an automation: {l}", { l: many.bad.join(" · ") })}</p> : null}</div>
           : <p className="text-[12px] text-[var(--c-warn)]" data-testid="auto-unknown">{tr("I didn't get that as an automation. Try: When my salary arrives, put 20% in the car fund.")}</p>) : null}
-        <button disabled={!draft} onClick={() => { let n = s; for (const r of many.rules) n = addRule(n, r); put(n); setText(""); flash && flash(many.rules.length > 1 ? tr("{n} automations on — they run on the phone, no AI needed", { n: many.rules.length }) : tr("Automation on — it runs on the phone, no AI needed")); }}
+        <button disabled={!draft} onClick={() => { if (!ruleRoom(many.rules.length || 1)) { flash && flash(tr("Free includes 1 rule — Pro runs as many as you need")); openPlan(); return; } let n = s; for (const r of many.rules) n = addRule(n, r); put(n); setText(""); flash && flash(many.rules.length > 1 ? tr("{n} automations on — they run on the phone, no AI needed", { n: many.rules.length }) : tr("Automation on — it runs on the phone, no AI needed")); }}
           className={btnP} data-testid="auto-add">{many.rules.length > 1 ? tr("Turn on {n}", { n: many.rules.length }) : tr("Turn it on")}</button>
         <p className="text-[11px] text-[var(--c-mut)]">{tr("It listens to your bank and wallet notifications (never SMS). When one matches, you get a notification at once and the money goes into the pot.")}</p>
         {!access ? <button className="min-h-[44px] text-[12.5px] font-bold text-[var(--c-warn)] underline flex items-center gap-1" onClick={() => { try { native.openPayAccess(); } catch (e) {} }} data-testid="auto-access"><Bell size={13} />{tr("Turn on Notification access for Attune first")}</button> : null}

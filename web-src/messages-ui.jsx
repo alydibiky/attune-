@@ -3,6 +3,7 @@
    person, words, templates, "write it for me", time, how it repeats, ask me first, send by itself); auto-reply rules. Logic:
    msgsched.js (tests/unit/v970messages.test.mjs); on the phone: Reminders.kt (sending), AutoReply.kt (rules), AutoSend.kt + SmsOut.kt
    (sending by itself — the full APK only). */
+import { proGate } from "./plan-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Send, Clock, X, Trash2, Plus, PenLine, MessageCircle, Repeat } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -123,7 +124,7 @@ function RuleCard({ r, save, remove, ar }) {
   </div>;
 }
 
-export function MessagesPage({ back, flash, nativeCall, drafter, startNew = false }) {
+function MessagesPageInner({ back, flash, nativeCall, drafter, startNew = false }) {
   const N = N0(), ar = getLang() === "ar";
   const [tab, setTab] = useState("scheduled");
   const [tick, setTick] = useState(0);
@@ -212,3 +213,6 @@ export function MessagesPage({ back, flash, nativeCall, drafter, startNew = fals
     </div> : null}
   </div>;
 }
+
+// v9.9.34 FP-4: Pro only (Free sees "Part of Pro"; nothing made is lost)
+export const MessagesPage = proGate("msgSchedule", "Scheduled messages", MessagesPageInner);

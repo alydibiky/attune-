@@ -95,13 +95,13 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=radar-title]").input_value() == "Spotify", "Chat → Watch it opens the Radar with it read")
     ctx.close()
 
-    # ---- Free: 3 deadlines ----
-    three = {"items": [{"id": "a%d" % i, "kind": "warranty", "title": "Item %d" % i, "date": (T + datetime.timedelta(days=100 + i)).isoformat(), "amount": 0, "status": "active", "created": now} for i in range(3)], "seen": []}
+    # ---- Free: 10 deadlines (v9.9.34 FP-4) ----
+    three = {"items": [{"id": "a%d" % i, "kind": "warranty", "title": "Item %d" % i, "date": (T + datetime.timedelta(days=100 + i)).isoformat(), "amount": 0, "status": "active", "created": now} for i in range(10)], "seen": []}
     ctx, page = new_page(br, env, errors, extra_init=init(pro=False, radar=three))
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     open_radar(page)
-    check(page.locator("[data-testid=radar-limit]").count() == 1, "Free: 3 deadlines watched — the limit card shows")
+    check(page.locator("[data-testid=radar-limit]").count() == 1, "Free: 10 deadlines watched — the limit card shows")
     page.click("[data-testid=radar-add]")
     page.wait_for_selector("[data-testid=upgrade]", timeout=5000)
     check(True, "…and adding a 4th opens the plan")

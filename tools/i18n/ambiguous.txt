@@ -239,6 +239,7 @@ focus-ui.jsx: <button className={btnP + " w-full"} disabled={!pick.task.trim()} 
 ## OK
 agents-ui.jsx: <button className={U.btnP + " !h-11 !min-h-[44px]"} data-testid="agents-answer-go">{tr("OK")}</button>
 aijobs-ui.jsx: <button className={btnS + " h-9! min-h-[36px]!"} onClick={() => { setS(saveJobs({ ...s, results: s.results.map((x) => (x.id === r.id ? { ...
+home-ui.jsx: <button onClick={() => done("week", !pro)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-week-close">{pro ? tr("OK") : tr("Not no
 shelf-ui.jsx: className={btnP + " mt-3 w-full"}>{tr("OK")}</button>
 trip-ui.jsx: <button type="button" className="c-sub min-h-[36px] px-1" aria-label={tr("OK")} onClick={() => setTrip({ autoUndo: null })} data-testid="tri
 voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold" da
@@ -725,6 +726,7 @@ attune.jsx: {k === "year" ? <span className="absolute -top-2.5 end-1 text-[9.5px
 scout-ui.jsx: {cmp.best ? <p className="m-0 text-[13.5px]" data-testid="scout-best" dir="auto">⭐ {tr("Best value")}: {cmp.best.title} — <b className="c-nu
 
 ## Free
+attune.jsx: <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr("Free")}</span>
 attune.jsx: <thead><tr className="text-[var(--c-mut)]"><th className="text-start font-extrabold pe-2">{tr("Feature")}</th><th className="font-extrabold 
 planner-ui.jsx: <tr><td className={td + " text-start! font-extrabold"}>{tr("Free")}</td><td className={td} /><td className={td} /><td className={td + " font
 
@@ -1196,14 +1198,14 @@ home-ui.jsx: <div className="flex items-center justify-between mb-2"><p classNam
 yourday-ui.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-1">{tr("Your day")}</p>
 
 ## Not now
+home-ui.jsx: <button onClick={() => done("typed", true)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-typed-later">{tr("Not now")}</button></
+home-ui.jsx: <button onClick={() => done("week", !pro)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-week-close">{pro ? tr("OK") : tr("Not no
 home-ui.jsx: {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</but
 messages-ui.jsx: askTitle: T("Send to {who} now?", { who: a.who }), sendLabel: tr("Send"), skipLabel: tr("Not now") } }));
 messages-ui.jsx: <button onClick={() => setExplain(false)} className={U.btnS}>{tr("Not now")}</button></div>
 mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not 
 notelabels-ui.jsx: <button onClick={notNow} className={CHIP + " c-sub inline-flex items-center gap-1"} data-testid="note-ask-skip"><X size={13} />{tr("Not now"
 notifask-ui.jsx: <button onClick={later} className="flex-1 min-h-[48px] rounded-full border border-[var(--c-ln)] font-bold" data-testid="notif-ask-later">{ar
-paylog-ui.jsx: <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className={U.btnS + " " + U.muted}>{tr
-suggest-ui.jsx: <button onClick={later} className="min-h-[40px] px-3.5 rounded-[12px] font-bold text-[13px] border border-[var(--c-acc)] text-[var(--c-acc)]
 
 ## Bill
 home.js: : (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr("Bill"));
@@ -1311,6 +1313,11 @@ mind-ui.jsx: <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(fal
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px
 radar-ui.jsx: <button className={U.btnP} onClick={() => { if (saveOne(s)) { put(D.markSeen(D.loadRadar(), [s.nid])); setSugg((x) => x.filter((y) => y !== 
+
+## See Pro
+mind-ui.jsx: <button onClick={openPlan} className="text-[var(--c-acc)] font-bold underline ms-1 min-h-[36px]">{tr("See Pro")}</button>
+photogate.js: box.append(p, mk(tr("See Pro"), "photo-pro-see", () => { close(); try { window.dispatchEvent(new CustomEvent("attune-show-plan")); } catch (
+plan-ui.jsx: <button type="button" onClick={openPlan} className="min-h-[44px] h-11 rounded-[12px] px-4 font-extrabold text-[14px] bg-[var(--c-btn,var(--c
 
 ## Pinned
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px

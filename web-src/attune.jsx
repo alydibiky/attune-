@@ -6,6 +6,8 @@ import { AR as AR_DICT } from "./i18n-ar.js";   // v6.50: Arabic names of the ap
 import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
+import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
+import { openPlan as openPlanUI } from "./plan-ui.jsx";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import { NotifAsk } from "./notifask-ui.jsx";
 import { TrainFront, Wrench, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase, ChevronDown } from "lucide-react";
@@ -6256,7 +6258,9 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   const moneyPanes = React.useMemo(() => { try { return panesFor(loadLedger()); } catch (e) { return MONEY_PANES; } }, [ver, view, pane]);
   const rep = React.useMemo(() => (account ? moneyReport(loadLedger(), { account, ar: arUI }) : allRep), [allRep, account]);
   // v9.9.8 P1 (Ali): the Money Report's own dates + category (‹ › months, From / To, a category); Home keeps this month
-  const [period, setPeriod] = React.useState(null);
+  const [period, setPeriod0] = React.useState(null);
+  // v9.9.34 FP-4: Free shows this month and the 2 before (older months stay saved; Pro shows every year)
+  const setPeriod = (p) => { const f0 = historyFrom(); if (p && f0 && String(p.from || "") < f0) { flash(tr("Free shows the last 3 months — Pro keeps every year")); openPlanUI(); return; } setPeriod0(p); };
   const repR = React.useMemo(() => (period ? moneyReport(loadLedger(), { account, ar: arUI, ...period }) : rep), [rep, period, account, arUI, ver]);
   const repCats = React.useMemo(() => { try { return usedCats(loadLedger(), arUI); } catch (e) { return []; } }, [ver, arUI]);
   const [ready, setReady] = React.useState(false);
@@ -6509,11 +6513,13 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     setListening(false);
   } : null;
   const exportCsv = async () => {
+    if (!allowedPlan("excelExport")) { flash(tr("Saving to Excel and PDF is part of Pro")); openPlanUI(); return; }   // v9.9.34 FP-4
     const name = "attune-money-" + repR.month.from.slice(0, 7) + ".csv", text = ledgerCsv(repR, { ar: arUI });
     try { if (NATIVE) { await nativeCall("saveFile", { name, mime: "text/csv", text }); flash(tr("Saved {n}", { n: name })); return; } } catch (e) {}
     try { const url = URL.createObjectURL(new Blob([text], { type: "text/csv" })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); } catch (e) {}
   };
   const exportPdf = () => {
+    if (!allowedPlan("pdfExport")) { flash(tr("Saving to Excel and PDF is part of Pro")); openPlanUI(); return; }   // v9.9.34 FP-4
     const esc = (x) => String(x == null ? "" : x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const f = (n) => fmtMoneyPlain(n);
     const html = `<!doctype html><html dir="${arUI ? "rtl" : "ltr"}"><head><meta charset="utf-8"><style>body{font-family:system-ui,"Noto Sans Arabic",sans-serif;color:#16201C;margin:32px;font-size:12px}h1{font-size:20px;margin:0 0 4px}p{color:#4A5852;margin:0 0 16px}.k{display:inline-block;margin:0 18px 12px 0}.k b{display:block;font-size:16px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:6px 8px;border-bottom:1px solid #E2EAE5;text-align:start}td.n{text-align:end;font-variant-numeric:tabular-nums}</style></head><body>
@@ -7821,7 +7827,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "9.9.33";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "9.9.34";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8186,6 +8192,7 @@ export default function App() {
   const proActive = testingPro() || isPro(tier) || trialLeft > 0 || bonusUntil() > 0;
   const proRef = useRef(proActive); proRef.current = proActive;
   setProSearch(proActive);
+  setProNow(proActive);   // v9.9.34 plan.js: every screen asks the same Pro answer
   // v6.27: the text in a photo — the phone's own reader (Latin scripts) first, then a photo-reading model on the phone (Arabic…)
   const readTextAny = async (b64) => {
     let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}
@@ -8193,6 +8200,7 @@ export default function App() {
     return r;
   };
   const [showUpgrade, setShowUpgrade] = useState(false);
+  useEffect(() => { const on = () => setShowUpgrade(true); window.addEventListener("attune-show-plan", on); return () => window.removeEventListener("attune-show-plan", on); }, []);   // v9.9.34 plan-ui openPlan
 
   const [loading, setLoading] = useState(false);
 
@@ -11899,7 +11907,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           ) : null}
           {pro ? <div className="rounded-[20px] border border-[var(--c-pos)]/30 bg-[var(--c-soft)] p-3.5 text-[13.5px] font-bold text-[var(--c-pos)]" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
             : trialLeft > 0 ? <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5 text-[13.5px] font-bold text-[var(--c-ink)]" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
-            : <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: unlimited answers, Money and Follow-ups. Pro adds agents that act for you, Chat X-Ray, deep research, reports, slides and file conversions without limits.")}</div>}
+            : <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-3.5 text-[13.5px] text-[var(--c-mut)]">{tr("You are on Free: everything you type or say works without limits. Pro is Attune doing it for you — your bank messages, rules, agents, your computer and every year.")}</div>}
 
           {/* 1 · the plan (what to pay) */}
           {!pro ? (
@@ -11922,7 +11930,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
               </div>
               <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
                 {/* v8.7 (Ali picked persona 3's point 3): what Pro does for you first, in plain words — not feature names */}
-                {["An assistant that finds and buys for you", "Know a deal is fair before you pay", "File conversions", "Who owes you, read from your chats", "Reports, slides and exports", "Deep research & expert review"].map((b) => (
+                {["Bank and wallet messages saved by themselves, with Undo", "Rules and agents, unlimited", "Phone + computer · every year", "Close the day, week plan and scheduled messages", "Unlimited photo reads, Chat X-Rays, conversions and slides", "Expert review and deep web research"].map((b) => (
                   <li key={b} className="flex items-start gap-1.5 text-[12.5px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(b)}</li>))}
               </ul>
               {Store.available() ? (
@@ -11935,6 +11943,19 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           ) : null}
 
           </div><div className="space-y-4">
+          {/* v9.9.34 FP-4 (Ali's pick): two columns — Free: you do it · Pro: Attune does it */}
+          <section className="grid grid-cols-2 gap-2" data-testid="plan-two">
+            <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 space-y-1 min-w-0">
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr("Free")}</span>
+              <b className="block text-[15px] text-[var(--c-ink)]">{tr("You do it")}</b>
+              {["Say it → done, unlimited", "This phone · the last 3 months", "1 agent · 1 rule"].map((x) => <span key={x} className="block text-[12.5px] text-[var(--c-mut)]" dir="auto">{tr(x)}</span>)}
+            </div>
+            <div className="rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] p-3.5 space-y-1 min-w-0">
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc)]">Pro</span>
+              <b className="block text-[15px] text-[var(--c-acc)]">{tr("Attune does it")}</b>
+              {["Reads your bank messages by itself", "Rules and agents, unlimited", "Phone + computer · every year"].map((x) => <span key={x} className="block text-[12.5px] text-[var(--c-ink)]" dir="auto">{tr(x)}</span>)}
+            </div>
+          </section>
           {/* 2 · what you get, app by app */}
           <section>
             <h3 className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr("What Pro gives you, app by app")}</h3>
@@ -11944,7 +11965,6 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                   <button onClick={() => setOpenGroup(openGroup === g.id ? "" : g.id)} aria-expanded={openGroup === g.id} className="w-full min-h-[52px] flex items-center gap-3 px-3.5 py-3 text-start" data-testid={"group-" + g.id}>
                     <span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-bg)] text-lg" aria-hidden="true">{g.icon}</span>
                     <span className="flex-1 text-[14.5px] text-[var(--c-ink)] font-extrabold">{tr(g.title)}</span>
-                    {g.id === "money" ? <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[var(--c-soft)] text-[var(--c-pos)] border border-[var(--c-pos)]/30">{tr("Included")}</span> : null}
                     <span className={`text-[var(--c-mut)] text-lg transition-transform duration-150 ${openGroup === g.id ? "rotate-90" : "rtl:rotate-180"}`}>›</span>
                   </button>
                   {openGroup === g.id ? <ul className="px-3.5 pb-3 space-y-1.5">{g.items.map((it) => <li key={it} className="flex items-start gap-2 text-[13px] text-[var(--c-ink)]"><Check size={14} className="text-[var(--c-acc)] mt-0.5 shrink-0" />{tr(it)}</li>)}</ul> : null}

@@ -5,6 +5,7 @@
    JPG / PNG / WebP / text; subtitles SRT ↔ VTT. On the phone: Word / Excel / CSV in convert.js, PDFs by Android
    (NativeBridge pdfText / pdfImages / makePdf). Scanned pages and photos of paper are read by the
    AI model (a model that reads photos). Nothing is uploaded. */
+import { LIMITS } from "./plan.js";
 import React, { useState, useRef, useEffect } from "react";
 import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
@@ -100,7 +101,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     if (target === "edit") { if (!nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; } setOut(null); setEditing(true); return; }
     const today = new Date().toISOString().slice(0, 10);
     let used = 0; try { used = JSON.parse(localStorage.getItem("attune:convert:day") || "{}")[today] || 0; } catch (e) {}
-    if (!pro && used >= 5) { flash && flash(tr("Free includes 5 conversions a day — Pro is unlimited")); openPlan && openPlan(); return; }
+    if (!pro && used >= LIMITS.convert) { flash && flash(tr("Free includes 3 conversions a day — Pro is unlimited")); openPlan && openPlan(); return; }   // v9.9.34 FP-4: 3 a day
     if (target === "translate" && !modelReady) { setErr(tr("Translating needs an AI model — open Engine and install one.")); openEngine && openEngine(); return; }
     if (needsNative(files.kind, target) && !nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; }
     const id = ++run.current, alive = () => run.current === id;

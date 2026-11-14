@@ -29,7 +29,7 @@ const MIME_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.
 const KIND_LABEL = { bullets: "Key points", two: "Comparison", steps: "Steps", table: "Table", quote: "Quote", stats: "Numbers", chart: "Chart" };
 const REPORT_LABEL = { business: "Business report", research: "Research report", status: "Project status", incident: "Incident report", financial: "Financial analysis", market: "Market study", technical: "Technical report", proposal: "Proposal" };
 const LENGTHS = { 3: "Short", 5: "Standard", 8: "Detailed" };
-const FREE_PER_DAY = 2;
+const FREE_PER_DAY = 3;   // v9.9.34 FP-4: 3 a day
 const STORE = "attune:slides:v1";
 const today = () => new Date().toISOString().slice(0, 10);
 const dateLine = (lang) => { try { return new Date().toLocaleDateString(lang === "ar" ? "ar-EG-u-nu-latn" : lang, { day: "numeric", month: "long", year: "numeric" }); } catch (e) { return today(); } };
@@ -348,7 +348,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const start = () => {
     if (!prompt.trim()) { setErr(tr("Write what it should be about first.")); return false; }
     if (!modelReady) { setErr(tr("This needs an AI model — open Engine and install one.")); openEngine && openEngine(); return false; }
-    if (!pro && dayUsed() >= FREE_PER_DAY) { flash && flash(tr("Free includes 2 presentations or reports a day — Pro is unlimited")); openPlan && openPlan(); return false; }
+    if (!pro && dayUsed() >= FREE_PER_DAY) { flash && flash(tr("Free includes 3 presentations or reports a day — Pro is unlimited")); openPlan && openPlan(); return false; }
     return true;
   };
 
@@ -665,7 +665,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           </select>
           </div> : null}
           {err ? <p className="text-[12.5px] text-[var(--c-neg)]" data-testid="slides-error">{err}</p> : null}
-          {!pro ? <p className="text-[11px] text-[var(--c-mut)]">{tr("Free: 2 a day · Pro: unlimited")}</p> : null}
+          {!pro ? <p className="text-[11px] text-[var(--c-mut)]">{tr("Free: 3 a day · Pro: unlimited")}</p> : null}
         </section>
       ) : null}
       </div><div className={RIGHT + (list.length ? "" : " hidden lg:block")}>

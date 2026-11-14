@@ -6,6 +6,7 @@
 import { tr } from "./i18n.js";
 import { checkPhoto, ADVICE } from "./photoquality.js";
 import { choosePhoto } from "./photopick.js";
+import { canUse, noteUse } from "./plan.js";
 function sheet(why, input, withAnyway) {
   return new Promise((done) => {
     const old = document.getElementById("attune-photo-retake"); if (old) old.remove();
@@ -30,8 +31,27 @@ function sheet(why, input, withAnyway) {
 }
 /** Before reading: true = go on (the photo is clear, or the person said use it anyway); false = stop (another photo is being taken). */
 export async function photoOk(url, input) {
+  // v9.9.34 FP-4: Free reads 3 photos a day (receipts, papers); Pro reads as many as you need
+  if (!canUse("photo").ok) { proSheet(); return false; }
   let q = { ok: true }; try { q = await checkPhoto(url); } catch (e) {}
-  return q.ok ? true : sheet(q.why || "unreadable", input, true);
+  const go = q.ok ? true : await sheet(q.why || "unreadable", input, true);
+  if (go) noteUse("photo");
+  return go;
+}
+function proSheet() {
+  const old = document.getElementById("attune-photo-pro"); if (old) old.remove();
+  const wrap = document.createElement("div"); wrap.id = "attune-photo-pro"; wrap.setAttribute("data-testid", "photo-pro");
+  wrap.style.cssText = "position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center";
+  const box = document.createElement("div");
+  box.style.cssText = "width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:18px 16px 16px;display:grid;gap:10px;background:var(--c-surf,#fff);color:var(--c-ink,#111)";
+  const p = document.createElement("p"); p.textContent = tr("Free includes 3 photo reads a day — Pro is unlimited"); p.setAttribute("dir", "auto");
+  p.style.cssText = "margin:0;font-size:15px;font-weight:800;line-height:1.4";
+  const close = () => wrap.remove();
+  const mk = (label, test, fn, primary) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.setAttribute("data-testid", test);
+    b.style.cssText = "min-height:48px;border-radius:14px;font-weight:800;font-size:15px;border:1px solid var(--c-ln,#ddd);" + (primary ? "background:var(--c-acc,#7a1f3d);color:var(--c-on-acc,#fff);border:0" : "background:transparent;color:var(--c-ink,#111)");
+    b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; };
+  box.append(p, mk(tr("See Pro"), "photo-pro-see", () => { close(); try { window.dispatchEvent(new CustomEvent("attune-show-plan")); } catch (e) {} }, true), mk(tr("Cancel"), "photo-pro-cancel", close));
+  box.onclick = (e) => e.stopPropagation(); wrap.onclick = close; wrap.appendChild(box); document.body.appendChild(wrap);
 }
 /** After reading found nothing: say so and offer another photo. */
 export function askRetake(why, input) { return sheet(why || "unread", input, false); }

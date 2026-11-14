@@ -5,7 +5,7 @@ const B = await import("../../web-src/billing.js"), U = await import("../../web-
 let n = 0; const t = (name, fn) => { fn(); n++; };
 t("Free answers are unlimited; one free agent; outcomes first", () => {
   assert.equal(B.FREE_LIMITS.answersPerDay, Infinity); assert.equal(B.FREE_LIMITS.agents, 1);
-  assert.equal(B.COMPARE_ROWS[0][1], "Unlimited"); assert.match(B.PRO_BENEFITS[0], /^Agents that find/);
+  assert.equal(B.COMPARE_ROWS[0][1], "Unlimited"); assert.match(B.PRO_BENEFITS[0], /saved by themselves, with Undo/);   // v9.9.34 FP-4 (Ali's pick): Pro = Attune does it for you
 });
 t("Lifetime is a launch offer", () => {
   assert.equal(B.lifetimeOffer(Date.parse("2026-11-01")), true); assert.equal(B.lifetimeOffer(Date.parse("2027-03-01")), false);

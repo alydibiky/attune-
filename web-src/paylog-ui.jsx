@@ -2,6 +2,7 @@
    Notification access off → one card that says what it does and opens Android's switch. On → "N payments read from
    your notifications": each with Add / Dismiss, and Add all. Added ones go to Money through the bridge (Yusr "add-txns");
    handled ids are remembered here and forgotten on the phone (payForget). Tests: tests/e2e_v727paylog.py.            */
+import { allowed } from "./plan.js";
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr, dateLocale } from "./i18n.js";
@@ -17,6 +18,8 @@ import { parseSmsBackup, moneySms } from "./smsfile.js";
 const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now", AUTO_KEY = "attune:paylog:auto", LOG_KEY = "attune:paylog:auto-log";
 const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) || "[]"); } catch (e) { return []; } };
 export const autoOn = () => { try { return localStorage.getItem(AUTO_KEY) !== "0"; } catch (e) { return true; } };   // on unless turned off
+// v9.9.34 FP-4: saved by themselves only with Pro (or the trial); in Free each one waits for a tap — the switch keeps its own setting
+const autoNow = () => autoOn() && allowed("autoMoney");
 const markDone = (N, ids) => {
   try { localStorage.setItem(DONE_KEY, JSON.stringify([...readDone(), ...ids].slice(-500))); } catch (e) {}
   try { N && N.payForget && N.payForget(JSON.stringify(ids)); } catch (e) {}
@@ -79,7 +82,7 @@ export async function runAutoPay(N, judge = payJudge()) {
   let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
   const led = loadLedger(); if (!led) return none;
   const all = inbox(q, readDone(), payOpts());
-  if (!autoOn()) return { added: 0, waiting: all.length };
+  if (!autoNow()) return { added: 0, waiting: all.length };
   // v7.9: one already in Money (typed by hand, or read before) is never added by itself — it waits as "Already in Money?"
   const sure = autoPick(all).filter((e) => !alreadyIn(e, led));
   const { add, wait } = await judged(sure, judge);   // v9.9.10: the model reads each one too, when one is loaded
@@ -190,7 +193,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
   // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
   const [doubt, setDoubt] = useState(readDoubt);
   useEffect(() => {
-    if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
+    if (!on || !auto || !allowed("autoMoney") || !ready) return;   // (v9.9.34: Pro) only once Money is loaded, so nothing is marked done before Money has it
     const led = loadLedger(), sure = autoPick(items.filter((e) => !/^(sms|smsf|gm):/.test(String(e.id)) && !doubt[e.id])).filter((e) => !alreadyIn(e, led));   // v7.9: never a second copy by itself; v8.7: old SMS wait for a tap
     if (!sure.length) return;
     let live = true;
@@ -245,6 +248,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
             </div><Evidence e={e} />
             </div>))}
           <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)")}</label>
+          {auto && !allowed("autoMoney") ? <p className="text-[12.5px] m-0 ps-7" data-testid="paylog-auto-pro" dir="auto"><b className="text-[var(--c-acc)]">PRO</b> · {tr("In Free each message waits for your tap. Pro saves them by itself, with Undo.")}</p> : null}
           {items.length > 1 ? <button onClick={() => add(items)} className={U.btnP + " w-full"} data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
     </div></div></>);

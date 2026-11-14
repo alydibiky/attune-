@@ -3,6 +3,7 @@
    Google: a passphrase once on each device, then "Sync with Google Drive" — the file in your own Drive's hidden app folder.
    Fleet's IndexedDB records travel too (time-sheet photos don't, yet). Afterwards the page reloads so every screen
    shows the merged data. */
+import { proGate } from "./plan-ui.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { Wifi, Cloud, Loader2, CheckCircle2, AlertTriangle, Copy } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -20,7 +21,7 @@ function useLocalNet(N) {
   return [ok, () => { try { N && N.askLocalNetwork && N.askLocalNetwork(); } catch (e) {} }];
 }
 
-export function SyncPanel({ native: N, flash }) {
+function SyncPanelInner({ native: N, flash }) {
   const [way, setWay] = useState("wifi");
   const [busy, setBusy] = useState(""), [err, setErr] = useState(""), [done, setDone] = useState("");
   const [host, setHost] = useState(null);          // { code, ip, port } while hosting
@@ -128,3 +129,6 @@ export function SyncPanel({ native: N, flash }) {
       {done ? <p className="text-[12.5px] text-[var(--c-pos)] flex items-center gap-2" data-testid="sync-done"><CheckCircle2 size={14} />{done}</p> : null}
     </div>);
 }
+
+// v9.9.34 FP-4: Pro only (Free sees "Part of Pro"; nothing made is lost)
+export const SyncPanel = proGate("sync", "Sync with your computer", SyncPanelInner);

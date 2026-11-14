@@ -1,4 +1,5 @@
 /* ---- v9.3 Money for two (Ali picked D4 — A and B, people choose). The logic is in moneyshare.js; the ledger merges ("merge-share"). */
+import { proGate } from "./plan-ui.jsx";
 import React, { useMemo, useRef, useState } from "react";
 import { Users, X, Send, Upload } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -8,7 +9,7 @@ import * as M from "./moneyshare.js";
 const ledgerNow = () => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null") || { accounts: [], txns: [] }; } catch (e) { return { accounts: [], txns: [] }; } };
 const scopeIds = (cfg, L) => new Set((L.txns || []).filter((t) => cfg.scope.kind === "all" || (cfg.scope.ids || []).includes(t.account)).map((t) => t.id));
 
-export function MoneyShareSheet({ onClose, runDo, flash }) {
+function MoneyShareSheetInner({ onClose, runDo, flash }) {
   const [cfg, setCfg] = useState(() => M.loadShare());
   const [how, setHow] = useState(cfg ? "" : "pick");   // pick → start | join
   const [kind, setKind] = useState("accounts"), [ids, setIds] = useState([]), [me, setMe] = useState(""), [code, setCode] = useState(""), [busy, setBusy] = useState(false);
@@ -76,3 +77,6 @@ export function MoneyShareSheet({ onClose, runDo, flash }) {
       </div>}
     </div></div>;
 }
+
+// v9.9.34 FP-4: Pro only (Free sees "Part of Pro"; nothing made is lost)
+export const MoneyShareSheet = proGate("moneyForTwo", "Money for two", MoneyShareSheetInner, { overlay: true });

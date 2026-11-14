@@ -4,6 +4,7 @@
    10,000 weeks). Shown as 3 days side by side (your things grey, prayers green, Attune's blocks in colour), with ‹ › for the rest of
    the week. "Keep plan" turns each block into a reminder (source "weekplan"; an older plan's reminders are replaced, not doubled).
    Opened from To-dos & lists ("Plan my week") and by the window event "attune-weekplan". */
+import { proGate } from "./plan-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { planWeek } from "./b4plan.js";
@@ -34,7 +35,7 @@ export function prayersOf(now = Date.now(), days = 7) {
   for (let i = 0; i < days; i++) { const d0 = dayStart(now) + i * DAY + 12 * 3600e3; try { for (const p of prayersToday(city, d0).list) out.push(dayStart(d0) + p.min * M); } catch (e) {} }
   return out;
 }
-export function WeekPlanPage({ onClose, flash }) {
+function WeekPlanPageInner({ onClose, flash }) {
   const [v, setV] = useState(get), [form, setForm] = useState({ name: "", hours: "1", due: iso(Date.now() + 3 * DAY) }), [off, setOff] = useState(0), [kept, setKept] = useState(false);
   const save = (x) => { setV(put(x)); setKept(false); };
   const now = Date.now();
@@ -103,3 +104,6 @@ export function WeekPlanHost({ flash }) {
   useEffect(() => { const f = () => setOpen(true); window.addEventListener("attune-weekplan", f); return () => window.removeEventListener("attune-weekplan", f); }, []);
   return open ? <WeekPlanPage onClose={() => setOpen(false)} flash={flash} /> : null;
 }
+
+// v9.9.34 FP-4: Pro only (Free sees "Part of Pro"; nothing made is lost)
+export const WeekPlanPage = proGate("weekPlan", "Week plan", WeekPlanPageInner, { overlay: true });

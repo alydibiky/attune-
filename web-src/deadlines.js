@@ -273,7 +273,7 @@ export function fromNotifications(queue, seen = [], opts = {}) {
 
 // ---- the store, and what to show ------------------------------------------------------------------------------------------------
 export const RADAR_KEY = "attune:radar:v1";
-export const FREE_LIMIT = 3;
+export const FREE_LIMIT = 10;   // v9.9.34 FP-4: 10 papers with dates
 export const loadRadar = (store = typeof localStorage !== "undefined" ? localStorage : null) => {
   try { const j = JSON.parse((store && store.getItem(RADAR_KEY)) || "null"); return j && Array.isArray(j.items) ? { seen: [], ...j } : { items: [], seen: [] }; } catch (e) { return { items: [], seen: [] }; }
 };

@@ -22,7 +22,7 @@ set + unit test on 2,500 · full suite before main · push after each batch · t
 - [x] A. (v9.9.33, branch) Agents work while you're away: checks during the day too (not only "Search now" / night charging), "what's new" messages in the
       agent's conversation + a notification only when something really changed (new best, back in stock, price drop), many more stores per
       country (search pages + the phone's real browser for sites that need one), offers from every store merged and believable.
-- [ ] B. Pro (FP-4 table + OK-1 with Undo kept + PM-1 + PM-2 + PM-4): billing.js plan rules, the Plan page's two columns, limits, the
+- [x] B. (v9.9.34, branch) Pro (FP-4 table + OK-1 with Undo kept + PM-1 + PM-2 + PM-4): billing.js plan rules, the Plan page's two columns, limits, the
       "Pro would have done this" line (≤ 1 a day, never on urgent days), Friday card, trial-end screen.
 - [ ] C. Guide (GD-5 + GW-A + TR-3, deep): Chat interview, Home "Set up your life · n of 8", one-time tips, Settings → Set up your life,
       monthly check-up; steps verified from real data; 6 of 8 really done → +7 trial days once.
