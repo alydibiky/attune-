@@ -12823,4 +12823,7 @@ export const JA = {
   "From your chats — {c}": "あなたのチャットから — {c}",
   "All {n} messages": "全 {n} 件のメッセージ",
   "Decided:": "決まったこと：",
+  "Computer checked: {n} · {f} fixed": "パソコンが確認：{n} · {f} 件修正",
+  "fixed": "修正済み",
+  "the computer checked it: {r}": "パソコンが確認しました：{r}",
 };

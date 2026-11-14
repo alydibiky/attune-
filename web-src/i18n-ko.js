@@ -12823,4 +12823,7 @@ export const KO = {
   "From your chats — {c}": "내 채팅에서 — {c}",
   "All {n} messages": "메시지 {n}개 전부",
   "Decided:": "결정:",
+  "Computer checked: {n} · {f} fixed": "컴퓨터가 확인: {n} · {f}개 수정",
+  "fixed": "수정됨",
+  "the computer checked it: {r}": "컴퓨터가 확인함: {r}",
 };

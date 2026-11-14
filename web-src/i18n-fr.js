@@ -12824,4 +12824,7 @@ export const FR = {
   "From your chats — {c}": "De tes discussions — {c}",
   "All {n} messages": "Les {n} messages",
   "Decided:": "Décidé :",
+  "Computer checked: {n} · {f} fixed": "L'ordinateur a vérifié : {n} · {f} corrigés",
+  "fixed": "corrigé",
+  "the computer checked it: {r}": "l'ordinateur l'a vérifié : {r}",
 };

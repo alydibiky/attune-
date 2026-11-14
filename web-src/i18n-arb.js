@@ -12815,4 +12815,7 @@ export const ARB = {
   "From your chats — {c}": "من محادثاتك — {c}",
   "All {n} messages": "كل الرسائل الـ{n}",
   "Decided:": "ما تقرر:",
+  "Computer checked: {n} · {f} fixed": "راجع الحاسوب: {n} · أصلح {f}",
+  "fixed": "أُصلح",
+  "the computer checked it: {r}": "راجعها الحاسوب: {r}",
 };

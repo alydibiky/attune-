@@ -12824,4 +12824,7 @@ export const TRK = {
   "From your chats — {c}": "Sohbetlerinden — {c}",
   "All {n} messages": "{n} mesajın hepsi",
   "Decided:": "Karar:",
+  "Computer checked: {n} · {f} fixed": "Bilgisayar kontrol etti: {n} · {f} düzeltildi",
+  "fixed": "düzeltildi",
+  "the computer checked it: {r}": "bilgisayar kontrol etti: {r}",
 };

@@ -12824,4 +12824,7 @@ export const IDN = {
   "From your chats — {c}": "Dari obrolanmu — {c}",
   "All {n} messages": "Semua {n} pesan",
   "Decided:": "Diputuskan:",
+  "Computer checked: {n} · {f} fixed": "Komputer memeriksa: {n} · {f} diperbaiki",
+  "fixed": "diperbaiki",
+  "the computer checked it: {r}": "komputer memeriksanya: {r}",
 };

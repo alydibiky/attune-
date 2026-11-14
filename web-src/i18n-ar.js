@@ -9925,4 +9925,7 @@ export const AR = {
   "From your chats — {c}": "من شاتاتك — {c}",
   "All {n} messages": "كل الـ{n} رسالة",
   "Decided:": "اللي اتقرر:",
+  "Computer checked: {n} · {f} fixed": "الكمبيوتر راجع: {n} · صلّح {f}",
+  "fixed": "اتصلّح",
+  "the computer checked it: {r}": "الكمبيوتر راجعها: {r}",
 };

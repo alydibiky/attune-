@@ -12823,4 +12823,7 @@ export const FA = {
   "From your chats — {c}": "از گفتگوهایت — {c}",
   "All {n} messages": "همه {n} پیام",
   "Decided:": "تصمیم:",
+  "Computer checked: {n} · {f} fixed": "کامپیوتر بررسی کرد: {n} · {f} اصلاح شد",
+  "fixed": "اصلاح شد",
+  "the computer checked it: {r}": "کامپیوتر بررسی کرد: {r}",
 };

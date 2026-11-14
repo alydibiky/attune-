@@ -12823,4 +12823,7 @@ export const BN = {
   "From your chats — {c}": "আপনার চ্যাট থেকে — {c}",
   "All {n} messages": "সব {n}টি বার্তা",
   "Decided:": "সিদ্ধান্ত:",
+  "Computer checked: {n} · {f} fixed": "কম্পিউটার যাচাই করেছে: {n} · {f}টি ঠিক করা হয়েছে",
+  "fixed": "ঠিক করা হয়েছে",
+  "the computer checked it: {r}": "কম্পিউটার যাচাই করেছে: {r}",
 };

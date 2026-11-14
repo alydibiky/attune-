@@ -12824,4 +12824,7 @@ export const UR = {
   "From your chats — {c}": "آپ کی چیٹس سے — {c}",
   "All {n} messages": "تمام {n} پیغامات",
   "Decided:": "طے ہوا:",
+  "Computer checked: {n} · {f} fixed": "کمپیوٹر نے جانچا: {n} · {f} درست کیے",
+  "fixed": "درست کیا",
+  "the computer checked it: {r}": "کمپیوٹر نے جانچا: {r}",
 };

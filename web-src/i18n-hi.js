@@ -12824,4 +12824,7 @@ export const HI = {
   "From your chats — {c}": "आपकी चैट से — {c}",
   "All {n} messages": "सभी {n} मैसेज",
   "Decided:": "तय हुआ:",
+  "Computer checked: {n} · {f} fixed": "कंप्यूटर ने जाँचा: {n} · {f} ठीक किए",
+  "fixed": "ठीक किया",
+  "the computer checked it: {r}": "कंप्यूटर ने जाँचा: {r}",
 };

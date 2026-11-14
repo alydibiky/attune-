@@ -10036,6 +10036,9 @@ export default function App() {
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,
     askChats: (q) => askChatsNow(q),   // v9.9.40 K5
+    // v9.9.40 K6: the computer's bigger AI, for the second look at the phone's Autopilot decisions (chatpilot-ui.jsx)
+    modelJSON: async (messages, maxTokens = 600) => { try { const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready")); if (!modelOn) return "";
+      return String(await LocalEngine.run("", null, { messages, temperature: 0, maxTokens, think: false }) || ""); } catch (e) { return ""; } },
     // v9.9.40 AS-2 (Ali picked "1 + what was decided"): the phone's AI reads ONLY the messages the answer used and says in one line
     // what was decided and what is still open; a number it says that is not in those messages → the line is dropped (never a guess)
     decideLine: async (msgs, chat, topic) => {
@@ -10148,6 +10151,8 @@ export default function App() {
     // (v9.8, Ali: "I want to reply to it and tell it how to add it — a reminder, a subscription…"): Autopilot's reply box goes through
     // the Home box (doFromHome), its To-do button into the to-do list
     window.__attuneDoIt = (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } };   // (Autopilot's box: the person said how to save it)
+    window.__attuneModelJSON = async (messages, maxTokens = 600) => { try { const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready")); if (!modelOn) return "";
+      return String(await LocalEngine.run("", null, { messages, temperature: 0, maxTokens, think: false }) || ""); } catch (e) { return ""; } };   // v9.9.40 K6
     window.__attuneAddTodo = (t0) => { const t = cleanTodo(t0); try { remember({ kind: "todo", title: String(t).slice(0, 90), text: String(t), tags: ["todo"], meta: { todo: true, done: false } }); return true; } catch (e) { return false; } };
     // v9.9.21 T1 brain dump: what it saves goes through the app's own stores (reminders on the phone too, notes in Mind)
     window.__attuneAddReminder = (r) => { try { const l = [...loadReminders(), r]; setReminders(l); try { NATIVE && syncToPhone(NATIVE, l); } catch (e) {} return true; } catch (e) { return false; } };

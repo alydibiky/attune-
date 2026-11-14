@@ -11,7 +11,8 @@ import { tr } from "./i18n.js";
 import * as CP from "./chatpilot.js";
 import * as CR from "./chatroles.js";
 import * as L from "./lists.js";
-import { applyBought } from "./shoplist.js";
+import { applyBought, itemsOf } from "./shoplist.js";
+import * as SL from "./secondlook.js";   // v9.9.40 K6
 
 const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
 const readNotes = () => { try { const n = N(); return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } };
@@ -119,12 +120,43 @@ export function ChatPilotCard() {
     put(CP.markUndone(st, d.id)); flash(tr("Undone"));
   };
   const never = (d) => { CR.saveRole(d.from.chatKey, { role: "quiet", ok: true, by: "you" }); flash(tr("Nothing more from {c}", { c: d.from.chat })); };
+  // v9.9.40 K6: on the computer (bigger AI), the phone's decisions of the week are read again once a day; each fix is done here with
+  // Undo and travels back to the phone with sync
+  useEffect(() => {
+    const n = N(), isDesk = !!(n && n.desktop);
+    if (!isDesk || !window.__attuneModelJSON || (st.review && Date.now() - st.review.at < 20 * 3600e3)) return;
+    let off = false;
+    (async () => {
+      const items = SL.toReview(st, Date.now() - 7 * 864e5); if (!items.length) return;
+      const roles = CR.loadRoles(), batches = [], results = [];
+      for (let i = 0; i < items.length && i < 200; i += 20) { const b = items.slice(i, i + 20); const out = await window.__attuneModelJSON(SL.reviewPrompt(b, roles)); if (off) return; const r = SL.readReview(out, b); if (!r) continue; batches.push(b); results.push(r); }
+      if (!results.length) return;
+      const rec = SL.reviewRecord(batches, results);
+      let s2 = { ...CP.loadCP(), review: rec }, lists = L.loadLists(), changed = false;
+      for (const f of rec.fixes) {
+        const d = (s2.done || []).find((x) => x.id === f.id);
+        if (f.should === "keep" && d && !d.undone) { undo(d); s2 = CP.markUndone(CP.loadCP(), d.id); s2.review = rec; }
+        else if (f.should === "items" && f.from.chatKey) { let l = listFor(lists, f.from.chatKey); const its = itemsOf(f.from.text).length ? itemsOf(f.from.text) : [f.from.text];
+          if (!l) { l = { ...L.makeList({ name: f.from.chat, emoji: "🛒" }), chatKey: f.from.chatKey }; lists = { ...lists, lists: [...lists.lists, l] }; }
+          const add = its.map((x) => ({ id: "i" + Math.random().toString(36).slice(2, 10), text: x, done: false, by: f.from.who || "" }));
+          lists = { ...lists, lists: lists.lists.map((x) => (x.id === l.id ? { ...x, items: [...x.items, ...add] } : x)) }; changed = true;
+          s2 = CP.record(s2, { id: "rv:" + f.id, kind: "items", at: Date.now(), from: f.from, items: its, why: { t: "the computer checked it: {r}", v: { r: f.reason } } }, { listId: l.id, itemIds: add.map((x) => x.id), how: "remove" }); }
+        else if (f.should === "todo") { const id = "cp-rv-" + Math.abs(String(f.id).split("").reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7));
+          try { window.__attuneAddReminder && window.__attuneAddReminder({ id, at: tomorrow9(), title: (f.from.who || f.from.chat) + ": " + String(f.from.text).slice(0, 80), body: f.from.text, repeat: "none", created: Date.now(), source: "chatpilot" }); } catch (e) {}
+          s2 = CP.record(s2, { id: "rv:" + f.id, kind: "todo", at: Date.now(), from: f.from, title: (f.from.who || f.from.chat) + ": " + String(f.from.text).slice(0, 80), why: { t: "the computer checked it: {r}", v: { r: f.reason } } }, { reminderId: id }); }
+        else if (f.should === "alert") s2 = CP.record(s2, { id: "rv:" + f.id, kind: "alert", at: Date.now(), from: f.from, why: { t: "the computer checked it: {r}", v: { r: f.reason } } }, {});
+      }
+      if (changed) L.saveLists(lists);
+      if (!off) put(s2);
+    })();
+    return () => { off = true; };
+  }, [slot]);
   const ask = st.ask[0] || null;
   const doneAsk = () => { put({ ...st, ask: st.ask.slice(1) }); setSlot((x) => x + 1); };   // (looked at again at once: the waiting messages are acted on now)
   const lists = useMemo(() => L.loadLists().lists.filter((l) => l.chatKey && openItems(l).length), [slot, st]);
   const recent = st.done.filter((d) => !d.undone && d.at > Date.now() - 2 * 864e5).slice(0, 5);
   const q = CP.quietToday(st);
-  if (!ask && !lists.length && !recent.length && !q.total) return null;
+  if (!ask && !lists.length && !recent.length && !q.total && !(st.review && st.review.total)) return null;
   return <section className="c-card p-3.5 space-y-2" data-testid="chatpilot">
     <div className="flex items-center gap-2"><Zap size={15} style={{ color: "var(--c-area-agents, var(--c-acc))" }} />
       <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Autopilot")}</span></div>
@@ -138,6 +170,10 @@ export function ChatPilotCard() {
       {recent.map((d) => { const I = ICON[d.kind] || Check; return <button key={d.id} onClick={() => setSheet(d)} className="w-full flex items-start gap-2 text-start min-h-[44px] py-1" data-testid="cp-line" data-kind={d.kind}>
         <I size={14} className="c-acc shrink-0 mt-1" /><span className="flex-1 min-w-0"><span className="block text-[13px] font-bold truncate" dir="auto">{lineOf(d)}</span>
           <span className="block text-[11.5px] c-sub truncate" dir="auto">{d.from.chat}{d.from.who ? " · " + d.from.who : ""} · {hm(d.from.ts || d.at)} · {tr("tap for the message")}</span></span></button>; })}
+    </div> : null}
+    {st.review && st.review.total ? <div className="rounded-[12px] bg-[var(--c-surf-2)] p-2.5 space-y-1" data-testid="cp-review">
+      <p className="m-0 text-[12.5px] font-extrabold">{tr("Computer checked: {n} · {f} fixed", { n: st.review.total, f: st.review.fixes.length })}</p>
+      {st.review.fixes.slice(0, 3).map((f) => <p key={f.id} className="m-0 text-[12px] c-sub" dir="auto">“{String(f.from.text).slice(0, 60)}” — {f.reason || tr("fixed")}</p>)}
     </div> : null}
     {q.total ? <div data-testid="cp-quiet">
       <button onClick={() => setQuietOpen((v) => !v)} className="w-full flex items-center gap-2 text-start min-h-[44px]" data-testid="cp-quiet-line">

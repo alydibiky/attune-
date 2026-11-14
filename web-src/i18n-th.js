@@ -12823,4 +12823,7 @@ export const TH = {
   "From your chats — {c}": "จากแชทของคุณ — {c}",
   "All {n} messages": "ข้อความทั้ง {n}",
   "Decided:": "ตัดสินใจแล้ว:",
+  "Computer checked: {n} · {f} fixed": "คอมพิวเตอร์ตรวจแล้ว: {n} · แก้ {f}",
+  "fixed": "แก้แล้ว",
+  "the computer checked it: {r}": "คอมพิวเตอร์ตรวจแล้ว: {r}",
 };

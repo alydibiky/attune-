@@ -12824,4 +12824,7 @@ export const SW = {
   "From your chats — {c}": "Kutoka kwa gumzo zako — {c}",
   "All {n} messages": "Jumbe zote {n}",
   "Decided:": "Imeamuliwa:",
+  "Computer checked: {n} · {f} fixed": "Kompyuta imekagua: {n} · {f} zimerekebishwa",
+  "fixed": "imerekebishwa",
+  "the computer checked it: {r}": "kompyuta imekagua: {r}",
 };

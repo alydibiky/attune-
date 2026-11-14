@@ -12823,4 +12823,7 @@ export const DE = {
   "From your chats — {c}": "Aus deinen Chats — {c}",
   "All {n} messages": "Alle {n} Nachrichten",
   "Decided:": "Entschieden:",
+  "Computer checked: {n} · {f} fixed": "Computer geprüft: {n} · {f} korrigiert",
+  "fixed": "korrigiert",
+  "the computer checked it: {r}": "der Computer hat es geprüft: {r}",
 };

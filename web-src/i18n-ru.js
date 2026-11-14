@@ -12823,4 +12823,7 @@ export const RU = {
   "From your chats — {c}": "Из твоих чатов — {c}",
   "All {n} messages": "Все сообщения ({n})",
   "Decided:": "Решено:",
+  "Computer checked: {n} · {f} fixed": "Компьютер проверил: {n} · исправлено {f}",
+  "fixed": "исправлено",
+  "the computer checked it: {r}": "компьютер проверил: {r}",
 };

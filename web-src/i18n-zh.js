@@ -12823,4 +12823,7 @@ export const ZH = {
   "From your chats — {c}": "来自你的聊天 — {c}",
   "All {n} messages": "全部 {n} 条消息",
   "Decided:": "已决定：",
+  "Computer checked: {n} · {f} fixed": "电脑已检查：{n} · 修正 {f}",
+  "fixed": "已修正",
+  "the computer checked it: {r}": "电脑已检查：{r}",
 };

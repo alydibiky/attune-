@@ -12823,4 +12823,7 @@ export const VI = {
   "From your chats — {c}": "Từ cuộc trò chuyện của bạn — {c}",
   "All {n} messages": "Tất cả {n} tin nhắn",
   "Decided:": "Đã quyết:",
+  "Computer checked: {n} · {f} fixed": "Máy tính đã kiểm tra: {n} · sửa {f}",
+  "fixed": "đã sửa",
+  "the computer checked it: {r}": "máy tính đã kiểm tra: {r}",
 };
