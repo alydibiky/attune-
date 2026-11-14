@@ -82,7 +82,7 @@ function MessageSheet({ d, close, undo, never }) {
 export function ChatPilotCard() {
   const [st, setSt] = useState(CP.loadCP), [slot, setSlot] = useState(0), [sheet, setSheet] = useState(null), [quietOpen, setQuietOpen] = useState(false);
   useEffect(() => { const t = setInterval(() => setSlot((x) => x + 1), 60000); const f = () => setSlot((x) => x + 1); window.addEventListener("attune-lists", f);
-    const g = () => { setSt(CP.loadCP()); setSlot((x) => x + 1); }; window.addEventListener("attune-chatpilot", g);
+    const g = () => { setSt(CP.loadCP()); setSlot((x) => x + 1); }; window.addEventListener("attune-chatpilot", g); window.addEventListener("attune-notifmind", f);
     return () => { clearInterval(t); window.removeEventListener("attune-lists", f); window.removeEventListener("attune-chatpilot", g); }; }, []);
   const put = (x) => setSt(CP.saveCP(x));
   // look at the new chat messages and carry out what was decided
@@ -90,7 +90,8 @@ export function ChatPilotCard() {
     // (the first open: the app's reminder path is set up a moment after this card — wait for it, or a to-do would be lost)
     if (!window.__attuneAddReminder) { const t = setTimeout(() => setSlot((x) => x + 1), 300); return () => clearTimeout(t); }
     const roles = CR.loadRoles(); let lists = L.loadLists();
-    const { st: s1, effects } = CP.step(readNotes(), st, { roles, me: myNames(), listOf: (k) => openItems(listFor(lists, k)) });
+    const minds = (() => { try { return JSON.parse(localStorage.getItem("attune:notifmind:v1") || "{}") || {}; } catch (e) { return {}; } })();   // v9.9.31 the AI's readings
+    const { st: s1, effects } = CP.step(readNotes(), st, { roles, me: myNames(), listOf: (k) => openItems(listFor(lists, k)), minds });
     let s2 = s1, changedLists = false;
     for (const e of effects) {
       if (e.type === "addItems") {
@@ -104,7 +105,7 @@ export function ChatPilotCard() {
         if (ids.length) { lists = { ...lists, lists: lists.lists.map((x) => (x.id === l.id ? { ...x, items: x.items.map((i) => (ids.includes(i.id) ? { ...i, done: true } : i)) } : x)) }; changedLists = true; s2 = CP.record(s2, e.rec, { listId: l.id, itemIds: ids, how: "untick" }); }
       } else if (e.type === "todo") {
         const id = "cp-" + Math.abs(String(e.rec.id).split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7));
-        try { window.__attuneAddReminder && window.__attuneAddReminder({ id, at: tomorrow9(), title: e.title, body: e.rec.from.text, repeat: "none", created: Date.now(), source: "chatpilot" }); } catch (x) {}
+        try { window.__attuneAddReminder && window.__attuneAddReminder({ id, at: e.due > Date.now() ? e.due : tomorrow9(), title: e.title, body: e.rec.from.text, repeat: "none", created: Date.now(), source: "chatpilot" }); } catch (x) {}
         s2 = CP.record(s2, e.rec, { reminderId: id });
       } else if (e.type === "alert") s2 = CP.record(s2, e.rec, {});
     }

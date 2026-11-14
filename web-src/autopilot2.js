@@ -21,7 +21,7 @@ const mentionsMe = (text, me = []) => { const t = fold(text); return (me || []).
 const src = (c, n) => ({ chatKey: c.key, chat: c.chat, who: c.who, text: c.text, ts: n.ts || 0, id: String(n.id || ""), app: c.app });
 
 /** n: a notification. ctx: { roles (chatroles store), known (chats seen), me: [your names], list: [open shopping items] } */
-export function decide(n, { roles = {}, known = {}, me = [], list = [] } = {}) {
+export function decide(n, { roles = {}, known = {}, me = [], list = [], minds = {} } = {}) {
   const c = chatOf(n, known); if (!c) return null;
   const from = src(c, n), nz = noiseOf(c.text);
   if (nz) return { kind: "keep", quiet: nz, from, why: { t: "kept quietly ({k})", v: { k: nz } } };
@@ -42,6 +42,11 @@ export function decide(n, { roles = {}, known = {}, me = [], list = [] } = {}) {
     case "quiet": return { kind: "keep", quiet: "chat", from, why: { t: "you said {c} is never important", v: { c: c.chat } } };
     case "person": {
       if (!c.group && asksYou(c.text)) return { kind: "todo", from, title: (c.who || c.chat) + ": " + c.text.slice(0, 80), why: { t: "{w} asked you something", v: { w: c.who || c.chat } } };
+      // v9.9.31 kept: what code can't read (Dima in Russian: "send me the contract tomorrow") — the phone's AI reading of THIS message,
+      // checked and kept by notifmind (code + model, sure, a request to do something), with its due date
+      { const md = minds[String(n.id)];
+        if (!c.group && md && md.by === "code+model" && md.sure && md.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(md.action || ""))
+          return { kind: "todo", from, title: (c.who || c.chat) + ": " + String(md.summary || c.text).slice(0, 80), due: md.due && md.due.date ? Date.parse(md.due.date + "T" + (md.due.time || "09:00") + ":00") : 0, why: { t: "{w} asked you something", v: { w: c.who || c.chat } } }; }
       if (hit) return { kind: "alert", from, topic: hit, why: { t: "it's about {x} — you asked to know", v: { x: hit } } };
       return { kind: "keep", from, why: { t: "nothing asked of you", v: {} } };
     }

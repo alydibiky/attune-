@@ -18,7 +18,7 @@ const idOf = (n) => String(n.id || (n.pkg || n.app) + ":" + n.ts + ":" + String(
 
 /** ctx: { roles, me, listOf(chatKey) → open items of that chat's list, now }. Only messages newer than st.since (the first run starts
  *  from the last 2 days — older ones are kept for questions, never acted on). */
-export function step(notes = [], st0 = emptyCP(), { roles = {}, me = [], listOf = () => [], now = Date.now() } = {}) {
+export function step(notes = [], st0 = emptyCP(), { roles = {}, me = [], listOf = () => [], now = Date.now(), minds = {} } = {}) {
   const st = { ...st0, seen: { ...st0.seen }, done: st0.done.slice(), ask: st0.ask.slice(), quiet: { ...st0.quiet } };
   if (!st.since) st.since = now - 2 * 864e5;
   const effects = [], known = {};
@@ -27,16 +27,19 @@ export function step(notes = [], st0 = emptyCP(), { roles = {}, me = [], listOf 
   for (const n of fresh) {
     const id = idOf(n);
     const c = chatOf(n, known); if (c && c.group) known[c.key] = { group: true };
-    const d = decide(n, { roles, known, me, list: c ? listOf(c.key) : [] }); if (!d) continue;
+    const d = decide(n, { roles, known, me, list: c ? listOf(c.key) : [], minds }); if (!d) continue;
     // a message waiting for "what is this chat?" is NOT marked as looked at — once you say Right it is acted on (Talabat's first items)
     const waiting = d.kind === "ask" || (d.kind === "keep" && !d.quiet && /^waiting for you/.test((d.why && d.why.t) || ""));
+    // a one-person message the phone's AI hasn't read yet (it reads a little later): looked at again for 30 minutes, then kept
+    const pendingMind = d.kind === "keep" && !d.quiet && c && !c.group && !minds[String(n.id)] && now - (n.ts || 0) < 30 * 60000;
+    if (pendingMind) continue;
     if (!waiting) st.seen[id] = 1;
     const rec = { id, kind: d.kind, at: n.ts || now, from: d.from, why: d.why };
     if (d.kind === "keep") { const k = day(n.ts || now); st.quiet[k] = st.quiet[k] || {}; st.quiet[k][d.from.chat] = (st.quiet[k][d.from.chat] || 0) + 1; continue; }
     if (d.kind === "ask") { if (!st.ask.some((a) => a.key === d.from.chatKey) && !(roles[d.from.chatKey])) st.ask.push({ key: d.from.chatKey, chat: d.from.chat, group: c ? c.group : false, guess: d.guess, from: d.from, at: n.ts || now }); continue; }
     if (d.kind === "items") effects.push({ type: "addItems", chatKey: d.from.chatKey, list: d.list, items: d.items, rec: { ...rec, items: d.items } });
     else if (d.kind === "bought") effects.push({ type: "bought", chatKey: d.from.chatKey, bought: d.bought, rec });
-    else if (d.kind === "todo") effects.push({ type: "todo", title: d.title, rec: { ...rec, title: d.title } });
+    else if (d.kind === "todo") effects.push({ type: "todo", title: d.title, due: d.due || 0, rec: { ...rec, title: d.title } });
     else if (d.kind === "alert") effects.push({ type: "alert", rec: { ...rec, topic: d.topic || "" } });
   }
   // keep the record small: what was looked at in the last 14 days; the done list 200 long; quiet counts 14 days

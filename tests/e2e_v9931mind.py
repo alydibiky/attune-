@@ -27,8 +27,9 @@ with sync_playwright() as p:
     m = minds["ru1"]
     check(m["intent"] == "request" and m["action"] == "do" and m["by"] == "code+model" and m["due"]["date"] == "2026-11-14", "the model read the Russian request: do it, by tomorrow — %s" % {k: m.get(k) for k in ("cat", "intent", "action", "due", "by")})
     check("cib1" not in minds, "the CIB debit (code is sure) was never sent to the model")
-    page.wait_for_selector("[data-testid=autopilot-done]", timeout=10000); page.wait_for_timeout(500)
-    done = page.locator("[data-testid=autopilot-done]").inner_text()
+    # v9.9.40 the new Autopilot: a chat request is the chat card's (one person → a to-do), using this same AI reading
+    page.wait_for_selector("[data-testid=cp-done]", timeout=10000); page.wait_for_timeout(500)
+    done = page.locator("[data-testid=cp-done]").inner_text()
     check("Дима" in done, "Autopilot made it a to-do by itself (Done for you): " + done.replace("\n", " | "))
     rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')"); rem = rem if isinstance(rem, list) else rem.get("items", [])
     r = [x for x in rem if "Дима" in x.get("title", "")]
