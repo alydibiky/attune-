@@ -151,7 +151,7 @@ export function SetupSideStrip({ go }) {
   const pro = proNow(), p = S.progress(setupData(), pro);
   if (p.done >= p.total || quiet()) return null;
   return <button onClick={go} data-testid="side-setup-strip" data-done={p.done}
-    className="w-full min-h-[44px] mb-1 text-start rounded-[12px] px-3 py-2 space-y-1.5 border border-[var(--c-ln)]" style={{ background: "var(--c-amber, #FBF0DC)" }}>
+    className="w-full min-h-[44px] mb-1 text-start rounded-[12px] px-3 py-2 space-y-1.5 border border-[var(--c-ln)]" style={{ background: "var(--c-soft)" }}>
     <span className="flex items-center gap-2 text-[13px] font-extrabold text-[var(--c-ink)]"><span aria-hidden="true">✨</span><span className="flex-1 truncate">{tr("Set up your life · {n} of {t}", { n: p.done, t: p.total })}</span><span aria-hidden="true" className="rtl:-scale-x-100">›</span></span>
     <span className="block h-1.5 rounded-full bg-[var(--c-ln)] overflow-hidden"><span className="block h-full bg-[var(--c-acc)]" style={{ width: Math.round((100 * p.done) / p.total) + "%" }} /></span>
   </button>;
