@@ -33,8 +33,10 @@ object AgentWatch {
         prefs(ctx).edit().putString("plan", arr.toString()).apply()
         // v9.0: a round already planned stays planned — opening the Agents page used to push the next check 12 hours later each time
         // v9.9.13 AC2 (Ali picked): agents on sites that need a browser (Booking…) get a real check once a night while charging on Wi-Fi
-        val browserOnes = (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }.any { HeadlessRead.needsScripts(it.optString("url")) }
-        if (browserOnes) AgentNightJob.schedule(ctx) else AgentNightJob.cancel(ctx)
+        // v9.9.33 (Ali: "I don't want Search now only — check while I am away and give me new info"): every price watch (Amazon, noon…
+        // show prices only to a real browser) is read in the invisible browser at night AND in a day round about every 4 hours
+        val browserOnes = (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }.any { needsBrowser(it) }
+        if (browserOnes) { AgentNightJob.schedule(ctx); AgentDayJob.schedule(ctx) } else { AgentNightJob.cancel(ctx); AgentDayJob.cancel(ctx) }
         val now0 = System.currentTimeMillis(); val ed = prefs(ctx).edit()
         for (i in 0 until arr.length()) { val b = baseId(arr.optJSONObject(i)?.optString("id") ?: continue); if (prefs(ctx).getLong("since:" + b, 0L) == 0L) ed.putLong("since:" + b, now0) }
         ed.apply()
@@ -177,7 +179,7 @@ object AgentWatch {
             if (price > 0 && (best == 0L || price < best)) bestNow[b] = price
             return yes
         }
-        for (i in 0 until minOf(plan.length(), 16)) {   // v8.2: a hotel window is several start days
+        for (i in 0 until minOf(plan.length(), 40)) {   // v8.2: a hotel window is several start days · v9.9.33: 40 (10 stores an agent)
             val w = plan.optJSONObject(i) ?: continue
             val url = w.optString("url"); if (!url.startsWith("https://")) continue
             // v9.4 G2: an appointment page (BLS, VFS, TLScontact, a consulate…) — its words, read with the login the person made in
@@ -193,7 +195,7 @@ object AgentWatch {
             val row = JSONObject().put("at", System.currentTimeMillis())
             // v9.9.4: a site that shows prices only after its scripts run (Booking…) → read it in an invisible browser, the way
             // "Check now" does (HeadlessRead.kt). At most 2 such pages a round (Android gives a background check about a minute); the rest come next round.
-            if (got == null && HeadlessRead.needsScripts(url) && (if (night) headless < 16 else headless < 2 && rotateOk(ctx, w.optString("id")))) {
+            if (got == null && needsBrowser(w) && (if (night) headless < 16 else headless < 2 && rotateOk(ctx, w.optString("id")))) {
                 headless++
                 val o = try { HeadlessRead.best(ctx, url, w.optString("rules", "{}")) } catch (e: Throwable) { null }
                 if (o != null && o.optDouble("price", 0.0) > 0) {
@@ -234,7 +236,7 @@ object AgentWatch {
         val seen = HashSet<String>()
         for (i in 0 until plan.length()) {
             val w = plan.optJSONObject(i) ?: continue
-            if (!HeadlessRead.needsScripts(w.optString("url")) || w.optString("kind") == "slot") continue
+            if (!needsBrowser(w) || w.optString("kind") == "slot") continue
             val b = baseId(w.optString("id")); if (!seen.add(b)) continue
             val lastRead = (0 until plan.length()).mapNotNull { plan.optJSONObject(it) }.filter { baseId(it.optString("id")) == b }.maxOfOrNull { p.getLong("hidden:" + it.optString("id"), 0L) } ?: 0L
             val since = maxOf(lastRead, p.getLong("since:" + b, now), w.optLong("lastBrowser", 0L))
@@ -261,11 +263,14 @@ object AgentWatch {
     /** The hidden reads go round the dates: the one read longest ago first (each round reads at most 2). */
     private fun rotateOk(ctx: Context, id: String): Boolean {
         val plan = try { JSONArray(prefs(ctx).getString("plan", "[]")) } catch (e: Exception) { JSONArray() }
-        val ids = (0 until plan.length()).mapNotNull { plan.optJSONObject(it) }.filter { HeadlessRead.needsScripts(it.optString("url")) }.map { it.optString("id") }
+        val ids = (0 until plan.length()).mapNotNull { plan.optJSONObject(it) }.filter { needsBrowser(it) }.map { it.optString("id") }
         val when0 = { k: String -> prefs(ctx).getLong("hidden:" + k, 0L) }
         val order = ids.sortedBy { when0(it) }
         return order.indexOf(id).let { it in 0..1 }
     }
+    /** v9.9.33: a page the plain reader can't read may be read in the invisible browser — hotel / flight sites, and every product watch
+     *  (Amazon, noon, Jumia… render their prices with scripts). An appointment page is never opened there. */
+    fun needsBrowser(w: JSONObject): Boolean = w.optString("kind") != "slot" && (HeadlessRead.needsScripts(w.optString("url")) || w.optString("what").isNotEmpty())
     private fun markRead(ctx: Context, id: String) { prefs(ctx).edit().putLong("hidden:" + id, System.currentTimeMillis()).apply() }
 
     private fun read(ctx: Context): JSONObject = try { JSONObject(File(ctx.filesDir, FILE).readText()) } catch (e: Exception) { JSONObject() }
@@ -293,6 +298,32 @@ class AgentNightJob : android.app.job.JobService() {
             val info = android.app.job.JobInfo.Builder(ID, android.content.ComponentName(ctx, AgentNightJob::class.java))
                 .setRequiresCharging(true).setRequiresDeviceIdle(true).setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_UNMETERED)
                 .setPeriodic(20 * 3600_000L, 6 * 3600_000L).setPersisted(true).build()
+            try { js.schedule(info) } catch (e: Exception) {}
+        }
+        fun cancel(ctx: Context) { try { ctx.getSystemService(android.app.job.JobScheduler::class.java)?.cancel(ID) } catch (e: Exception) {} }
+    }
+    @Volatile private var worker: Thread? = null
+    override fun onStartJob(params: android.app.job.JobParameters): Boolean {
+        worker = Thread {
+            try { AgentWatch.run(applicationContext, night = true) } catch (e: Throwable) {} finally { try { jobFinished(params, false) } catch (e: Throwable) {} }
+        }.also { it.start() }
+        return true
+    }
+    override fun onStopJob(params: android.app.job.JobParameters): Boolean { try { worker?.interrupt() } catch (e: Throwable) {}; return true }
+}
+
+/** v9.9.33 (Ali: "check while I am away and give me new info"): a day round about every 4 hours, whenever the battery is not low and
+ *  there is any network — every watched store is read (the invisible browser for the ones that need it, up to 16 pages), a real
+ *  change (a new best, under your price) becomes a notification and a line in the agent's conversation. */
+class AgentDayJob : android.app.job.JobService() {
+    companion object {
+        private const val ID = 0x5c0aa
+        fun schedule(ctx: Context) {
+            val js = ctx.getSystemService(android.app.job.JobScheduler::class.java) ?: return
+            if (js.getPendingJob(ID) != null) return
+            val info = android.app.job.JobInfo.Builder(ID, android.content.ComponentName(ctx, AgentDayJob::class.java))
+                .setRequiresBatteryNotLow(true).setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(4 * 3600_000L, 3600_000L).setPersisted(true).build()
             try { js.schedule(info) } catch (e: Exception) {}
         }
         fun cancel(ctx: Context) { try { ctx.getSystemService(android.app.job.JobScheduler::class.java)?.cancel(ID) } catch (e: Exception) {} }

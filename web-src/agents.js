@@ -306,6 +306,16 @@ export function recheckSaved(a) {
   const ok = (o) => o && o.price > 0 && believable({ ...o, currency: o.currency || a.currency }, a) && !(a.below > 0 && o.price < a.below * 0.3)
     && !(!ACC_RE.test(String(a.what || "") + " " + String(a.said || "")) && ACC_RE.test(String(o.name || "") + " " + String(o.text || "").slice(0, 120)));
   let b = a;
+  // v9.9.33 (Ali: "use much more websites, not just Amazon"): an agent made when its country had fewer stores searches them all now
+  // (only a general search — an agent the person tied to one store keeps it)
+  try {
+    if (Array.isArray(b.tries) && b.tries.length >= 2 && !b.tries.some((x) => x && x.checkin)) {   // (one store = the person named it)
+      const cur = String(b.currency || "").toUpperCase(), c = { EGP: "EG", SAR: "SA", AED: "AE" }[cur] || (typeof localStorage !== "undefined" && localStorage.getItem("attune:country")) || "";
+      const fresh = storeTries(b.q || b.what, c, "").map((l) => ({ url: l.url, site: l.site }));
+      const sites = new Set(fresh.map((x) => x.site));
+      if (fresh.length > b.tries.length && b.tries.every((x) => sites.has(x.site))) b = { ...b, tries: fresh, site: fresh.length + " stores" };
+    }
+  } catch (e) {}
   if (b.found && !ok(b.found)) { const { found, ...rest } = b; b = rest; }
   if (b.best && b.best.price > 0 && !ok(b.best)) { const { best, ...rest } = b; b = rest; }
   if (Array.isArray(b.best3) && b.best3.some((o) => !ok(o))) b = { ...b, best3: b.best3.filter(ok) };
@@ -475,7 +485,7 @@ export const watchPlan = (st) => [
     .map((x) => { const b = bestSoFar(a), lb = ((a.checks || []).filter((c) => c.how === "browser" && c.price > 0).slice(-1)[0] || {}).at || 0;   // v9.9.13: the phone tells only a price that beats the best; AC3 knows the last browser read
       return { ...x, ...(b && b.price > 0 ? { best: b.price } : {}), ...(lb ? { lastBrowser: lb } : {}) }; })
     .map((x) => (a.rules && a.rules.hours ? { ...x, hours: a.rules.hours } : x))
-    .map((x) => (a.rules && Object.keys(a.rules).length ? { ...x, rules: JSON.stringify(a.rules) } : x)))].slice(0, 16);   // v9.9.4: the hidden read follows the rules too   // v9.2: "check every 6 hours" (agent-rules.js)
+    .map((x) => (a.rules && Object.keys(a.rules).length ? { ...x, rules: JSON.stringify(a.rules) } : x)))].slice(0, 40);   // v9.9.33: 10 stores an agent   // v9.9.4: the hidden read follows the rules too   // v9.2: "check every 6 hours" (agent-rules.js)
 /** The phone's checks ({id or "id~i": [rows]}) → the agents with them added (a window's row keeps its days). */
 export function takeChecks(agents, got) {
   return agents.map((a) => {
@@ -721,14 +731,14 @@ export function agentChat(a, now = Date.now()) {
   let best = 0; for (const c of all.slice(0, from)) if (c.price > 0 && (!best || c.price < best)) best = c.price;
   for (const c of all.slice(from)) {
     if (c.price > 0) { miss = null;
-      const d = c.checkin ? " (" + c.checkin + " → " + (c.checkout || "") + ")" : "";
+      const d = (c.checkin ? " (" + c.checkin + " → " + (c.checkout || "") + ")" : "") + (c.site && !c.checkin ? " · " + c.site : "");   // v9.9.33: which store
       const T = !best ? ["Checked: cheapest {p}{d}.", { p: c.price, d }]
         : c.price < best ? ["New best: {p}{d} — {x} less than the best before ({b}).", { p: c.price, d, x: best - c.price, b: best }]
         : c.price === best ? ["Checked: {p}{d} — the same as your best.", { p: c.price, d }]
         : ["Checked: cheapest {p}{d} — no better. Your best is still {b}.", { p: c.price, d, b: best }];
       out.push({ who: "agent", at: c.at, T, ...(best && c.price < best ? { better: true } : {}) });
       if (!best || c.price < best) best = c.price; continue; }
-    if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} checks in the background couldn't read the prices — {site} shows them only in a browser. Your best stays; I read them again when you tap Check now.", { n: miss.n, site: a.site || "this site" }]; continue; }
+    if (miss) { miss.n++; miss.at = c.at; miss.T = ["{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.", { n: miss.n }]; continue; }
     miss = { who: "agent", at: c.at, n: 1, T: ["The site didn't show prices this time — I'll try again."] }; out.push(miss);
   }
   { const f = withRuleFound(a).found; if (f) out.push({ who: "agent", at: f.at, T: ["Found one under your price: {p}.", { p: f.price }], found: true }); }

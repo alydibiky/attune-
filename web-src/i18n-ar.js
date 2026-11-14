@@ -9543,4 +9543,5 @@ export const AR = {
   "With Attune closed, a job runs at its time while the phone is charging.": "لو Attune مقفول، الشغلانة بتشتغل في ميعادها والموبايل على الشاحن.",
   "Updated by itself: {t}": "اتعدّل لوحده: {t}",
   "Removed by itself — it was cancelled: {t}": "اتشال لوحده — اتلغى: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} فحص سريع مقدرش يقرا الأسعار — هقراها بالمتصفح في الجولة الجاية (كل حوالي 4 ساعات). أحسن سعر عندك زي ما هو.",
 };

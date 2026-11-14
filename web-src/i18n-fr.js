@@ -12452,4 +12452,5 @@ export const FR = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune fermé, une tâche s'exécute à son heure pendant que le téléphone charge.",
   "Updated by itself: {t}": "Mis à jour tout seul : {t}",
   "Removed by itself — it was cancelled: {t}": "Retiré tout seul — annulé : {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} vérifications rapides n'ont pas pu lire les prix — je les lirai avec le navigateur à ma prochaine tournée (environ toutes les 4 heures). Votre meilleur prix reste.",
 };

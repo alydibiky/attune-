@@ -12452,4 +12452,5 @@ export const SW = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune ikiwa imefungwa, kazi huendeshwa kwa wakati wake simu ikichajiwa.",
   "Updated by itself: {t}": "Imesasishwa yenyewe: {t}",
   "Removed by itself — it was cancelled: {t}": "Imeondolewa yenyewe — ilighairiwa: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "Ukaguzi {n} wa haraka haukuweza kusoma bei — nitazisoma kwa kivinjari katika mzunguko ujao (kila saa 4 hivi). Bei yako bora inabaki.",
 };

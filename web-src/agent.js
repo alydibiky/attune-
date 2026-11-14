@@ -286,7 +286,9 @@ const STORES = {
   EG: [S("amazon.eg", "Amazon", (q) => "https://www.amazon.eg/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/egypt-en/search/?q=" + enc(q), "com.noon.buyerapp"),
     S("jumia.com.eg", "Jumia", (q) => "https://www.jumia.com.eg/catalog/?q=" + enc(q), "com.jumia.android"), S("btech.com", "B.TECH", (q) => "https://btech.com/en/catalogsearch/result/?q=" + enc(q)),
     S("2b.com.eg", "2B", (q) => "https://2b.com.eg/en/catalogsearch/result/?q=" + enc(q)), S("rayashop.com", "Raya Shop", (q) => "https://www.rayashop.com/en/catalogsearch/result/?q=" + enc(q)),
-    S("dubizzle.com.eg", "Dubizzle", (q) => "https://www.dubizzle.com.eg/en/ads/q-" + enc(q.replace(/\s+/g, "-")) + "/")],
+    S("dubizzle.com.eg", "Dubizzle", (q) => "https://www.dubizzle.com.eg/en/ads/q-" + enc(q.replace(/\s+/g, "-")) + "/"),
+    // v9.9.33 (Ali: "use much more websites, not just Amazon")
+    S("carrefouregypt.com", "Carrefour", (q) => "https://www.carrefouregypt.com/mafegy/en/search?keyword=" + enc(q)), S("tradelinestores.com", "Tradeline", (q) => "https://www.tradelinestores.com/catalogsearch/result/?q=" + enc(q))],
   SA: [S("amazon.sa", "Amazon", (q) => "https://www.amazon.sa/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/saudi-en/search/?q=" + enc(q), "com.noon.buyerapp"),
     S("jarir.com", "Jarir", (q) => "https://www.jarir.com/sa-en/catalogsearch/result?search=" + enc(q)), S("extra.com", "eXtra", (q) => "https://www.extra.com/en-sa/search/?text=" + enc(q))],
   AE: [S("amazon.ae", "Amazon", (q) => "https://www.amazon.ae/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("noon.com", "noon", (q) => "https://www.noon.com/uae-en/search/?q=" + enc(q), "com.noon.buyerapp"),
@@ -329,12 +331,15 @@ export function productEnglish(what) {
 }
 
 /** The stores to search for a product, in order (the store the person named comes first, or alone when they said "on Amazon"). */
-export function storeTries(what, country = "", store = "", max = 6) {
+export function storeTries(what, country = "", store = "", max = 10) {
   // v9.9.16 ("every country like Egypt"): a country with no hand-tuned list here uses its country pack's shops (countrypack.js)
   const c = String(country || "").toUpperCase(), packed = STORES[c] ? null : shopLinksOf(c, "\u0001").map((l) => S(l.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0], l.site, (q) => l.url.replace("%01", enc(q)))),
     list = STORES[c] || (packed && packed.length ? packed : null) || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
   const named = store ? list.filter((x) => x.label.toLowerCase().startsWith(String(store).toLowerCase().slice(0, 4)) || x.site.startsWith(String(store).toLowerCase())) : [];
-  return (named.length ? named : list).slice(0, max).map((x) => ({ site: x.label, host: x.site, url: x.url(what), app: x.app }));
+  // v9.9.33: Google Shopping lists many shops' prices on one page — read in the invisible browser like the stores (a general search only)
+  const gs = S("google.com", "Google Shopping", (q) => "https://www.google.com/search?tbm=shop&q=" + enc(q) + (c ? "&gl=" + c.toLowerCase() : ""));
+  const use = named.length ? named : [...list.slice(0, Math.max(1, max - 1)), gs];
+  return use.slice(0, max).map((x) => ({ site: x.label, host: x.site, url: x.url(what), app: x.app }));
 }
 /** Where a person looks by hand: opened in the browser, not read by the phone. */
 export function lookLinks(what, country = "") {

@@ -12451,4 +12451,5 @@ export const VI = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Khi Attune đóng, công việc vẫn chạy đúng giờ lúc điện thoại đang sạc.",
   "Updated by itself: {t}": "Tự cập nhật: {t}",
   "Removed by itself — it was cancelled: {t}": "Tự bỏ đi — đã bị hủy: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} lần kiểm tra nhanh không đọc được giá — tôi sẽ đọc bằng trình duyệt ở vòng tới (khoảng mỗi 4 giờ). Giá tốt nhất của bạn vẫn giữ.",
 };

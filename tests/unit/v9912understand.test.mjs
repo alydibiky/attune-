@@ -42,7 +42,7 @@ ok(/^New best/.test(t[2]) && chat.find((m) => m.better).T[1].x === 966, "a lower
 ok(/same as your best/.test(t[3]), "the same price → “the same as your best”");
 ok(/no better\. Your best is still/.test(t[4]) && chat.find((m) => m.T && /no better/.test(m.T[0])).T[1].b === 42124, "a higher price → “no better. Your best is still 42,124”");
 { const c3 = A.agentChat({ said: "x", created: 1, site: "Booking.com", checks: [{ at: 2, price: 41495 }, { at: 3, blocked: true }, { at: 4, blocked: true }] }), m = c3.find((x) => x.n === 2);
-  ok(m && /Your best stays/.test(m.T[0]) && m.T[1].site === "Booking.com", "background misses say why (Booking.com shows prices only in a browser) and that the best stays"); }
+  ok(m && /Your best stays/.test(m.T[0]) && /browser in my next round/.test(m.T[0]), "background misses say the browser reads them next round (v9.9.33: no more 'tap Check now') and that the best stays"); }
 // the table: the same 41,495 on the same days once
 const offers = [{ name: "Booking.com", price: 41495, checkin: "2027-01-08", checkout: "2027-01-12", text: "a" }, { name: "Booking.com", price: 41495, checkin: "2027-01-08", checkout: "2027-01-12", text: "b" }, { name: "Booking.com", price: 42124, checkin: "2027-01-04", checkout: "2027-01-08" }];
 ok(A.compareOffers(offers).rows.length === 2, "“Best found” shows the same 41,495 on 01/08 → 01/12 once (it showed it twice)");

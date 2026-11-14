@@ -12451,4 +12451,5 @@ export const RU = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Когда Attune закрыт, задание выполняется в своё время, пока телефон заряжается.",
   "Updated by itself: {t}": "Обновлено само: {t}",
   "Removed by itself — it was cancelled: {t}": "Убрано само — отменено: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} быстрых проверок не смогли прочитать цены — я прочитаю их в браузере в следующем обходе (примерно каждые 4 часа). Ваша лучшая цена сохраняется.",
 };

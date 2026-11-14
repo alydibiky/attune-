@@ -12451,4 +12451,5 @@ export const TH = {
   "With Attune closed, a job runs at its time while the phone is charging.": "แม้ปิด Attune งานจะทำตามเวลาขณะที่โทรศัพท์กำลังชาร์จ",
   "Updated by itself: {t}": "อัปเดตให้เองแล้ว: {t}",
   "Removed by itself — it was cancelled: {t}": "นำออกให้เองแล้ว — ถูกยกเลิก: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "ตรวจแบบเร็ว {n} ครั้งอ่านราคาไม่ได้ — รอบถัดไป (ราวทุก 4 ชั่วโมง) ฉันจะอ่านด้วยเบราว์เซอร์ ราคาที่ดีที่สุดของคุณยังอยู่",
 };

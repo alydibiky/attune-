@@ -12443,4 +12443,5 @@ export const ARB = {
   "With Attune closed, a job runs at its time while the phone is charging.": "عندما يكون Attune مغلقًا، تعمل المهمة في موعدها أثناء شحن الهاتف.",
   "Updated by itself: {t}": "حُدِّث تلقائيًا: {t}",
   "Removed by itself — it was cancelled: {t}": "أُزيل تلقائيًا — أُلغي: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} فحصًا سريعًا لم تستطع قراءة الأسعار — سأقرؤها بالمتصفح في الجولة القادمة (كل 4 ساعات تقريبًا). أفضل سعر لديك باقٍ.",
 };

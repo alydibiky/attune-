@@ -12451,4 +12451,5 @@ export const ZH = {
   "With Attune closed, a job runs at its time while the phone is charging.": "即使 Attune 已关闭，任务也会在手机充电时按时运行。",
   "Updated by itself: {t}": "已自动更新：{t}",
   "Removed by itself — it was cancelled: {t}": "已自动移除——已取消：{t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} 次快速检查没能读到价格——我会在下一轮（约每 4 小时）用浏览器读取。你的最低价保持不变。",
 };

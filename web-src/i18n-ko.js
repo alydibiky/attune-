@@ -12451,4 +12451,5 @@ export const KO = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune이 닫혀 있어도 휴대폰을 충전하는 동안 작업이 제시간에 실행돼요.",
   "Updated by itself: {t}": "자동으로 바뀜: {t}",
   "Removed by itself — it was cancelled: {t}": "자동으로 뺌 — 취소됨: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "빠른 확인 {n}번이 가격을 읽지 못했어요 — 다음 순회(약 4시간마다)에 브라우저로 읽을게요. 최저가는 그대로예요.",
 };

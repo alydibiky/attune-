@@ -12451,4 +12451,5 @@ export const JA = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune を閉じていても、充電中ならジョブは時間どおりに動きます。",
   "Updated by itself: {t}": "自動で更新: {t}",
   "Removed by itself — it was cancelled: {t}": "自動で削除 — キャンセル済み: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} 回のクイックチェックで価格を読めませんでした — 次の巡回（約4時間ごと）でブラウザで読みます。あなたの最安値はそのままです。",
 };

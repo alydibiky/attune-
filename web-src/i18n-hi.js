@@ -12452,4 +12452,5 @@ export const HI = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune बंद होने पर भी, फ़ोन चार्ज होते समय काम अपने समय पर चलता है।",
   "Updated by itself: {t}": "अपने आप अपडेट हुआ: {t}",
   "Removed by itself — it was cancelled: {t}": "अपने आप हटाया गया — रद्द हुआ: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} तेज़ जाँचें कीमतें नहीं पढ़ पाईं — अगले दौर में (लगभग हर 4 घंटे) मैं उन्हें ब्राउज़र से पढ़ूँगा। आपकी सबसे अच्छी कीमत बनी रहेगी।",
 };

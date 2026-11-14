@@ -12452,4 +12452,5 @@ export const IDN = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Saat Attune tertutup, tugas berjalan tepat waktu selama ponsel diisi daya.",
   "Updated by itself: {t}": "Diperbarui otomatis: {t}",
   "Removed by itself — it was cancelled: {t}": "Dihapus otomatis — dibatalkan: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} pengecekan cepat tidak bisa membaca harga — aku akan membacanya dengan browser di putaran berikutnya (sekitar tiap 4 jam). Harga terbaikmu tetap.",
 };

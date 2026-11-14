@@ -12452,4 +12452,5 @@ export const TRK = {
   "With Attune closed, a job runs at its time while the phone is charging.": "Attune kapalıyken bir iş, telefon şarj olurken zamanında çalışır.",
   "Updated by itself: {t}": "Kendiliğinden güncellendi: {t}",
   "Removed by itself — it was cancelled: {t}": "Kendiliğinden kaldırıldı — iptal edildi: {t}",
+  "{n} quick checks couldn't read the prices — I read them with the browser in my next round (about every 4 hours). Your best stays.": "{n} hızlı kontrol fiyatları okuyamadı — bir sonraki turumda (yaklaşık 4 saatte bir) tarayıcıyla okuyacağım. En iyi fiyatın duruyor.",
 };
