@@ -17,12 +17,16 @@
 > understood() lines; confirmedRole — a guess is never acted on) · **AP-5 decisions** web-src/autopilot2.js decide() → keep / ask /
 > items / bought / alert / todo, each with from + why; 10,000 conversations, ACTIONS ON NOISE 0 · **AP-6** web-src/chatask.js askChat()
 > (chat named before "discuss / اتكلموا عن", topic after; days, who, ids of every message) · shoplist.js rejects sentences as items.
-> Next (the screens — nothing visible yet): wire decide() into the Autopilot card + Home (K2: Shopping line, Done for you lines that
-> open the full message K4, "Kept quietly today: N" NS-2), the K1 "What I understood — Right / Change / say it" card (saveRole ok:true),
-> the export share target (Android intent → readExport → keep by chat → guessRole), K3 "I bought…" in the Home box/Chat → tick the
-> list with Undo, K5 Chat answer from askChat + "Show all N messages" + the AI's "Decided:" line, a message store by chat
-> (IndexedDB — exports are big), every new line in 20 languages, then AP-7 (computer re-check K6; sync free + automatic), full suite,
-> main, APK.
+> **v9.9.40 (on the branch, then main):** the screens are built — ChatPilotCard on Home (web-src/chatpilot-ui.jsx: K1 What I
+> understood + Right / Not now / your words, K2 Shopping line + Done for you, K4 the full-message sheet with Undo / Open chat / Never,
+> NS-2 Kept quietly + This mattered), K3 "I bought…" in the Home box (attune.jsx boughtFromLists, Undo), K5 Chat answers about any chat
+> (attune.jsx askChatsNow + chat.jsx card + "Show all N messages"), exports from the WhatsApp groups library are read for questions,
+> a one-to-one chat is one person (no question), the old Autopilot card no longer makes chat to-dos, sync is FREE and syncs by itself
+> through Google (sync-ui.jsx autoDriveSync; plan.js). Tests: e2e_v9940chatpilot.py, e2e_v9940chatask.py + all the v9940 unit tests.
+> **Still to do:** AS-2's "Decided:" line (the phone's AI reads the messages askChat used; shown above them) · K6 the computer's second
+> look (needs the kept-quietly messages' texts in chatpilot state so the computer can re-read them; the bigger model re-judges keep /
+> done decisions → "Computer checked: N fixed" with the message + Undo) · EX-1: when an export is added in the groups library, ask
+> "What I understood" for that chat at once · Ali: the Google Cloud project (SETUP_CLOUD.md §A) for sync.
 
 Read this page first, then `CLAUDE.md` (Ali's standing rules), `GEMINI_DESIGN_BRIEF.md` and `CHAT_RUNS_APP.md`.
 Then carry on with **"Do this next"** below — no need to ask Ali anything before starting.
