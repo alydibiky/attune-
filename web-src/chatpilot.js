@@ -10,7 +10,7 @@ import { readExport } from "./waexport.js";
 import { guessRole } from "./chatroles.js";
 
 export const CP_KEY = "attune:chatpilot:v1";
-export const emptyCP = () => ({ seen: {}, done: [], ask: [], quiet: {}, since: 0 });
+export const emptyCP = () => ({ seen: {}, done: [], ask: [], quiet: {}, since: 0, kept: [], review: null });
 export function loadCP(s = typeof localStorage !== "undefined" ? localStorage : null) { try { const v = JSON.parse((s && s.getItem(CP_KEY)) || "null"); return v && typeof v === "object" ? { ...emptyCP(), ...v } : emptyCP(); } catch (e) { return emptyCP(); } }
 export function saveCP(st, s = typeof localStorage !== "undefined" ? localStorage : null) { try { s && s.setItem(CP_KEY, JSON.stringify(st)); } catch (e) {} return st; }
 const day = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
@@ -35,7 +35,9 @@ export function step(notes = [], st0 = emptyCP(), { roles = {}, me = [], listOf 
     if (pendingMind) continue;
     if (!waiting) st.seen[id] = 1;
     const rec = { id, kind: d.kind, at: n.ts || now, from: d.from, why: d.why };
-    if (d.kind === "keep") { const k = day(n.ts || now); st.quiet[k] = st.quiet[k] || {}; st.quiet[k][d.from.chat] = (st.quiet[k][d.from.chat] || 0) + 1; continue; }
+    if (d.kind === "keep") { const k = day(n.ts || now); st.quiet[k] = st.quiet[k] || {}; st.quiet[k][d.from.chat] = (st.quiet[k][d.from.chat] || 0) + 1;
+      // K6: the last 200 kept messages (text + why) travel with sync, so the computer's bigger AI can read them again
+      st.kept = [{ id, at: n.ts || now, from: d.from, quiet: d.quiet || "", why: d.why }, ...(st.kept || [])].slice(0, 200); continue; }
     if (d.kind === "ask") { if (!st.ask.some((a) => a.key === d.from.chatKey) && !(roles[d.from.chatKey])) st.ask.push({ key: d.from.chatKey, chat: d.from.chat, group: c ? c.group : false, guess: d.guess, from: d.from, at: n.ts || now }); continue; }
     if (d.kind === "items") effects.push({ type: "addItems", chatKey: d.from.chatKey, list: d.list, items: d.items, rec: { ...rec, items: d.items } });
     else if (d.kind === "bought") effects.push({ type: "bought", chatKey: d.from.chatKey, bought: d.bought, rec });
