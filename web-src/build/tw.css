@@ -82,3 +82,7 @@ html[dir="rtl"] body { line-height: 1.6; }
 
 /* v9.9.16 OK1 (Ali's OK): on a phone the top bar carries the page's name, so the page's own big name is not repeated under it */
 html:not(.att-wide) .att-h1 { display: none; }
+
+/* v9.9.39 UI-1 (Ali picked it): Home's one "Attune noticed" spot — the first card that has something today; the others wait their turn */
+.home-one > * ~ * { display: none !important; }
+.home-one:empty { display: none; }

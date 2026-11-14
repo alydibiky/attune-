@@ -129,8 +129,9 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 const SIDE_PLACES = [["home", "Home", House],
   // v9.2 (Ali, 1A: "a part where I add my list … clear and visible"): To-dos & lists first under My life
   ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
-  ["@", "Learn & daily"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
-  ["@", "Go & work"], ["travel", "Go", Plane], ["tools", "Tools", Wrench]];   // v9.9.16 (Ali: keep the groups): only "Work" left — it opened Projects, which has its own row under Workspaces   // v9.1: Business archived — Work = Projects
+  // v9.9.39 UI-1 (Ali picked it): "Learn & daily" had one row left (My things) — the rest of the places are one "More" group
+  ["@", "More"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
+  ["travel", "Go", Plane], ["tools", "Tools", Wrench]];   // v9.9.16 (Ali: keep the groups): only "Work" left — it opened Projects, which has its own row under Workspaces   // v9.1: Business archived — Work = Projects
 /** v9.2 round 3: the places of the side menu (and what they open) — their header shows ☰; every other page shows ‹ back. */
 const TOP_PLACES = new Set(["home", "lists", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools", "memory", "booklib", "people", "coach", "learn"]);
 // v9.1: archived / folded tools leave the sidebar (and a group heading with nothing under it goes too)

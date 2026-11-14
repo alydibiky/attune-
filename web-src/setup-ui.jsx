@@ -135,9 +135,14 @@ export function CoachHost({ mode, hold = false }) {
   const [st, setSt] = useState(() => j(C.COACH_KEY, {})), [more, setMore] = useState(false);
   const [tip, setTip] = useState(null);
   useEffect(() => { if (hold) { setTip(null); return; } const t = setTimeout(() => { const s = j(C.COACH_KEY, {}); setSt(s); setTip(C.tipFor(mode, s, Date.now(), more)); }, 1200); return () => clearTimeout(t); }, [mode, hold, more]);
+  // v9.9.39 UI-1 (Ali picked it: "one tip at a time, never over a card"): while a tip shows, the page grows by its height, so the
+  // last card can always scroll out from under it
+  const box = React.useRef(null), shown = !!(tip && !quiet());
+  useEffect(() => { if (!shown) return; const el = box.current; if (!el) return; const set = () => { try { document.body.style.paddingBottom = (el.offsetHeight + 96) + "px"; } catch (e) {} };
+    set(); let ro = null; try { ro = new ResizeObserver(set); ro.observe(el); } catch (e) {} return () => { try { ro && ro.disconnect(); document.body.style.paddingBottom = ""; } catch (e) {} }; }, [shown, tip && tip.id]);
   if (!tip || quiet()) return null;
   const done = (again) => { const n = C.markSeen(tip.id, st); try { localStorage.setItem(C.COACH_KEY, JSON.stringify(n)); } catch (e) {} setSt(n); setTip(again ? C.tipFor(mode, n, Date.now(), true) : null); setMore(again); };
-  return <div className="fixed inset-x-3 z-[55] mx-auto max-w-[520px] rounded-[16px] p-3 space-y-1.5 shadow-lg" style={{ bottom: "calc(84px + env(safe-area-inset-bottom, 0px))", background: "#2a2526", color: "#f6eff1" }} data-testid="coach-tip" data-id={tip.id} role="status">
+  return <div ref={box} className="fixed inset-x-3 z-[55] mx-auto max-w-[520px] rounded-[16px] p-3 space-y-1.5 shadow-lg" style={{ bottom: "calc(84px + env(safe-area-inset-bottom, 0px))", background: "#2a2526", color: "#f6eff1" }} data-testid="coach-tip" data-id={tip.id} role="status">
     <b className="block text-[12px] uppercase tracking-[0.08em] opacity-80">{tr("Tip")}</b>
     <p className="m-0 text-[13.5px] leading-snug" dir="auto">{tr(tip.text)}</p>
     <div className="flex gap-4 font-extrabold text-[13px]" style={{ color: "#f2b6c8" }}><button onClick={() => done(false)} className="min-h-[36px]" data-testid="coach-ok">{tr("Got it")}</button>

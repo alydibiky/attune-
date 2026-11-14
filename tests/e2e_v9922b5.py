@@ -21,6 +21,8 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1800)
+    # v9.9.39 UI-1: Home shows ONE of these cards at a time (tests/e2e_v9939home.py checks that) — here each card itself is checked
+    page.add_style_tag(content=".home-one > * ~ * { display: block !important; }")
     # N3
     c = page.locator("[data-testid=home-onthisday]")
     check(c.count() == 1 and "a year ago today" in c.inner_text().lower() and "3,500" in c.inner_text() and "car instalment" in c.inner_text(), "N3: 'A year ago today' — the car instalment 3,500: " + (c.inner_text().replace("\n", " ") if c.count() else "none"))

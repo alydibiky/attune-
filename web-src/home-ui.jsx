@@ -359,11 +359,13 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {!rep && nextFlight(loadTrip(), Date.now(), 1) ? <FlightDayCard trip={loadTrip()} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* persona 9 (Ali picked H-E): on the 1st–3rd, last month in one card (monthreview.js); × hides it for that month */}
-      {!rep ? <MonthCard /> : null}
+      {null /* v9.9.39 UI-1: the month card moved into the one "Attune noticed" spot below */}
       {!rep && trial ? <TrialLine trial={trial} /> : null}
-      {!rep ? <SetupHomeCard trial={trial} /> : null}
-      {!rep ? <BrainHome quiet={quietTests()} /> : null}
-      {!rep ? <ProNotes trial={trial} /> : null}
+      {/* v9.9.39 UI-1 (Ali picked it: "organise the app in the best way possible"): Home = the box → Right now → To do → one thing
+          Attune noticed. Set up is the sidebar strip (SB-4); What Attune knows, Your week and the feature cards are in My report */}
+      {rep || !minimal ? <SetupHomeCard trial={trial} /> : null}
+      {rep || !minimal ? <BrainHome quiet={quietTests()} /> : null}
+      {rep || !minimal ? <ProNotes trial={trial} /> : null}
       {/* v6.50: no row of Chat's tools here — "/chat", "/translate", "/remember"… from the box (Ali: one Translate, one place) */}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
       {now1 && !rep ? <div className="rounded-[20px] p-4 space-y-2.5" style={{ boxShadow: "0 4px 14px rgba(16,32,28,.16)", background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: now1.level === "bad" ? "#fff" : "var(--c-on-acc, #fff)" }} data-testid="home-now" data-kind={now1.kind}>
@@ -380,7 +382,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v9.9.19 T2 (Ali picked A): habits with this week's dots */}
       {minimal && !rep ? <HabitsCard /> : null}
       {minimal && !rep ? <AutopilotCard /> : null}
-      {minimal && !rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
+      {minimal && rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}
           fleetK={(() => { try { return fleet && fleetLive(fleet.cranes || []).length ? fleetKpis(fleet) : null; } catch (e) { return null; } })()} />
         <WeekChart week={data.week} cur={data.o && data.o.cur} /></> : null}
@@ -456,7 +458,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {rep ? <>{guardian || null}
       <MissionsLine go={() => navTo("missions")} /></> : null}
       {/* v6.43: one line for today across the apps — what you ate, spent, and what is still ahead */}
-      <div data-testid="home-line">
+      {rep || freshApp() ? <div data-testid="home-line">
         <div className="flex items-center justify-between mb-2"><p className="c-lbl m-0">{tr("Your day")}</p>
           {!rep ? <button onClick={() => setRep(true)} className="text-[12.5px] font-extrabold c-acc inline-flex items-center gap-1 bg-transparent border-0 p-0" data-testid="home-see-all">{tr("See all")}<ChevronRight size={14} className="rtl:rotate-180" /></button> : null}</div>
         {data.line.length ? <div className="space-y-2">
@@ -471,20 +473,24 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             examples={ar ? ["غدا 150، تاكسي 60", "أحمد عليه 500", "فكرني بكرة الساعة 9"] : ["lunch 150, taxi 60", "Ahmed owes me 500", "remind me tomorrow at 9"]}
             onPick={(x) => { setText(x); try { const el = document.querySelector("[data-testid=home-box] textarea"); if (el) el.focus(); } catch (e) {} }} />
           : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you spent or need to remember.")}</p>}
-      </div>
+      </div> : null}
       {!rep ? <button onClick={() => setRep(true)} className="w-full min-h-[50px] rounded-[20px] px-4 flex items-center justify-between gap-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="home-see-report">
         <span className="font-extrabold text-[14px]">{tr("See all")}</span>
         <span className="c-sub text-[12.5px] inline-flex items-center gap-1.5">{tr("My report")}<ChevronRight size={16} className="c-acc rtl:rotate-180" /></span></button> : null}
       {/* v9.9.18 AU2 (Ali picked A): a habit Attune can do for you — one at a time */}
-      {!rep ? <SalaryHomeCard /> : null}
-      {!rep ? <SuggestCard flash={null} /> : null}
+      {!rep ? <div className="home-one" data-testid="home-noticed">
+        {minimal ? <PeopleHomeCard /> : null}
+        <MonthCard />
+        {smart[0] && smart[0].score >= 75 ? <SmartRow x={smart[0]} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart" /> : null}
+        <ProNotes trial={trial} only="typed" />
+        <SalaryHomeCard />
+        <SuggestCard flash={null} />
+        {minimal ? <OnThisDayCard records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} open={(x) => (x.src === "money" ? navTo("money") : cmd && cmd.openRecord ? cmd.openRecord({ id: x.id }) : navTo("memory"))} /> : null}
+      </div> : null}
       {/* v9.9.22 P3 / P1: today's birthday with a ready wish (from 9:00), else one "say hi" a day */}
-      {minimal && !rep ? <PeopleHomeCard /> : null}
       {/* v9.9.22 N3 (Ali picked A): "A year ago today" — one thing, tap → the original */}
-      {minimal && !rep ? <OnThisDayCard records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} open={(x) => (x.src === "money" ? navTo("money") : cmd && cmd.openRecord ? cmd.openRecord({ id: x.id }) : navTo("memory"))} /> : null}
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) — in My report */}
       {/* v8.8: the most urgent finding on Home itself (charged twice, the barber due, a bill late) — the rest in My report */}
-      {!rep && smart[0] && smart[0].score >= 75 ? <SmartRow x={smart[0]} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart" /> : null}
       {rep && smart.length ? <div className="space-y-2" data-testid="home-smart-list">
         <p className="m-0 text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub">{tr("Attune noticed")}</p>
         {smart.slice(0, 5).map((x) => <SmartRow key={x.id} x={x} ar={ar} open={openSmart} drop={dropSmart} testid="home-smart-item" />)}</div> : null}
@@ -514,7 +520,7 @@ function MonthCard() {
 /* v9.9.34 PM-1 + PM-2 (Ali picked): Pro shown at the moment of effort (after the 5th payment typed by hand this week, Free only) and
    in a Friday card ("Your week with Attune" — what Pro saved, or would have saved). At most one of them a day, never on a day something
    is due, "Not now" = 14 quiet days (plan.js). */
-function ProNotes({ trial }) {
+function ProNotes({ trial, only = "" }) {
   const [, bump] = useState(0);
   if (quietTests()) return null;   // (the older browser tests)
   const now = Date.now(), L = (() => { try { return loadLedger(); } catch (e) { return null; } })();
@@ -527,7 +533,7 @@ function ProNotes({ trial }) {
     <div className="flex gap-2"><button onClick={() => { done("typed"); open(); }} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="pro-typed-see">{tr("Show me")}</button>
       <button onClick={() => done("typed", true)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-typed-later">{tr("Not now")}</button></div></div>;
   // (an empty "Your week with Attune — OK" card showed with Pro on and only typed payments: what it would show must not be empty)
-  if (P.showWeekCard({ dueToday, now }) && ((pro ? w.fromMsgs : w.typed) || w.reminders)) {
+  if (only !== "typed" && P.showWeekCard({ dueToday, now }) && ((pro ? w.fromMsgs : w.typed) || w.reminders)) {
     const payments = pro ? w.fromMsgs : w.typed, mins = P.minutesFor(payments);
     return <div className="c-card space-y-1.5" style={{ background: "var(--c-soft)" }} data-testid="pro-week" data-pro={pro ? "1" : "0"}>
       <span className="block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)]">{tr("Your week with Attune")}</span>

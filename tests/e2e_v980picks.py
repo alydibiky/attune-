@@ -65,7 +65,7 @@ with sync_playwright() as p:
     open_mode(page, "money", "[data-testid=money-page]")
     acc = page.evaluate("getComputedStyle(document.querySelector('[data-testid=money-page]').closest('.calm') || document.querySelector('[data-testid=money-page]')).getPropertyValue('--c-acc').trim()")
     check(page.evaluate("document.documentElement.dataset.area") == "money" and acc.lower() in ("#1e7a43", "#5bc48a"), "C6: Money is green: %s" % acc)
-    open_mode(page, "home", "[data-testid=home-hero-money]")
+    open_mode(page, "home", "[data-testid=home-box]")   # v9.9.39 UI-1: the feature cards moved to My report
     check(page.evaluate("document.documentElement.dataset.area") is None, "C6: Home has no area (its cards wear their own colours)")
     # ---- F1: one box + list by day ----
     open_mode(page, "reminders", "[data-testid=reminders-panel]")
