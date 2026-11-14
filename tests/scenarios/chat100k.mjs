@@ -15,7 +15,7 @@ const { classify } = await import("./brain.mjs");
 const { readable: cleanTyped } = await import("../../web-src/wrapclean.js");
 const { money, moneyAll, remind, life, at, plus, NOT, itemsOf, hm, NAMES, NAMES_AR, THINGS, THINGS_AR, PRODUCTS, PLACES, PLACES_AR, TASKS, TASKS_AR, WHEN_EN, WHEN_AR, CITIES, sub, arD } = H;
 const NOW = H.NOW, TOTAL = +(process.argv[2] || 100000);
-let seed = 20261114; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261114 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const AMT = [15, 25, 35, 45, 55, 60, 75, 85, 95, 110, 120, 135, 145, 150, 165, 175, 180, 210, 220, 240, 250, 275, 290, 300, 320, 350, 380, 420, 450, 480, 520, 550, 600, 650, 720, 780, 800, 850, 950, 1100, 1250, 1400, 1500, 1750, 1900, 2200, 2500, 2750, 3200, 3800];
 const BIG = [500, 700, 800, 1000, 1200, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 6500, 7500, 8000, 9000, 10000, 12000, 15000, 18000, 20000, 25000, 30000, 40000];
@@ -135,6 +135,6 @@ let md = `# 100,000 chat orders — ${total} orders, ${total - bad} right (${(10
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${b.model} | ${(100 * (b.n - b.bad) / b.n).toFixed(2)} |\n`;
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length).slice(0, 12)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 6).map((x) => "«" + x.replace(/\n/g, " ⏎ ") + "»").join(" · ")}\n`; }
-if (TOTAL === 100000) fs.writeFileSync(new URL("./chat100k-report.md", import.meta.url), md);
+if (TOTAL === 100000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/A2-chat-s" + process.env.SEED_SHIFT + ".md" : "./chat100k-report.md", import.meta.url), md);
 if (process.env.CHAT_JSON) fs.writeFileSync(process.env.CHAT_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]);

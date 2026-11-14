@@ -11,7 +11,7 @@ const { classify } = await import("./brain.mjs");
 const { readable: cleanTyped } = await import("../../web-src/wrapclean.js");
 const { G, NOW } = H;
 const TOTAL = +(process.argv[2] || 100000);
-let seed = 20261113; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261113 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const isAr = (s) => /[؀-ۿ]/.test(s);
 const PRE_EN = ["", "", "", "hey attune, ", "ok so ", "Attune: ", "quick one - ", "pls ", "yo ", "um, ", "listen, ", "btw ", "hi! ", "ok ", "so, ", "attune ", "hey, "];
@@ -49,7 +49,7 @@ let md = `# 100,000-sentence run — ${total} sentences, ${total - bad} right ($
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(2)} |\n`;
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length).slice(0, 12)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 6).map((x) => "«" + x.replace(/\n/g, " ⏎ ") + "»").join(" · ")}\n`; }
-if (TOTAL === 100000) fs.writeFileSync(new URL("./mega-report.md", import.meta.url), md);
+if (TOTAL === 100000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/A1-mega-s" + process.env.SEED_SHIFT + ".md" : "./mega-report.md", import.meta.url), md);
 if (process.env.MEGA_JSON) fs.writeFileSync(process.env.MEGA_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]);
 export const RESULT = { total, bad };

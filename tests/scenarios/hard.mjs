@@ -12,7 +12,7 @@ import { chatDeadlineIntent } from "../../web-src/deadlines.js";
 import { francoToArabic, looksFranco } from "../../web-src/understand.js";
 setCountry("EG");
 const NOW = Date.parse("2026-11-10T12:00:00");   // a Tuesday
-let seed = 20261111; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // mulberry32
+let seed = 20261111 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // mulberry32
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const TOTAL = +(process.argv[2] || 10000);
