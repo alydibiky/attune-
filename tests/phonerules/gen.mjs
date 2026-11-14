@@ -5,7 +5,7 @@
 // says which rule must fire at each event. Checked: exactly those fire — never a reconnect within 60 s, never a short bump, never an unseen
 // Wi-Fi name, never outside the rule's hours, a renamed car still matched by its address.
 const P = await import(process.env.PR || "../../web-src/phonerules.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const DEV = [{ address: "AA:11:22:33:44:01", name: "KIA Cerato" }, { address: "AA:11:22:33:44:02", name: "AirPods Pro" }, { address: "AA:11:22:33:44:03", name: "JBL Flip 5" }, { address: "AA:11:22:33:44:04", name: "JBL Flip 5" }];
 const NETS = ["Home-5G", "WE_8F2A", "Office", "Orange-Fiber"];
 export function make(i) {

@@ -14,7 +14,7 @@ import fs from "fs";
 import { act, setCountry } from "./brain.mjs";
 import { WORLD } from "../corpus/world-bank-messages.mjs";
 const NOW = Date.parse("2026-11-10T15:00:00");   // a Tuesday
-let seed = 20261112; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261112 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const TOTAL = +(process.argv[2] || 10000);
@@ -271,6 +271,6 @@ for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad || b.kbad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 4).map(show).join(" · ")}\n`;
   for (const [k, ex] of Object.entries(b.kex).sort((a, b) => b[1].length - a[1].length)) md += `- kind read as **${k}** × ${ex.length}: ${ex.slice(0, 3).map(show).join(" · ")}\n`; }
-if (TOTAL === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), md);
+if (TOTAL === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-notifs-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
 if (process.env.NOTIF_JSON) fs.writeFileSync(process.env.NOTIF_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]); console.log(TOTAL === 10000 ? "report: tests/notifs/report.md" : "(a smaller run — the report file is written only by the full 10,000)");

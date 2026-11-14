@@ -4,7 +4,7 @@
 //                                                             bash tests/scenarios/run.sh gen.mjs 2000   (a smaller run)
 import fs from "fs";
 import { classify, calculate } from "./brain.mjs";
-let seed = 20261110; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+let seed = 20261110 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const N = +(process.argv[2] || 10000);
 const AMT = [5, 12, 20, 35, 45, 50, 60, 75, 80, 85, 99, 100, 120, 150, 175, 200, 250, 300, 320, 450, 500, 650, 700, 850, 1000, 1200, 1500, 2000, 2500, 3200, 4500, 5000, 7500, 12000, 19500, 25000];
@@ -82,5 +82,5 @@ let md = `# Scenario run — ${total} sentences, ${total - bad} right (${(100 * 
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(1)} |\n`;
 md += "\n## What went wrong (a few examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 6).map((x) => "«" + x + "»").join(" · ")}\n`; }
-fs.writeFileSync(new URL("./report.md", import.meta.url), md);
+fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-scenarios-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
 console.log(md.split("\n## What")[0]); console.log("report: tests/scenarios/report.md");

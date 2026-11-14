@@ -5,7 +5,7 @@
 //     node tests/setup/gen.mjs [count]
 const S = await import("../../web-src/setup.js");
 const TOTAL = +(process.argv[2] || 10000);
-let seed = 35; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 35 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const DAY = 86400000, NOW = Date.parse("2026-11-14T12:00:00"), iso = (t) => new Date(t).toISOString().slice(0, 10);
 const IDS = S.STEPS.map((s) => s.id);

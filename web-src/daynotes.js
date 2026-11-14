@@ -55,7 +55,13 @@ export function senderOf(n) {
 /** The notifications → the day. notes: [{ id, pkg, app, title, text, ts }] (RecallLog, newest first or any order).
  *  → { people: [{ who, group, app, kind, n, last, at }], asks: [{ id, who, app, text, at (when it is for), from (ms the message came) }],
  *      arriving: [{ app, text, at }], counts: { social: n, video: n, email: n, … }, total, apps: [{ app, n }] (the other apps, most first) } */
-export function dayFromNotes(notes, { now = Date.now(), offApps = [], asksDays = 3 } = {}) {
+const foldName = (x) => String(x || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\s+/g, " ").trim();
+/** v9.9.38: is this sender one of the people told to come first? (the first name is enough: "Sara" = "Sara Ali") */
+export function isFirst(who, first = []) {
+  const w = foldName(who); if (!w) return false;
+  return (first || []).some((x) => { const f = foldName(x); return f && (w === f || w.split(" ")[0] === f.split(" ")[0] || (f.length >= 3 && (" " + w + " ").includes(" " + f + " "))); });
+}
+export function dayFromNotes(notes, { now = Date.now(), offApps = [], asksDays = 3, first = [] } = {}) {
   const off = new Set(offApps || []), today = startOfDay(now), askFrom = now - asksDays * 864e5;
   const list = (notes || []).filter((n) => n && n.ts && n.ts <= now + 60e3 && !off.has(n.pkg) && !SUMMARY.test(String(n.text || "")) && !SUMMARY.test(String(n.title || "")))
     .sort((a, b) => b.ts - a.ts);
@@ -82,7 +88,8 @@ export function dayFromNotes(notes, { now = Date.now(), offApps = [], asksDays =
     if ((kind === "shop" || kind === "sms" || kind === "email" || kind === "other") && isToday && DELIVERY.test(text + " " + (n.title || "")) && !money.test(text) && arriving.length < 5 && (() => { try { return understandNote(n).kind !== "promo"; } catch (e) { return true; } })())   // (v9.8: "300 EGP OFF … delivered in 15 minutes" is an offer)
       arriving.push({ app: n.app || "", text: (n.title ? n.title + " — " : "") + text.slice(0, 120), at: n.ts });
   }
-  return { people: [...people.values()].sort((a, b) => b.at - a.at), asks: asks.sort((a, b) => a.at - b.at), arriving, counts, total,
+  for (const p of people.values()) p.first = isFirst(p.who, first) || (p.group ? isFirst(p.group, first) : false);
+  return { people: [...people.values()].sort((a, b) => (b.first ? 1 : 0) - (a.first ? 1 : 0) || b.at - a.at), asks: asks.sort((a, b) => a.at - b.at), arriving, counts, total,
     apps: [...apps.entries()].map(([app, n]) => ({ app, n })).sort((a, b) => b.n - a.n) };
 }
 

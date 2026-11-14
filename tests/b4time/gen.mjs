@@ -2,7 +2,7 @@
 // (day by day for countdowns and streaks, second by second for focus). Run it in several time zones (run.sh).
 import fs from "fs"; import { daysLeft, streak, weekDots, goalCount, focused } from "../../web-src/b4time.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261121 + [...(process.env.TZ || "x")].reduce((a, c) => a + c.charCodeAt(0), 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261121 + 7919 * +(process.env.SEED_SHIFT || 0) + [...(process.env.TZ || "x")].reduce((a, c) => a + c.charCodeAt(0), 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), DAY = 864e5, base = new Date(2026, 0, 1, 0, 0).getTime();
 const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const res = { countdown: 0, habit: 0, focus: 0 }, bad = {};
@@ -32,4 +32,4 @@ for (let i = 0; i < N; i++) {
     if (focused(ev, plan) === Math.min(s, plan * 60000)) res.focus++; else bad["focus"] = (bad["focus"] || 0) + 1; }
 }
 const out = `# B4 time run (${process.env.TZ || "local"}) — countdowns ${res.countdown}/${N} · habits ${res.habit}/${N} · focus ${res.focus}/${N} (${(100 * (res.countdown + res.habit + res.focus) / (3 * N)).toFixed(2)}%)` + Object.entries(bad).slice(0, 8).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000 && process.env.TZ === "Africa/Cairo") fs.writeFileSync(new URL("./report.md", import.meta.url), out); console.log(out);
+if (N === 10000 && process.env.TZ === "Africa/Cairo") fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-b4time-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), out); console.log(out);

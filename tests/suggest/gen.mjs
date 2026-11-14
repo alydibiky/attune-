@@ -5,7 +5,7 @@
 import fs from "fs";
 import { findIdeas, refuse } from "../../web-src/suggest.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261116; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261116 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const WHO = ["the maid", "الشغالة", "Seoudi", "talabat", "Le pressing", "la limpieza", "Putzfrau", "a faxineira", "la colf", "уборщица", "temizlikçi", "pembantu", "कामवाली", "ماسی", "خدمتکار", "কাজের লোক", "mfanyakazi", "แม่บ้าน", "người giúp việc", "保姆", "家政婦", "가사도우미", "Gym", "Netflix", "Rent", "الايجار", "Uber", "Vodafone Cash", "Careem", "Kahraba"];
 const DAY = 864e5, now = Date.parse("2026-11-11T20:00:00");
@@ -44,5 +44,5 @@ for (let i = 0; i < N; i++) {
   if (err) fail(err, i); else ok++;
 }
 const s = `# Suggestions run — ${N} histories, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v.length}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), s);
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-suggest-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
 console.log(s);

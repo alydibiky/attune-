@@ -4,7 +4,7 @@
 import fs from "fs";
 import * as D from "../../web-src/donelog.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261114; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261114 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const SRC = ["talabat", "Talabat", "TALABAT ", "Seoudi", "سعودي", "سعودى", "Carrefour", "Uber", "أوبر", "Vodafone Cash", "Şok Market", "Мираторг", "Tokopedia", "Swiggy", "美团", "メルカリ", "쿠팡", "Grab", "Jumia", "Noon"];
 const KINDS = ["money", "pot", "reminder", "close"], CATS = ["food", "groceries", "transport", "bills", "fun", "late food"], ACC = ["cash", "cib", "vfc"];
@@ -45,5 +45,5 @@ for (let i = 0; i < N; i++) {
   if (err) fail(err, i); else ok++;
 }
 const s = `# Done-for-you run — ${N} days, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v.length}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), s);
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-donelog-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
 console.log(s);

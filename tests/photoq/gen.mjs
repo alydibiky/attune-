@@ -3,7 +3,7 @@
 // 39–40 / 40 (sharpness 25.3–27.6); σ 2.5 → 36 / 40 (21.4–23.2); σ 3 → 34 / 40 (18.0–19.8). So the "blur" limit is 20: σ ≥ 3 px is
 // "take another", σ ≤ 2 px always passes. Here: ok photos have σ ≤ 1.4 px, blurred ones σ ≥ 2.7 px.
 const mod = await import(process.env.PQ || "../../web-src/photoquality.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 function blur(g, w, h, k) { let a = Float32Array.from(g), b = new Float32Array(a.length);   // k passes of a separable 3×3 box (σ² = 2/3 each)
   for (let p = 0; p < k; p++) {
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; b[i] = (a[x > 0 ? i - 1 : i] + a[i] + a[x < w - 1 ? i + 1 : i]) / 3; }

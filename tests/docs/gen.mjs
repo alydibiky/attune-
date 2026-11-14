@@ -6,7 +6,7 @@
 import fs from "fs";
 const D = await import(process.env.DOCS || "../../web-src/deadlines.js");
 const N = +(process.argv[2] || 10000), now = Date.parse("2026-11-12T10:00:00");
-let seed = 13; const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
+let seed = 13 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
 const pad = (n) => String(n).padStart(2, "0"), iso = (y, m, d) => y + "-" + pad(m) + "-" + pad(d);
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], AR = "٠١٢٣٤٥٦٧٨٩", arD = (s) => String(s).replace(/\d/g, (d) => AR[d]);
 const addM = (y, m, d, k) => { const t = new Date(y, m - 1 + k, d); return [t.getFullYear(), t.getMonth() + 1, t.getDate()]; };
@@ -52,5 +52,5 @@ for (let i = 0; i < N; i++) {
   if (!why) pass++; else { (miss[why] = miss[why] || []).push(i); ex[why] = ex[why] || text.replace(/\n/g, " / ") + "  →  " + JSON.stringify(r || {}).slice(0, 160); }
 }
 const rep = ["# Papers from a photo — " + N, "", "Passed: **" + pass + " / " + N + " (" + (100 * pass / N).toFixed(2) + "%)**", "", ...Object.entries(miss).sort((a, b) => b[1].length - a[1].length).map(([k, l]) => "- " + k + " — " + l.length + "\n  e.g. " + ex[k].slice(0, 330))].join("\n");
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-docs-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep.slice(0, +(process.env.CH || 6000)));

@@ -71,6 +71,7 @@ const APPS = [["life360", "com.life360.android.safetymapd", /life ?360/i], ["yaz
   ["google", "com.google.android.googlequicksearchbox", /\bgoogle\b|جوجل/i], ["maps", "com.google.android.apps.maps", /\bmaps\b|الخرايط|خرائط/i], ["instagram", "com.instagram.android", /instagram|انستا/i],
   ["facebook", "com.facebook.katana", /facebook|فيسبوك|الفيس/i], ["talabat", "com.talabat", /talabat|طلبات/i], ["amazon", "com.amazon.mShop.android.shopping", /amazon|امازون/i]];
 const appIn = (t) => APPS.find((a) => a[2].test(t)) || null;
+const FIRST_NOT = /^(?:family|safety|health|work|god|allah|money|kids|children|education|quality|business|customers?|clients?|love|respect|school|home|sleep|food|life|faith|prayer|study|studies|it|this|that|he|she|they|we|you|i|me|everything|everyone|nothing|what|who|which|first|the|my|our|your|his|her|their|العيلة|العيله|الصحة|الصحه|الشغل|ربنا|الفلوس|الاولاد|العيال|الدراسة|الدراسه|الصلاة|الصلاه|البيت)$/i;
 function ruleSentence(raw, dir) {
   const t = String(raw || "").trim(), low = t.toLowerCase();
   // hide an app: "never show Yazio", "hide dubizzle", «ماتورينيش يازيو», «اخفي إشعارات طلبات»
@@ -82,6 +83,13 @@ function ruleSentence(raw, dir) {
   if (/\b(first|on top|top priority|important)\b|الأول|الاول|فوق خالص|مهم/i.test(low) && !/\b(tell|notify|alert)\b|قولي|نبهني/i.test(low)) {
     const p = nameFromRole(low, dir) || ((mentions(t, dir) || [])[0] ? dir.items.find((x) => x.id === mentions(t, dir)[0].ids[0]) : null);
     if (p) return { kind: "rule", rule: { kind: "first", who: p.name, pid: p.id } };
+    // v9.9.38 (the 1M test: "Sara always comes first" went to the AI when Sara wasn't saved yet): a name said plainly is enough — the
+    // rule matches the sender's name on the notification. A saying ("family always comes first", "safety first") is not a person.
+    const nm = /^(?:put\s+)?([\p{L}][\p{L}'’-]{1,20})\s+(?:always\s+)?(?:comes?|goes?|is|stays?)\s+(?:always\s+)?(?:first|on top|top priority)\b/iu.exec(t)
+      || /^put\s+([\p{L}][\p{L}'’-]{1,20})\s+(?:always\s+)?(?:first|on top)\b/iu.exec(t)
+      || /^([ء-ي]{2,})\s+(?:دايما|دايماً|دائما)?\s*(?:يبقى|تبقى|يكون|تكون)\s+(?:الأول|الاول)/u.exec(t);
+    if (nm && !FIRST_NOT.test(nm[1])) { const who = /^[a-z]/.test(nm[1]) ? nm[1][0].toUpperCase() + nm[1].slice(1) : nm[1];
+      return { kind: "rule", rule: { kind: "first", who, pid: null } }; }
   }
   // arrivals: "tell me when my wife gets home", "tell me when Nada arrives at work", «قولي لما مراتي توصل البيت»
   const tellMe = /\b(tell|notify|alert|let)\s+me\b|قولي|قول لي|نبهني|عرفني|بلغني/i.test(low);
@@ -151,6 +159,8 @@ export function personOf(n) {
   if (!title || title.length > 40 || /\d{2,}|:|·|http/.test(title) || title.split(/\s+/).length > 3) return "";
   return title;
 }
+/** v9.9.38: the people told to come first ("Sara always comes first") — they lead Home's "who messaged you" (daynotes.js). */
+export const firstNames = (teach) => ((teach && teach.rules) || []).filter((r) => r && r.on !== false && r.kind === "first" && r.who).map((r) => String(r.who));
 export const isHidden = (n, teach) => (teach.rules || []).some((r) => r.on !== false && r.kind === "hide" && (String((n && n.app) || "").toLowerCase().replace(/\s+/g, "").includes(r.app) || String((n && n.pkg) || "") === r.pkg));
 /** The card of the person a notification is about, if you told Attune who they are. */
 export function cardOf(n, dir) { const nm = personOf(n); if (!nm) return null; const k = f(nm); return ((dir && dir.items) || []).find((p) => p.kind === "person" && p.role && (f(p.name) === k || (p.aliases || []).some((a) => f(a) === k) || f(nm).split(" ")[0] === f(p.name).split(" ")[0])) || null; }

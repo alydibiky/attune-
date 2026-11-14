@@ -5,7 +5,7 @@
 import fs from "fs";
 const B = await import(process.env.BRAINDUMP || "../../web-src/braindump.js");
 const N = +(process.argv[2] || 10000), now = Date.parse("2026-11-12T10:00:00");   // a Thursday
-let seed = 11; const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), pick = (l) => l[Math.floor(rnd() * l.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+let seed = 11 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), pick = (l) => l[Math.floor(rnd() * l.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const DAY = 864e5, noon = Date.parse("2026-11-12T12:00:00");
 const L = {
@@ -81,5 +81,5 @@ for (const c of cases) {
 }
 const pct = (100 * pass / cases.length).toFixed(2);
 const rep = ["# Brain dump — " + cases.length + " paragraphs", "", "Passed: **" + pass + " / " + cases.length + " (" + pct + "%)**", "", ...Object.entries(miss).sort((x, y) => y[1].length - x[1].length).slice(0, 60).map(([k, l]) => "- " + k + " — " + l.length + "  e.g. «" + ex[k].slice(0, 140).replace(/\n/g, " / ") + "»")].join("\n");
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-braindump-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep.split("\n").slice(0, +(process.env.LINES || 40)).join("\n"));

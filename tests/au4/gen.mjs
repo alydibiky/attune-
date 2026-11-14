@@ -4,7 +4,7 @@
 // with the 29th–31st in short months) — with a time (HH:MM) or none (→ 21:00) and the job's words. Checked: the kind, the days, the day of
 // the month, the time, and the next run (a separate calendar: the 31st in a 30-day month = its last day; never a run in the past).
 const J = await import(process.env.AU4 || "../../web-src/aijobs.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const LOC = { en: "en-US", ar: "ar-EG", arb: "ar", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR", it: "it-IT", ru: "ru-RU", tr: "tr-TR", id: "id-ID", hi: "hi-IN", ur: "ur-PK", fa: "fa-IR", bn: "bn-BD", sw: "sw-KE", th: "th-TH", vi: "vi-VN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR" };
 const DAILY = { en: "every day", ar: "كل يوم", arb: "يوميًا", es: "todos los días", fr: "tous les jours", de: "jeden Tag", pt: "todos os dias", it: "ogni giorno", ru: "каждый день", tr: "her gün", id: "setiap hari", hi: "हर दिन", ur: "ہر روز", fa: "هر روز", bn: "প্রতিদিন", sw: "kila siku", th: "ทุกวัน", vi: "mỗi ngày", zh: "每天", ja: "毎日", ko: "매일" };
 const MONTH = { en: "every month on the {n}th", ar: "يوم {n} كل شهر", arb: "يوم {n} من كل شهر", es: "el día {n} de cada mes", fr: "le {n} de chaque mois", de: "am {n}. jeden Monat", pt: "dia {n} todo mês", it: "il {n} di ogni mese",

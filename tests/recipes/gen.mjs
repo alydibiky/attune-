@@ -4,7 +4,7 @@
 import fs from "fs";
 import { gallery, RECIPES } from "../../web-src/recipes.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261117; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261117 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), DAY = 864e5;
 const H = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "numeric" });
 const ramadanDays = (now) => { const d = new Date(now); d.setHours(12, 0, 0, 0); for (let i = 0; i < 400; i++) { const p = H.formatToParts(d), m = +p.find((x) => x.type === "month").value, dd = +p.find((x) => x.type === "day").value; if (m === 9 && dd === 1) return i; d.setDate(d.getDate() + 1); } return null; };
@@ -26,5 +26,5 @@ for (let i = 0; i < N; i++) {
   if (err) fail(err); else ok++;
 }
 const s = `# Recipes run — ${N} people, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n` + Object.entries(bad).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), s);
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-recipes-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s);
 console.log(s);

@@ -5,7 +5,7 @@
 // line exists; the date is the receipt's and "sure" only when it is the only date; the warranty months; the item's name; the serial
 // exactly; an IMEI only when its check digit is right.
 const T = await import(process.env.X3 || "../../web-src/things.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const NOW = Date.parse("2026-11-12T12:00:00");
 const AR = (s) => String(s).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
 const ITEMS = [["Samsung TV 55\"", "شاشة سامسونج ٥٥"], ["Toshiba washer 8kg", "غسالة توشيبا ٨ كيلو"], ["iPhone 15 128GB", "ايفون ١٥ ١٢٨ جيجا"], ["Dyson V8", "مكنسة دايسون"], ["Sharp AC 1.5HP", "تكييف شارب ١.٥ حصان"], ["Lenovo laptop", "لابتوب لينوفو"]];

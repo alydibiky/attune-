@@ -5,7 +5,7 @@
 // each cost exactly, the nets sum to ZERO, the transfers pay every debt and number at most people − 1; the passport says renew exactly
 // when it ends before arrival/leave + the country's months.
 const M = await import(process.env.TR3 || "../../web-src/tripmoney.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const COUNTRIES = ["eg", "sa", "ae", "kw", "qa", "bh", "om", "jo", "lb", "ma", "dz", "tn", "tr", "pk", "in", "id", "my", "us", "gb", "ca", "de", "fr", "es", "it", "pt", "nl", "br", "mx", "ng", "za"];
 const RULE = { sa: [6, 0], ae: [6, 0], kw: [6, 0], qa: [6, 0], bh: [6, 0], om: [6, 0], jo: [6, 0], eg: [6, 0], id: [6, 0], my: [6, 0], in: [6, 0], de: [3, 1], fr: [3, 1], es: [3, 1], it: [3, 1], pt: [3, 1], nl: [3, 1], gb: [0, 1], ca: [0, 1] };
 const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");

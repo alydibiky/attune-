@@ -1,2 +1,2 @@
-export function rng(seed) { return () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+export function rng(seed) { seed = seed + 7919 * +(process.env.SEED_SHIFT || 0); return () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 export const CURS = ["EGP", "SAR", "AED", "KWD", "QAR", "BHD", "OMR", "JOD", "LBP", "MAD", "DZD", "TND", "TRY", "PKR", "INR", "IDR", "MYR", "USD", "GBP", "CAD", "EUR", "BRL", "MXN", "NGN", "ZAR", "JPY", "KRW"];

@@ -152,6 +152,12 @@ function personOf(raw, t) {
   // persona 9 (28 Oct): English with an Arabic-script name — "محمد owes me 1730", "I lent محمد 1603" became plain expenses
   const mixed = /(?:^|\s)([ء-ي]{2,})\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\b/i.exec(raw) || /\b(?:lent|loaned|owe|borrowed\s+(?:[\d,.]+\s+)?from)\s+([ء-ي]{2,})/i.exec(raw);
   if (mixed && !NOT_NAME.test(mixed[1])) return mixed[1];
+  // v9.9.38 (the 1M test, 20 languages): a name in any other script — "Иван owes me 900", "I owe 小王 3500", "I lent 민수 400",
+  // "I borrowed 900 from Мария", "田中さん owes me 600" (worldlang.js writes these from the person's own language)
+  { const OTHER = "([^\\x00-\\x7F\\s\\d.,!?،؟:;()\\[\\]\"'“”][^\\s\\d.,!?،؟:;()\\[\\]\"“”]{0,23}(?:\\s(?:\\p{Lu}[\\p{L}\\p{M}'’-]*|さん|씨|जी))?)";
+    const any = new RegExp("(?:^|\\s)" + OTHER + "\\s+(?:owes|will pay|is paying|has to pay|must pay|borrowed)\\b", "iu").exec(raw)
+      || new RegExp("\\b(?:lent|loaned|owe|borrowed\\s+(?:[\\d,.]+\\s+)?from)\\s+" + OTHER, "iu").exec(raw);
+    if (any && !/^[ء-ي]/.test(any[1]) && !NOT_NAME.test(any[1])) return any[1].trim(); }
   // v6.27: Spanish, French, Portuguese, German, Italian, Turkish, Indonesian
   const N = "(\\p{Lu}[\\p{Ll}'’-]+(?:\\s\\p{Lu}[\\p{Ll}'’-]+)?)";
   const world = [

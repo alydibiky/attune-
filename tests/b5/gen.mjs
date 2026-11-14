@@ -3,7 +3,7 @@
 import fs from "fs";
 const B = await import(process.env.B5 || "../../web-src/b5people.js");
 const N = +(process.argv[2] || 10000);
-let seed = 5; const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
+let seed = 5 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
 const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h, 0, 0).getTime(), pad = (n) => String(n).padStart(2, "0"), isoOf = (y, m, d) => y + "-" + pad(m) + "-" + pad(d);
 const leap = (y) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0, dim = (y, m) => new Date(y, m, 0).getDate();
 const res = {};
@@ -55,5 +55,5 @@ run("P3 occasions", () => {
 });
 const lines = ["# B5 people — " + N + " cases each", ""];
 for (const [k, r] of Object.entries(res)) { lines.push("- **" + k + "**: " + r.pass + " / " + N + " (" + (100 * r.pass / N).toFixed(2) + "%)"); for (const [w, l] of Object.entries(r.miss)) lines.push("  - " + w + " — " + l.length); }
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), lines.join("\n") + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-b5-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), lines.join("\n") + "\n");
 console.log(lines.join("\n"));

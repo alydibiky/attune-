@@ -10,7 +10,7 @@ const mem = {}; globalThis.localStorage = { getItem: (k) => (k in mem ? mem[k] :
 const A = await import("../../web-src/agents.js");
 const { storeTries } = await import("../../web-src/agent.js");
 const TOTAL = +(process.argv[2] || 10000);
-let seed = 33; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 33 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const PROD = [["Huawei FreeClip 2", 8400], ["iPhone 16 Pro", 75000], ["Samsung Galaxy S24", 45000], ["AirPods Pro 2", 12000], ["PS5 Slim", 30000], ["Kindle Paperwhite", 9000], ["JBL Flip 6", 7000], ["Xiaomi Redmi Note 13", 14000], ["Dyson V15", 40000], ["Apple Watch Series 10", 25000]];
 const CUR = [["EGP", "EG", 1], ["SAR", "SA", 0.075], ["AED", "AE", 0.075]];

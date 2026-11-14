@@ -3,7 +3,7 @@
 // more / less than an amount) and an event at a random moment of a week with an amount read (or none). A separate oracle says fire or not.
 // Checked: exactly — never a "more than 1,000" fired without an amount, never outside the hours / days.
 const P = await import(process.env.CD || "../../web-src/phonerules.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 function oracle(ifs, at, we, amount) {
   const d = new Date(at), m = d.getHours() * 60 + d.getMinutes(), isWe = we.includes(d.getDay());
   let a = null, b = null;

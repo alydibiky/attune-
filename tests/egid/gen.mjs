@@ -4,7 +4,7 @@
 import fs from "fs";
 const E = await import(process.env.EGID || "../../web-src/egid.js");
 const N = +(process.argv[2] || 10000), now = Date.parse("2026-11-12T12:00:00");
-let seed = 17; const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
+let seed = 17 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
 const AR = "٠١٢٣٤٥٦٧٨٩", G = Object.keys(E.GOVS), pad = (n, k = 2) => String(n).padStart(k, "0");
 let pass = 0; const miss = {};
 for (let i = 0; i < N; i++) {
@@ -29,5 +29,5 @@ for (let i = 0; i < N; i++) {
   if (!bad) pass++; else (miss[bad] = miss[bad] || []).push(i);
 }
 const rep = ["# Egyptian national ID — " + N, "", "Passed: **" + pass + " / " + N + " (" + (100 * pass / N).toFixed(2) + "%)**", "", ...Object.entries(miss).map(([k, l]) => "- " + k + " — " + l.length)].join("\n");
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-egid-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep);

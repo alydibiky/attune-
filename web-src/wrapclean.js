@@ -1,3 +1,4 @@
+import { worldToEnglish } from "./worldlang.js";
 /* ---- v9.9.32 (Ali, 13 Nov 2026: "try the code … with 100,000 scenarios and unique texts … in a very hard and unique way") -------------
    The 100,000-sentence run (tests/scenarios/mega.mjs) found that the readers were ~99% right on a plain sentence but only ~80% right
    when people typed it the way they really do: "hey attune, remind me tomorrow at 9 to call mama thanks", «يا أتيون، صرفت 150 على
@@ -105,8 +106,13 @@ function rephrase(t) {
   if ((m = /^i (?:keep|always) forget(?:ting)? to (.+?),?\s+remind me\s*(.*)$/i.exec(s))) s = "remind me " + m[2] + " to " + m[1];
   if ((m = /^i (?:really )?(?:need|have) to (.+?),?\s+remind me(?: please)?$/i.exec(s))) s = "remind me to " + m[1];
   if ((m = /^(.+?)\s+i (?:have|need) to (.+?),?\s+remind me(?: please)?$/i.exec(s)) && new RegExp("^" + TIMEW, "i").test(m[1] + " ")) s = "remind me " + m[1] + " to " + m[2];
+  // v9.9.38 (the 1M test): "what's my taxis total since the 1st?" · "my coffee total this month" · "what's my total on food this week?"
+  if ((m = /^(?:what'?s|what is|show me|tell me)?\s*(?:my|the)\s+(?!grand\b|overall\b|monthly\b|net\b)([\p{L}][\p{L}\s'’-]{1,30}?)\s+(?:total|spending)(?!\s*(?:is|was|=|:)(?:\s|\d|$))\s*(.*)$/iu.exec(s)) && !/\b(?:income|salary|balance|savings?)\b/i.test(m[1])) s = "how much did I spend on " + m[1] + (m[2] ? " " + m[2] : "");
+  else if ((m = /^(?:what'?s|what is|show me|tell me)\s+my\s+total\s+(?:on|for)\s+(.+)$/i.exec(s))) s = "how much did I spend on " + m[1];
   // "heads up tonight at 7: buy bread" / "reminder please: pay the bill, tomorrow at 9"
-  if ((m = /^heads[- ]up\s+(.+?):\s*(.+)$/i.exec(s))) s = "remind me " + m[1] + " to " + m[2];
+  if ((m = /^heads[- ]up\s+(.+?):(?!\d\d)\s*(.+)$/i.exec(s))) s = "remind me " + m[1] + " to " + m[2];   // (v9.9.38: "at 7:30 am" keeps its minutes)
+  // v9.9.38 (the 1M test: "paid 150 for a haircut and don't let me forget to call the bank in 2 hours" kept only the money)
+  s = s.replace(/^(?:please\s+)?(?:don'?t|do not) let me forget (?:to\s+)?/i, "remind me to ").replace(/([,;]\s*|\s+(?:and|also|plus|then)\s+)(?:please\s+)?(?:don'?t|do not) let me forget (?:to\s+)?/i, "$1remind me to ");
   if ((m = /^reminder(?: please)?:\s*(.+?),\s*(.+)$/i.exec(s)) && new RegExp("^" + TIMEW, "i").test(m[2] + " ")) s = "remind me " + m[2] + " to " + m[1];
   if ((m = /^remind me\s+(.+?)\s+so I\s+(.+)$/i.exec(s))) s = "remind me " + m[1] + " to " + m[2];
   // Egyptian Arabic
@@ -174,6 +180,8 @@ const WHEN = [
 function whenEn(w) { const x = WHEN.find(([re]) => re.test(w.trim())); return x ? x[1] : ""; }
 function otherLang(t) {
   let m;
+  // v9.9.38 (the 1M test): "where did my money go this week?" was read as "where did I put my …" / "what's due"
+  if ((m = /^(?:so\s+|ok\s+)?where\s+(?:did|has|have)\s+(?:all\s+)?(?:my|our)\s+(?:money|cash|salary)\s+(?:go|gone|went)\b\s*(.*)$/i.exec(t))) return "what did I spend money on" + (m[1] ? " " + m[1] : "?");
   // spending
   if ((m = new RegExp("^(?:gasté|pagué|gastei|paguei|ho speso|ho pagato|spesi|pagai|j'ai payé|j'ai dépensé|j’ai payé|j’ai dépensé)\\s+" + N + "\\s*(euros?|reais|real|pesos|€)?\\s+(?:en|por|no|na|nos|nas|em|pelo|pela|com|per|di|para|para o|para a|pour|au|à la|à|aux)\\s+(.+)$", "i").exec(t))) return "spent " + amt(m[1], curOf(m[2])) + " on " + m[3];
   if ((m = new RegExp("^(.+?)\\s+için\\s+" + N + "\\s*(lira|tl)?\\s+(?:ödedim|harcadım|verdim)$", "i").exec(t))) return "spent " + amt(m[2], curOf(m[3] || "lira")) + " on " + m[1];
@@ -196,5 +204,5 @@ function otherLang(t) {
     if (m[1]) return "remind me in " + m[1] + " hours to " + m[5];
     const day = whenEn(m[2] || ""); if (day) return "remind me " + day + (m[3] ? " at " + m[3] + (m[4] ? ":" + m[4] : "") : "") + " to " + m[5];
   }
-  return t;
+  return worldToEnglish(t);   // v9.9.38: the six everyday orders in all 20 languages (worldlang.js)
 }

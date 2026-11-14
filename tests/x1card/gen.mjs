@@ -3,7 +3,7 @@
 // website, in shuffled orders (cards put the company on top or the name on top). Checked: the name exactly (never the company or the
 // title), the title, the company, the phone saved is the MOBILE (never the fax), the email, the website.
 const B = await import(process.env.BC || "../../web-src/bizcard.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const AR = (s) => String(s).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
 const N = { en: [["Ahmed", "Kamal"], ["Sara", "Fawzy"], ["Omar", "Hamdy"], ["Mona", "Lotfy"], ["Karim", "Zaki"], ["Laila", "Ragab"]], ar: [["أحمد", "كمال"], ["سارة", "فوزي"], ["عمر", "حمدي"], ["منى", "لطفي"], ["كريم", "زكي"], ["ليلى", "رجب"]], fr: [["Jean", "Martin"], ["Claire", "Dubois"], ["Hugo", "Bernard"], ["Léa", "Moreau"]] };
 const T = { en: ["Sales Manager", "Senior Engineer", "Marketing Director", "Chief Accountant", "Legal Consultant", "Project Coordinator"], ar: ["مدير المبيعات", "مهندس أول", "مدير التسويق", "محاسب", "مستشار قانوني", "منسق مشروعات"], fr: ["Directeur commercial", "Ingénieur", "Responsable marketing", "Comptable"] };

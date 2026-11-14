@@ -5,7 +5,7 @@
 // leave-home time (3 h international / 2 h domestic + travel), check-in 24 h before (or the airline's "open"), the gate / boarding /
 // delay ONLY from the airline, a delay past midnight on the next day, the steps done as the clock passes them.
 const F = await import(process.env.TR2 || "../../web-src/flightday.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const AIR = [["EgyptAir", "MS", "مصر للطيران"], ["Saudia", "SV", "السعودية"], ["flynas", "XY", "طيران ناس"], ["flyadeal", "F3", "طيران أديل"], ["Air Arabia", "G9", "العربية للطيران"], ["Emirates", "EK", "طيران الإمارات"]];
 const ROUTES = [["CAI", "JED", 0], ["CAI", "HRG", 1], ["JED", "RUH", 1], ["RUH", "DXB", 0], ["CAI", "IST", 0], ["DXB", "AUH", 1], ["JED", "MED", 1], ["CAI", "LXR", 1], ["KWI", "CAI", 0], ["AMM", "JED", 0]];
 const pad = (n) => String(n).padStart(2, "0");

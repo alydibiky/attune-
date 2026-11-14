@@ -107,6 +107,30 @@ const UNIT_AFTER = "(?:min(?:ute)?s?|hours?|hrs?|km|kms|kilomet(?:er|re)s?|miles
 const LEAD_BEFORE = "(?:invoice|receipt|order|order number|order no\\.?|ref|reference|table|platform|ticket|طلب|الطلب|رقم الطلب|فاتوره رقم|فاتورة رقم|ترابيزه|ترابيزة|رصيف|page|room|floor|chapter|code|pin|password|passcode|number|no\\.?|flat|apartment|gate|seat|bus|line|flight|الرحله|الرحلة|رحله|رحلة|version|model|iphone|galaxy|pixel|ps|size|aged?|score|صفحه|صفحة|اوضه|أوضة|الدور|شقه|شقة|الكود|كود|الرقم|رقم|الباسورد|باسورد|باب|مقاس|ايفون|آيفون)";
 const FUTURE_PAY = /\b(?:will|going to|gonna|should|need to|have to|must|want to|plan to|about to)\s+(?:pay|buy|spend|give|send|transfer|get)\b|(?<![ء-ي])(?:هدفع|هشتري|هحول|هبعت)(?![ء-ي])|(?:لازم|عايز|عاوز|محتاج|ناوي)\s+(?:ادفع|اشتري|احول|ابعت)/i;
 const NOT_A_LOG = /\bremind(?:er)?\b|فكرني|ذكرني|نبهني|^\s*(?:watch|track|follow|monitor|compare|search|find|look up|google)\b|^\s*(?:we|he|she|they|i)\s+(?:are|is|am|were|was)\b|^\s*(?:تابع|راقب|دور|قارن)/i;
+// v9.9.38: what counts or names things in a story — taken out before a payment in the same sentence is read again (dropNoise)
+const COUNT_AFTER = "(?:meetings?|calls?|emails?|messages?|tasks?|items?|guests?|rounds?|laps?|sets?|reps?|classes?|lessons?|episodes?|games?|matches?|stops?|tickets? sold|hours? long|-?hours?|-?minutes?|-?days?|-?weeks?|-?months?|-?years?|اجتماعات|اجتماع|مكالمات|مكالمه|مكالمة|رسايل|رسالة|رسالتين|ضيوف|حصص|حصه|حصة)";
+const NOISE_LEAD = "(?:invoice|receipt|order|order number|order no\\.?|ref|reference|table|platform|ticket|page|room|floor|chapter|code|gate|seat|flat|apartment|bus|line|flight|building|block|office|اوضة|اوضه|أوضة|غرفة|غرفه|فاتورة رقم|فاتوره رقم|فاتورة|فاتوره|رقم الطلب|طلب رقم|ترابيزة|ترابيزه|دور|عمارة|عماره|شقة رقم|شقه رقم|رصيف|بوابة|بوابه|كرسي|مقعد|رحلة رقم|رحله رقم)";
+const PAID_HINT = /\bfor\s+[\d٠-٩]|\b(?:paid|spent|bought|grabbed|got|picked up|ordered)\b|دفعت|اشتريت|صرفت|جبت|طلبت|(?:^|\s)ب\s?[\d٠-٩]/i;
+// "long day, 7 meetings, then a cake for 780" · "after the meeting I grabbed breakfast for 1750" · «بعد الاجتماع اشتريت …»: the story
+// before the payment is not part of it
+function storyTrim(t) {
+  const s = String(t || "");
+  const a = /^(?:[^.!?]{0,80}?[,،]\s*)?(?:and\s+)?then\s+(?=\S)/i.exec(s);
+  if (a && PAID_HINT.test(s.slice(a[0].length))) return s.slice(a[0].length);
+  const b = /^(?:right\s+|just\s+)?after\s+[^,.!?]{2,70}?[,]?\s+(?=i\s+(?:grabbed|bought|paid|got|spent|ordered|picked up)\b)/i.exec(s);
+  if (b) return s.slice(b[0].length);
+  const c = /^بعد\s+[^،,.!؟]{2,60}?[،,]?\s+(?=(?:انا\s+)?(?:اشتريت|دفعت|جبت|صرفت|طلبت)(?![ء-ي]))/.exec(s);
+  if (c) return s.slice(c[0].length);
+  return s;
+}
+function dropNoise(t) {
+  const s0 = String(t || ""); if ((s0.match(/[\d٠-٩]+/g) || []).length < 2) return s0;
+  let s = s0.replace(new RegExp("(?<![\\p{L}])" + NOISE_LEAD + "\\s*#?\\s*(?:no\\.?\\s*|رقم\\s*)?[\\d٠-٩][\\d٠-٩,./-]*", "giu"), " ")
+    .replace(new RegExp("(?<![\\d.,\\p{L}])[\\d٠-٩]+\\s*(?:-\\s*)?" + COUNT_AFTER + "(?![\\p{L}])", "giu"), " ")
+    .replace(new RegExp("(?<![\\d.,\\p{L}])[\\d٠-٩]+\\s*" + UNIT_AFTER + "(?![\\p{L}])", "giu"), " ")
+    .replace(/\s+([,،.])/g, "$1").replace(/\s{2,}/g, " ").replace(/^[\s,،.]+/, "").trim();
+  return (s.match(/[\d٠-٩]/) && s !== s0.trim()) ? s : s0;
+}
 /** Is this amount really money? → false when the number that would be saved is a time, a count, a page, a model number… */
 function amountIsMoney(t, amount) {
   const n = String(amount).replace(/\.0+$/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), s = latin(t).replace(/(\d),(?=\d{3})/g, "$1");
@@ -139,6 +163,15 @@ export function understand(text0, opts = {}) {
       if (!(b && b.actions && b.actions.length === 1 && b.actions[0].kind === "reminder")) { const q = quickAction(parts.remind, (opts && opts.now) || Date.now()); if (q && ["reminder", "alarm", "timer"].includes(q.kind) && !q.problems.length) b = { actions: [{ kind: "reminder", action: q }] }; }
       if (a && b && a.actions && b.actions && a.actions.length && a.actions.every((x) => x.kind === "money") && b.actions.length === 1 && b.actions[0].kind === "reminder") return { actions: [...a.actions, ...b.actions], two: true }; } }
   let u = understand1(text, opts);
+  // v9.9.38 (the 1M test: "long day, 7 meetings, then a cake for 780 at Starbucks", "pizza for 175, invoice 4999", «بعد اجتماع 5 ساعات في
+  // اوضة 424 اشتريت الجيم ب45»): numbers that only count or name things are taken out and the payment is read again
+  { const dn = dropNoise(storyTrim(text));
+    if (dn !== text && PAID_HINT.test(dn)) { const u2 = understand1(dn, opts);
+      const money2 = u2 && u2.actions && u2.actions.length && u2.actions.every((a) => a.kind === "money");
+      const n1 = (u && u.actions || []).reduce((a, x) => a + (x.kind === "money" ? (x.items || []).length : 0), 0), n2 = money2 ? u2.actions.reduce((a, x) => a + (x.items || []).length, 0) : 0;
+      const remindSaid = /\bremind|\bforget\b|\bheads up\b|\balarm\b|فكرني|ذكرني|نبهني|متنسانيش|ماتنسانيش|منبه/i.test(text);
+      const firstOther = (u && u.actions || []).some((x) => x.kind !== "money");
+      if (money2 && (!(u && u.actions && u.actions.length) || (!firstOther && n2 < n1) || (firstOther && !remindSaid))) u = { ...u2, actions: u2.actions.map((a) => ({ ...a, items: (a.items || []).map((x) => ({ ...x, src: x.src || String(text0 || "").trim() })) })) }; } }
   // a spending line written with signs — "lunch (350)", "mechanic: 320", "haircut 1750/-", «تورتة 15ج», "😋 charger 25" — is read without them
   if (u && !u.ask && !(u.actions || []).length) { const t2 = tidy(text); if (t2 && t2 !== text.trim()) { const u2 = understand1(t2, opts); if (u2 && u2.actions && u2.actions.length && u2.actions.every((a) => a.kind === "money")) u = u2; } }
   if (u && u.actions && u.actions.length && u.actions.every((a) => a.kind === "money") && notSpent(text)) return { actions: [], chat: true };

@@ -3,7 +3,7 @@
 // 2 minutes), around-the-block (back within 10 minutes), new visits after 10+ minutes away, done reminders. A separate oracle (works from
 // whole visits: arrive = its start; leave = the first exit after 3+ minutes in it) says when it must ring. Checked: exactly those rings.
 const P = await import(process.env.PL || "../../web-src/placering.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 export function make(i) {
   const r = rng(i * 53 + 7), on = r() < 0.5 ? "arrive" : "leave", done = r() < 0.05, evs = [], visits = [];
   let t = Date.parse("2026-11-13T08:00:00");

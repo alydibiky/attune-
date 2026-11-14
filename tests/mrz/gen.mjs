@@ -5,7 +5,7 @@
 import fs from "fs";
 const M = await import(process.env.MRZ || "../../web-src/mrz.js");
 const N = +(process.argv[2] || 10000);
-let seed = 9; const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
+let seed = 9 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648), int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), pick = (l) => l[Math.floor(rnd() * l.length)];
 const W = [7, 3, 1], val = (c) => (c === "<" ? 0 : /\d/.test(c) ? +c : c.charCodeAt(0) - 55), cd = (s) => String([...s].reduce((a, c, i) => a + val(c) * W[i % 3], 0) % 10);
 const C = ["EGY", "SAU", "ARE", "GBR", "USA", "FRA", "DEU", "TUR", "IND", "PAK", "IDN", "NGA", "KEN", "BRA", "MAR", "JOR", "D<<", "CHN", "JPN", "KOR"];
 const SUR = ["ELDIBIKY", "MOHAMED", "SMITH", "OCONNOR", "NGUYEN", "GARCIA LOPEZ", "AL RASHID", "KIM", "MUELLER", "OKAFOR", "SILVA"], GIV = ["ALI", "NADA", "JOHN PAUL", "MARIAM", "WEI", "AHMED SAMIR", "FATIMA", "LUCAS", "AISHA"];
@@ -53,5 +53,5 @@ for (let i = 0; i < N; i++) {
   if (!why) pass++; else (miss[why] = miss[why] || []).push(i);
 }
 const rep = ["# MRZ — " + N + " documents", "", "Passed: **" + pass + " / " + N + " (" + (100 * pass / N).toFixed(2) + "%)**", "", ...Object.entries(miss).map(([k, l]) => "- " + k + " — " + l.length)].join("\n");
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), rep + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-mrz-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), rep + "\n");
 console.log(rep);

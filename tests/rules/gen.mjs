@@ -4,7 +4,7 @@
 import fs from "fs";
 import { parseRule } from "../../web-src/rules.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261115; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261115 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 // the person's own names, as they'd be saved in each script
 const ctx = { people: [{ id: "karim", name: "Karim", aka: ["كريم", "Карим", "カリム", "카림", "卡里姆", "करीम", "کریم", "করিম", "คาริม"] }, { id: "mona", name: "Mona", aka: ["منى", "Мона", "モナ", "모나", "莫娜", "मोना", "مونا", "মোনা", "โมนา"] }],
@@ -96,5 +96,5 @@ for (let i = 0; i < N; i++) {
 const byL = {}; for (const k of Object.keys(bad)) { const L = k.split(" · ")[0]; byL[L] = (byL[L] || 0) + bad[k].length; }
 let md = `# Rules run — ${N} sentences, ${ok} right (${(100 * ok / N).toFixed(2)}%)\n\nWrong per language: ${Object.entries(byL).sort((a, b) => b[1] - a[1]).map(([l, n]) => l + " " + n).join(" · ") || "none"}\n`;
 for (const [k, v] of Object.entries(bad).sort((a, b) => b[1].length - a[1].length).slice(0, 60)) md += `\n- **${k}** × ${v.length}: «${v[0]}»`;
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), md + "\n");
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-rules-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md + "\n");
 console.log(md.slice(0, 6000));

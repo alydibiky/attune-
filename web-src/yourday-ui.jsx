@@ -59,7 +59,7 @@ export function YourDay({ records = [], navTo, flash: flash0, now: now0 }) {
     for (const n of [...notes].filter((x) => /life ?360|find my|family/i.test(String(x.app || "") + " " + String(x.pkg || "")) && (x.ts || 0) > now - 864e5).sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
       const d = NT.describe(n, dir, { tr }); if (!d || seen.has(d.name)) continue; seen.add(d.name); out.push({ ...d, ts: n.ts, id: n.id }); }
     return out.slice(0, 3); }, [notes, tv, Math.floor(now / 60000)]);
-  const day = useMemo(() => dayFromNotes(notes, { now, offApps: ds.offApps }), [notes, Math.floor(now / 60000), ds.offApps.join()]);
+  const day = useMemo(() => dayFromNotes(notes, { now, offApps: ds.offApps, first: NT.firstNames(NT.loadTeach()) }), [notes, Math.floor(now / 60000), ds.offApps.join(), tv]);
   const hidden = new Set(readJson(ADDED_KEY, []));
   const asks = day.asks.filter((a) => !hidden.has(a.id)).slice(0, 3);
   const hide = (id) => { try { localStorage.setItem(ADDED_KEY, JSON.stringify([...hidden, id].slice(-300))); } catch (e) {} bump((x) => x + 1); };

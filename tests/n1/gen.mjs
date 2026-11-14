@@ -5,7 +5,7 @@
 //      done promise or a paid debt (then it shows nowhere);   2. its line opens ITS original (the page + that exact id);
 //   3. it never shows on another person's page — except "either Ahmed", which shows on both as "maybe", never as sure.
 const P = await import(process.env.N1 || "../../web-src/personpage.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const FIRST = [["Ahmed", "أحمد"], ["Mona", "منى"], ["Karim", "كريم"], ["Sara", "سارة"], ["Youssef", "يوسف"], ["Nadia", "نادية"], ["Omar", "عمر"], ["Laila", "ليلى"], ["Hassan", "حسن"], ["Dina", "دينا"],
   ["Tarek", "طارق"], ["Heba", "هبة"], ["Maged", "ماجد"], ["Rania", "رانيا"], ["Samir", "سمير"], ["Yasmin", "ياسمين"], ["Walid", "وليد"], ["Noha", "نهى"], ["Khaled", "خالد"], ["Salma", "سلمى"]];
 const LAST = [["Samir", "سمير"], ["Kamal", "كمال"], ["Fawzy", "فوزي"], ["Hamdy", "حمدي"], ["Lotfy", "لطفي"], ["Ragab", "رجب"], ["Shawky", "شوقي"], ["Zaki", "زكي"]];

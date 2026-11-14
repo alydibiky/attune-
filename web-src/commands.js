@@ -203,7 +203,9 @@ export function guess(text, ctx = {}) {
   const thing = (ctx.things || []).some((n) => n && f.includes(fold(n)));
   if (T(RX.whereSet) && !/[?؟]\s*$/.test(t)) add("whereSet", mine || thing ? 0.86 : 0.62);
   const parcel = ctx.agent === "track" || /\b(?:order|package|parcel|delivery|shipment)\b|طلبي|الاوردر|الأوردر|الشحنة|الشحنه|الطرد/i.test(t);   // v9.9.18: "where is my noon order" is a delivery
-  if (!parcel && (T(RX.whereAsk) || (T(RX.whereIs) && (mine || thing)))) add("whereAsk", mine || thing ? 0.86 : 0.62);
+  // v9.9.38 (the 1M test): "where did my money go this week?" asks about spending, not where a thing is kept
+  const moneyGo = /\bwhere\s+(?:did|has|have|does|do|is)\s+(?:all\s+)?(?:my|our|the)\s+(?:money|salary|cash|pay|budget|income|savings|spending)\s+(?:go(?:ne|ing)?|went)\b|فلوسي (?:راحت|بتروح) فين|فين فلوسي/i.test(t);
+  if (!parcel && !moneyGo && (T(RX.whereAsk) || (T(RX.whereIs) && (mine || thing)))) add("whereAsk", mine || thing ? 0.86 : 0.62);
   // v9.9.18 (the hard run): "where did I put the charger?" and «النضارة فين؟» can only mean a thing of mine
   if (/\bwhere (?:did|do) (?:i|we) (?:usually |last )?(?:put|leave|keep|place|hide)\b/i.test(t) || /^\s*(?:ال)[ء-ي]{2,}(?:\s+(?:بتاعي|بتاعتي|بتاعتنا|بتاعنا|ال[ء-ي]{2,}))?\s+(?:فين|راحت فين|راح فين)\s*[?؟]?\s*$/.test(f) && !/(?:^|\s)ال(?:محطه|مترو|صيدليه|مستشفي|مستشفى|بنك|جامعه|مطار|مول|جامع|مسجد|كنيسه|مدرسه|سوبر|ماركت|قسم|بوسطه|بريد|شارع|ميدان|كوبري|مطعم|كافيه|نادي|فندق|عياده|سفاره|محكمه|مصلحه|حمام|اسانسير|مخرج|مدخل|بوابه)/.test(f)) add("whereAsk", 0.9);
   if (T(RX.mapGo)) add("map", 0.84);

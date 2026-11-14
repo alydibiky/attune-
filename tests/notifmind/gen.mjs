@@ -9,7 +9,7 @@
 // to the model (tests/trials/notifmind-model.mjs). Seeded.  node tests/notifmind/gen.mjs [N] [from]   (MIND=<path> swaps the module)
 const M = await import(process.env.MIND || "../../web-src/notifmind.js");
 export const NOW = Date.parse("2026-11-13T18:00:00");   // a Friday evening
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const pad = (n) => String(n).padStart(2, "0");
 const iso = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
 const plus = (days) => { const d = new Date(NOW); d.setDate(d.getDate() + days); return iso(d); };

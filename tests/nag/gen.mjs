@@ -3,7 +3,7 @@
 import fs from "fs";
 import { rings, LEVELS, inQuiet } from "../../web-src/nag.js";
 const N = +(process.argv[2] || 2000), TZ = process.env.TZ || "local";
-let seed = 20261112 + [...TZ].reduce((a, c) => a + c.charCodeAt(0), 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261112 + 7919 * +(process.env.SEED_SHIFT || 0) + [...TZ].reduce((a, c) => a + c.charCodeAt(0), 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const QUIETS = [null, null, { from: "23:00", to: "07:00" }, { from: "22:30", to: "06:00" }, { from: "00:00", to: "08:00" }, { from: "13:00", to: "15:00" }, { from: "21:00", to: "09:30" }];
 const M = 60000, base = Date.parse("2026-11-11T00:00:00");

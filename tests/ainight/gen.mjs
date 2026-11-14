@@ -9,7 +9,7 @@
 //    won't run it again), a job deleted meanwhile still shows its answer, newest first, at most 30.
 // `node tests/ainight/gen.mjs [N] [from]`; AINIGHT=<path> swaps the module (planted-bug check).
 const A = await import(process.env.AINIGHT || "../../web-src/aijobs.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const H = 36e5, D = 864e5, BASE = Date.parse("2026-11-01T00:00:00");
 const SENT = ["every day at 7 summarize my day", "every Sunday 9 pm plan my week", "on the 25th check my bills", "every Friday at 10 am list my follow-ups",
   "كل يوم الساعة ٨ لخص يومي", "كل يوم أحد الساعة ٩ مساءً خطط أسبوعي", "every Monday and Thursday at 6 pm remind me what's due", "chaque jour à 21h résume ma journée",

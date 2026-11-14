@@ -5,7 +5,7 @@
 // languages. Checked: the blood type is exactly right or marked "check" (never guessed); the medicines are exactly today's own;
 // what is missing is listed; the shared text has every value under the reader's own words, the insurance number masked (never whole).
 const E = await import(process.env.X4 || "../../web-src/emergency.js");
-function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function rng(seed) { let s = (seed + 7919 * +(process.env.SEED_SHIFT || 0)) >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const NOW = Date.parse("2026-11-12T12:00:00"), DAY = 864e5, iso = (t) => new Date(t).toISOString().slice(0, 10);
 const G = ["A", "B", "AB", "O"];
 const WRITE = [   // (group, +/-) → how it is written

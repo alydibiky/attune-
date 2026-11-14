@@ -4,7 +4,7 @@
 // minutes or is reported late — never half.
 import fs from "fs"; import { placeEvents, planWeek, meters } from "../../web-src/b4plan.js";
 const N = +(process.argv[2] || 10000);
-let seed = 20261122; const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+let seed = 20261122 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const int = (a, b) => a + Math.floor(rnd() * (b - a + 1)), M = 60000;
 const PLACES = [{ lat: 29.9602, lng: 31.2569 }, { lat: 24.7136, lng: 46.6753 }, { lat: 51.5072, lng: -0.1276 }, { lat: -6.2, lng: 106.8166 }, { lat: 35.6762, lng: 139.6503 }, { lat: 40.7128, lng: -74.006 }];
 const at = (p, m, bearing) => ({ lat: p.lat + (m * Math.cos(bearing)) / 111320, lng: p.lng + (m * Math.sin(bearing)) / (111320 * Math.cos((p.lat * Math.PI) / 180)) });
@@ -39,4 +39,4 @@ for (let i = 0; i < N; i++) {
     if (err) bad["week: " + err] = (bad["week: " + err] || 0) + 1; else okW++; }
 }
 const s = `# B4 plan run — places ${okP}/${N} · week plans ${okW}/${N} (${(100 * (okP + okW) / (2 * N)).toFixed(2)}%)` + Object.entries(bad).slice(0, 10).map(([k, v]) => `\n- ✗ ${k} × ${v}`).join("") + "\n";
-if (N === 10000) fs.writeFileSync(new URL("./report.md", import.meta.url), s); console.log(s);
+if (N === 10000) fs.writeFileSync(new URL(process.env.SEED_SHIFT ? "../onemillion/B-b4plan-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), s); console.log(s);

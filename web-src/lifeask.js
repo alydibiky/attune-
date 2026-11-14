@@ -103,6 +103,26 @@ function lastTime(q, s) {
     rows: recs.slice(0, 6).map((x) => [x.date, x.what]), open: r.src, sources: [...new Set(recs.map((x) => x.src))] };
 }
 
+// v9.9.38 (the 1M test: "what are my subscriptions?" went to the AI): the subscriptions you pay, from People & plans and from Money
+const SUBS_Q = /\b(?:my|the|all)\s+(?:monthly\s+)?subscriptions\b|\bwhat (?:am i|do i) (?:subscribed to|pay for every month)\b|\bsubscriptions? (?:do|am) i\b|اشتراكاتي|الاشتراكات (?:اللي|بتاعتي)|انا مشترك في ايه|بدفع اشتراك في ايه/i;
+const SUB_CAT = /^(?:subs|subscriptions?|اشتراكات)$/i;
+function subs(q, s, now) {
+  const out = [], seen = new Set(), today = iso(now);
+  for (const c of ((s.life && s.life.items) || [])) if (c && c.kind === "subscription" && !c.del && !c.ended) {
+    const k = fold(c.title || c.person || ""); if (seen.has(k)) continue; seen.add(k);
+    out.push({ name: c.title || c.person || "?", monthly: c.every === "year" ? c.amount / 12 : c.every === "week" ? c.amount * 52 / 12 : c.amount, cur: c.currency || "", src: "life" }); }
+  // Money: what was paid as a subscription in the last two months and is not in People & plans already
+  const L = s.ledger || {}, from = iso(now - 62 * DAY);
+  for (const t of (L.txns || [])) if (t && t.type === "expense" && t.date >= from && t.date <= today && (SUB_CAT.test(String(t.cat || "")) || /netflix|spotify|shahid|anghami|icloud|youtube premium|chatgpt|disney|osn|starzplay|watch ?it|google one|apple (?:music|one|tv)/i.test(String(t.note || "")))) {
+    const k = fold(t.note || t.cat); if (!k || seen.has(k)) continue; seen.add(k);
+    out.push({ name: t.note || t.cat, monthly: Number(t.amount) || 0, cur: t.currency || "", src: "money" }); }
+  if (!out.length) return { kind: "subs", en: "I don't see any subscriptions yet — add one in People & plans (“Netflix 200 a month”) and I'll keep track.", ar: "مش شايف اشتراكات لسه — ضيف واحد في الناس والالتزامات («نتفليكس 200 كل شهر») وأنا أتابعه.", open: "life", sources: ["life", "money"] };
+  out.sort((a, b) => b.monthly - a.monthly);
+  const cur = out[0].cur, total = Math.round(out.reduce((a, x) => a + (x.cur === cur ? x.monthly : 0), 0));
+  return { kind: "subs", en: `${out.length} subscription${out.length === 1 ? "" : "s"} · about ${num(total)} ${cur} a month (${num(total * 12)} a year). Biggest: ${out[0].name}.`,
+    ar: `${out.length === 1 ? "اشتراك واحد" : out.length === 2 ? "اشتراكين" : out.length <= 10 ? out.length + " اشتراكات" : out.length + " اشتراك"} · حوالي ${num(total)} ${cur} في الشهر (${num(total * 12)} في السنة). أكبرهم: ${out[0].name}.`,
+    rows: out.slice(0, 12).map((x) => [x.name, num(Math.round(x.monthly)) + " " + x.cur + " / month"]), open: out[0].src, sources: [...new Set(out.map((x) => x.src))] };
+}
 export function kindOf(q, stores = {}) {
   const t = String(q || "");
   if (HISTORY.test(t)) return "history";
@@ -116,6 +136,7 @@ export function kindOf(q, stores = {}) {
   if (FOOD.test(t)) return "food";
   // v9.0: "remind me to pay…" (in any of the 20 languages) is something to set, not a money question
   if (lexSignals(t).has("action") && !/[?؟]\s*$/.test(t)) return "search";
+  if (SUBS_Q.test(t) && (/[?؟]\s*$/.test(t) || /^(?:what|which|list|show|how many|tell me|كام|ايه|إيه|وريني|قولي)\b/i.test(t.trim()))) return "subs";   // v9.9.38
   if (myMoneyIntent(t) || catAsked(t) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance|went on|go on|goes on)\b|صرفت|مصاريف|دخل|رصيد/i.test(t)) return "money";
   if (DUE.test(t)) return "due";
   return "search";
@@ -286,7 +307,7 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
     if (n) return { kind: "live", en: n.en, ar: n.ar, sources: ["recall"], open: "recall" };
     return { kind: "world", en: "That's about the world, not your own data — asking the web.", ar: "ده سؤال عن الدنيا مش عن بياناتك — بسأل النت.", web: true, sources: [] };
   }
-  const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due }[k];
+  const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due, subs }[k];
   const r = (f && f(q, stores, now)) || search(q, stores);
   // v6.38 (H3): results over time come with their chart (drawn from the same rows, so it matches the table)
   if (r && !r.chart && ["lab", "sugar", "food"].includes(r.kind)) { const c = chartOfRows(r.rows, r.kind === "food" ? "bar" : "line"); if (c) r.chart = c; }
