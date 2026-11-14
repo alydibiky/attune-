@@ -181,6 +181,7 @@ function whenEn(w) { const x = WHEN.find(([re]) => re.test(w.trim())); return x 
 function otherLang(t) {
   let m;
   // v9.9.38 (the 1M test): "where did my money go this week?" was read as "where did I put my …" / "what's due"
+  if ((m = /^(?:هي\s+)?(?:فلوسي|الفلوس)\s+(?:راحت|بتروح|راحو|راحوا)\s+(?:فين|على ايه|في ايه)\s*(.*)$/.exec(t))) return "صرفت كام " + (m[1] || "").replace(/[؟?]+$/, "").trim() + "؟";   // (the model trial: «فلوسي راحت فين الاسبوع ده؟» went to the model)
   if ((m = /^(?:so\s+|ok\s+)?where\s+(?:did|has|have)\s+(?:all\s+)?(?:my|our)\s+(?:money|cash|salary)\s+(?:go|gone|went)\b\s*(.*)$/i.exec(t))) return "what did I spend money on" + (m[1] ? " " + m[1] : "?");
   // spending
   if ((m = new RegExp("^(?:gasté|pagué|gastei|paguei|ho speso|ho pagato|spesi|pagai|j'ai payé|j'ai dépensé|j’ai payé|j’ai dépensé)\\s+" + N + "\\s*(euros?|reais|real|pesos|€)?\\s+(?:en|por|no|na|nos|nas|em|pelo|pela|com|per|di|para|para o|para a|pour|au|à la|à|aux)\\s+(.+)$", "i").exec(t))) return "spent " + amt(m[1], curOf(m[2])) + " on " + m[3];
