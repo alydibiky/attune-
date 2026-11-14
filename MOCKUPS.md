@@ -77,3 +77,4 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   a tap", A1/A2 "ask me about chats" (now only when he asks to teach, in Chat), TR1 B "ask first" (now only bookings without a code).
 
 - 14 Nov 2026 (v9.9.38, from the 1M test): count goals CG-1..4 + week start WK-1..3 — docs/mockups/goals-week.html → https://claude.ai/artifact/Shh9zXeQFYVAZ8sDK6nMcL (waiting for Ali)
+- 14 Nov 2026: Ali picked CG-3 (+ his book idea: plot, review, lessons, the PDF Chat answers from) and WK-2 + WK-3 → combined page docs/mockups/books-week-combined.html → https://claude.ai/artifact/Y7mhmLwv1vQornz2gc49Fb (waiting for his OK)

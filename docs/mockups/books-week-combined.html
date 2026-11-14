@@ -1,0 +1,237 @@
+<title>Books and Week</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: one column of features; each shows 2 phone screens (A, B) side by side, wrapping to one on phones; sticky pick bar */
+:root {
+  --bg: #f3f1ef; --surface: #ffffff; --ink: #1f1b1c; --mut: #69605f; --line: #e3dedb; --acc: #7a1f3d; --acc-soft: #f4e4ea; --ok: #1e7a43;
+  --font-ui: "Nunito", "IBM Plex Sans Arabic", system-ui, sans-serif; --font-code: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* the app's own look inside the phones (Attune light, burgundy C1) */
+  --a-bg: #F5F4F2; --a-surf: #FFFFFF; --a-surf2: #EFEDEA; --a-ink: #1E1C1B; --a-mut: #5E5A57; --a-ln: #E6E3E0; --a-acc: #7A1F3D; --a-soft: #F6E6EC;
+  --a-pos: #1e7a43; --a-neg: #b33a2e; --a-warn: #b4560e; --a-amber: #FBF0DC; --a-frame: #1b1718;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #161213; --surface: #201a1c; --ink: #f1e9eb; --mut: #b1a5a8; --line: #392f32; --acc: #e58fab; --acc-soft: #3a2029; --ok: #7fcaa3; --a-frame: #000000; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 150px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 900; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lead { color: var(--mut); font-size: 16px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.intro { display: grid; gap: 10px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; display: grid; gap: 6px; }
+.box ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 3px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { font-family: var(--font-code); font-size: 12.5px; text-decoration: none; color: var(--acc); background: var(--acc-soft); border-radius: 8px; padding: 2px 8px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.group-h .ar { color: var(--mut); font-weight: 800; }
+.feat { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; scroll-margin-top: 12px; }
+.feat-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.fcode { font-family: var(--font-code); font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 7px; padding: 1px 8px; font-size: 14px; }
+.fname { font-weight: 900; font-size: 19px; }
+.far { color: var(--mut); font-weight: 700; }
+.ali { font-size: 13.5px; color: var(--acc); font-weight: 800; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 14px; }
+.facts div { min-width: 0; } .facts b { display: block; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+@media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
+.opts { display: flex; flex-wrap: wrap; gap: 18px; }
+.opt { flex: 1 1 300px; min-width: 0; display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.opt-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-h input { width: 22px; height: 22px; margin: 0; accent-color: var(--acc); cursor: pointer; }
+.ocode { font-family: var(--font-code); font-weight: 600; font-size: 13px; color: var(--acc); }
+.oname { font-weight: 900; }
+.rec { font-size: 11.5px; font-weight: 800; color: var(--surface); background: var(--acc); border-radius: 999px; padding: 1px 8px; }
+.pm { font-size: 13.5px; color: var(--mut); display: grid; gap: 2px; }
+.pm span::before { font-weight: 900; margin-inline-end: 4px; }
+.pm .plus::before { content: "+"; color: var(--ok); } .pm .minus::before { content: "−"; color: #b33a2e; }
+.note { width: 100%; min-height: 40px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); }
+.note:focus, .opt input:focus-visible, .btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* ---- the phone ---- */
+.phone { width: 290px; max-width: 100%; margin: 0 auto; background: var(--a-frame); border-radius: 36px; padding: 9px; }
+.scr { background: var(--a-bg); border-radius: 28px; overflow: hidden; color: var(--a-ink); font-family: "Nunito", "IBM Plex Sans Arabic", sans-serif; font-size: 12px; line-height: 1.4; height: 560px; display: flex; flex-direction: column; position: relative; }
+.sb { display: flex; justify-content: space-between; padding: 8px 18px 2px; font-size: 10.5px; font-weight: 800; color: var(--a-ink); }
+.tb { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; font-weight: 900; font-size: 15px; }
+.tb .ico { font-size: 16px; color: var(--a-ink); width: 18px; text-align: center; }
+.body { padding: 4px 12px 12px; display: grid; gap: 8px; align-content: start; overflow: hidden; flex: 1; }
+.c { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 18px; padding: 10px 12px; display: grid; gap: 6px; }
+.c.amber { background: var(--a-amber); border-color: #efdcb8; }
+.c.soft { background: var(--a-soft); border-color: #ecd0da; }
+.lb { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--a-mut); font-weight: 800; }
+.t { font-weight: 900; font-size: 13px; }
+.s { color: var(--a-mut); font-size: 11px; }
+.r { display: flex; align-items: center; gap: 8px; } .r > .grow { flex: 1; min-width: 0; }
+.sq { width: 26px; height: 26px; border-radius: 9px; background: var(--a-soft); color: var(--a-acc); display: grid; place-items: center; font-weight: 900; font-size: 12px; flex: none; }
+.amt { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--a-neg); } .pos { color: var(--a-pos); } .warn { color: var(--a-warn); } .acc { color: var(--a-acc); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.b { border-radius: 10px; padding: 5px 10px; font-weight: 800; font-size: 11px; background: var(--a-acc); color: #fff; }
+.b.g { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); }
+.b.q { background: var(--a-surf2); color: var(--a-ink); }
+.ch { border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: var(--a-surf); border: 1px solid var(--a-ln); white-space: nowrap; }
+.ch.on { background: var(--a-acc); color: #fff; border-color: var(--a-acc); }
+.ch.soft { background: var(--a-soft); color: var(--a-acc); border-color: transparent; }
+.tag { font-size: 9.5px; font-weight: 800; border-radius: 6px; padding: 1px 6px; background: var(--a-surf2); color: var(--a-mut); white-space: nowrap; }
+.bar { height: 6px; border-radius: 9px; background: var(--a-ln); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--a-acc); }
+.tick { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--a-acc); display: inline-grid; place-items: center; font-size: 10px; color: #fff; flex: none; }
+.tick.d { background: var(--a-acc); }
+.sep { border-top: 1px solid var(--a-ln); }
+.notif { background: #2a2526; color: #f3eeee; border-radius: 16px; padding: 9px 11px; display: grid; gap: 4px; font-size: 11px; }
+.notif .app { font-size: 9.5px; color: #c9bfc1; font-weight: 700; }
+.notif .nt { font-weight: 900; font-size: 12px; }
+.notif .na { display: flex; gap: 14px; font-weight: 900; color: #f2b6c8; font-size: 11px; padding-top: 2px; }
+.shade { background: #3b3537; }
+.dim { position: absolute; inset: 0; background: rgba(20,14,16,.38); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--a-surf); border-radius: 22px 22px 0 0; padding: 8px 14px 14px; display: grid; gap: 7px; }
+.sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--a-ln); justify-self: center; }
+.inp { background: var(--a-surf); border: 1.5px solid var(--a-acc); border-radius: 16px; padding: 8px 10px; color: var(--a-mut); }
+.bubble { background: var(--a-acc); color: #fff; border-radius: 16px 16px 4px 16px; padding: 7px 10px; justify-self: end; max-width: 85%; font-weight: 700; }
+.dots { display: flex; gap: 4px; } .dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--a-acc); display: block; } .dots i.d { background: var(--a-acc); } .dots i.x { border-color: var(--a-ln); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tile { background: var(--a-surf); border: 1px solid var(--a-ln); border-radius: 14px; padding: 8px; display: grid; gap: 2px; }
+.cal { display: grid; grid-template-columns: 26px repeat(3, 1fr); gap: 3px; font-size: 9.5px; }
+.cal .h { font-weight: 800; color: var(--a-mut); text-align: center; }
+.cal .tm { color: var(--a-mut); }
+.cal .slot { border-radius: 6px; min-height: 22px; padding: 2px 4px; }
+.cal .busy { background: var(--a-surf2); color: var(--a-mut); }
+.cal .pr { background: #eef3ef; color: #4b6b57; }
+.cal .plan { background: var(--a-acc); color: #fff; font-weight: 800; }
+.ring { width: 150px; height: 150px; border-radius: 50%; margin: 6px auto; display: grid; place-items: center; background: conic-gradient(var(--a-acc) 0 62%, var(--a-ln) 62% 100%); }
+.ring > div { width: 126px; height: 126px; border-radius: 50%; background: var(--a-bg); display: grid; place-items: center; text-align: center; }
+.big { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tl { display: grid; gap: 0; } .tl .it { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 5px 0; border-inline-start: 2px solid var(--a-ln); margin-inline-start: 18px; padding-inline-start: 10px; }
+.src { font-size: 9.5px; color: var(--a-mut); }
+.ar-t { font-family: "IBM Plex Sans Arabic", sans-serif; direction: rtl; text-align: right; }
+.hl { background: #fff1c9; border-radius: 4px; padding: 0 2px; }
+/* ---- pick bar ---- */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pb-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.picked { flex: 1 1 240px; min-width: 0; font-family: var(--font-code); font-size: 12.5px; color: var(--mut); overflow-wrap: anywhere; max-height: 3.3em; overflow: auto; }
+.picked b { color: var(--ink); }
+.btn { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--acc); color: var(--surface); min-height: 44px; }
+.btn.ghost { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
+.copybox { width: 100%; min-height: 90px; font-family: var(--font-code); font-size: 12.5px; border: 1px solid var(--acc); border-radius: 10px; padding: 8px; background: var(--bg); color: var(--ink); }
+.toast { font-weight: 800; color: var(--ok); font-size: 13.5px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--mut); }
+.tbl td.f { color: var(--ok); font-weight: 800; } .tbl td.p { color: var(--acc); font-weight: 800; }
+.tblwrap { overflow-x: auto; }
+.pro { font-size: 9px; font-weight: 900; color: #fff; background: var(--a-acc); border-radius: 6px; padding: 1px 5px; letter-spacing: .04em; }
+.free { font-size: 9px; font-weight: 900; color: var(--a-pos); background: #e6f3ea; border-radius: 6px; padding: 1px 5px; }
+.coach { position: absolute; left: 12px; right: 12px; background: #2a2526; color: #f6eff1; border-radius: 16px; padding: 10px 12px; display: grid; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.coach .ct { font-weight: 900; font-size: 12.5px; } .coach .ca { display: flex; gap: 12px; font-weight: 900; color: #f2b6c8; }
+.hole { position: absolute; border: 2px solid #f2b6c8; border-radius: 14px; box-shadow: 0 0 0 999px rgba(20,14,16,.45); }
+.scr { position: relative; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <span class="eyebrow">Attune · your picks joined · 14 Nov 2026</span>
+    <h1>Count your books, keep what each one taught you, and a week that starts on your day</h1>
+    <p class="lead">Your picks: CG-3 with your book idea, WK-2 and WK-3. These are the real screens with what I understood. OK them or write a note, then copy. I build after your OK.</p>
+    <div class="box">
+      <b>What I understood</b>
+      <ul>
+        <li><b>CG-3:</b> a book goal counts from the +1 on its card and from saying it (“finished another book”, «خلصت كتاب») in Chat or the Home box, with Undo. A Sunday line only after 3 weeks with nothing counted.</li>
+        <li><b>Your book idea:</b> each +1 can become the book itself: title and cover, the plot in your words, your review and stars, what you learned. All optional, it saves with just the title.</li>
+        <li><b>Its PDF or e-book:</b> attach it and it goes into the library Attune already reads on the phone (Ask a PDF). Later Chat answers from it, with the page: “what does chapter 3 say about habits?”, “what did I learn from Atomic Habits?” (your notes + the book).</li>
+        <li><b>Every goal you count works the same way</b> (runs, gym visits, courses), the book details only for books.</li>
+        <li><b>WK-2 + WK-3:</b> the week starts on your country’s day (Saturday in Egypt and the Gulf, Sunday in the US, Monday in Europe), and Settings → Language & region lets you change it. Money, Your week and every report follow it.</li>
+        <li><b>Tested</b> with 10,000 sentences (“finished a book”, «خلصت كتاب», Franco, the 20 languages) and 10,000 weeks per country, checked by code.</li>
+      </ul>
+    </div>
+    <nav class="toc" id="toc" aria-label="Jump to a choice"></nav>
+  </header>
+  <div id="groups"></div>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="pb-in">
+    <div class="picked" id="picked">No options picked yet.</div>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="toast" id="toast" hidden>Copied</span>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="Your picks to copy"></textarea>
+  </div>
+</div>
+
+<script>
+// ---------- tiny builders for the phone screens ----------
+const ph = (title, body, o = {}) => `<div class="phone"><div class="scr"><div class="sb"><span>9:41</span><span>●●● 82%</span></div>${title === null ? "" : `<div class="tb"><span class="ico">${o.back ? "‹" : "☰"}</span><span>${title}</span></div>`}<div class="body">${body}</div>${o.over || ""}</div></div>`;
+const c = (x, cls = "") => `<div class="c ${cls}">${x}</div>`;
+const lb = (x) => `<div class="lb">${x}</div>`;
+const r = (ic, t, s = "", right = "") => `<div class="r">${ic ? `<div class="sq">${ic}</div>` : ""}<div class="grow"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ""}</div>${right}</div>`;
+const bt = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="b ${k}">${t}</span>`; }).join("")}</div>`;
+const chips = (...a) => `<div class="btns">${a.map((x) => { const [k, t] = x.includes("|") ? x.split("|") : ["", x]; return `<span class="ch ${k}">${t}</span>`; }).join("")}</div>`;
+const nt = (app, t, s, acts = []) => `<div class="notif"><div class="app">${app}</div><div class="nt">${t}</div><div>${s}</div>${acts.length ? `<div class="na">${acts.map((a) => `<span>${a}</span>`).join("")}</div>` : ""}</div>`;
+const sheet = (x) => `<div class="dim"></div><div class="sheet">${x}</div>`;
+const tk = (d) => `<span class="tick ${d ? "d" : ""}">${d ? "✓" : ""}</span>`;
+const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
+const sep = `<div class="sep"></div>`;
+const ar = (x) => `<span class="ar-t">${x}</span>`;
+
+// ---------- the screens to OK: [group, code, name, arabic, your words, where, how it is tested, screens] ----------
+const G = { a: ["A · CG-3 + your book idea", "الكتب والأهداف"], b: ["B · WK-2 + WK-3", "أول يوم في الأسبوع"] };
+const F = [
+["a","BK","A goal you count, and the books behind it","هدف بالعدد والكتب اللي وراه","“also add the book and its details like the plot, your review of the book, what you learned … add the PDF and Attune knows it and can answer questions about it in the future”","Plan → Goals · Home box · Chat · Ask a PDF’s library","10,000 sentences and taps; every count, date, Undo and library link checked by code",
+ [["1","The goal card","6 of 14 books, the pace, the +1, and the last books you read under it.","One look shows where you are.","—",0,
+   ph("Goals", c(lb("Read 14 books · by 31 Dec 2027") + `<div class="big">6 <span class="s">of 14</span></div>` + bar(43) + `<div class="s">1 every 6 weeks keeps you on time · 2 weeks ahead</div>` + bt("+1 book","g|Undo last"), "soft") + c(lb("Books you read") + r("📗","Atomic Habits","★★★★☆ · 3 lessons · PDF") + r("📘","The Psychology of Money","★★★★★ · notes") + r("📙","Sapiens","just the title")))],
+  ["2","+1 → the book (all optional)","Tap +1 or say “finished Atomic Habits”: a sheet asks for the title (the cover comes by itself), then only if you want: the plot, your review and stars, what you learned, and the PDF / e-book. Save works with the title alone.","Your reading journal grows with no extra app.","A few seconds if you fill it; zero if you skip.",0,
+   ph("Goals", c(r("📗","Read 14 books","6 of 14")), { over: sheet(`<div class="t">Book 7 of 14</div><div class="inp" style="color:var(--a-ink)">Atomic Habits · James Clear</div><div class="s">The plot (optional)</div><div class="inp">Small habits compound…</div><div class="s">Your review</div><div class="r"><span class="acc">★★★★☆</span><div class="grow s">Practical, a bit long</div></div><div class="s">What you learned</div><div class="inp">1. Make it obvious · 2. 2-minute rule · 3. Identity first</div>` + chips("soft|📎 Attach the PDF / e-book") + bt("Save","q|Just the title")) })],
+  ["3","The book’s page","Everything about the book in one place: cover, your plot, review, lessons, the date you finished, and its file in the library (reading 140 of 230 pages).","You can come back to what a book taught you years later.","—",0,
+   ph("Atomic Habits", c(r("📗","Atomic Habits","James Clear · finished 14 Nov 2026") + `<div class="s acc">★★★★☆ Practical, a bit long</div>`) + c(lb("What I learned") + r("1","Make it obvious") + r("2","The 2-minute rule") + r("3","Identity first, results second")) + c(lb("The plot (my words)") + `<div class="s">Small habits compound like interest…</div>`) + c(r("📎","atomic-habits.pdf","in the library · read · 320 pages","<span class='tag'>Ask it</span>")), { back: 1 })],
+  ["4","Chat already knows the book","Ask in Chat, any time later: it answers from your notes and from the book itself, with the page, and says which is which.","The books you read keep working for you.","Answers from the PDF need it attached (the notes work without).",0,
+   ph("Chat", `<div class="bubble">what did I learn from Atomic Habits?</div>` + c(`<div class="s"><b>Your notes:</b> make it obvious, the 2-minute rule, identity first.</div><div class="s"><b>The book adds:</b> “habits are the compound interest of self-improvement” <span class="tag">p. 16</span></div>`) + `<div class="bubble">what does chapter 3 say?</div>` + c(`<div class="s">Chapter 3 builds better habits in 4 steps: cue, craving, response, reward <span class="tag">p. 47</span></div>`))],
+ ]],
+["b","WK","Your week starts on your day","الأسبوع بيبدأ يوم بلدك","WK-2 + WK-3","Money · Your week · reports · Settings → Language & region","10,000 weeks for each of the 30 countries, checked against the country’s own first day",
+ [["1","Money follows your country","Egypt: Sat 14 – Fri 20 Nov. Germany: Mon 16 – Sun 22 Nov. Nothing to set.","Right everywhere.","—",0,
+   ph("Money", c(lb("This week · Sat 14 – Fri 20 Nov") + `<div class="big neg">−3,240</div>` + r("🍔","Food","1,410") + r("🚕","Transport","620")) + `<div class="s" style="padding:0 4px">Egypt · the week starts on Saturday</div>`)],
+  ["2","…and you can change it","Settings → Language & region → Week starts on. It shows your country’s day and what you picked.","For anyone who lives by another week.","—",0,
+   ph("Language & region", c(lb("Language") + `<div class="inp" style="color:var(--a-ink)">English ▾</div>`) + c(lb("Week starts on") + chips("on|Saturday","Sunday","Monday") + `<div class="s">From your country (Egypt): Saturday.</div>`) + c(lb("Country") + r("🇪🇬","Egypt","currency EGP · weekend Fri–Sat")), { back: 1 })],
+ ]],
+];
+// ---------- render ----------
+const KEY = "attune-books-week-v1";
+let st = { on: {}, notes: {} };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") st = { on: v.on || {}, notes: v.notes || {} }; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const groupsEl = document.getElementById("groups"), toc = document.getElementById("toc");
+const ORDER = [];
+let lastG = "";
+let gWrap = null;
+for (const [g, code, name, arName, aliNote, where, test, opts] of F) {
+  if (g !== lastG) { lastG = g; gWrap = document.createElement("section"); gWrap.style.display = "grid"; gWrap.style.gap = "16px"; gWrap.innerHTML = `<div class="group-h"><h2>${G[g][0]}</h2><span class="ar" lang="ar">${G[g][1]}</span></div>`; groupsEl.appendChild(gWrap); }
+  const a = document.createElement("a"); a.href = "#f-" + code; a.textContent = code; toc.appendChild(a);
+  const f = document.createElement("article"); f.className = "feat"; f.id = "f-" + code;
+  f.innerHTML = `<div class="feat-h"><span class="fcode">${code}</span><span class="fname">${esc(name)}</span><span class="far" lang="ar">${esc(arName)}</span></div>` + (aliNote ? `<div class="ali">${esc(aliNote)}</div>` : "") +
+    `<div class="facts"><div><b>Where it lives</b>${esc(where)}</div><div><b>How it will be tested</b>${esc(test)}</div></div><div class="opts"></div>`;
+  const host = f.querySelector(".opts");
+  for (const [k, oname, what, plus, minus, rec, phone] of opts) {
+    const id = code + "-" + k; ORDER.push(id);
+    const o = document.createElement("div"); o.className = "opt" + (st.on[id] ? " on" : "");
+    o.innerHTML = `<div class="opt-h"><input type="checkbox" id="cb-${id}" aria-label="Pick ${id}"${st.on[id] ? " checked" : ""}><label for="cb-${id}" class="ocode">${id}</label><label for="cb-${id}" class="oname">${esc(oname)}</label>${rec ? '<span class="rec">Recommended</span>' : ""}</div>` +
+      `<p style="font-size:14px">${esc(what)}</p><div class="pm"><span class="plus">${esc(plus)}</span><span class="minus">${esc(minus)}</span></div>${phone}` +
+      `<textarea class="note" id="note-${id}" rows="1" placeholder="Your note on ${id} (optional)">${esc(st.notes[id] || "")}</textarea>`;
+    host.appendChild(o);
+    o.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) st.on[id] = true; else delete st.on[id]; o.classList.toggle("on", e.target.checked); save(); render(); });
+    o.querySelector("textarea").addEventListener("input", (e) => { const v = e.target.value; if (v.trim()) st.notes[id] = v; else delete st.notes[id]; if (v.trim() && !st.on[id]) { st.on[id] = true; o.classList.add("on"); o.querySelector("input").checked = true; } save(); render(); });
+  }
+  gWrap.appendChild(f);
+}
+const lines = () => ORDER.filter((id) => st.on[id]).map((id) => (st.notes[id] && st.notes[id].trim() ? id + " — " + st.notes[id].trim().replace(/\s*\n\s*/g, " / ") : id));
+function render() { const l = lines(); document.getElementById("picked").innerHTML = l.length ? "<b>" + l.length + " picked:</b> " + l.map(esc).join(" · ") : "No options picked yet."; }
+render();
+document.getElementById("copy").addEventListener("click", () => {
+  const l = lines(), box = document.getElementById("copybox"), toast = document.getElementById("toast");
+  if (!l.length) { document.getElementById("picked").textContent = "Tick at least one option first."; return; }
+  const text = "My OK (books + week):\n" + l.join("\n");
+  const fallback = () => { box.hidden = false; box.value = text; box.focus(); box.select(); toast.hidden = false; toast.textContent = "Selected: copy it with your keyboard or long-press."; };
+  try { navigator.clipboard.writeText(text).then(() => { toast.hidden = false; toast.textContent = "Copied " + l.length + " picks"; box.hidden = true; setTimeout(() => { toast.hidden = true; }, 2500); }, fallback); } catch (e) { fallback(); }
+});
+document.getElementById("clear").addEventListener("click", () => { st = { on: {}, notes: {} }; save(); document.querySelectorAll(".opt").forEach((o) => { o.classList.remove("on"); o.querySelector("input").checked = false; o.querySelector("textarea").value = ""; }); render(); });
+</script>

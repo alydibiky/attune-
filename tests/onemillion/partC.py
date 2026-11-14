@@ -56,6 +56,12 @@ PROBE = open(os.path.join(HERE, "partC_probe.js")).read()
 ctxs = [(lg, th, dev) for dev in ["phone", "computer"] for th in ["light", "dark"] for lg in LANGS]
 mine = [c for i, c in enumerate(ctxs) if i % NSH == SHARD]
 env = Env(); rows = []; en_text = {}
+# resume: the contexts this shard already finished (a stopped run starts where it left off)
+_out = os.path.join(HERE, "C-shard-%s-%d.json" % ("en" if os.environ.get("C_LANGS") == "en" else "rest", SHARD))
+try: rows = json.load(open(_out))
+except Exception: rows = []
+_done = set((r["lang"], r["theme"], r["dev"]) for r in rows)
+mine = [c for c in mine if c not in _done]
 # English first (its words are what "English left in another language" is compared with) — each shard reads the English of its own
 # theme / device: the English text sets are written by shard runs that hold "en" and read from disk by the others
 EN_DIR = os.path.join(HERE, "C-en"); os.makedirs(EN_DIR, exist_ok=True)
