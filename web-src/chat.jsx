@@ -33,7 +33,7 @@ import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_F
 import { chatLifeIntent, scheduleOf } from "./life.js";
 import { describe as lifeDescribe, heading as lifeHeading } from "./life-ui.jsx";
 import { missingAmounts } from "./numguard.js";
-import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
+import { chatAsk, loadStores as lifeStores, sayAnswer as LA_say } from "./lifeask.js";
 import { mindAnswer } from "./personal.js";
 import { libraryBlock } from "./booklib.js";
 import { connectNow, pickPerson, allStores } from "./connected.js";
@@ -1100,7 +1100,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: said },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? cx.answer.ar : tr(cx.answer.en)) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: LA_say(cx.answer, ar) + (cx.items.length ? "\n" + cx.items.slice(0, 5).map((x) => "• " + x.title + (x.amount ? " — " + Math.round(x.amount).toLocaleString("en-US") : "") + (x.ts ? " · " + new Date(x.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short" }) : "")).join("\n") : ""),
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };
@@ -1164,7 +1164,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: said },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? mine.ar : tr(mine.en)).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: LA_say(mine, ar).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
           actions: [...(mine.open && TOOL[mine.open] ? [[TOOL[mine.open], "open:" + mine.open]] : []), ["Just answer", "answer"]] } }] }));
       setText("");
       return;

@@ -333,8 +333,11 @@ export function productEnglish(what) {
 /** The stores to search for a product, in order (the store the person named comes first, or alone when they said "on Amazon"). */
 export function storeTries(what, country = "", store = "", max = 10) {
   // v9.9.16 ("every country like Egypt"): a country with no hand-tuned list here uses its country pack's shops (countrypack.js)
-  const c = String(country || "").toUpperCase(), packed = STORES[c] ? null : shopLinksOf(c, "\u0001").map((l) => S(l.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0], l.site, (q) => l.url.replace("%01", enc(q)))),
-    list = STORES[c] || (packed && packed.length ? packed : null) || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
+  const c = String(country || "").toUpperCase(), packed = shopLinksOf(c, "\u0001").map((l) => S(l.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0], l.site, (q) => l.url.replace("%01", enc(q)))),
+    // v9.9.38 (Ali: "the agents search the sites the people in this country use?"): the hand-tuned list AND the country pack's shops
+    // together (Saudi Arabia was missing Nahdi, the UAE Lulu), each shop once
+    merged = [...(STORES[c] || []), ...(packed || [])].filter((x, i, a) => a.findIndex((y) => y.site === x.site || y.label === x.label) === i),
+    list = (merged.length ? merged : null) || [S("amazon." + (AMAZON_TLD[c] || "com"), "Amazon", (q) => "https://www.amazon." + (AMAZON_TLD[c] || "com") + "/s?k=" + enc(q), "com.amazon.mShop.android.shopping"), S("ebay.com", "eBay", (q) => "https://www.ebay.com/sch/i.html?_nkw=" + enc(q))];
   const named = store ? list.filter((x) => x.label.toLowerCase().startsWith(String(store).toLowerCase().slice(0, 4)) || x.site.startsWith(String(store).toLowerCase())) : [];
   // v9.9.33: Google Shopping lists many shops' prices on one page — read in the invisible browser like the stores (a general search only)
   const gs = S("google.com", "Google Shopping", (q) => "https://www.google.com/search?tbm=shop&q=" + enc(q) + (c ? "&gl=" + c.toLowerCase() : ""));

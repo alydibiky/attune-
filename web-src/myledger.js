@@ -5,7 +5,7 @@ import { weekStart } from "./country.js";   // v9.9.38 WK: the week starts on yo
    Now Instant and Chat spot a question about the person's own spending / income, read the ledger, and answer with sums
    computed here — the model never adds up money. Pure logic; tests: tests/unit/v702myledger.test.mjs.                       */
 
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { CAT_WORDS } from "./yusr/logtext.js";
 import { LEX } from "./understand.js";
@@ -58,25 +58,33 @@ export function spanOf(q, now = Date.now()) {
     let n = /^\d+$/.test(m[1]) ? +m[1] : WORDNUM[m[1]] || 0;
     const unit = /week|سبوع|سابيع/.test(m[2]) ? 7 : /month|شهر|شهور/.test(m[2]) ? 30 : 1;
     if (!n && /^(أسبوع|اسبوع|شهر|يوم)$/.test(m[1])) n = 1;
-    if (n > 0 && n < 400) { const days = n * unit; return { from: iso(back(days)), to: iso(today), label: [`the last ${n} ${unit === 7 ? "week" : unit === 30 ? "month" : "day"}${n > 1 ? "s" : ""}`, `آخر ${n} ${unit === 7 ? "أسبوع" : unit === 30 ? "شهر" : n > 2 && n < 11 ? "أيام" : "يوم"}`] };
+    if (n > 0 && n < 400) { const days = n * unit; return { key: "last", n, unit: unit === 7 ? "week" : unit === 30 ? "month" : "day", from: iso(back(days)), to: iso(today), label: [`the last ${n} ${unit === 7 ? "week" : unit === 30 ? "month" : "day"}${n > 1 ? "s" : ""}`, `آخر ${n} ${unit === 7 ? "أسبوع" : unit === 30 ? "شهر" : n > 2 && n < 11 ? "أيام" : "يوم"}`] };
     }
   }
-  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "النهارده"] };
-  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "امبارح"] }; }
-  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() - weekStart() + 7) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
-  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() - weekStart() + 7) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
-  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر اللي فات"] }; }
-  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "السنة دي"] };
+  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { key: "today", from: iso(today), to: iso(today), label: ["today", "النهارده"] };
+  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { key: "yesterday", from: iso(y), to: iso(y), label: ["yesterday", "امبارح"] }; }
+  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() - weekStart() + 7) % 7)); return { key: "this week", from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
+  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() - weekStart() + 7) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { key: "last week", from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
+  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { key: "last month", from: iso(f), to: iso(e), label: ["last month", "الشهر اللي فات"] }; }
+  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { key: "this year", from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "السنة دي"] };
   // v8.7 (persona 4, idea 5 — "how much did I spend on uber in September?" was answered for this month): a month by name is that
   // month (this year's, or last year's when it hasn't come yet)
   { const EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], AR = ["يناير", "فبراير", "مارس", "أبريل|ابريل", "مايو", "يونيو", "يوليو", "أغسطس|اغسطس", "سبتمبر", "أكتوبر|اكتوبر", "نوفمبر", "ديسمبر"];
     let mo = EN.findIndex((m) => new RegExp("\\b(in|for|during|of|on)?\\s*" + m + "[a-z]*\\b").test(t) && new RegExp("\\b" + m + "(uary|ruary|ch|il|e|y|ust|tember|ober|ember)?\\b").test(t));
     if (mo < 0) mo = AR.findIndex((m) => new RegExp("(?:^|\\s|في|ف)(" + m + ")(?![\\u0621-\\u064A])").test(t));
     if (mo >= 0) { const y = mo > today.getMonth() ? today.getFullYear() - 1 : today.getFullYear(), f = new Date(y, mo, 1), e = new Date(y, mo + 1, 0);
-      const name = f.toLocaleDateString("en-GB", { month: "long" }); return { from: iso(f), to: iso(e > today ? today : e), label: ["in " + name, "في " + AR[mo].split("|")[0]] }; } }
-  return { from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "الشهر ده"] };
+      const name = f.toLocaleDateString("en-GB", { month: "long" }); return { key: "month", mo, y, from: iso(f), to: iso(e > today ? today : e), label: ["in " + name, "في " + AR[mo].split("|")[0]] }; } }
+  return { key: "this month", from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "الشهر ده"] };
 }
 
+/** v9.9.38: a span in the screen's language — "this month", «في الشهر ده», "este mes", "in the last 3 days", "en septiembre"… */
+export function spanWords(span) {
+  if (!span) return "";
+  const k = span.key;
+  if (k === "last") return tr(span.unit === "week" ? "in the last {n} weeks" : span.unit === "month" ? "in the last {n} months" : "in the last {n} days", { n: span.n });
+  if (k === "month") { let m = ""; try { m = new Date(span.y, span.mo, 1).toLocaleDateString(dateLocale(), { month: "long" }); } catch (e) { m = String(span.mo + 1); } return tr("in {m}", { m }); }
+  return tr({ today: "today", yesterday: "yesterday", "this week": "this week", "last week": "last week", "this month": "this month", "last month": "last month", "this year": "this year" }[k] || span.label[0]);
+}
 /** The Money ledger as the Money tab saved it, or null. */
 export function loadLedger(store = typeof localStorage !== "undefined" ? localStorage : null) {
   try { const j = JSON.parse((store && store.getItem("ledger.v3")) || "null"); return j && Array.isArray(j.txns) ? j : null; } catch (e) { return null; }
@@ -96,6 +104,8 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
   const onlyCat = catAsked(question);   // v6.13: "how much on food this week?" counts food only
   const span = spanOf(question, now);
   const L = (en, a) => (ar ? a : tr(en));
+  // v9.9.38: every other language gets the sentence as a template with its numbers (a finished English sentence can't be translated)
+  const T = (t, v, a) => (ar ? a : tr(t, v)), P = spanWords(span);
   if (!ledger) return { noLedger: true, text: L("Nothing is recorded in **Money** yet. Add your expenses there (or share a bank SMS to Attune) and ask again.", "لا يوجد شيء مسجّل في **المال** بعد. سجّل مصروفاتك هناك (أو شارك رسالة البنك مع Attune) واسأل مرة أخرى.") };
   const acct = new Map((ledger.accounts || []).map((a) => [a.id, a]));
   const cur = (tx) => ((acct.get(tx.account) || {}).currency || ledger.currency || homeCurrency());
@@ -111,21 +121,28 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
     const curs = [...new Set(rows.map(cur))];
     const head = type === "expense" ? L("You spent", "صرفت") : L("You received", "دخلك");
     if (short) {   // v6.13: a chat-sized answer for Yusr's write-or-ask bar
-      if (!rows.length) { out.push(type === "expense" ? L(`Nothing spent${onlyCat ? " on " + catName(onlyCat) : ""} ${inEn(span.label[0])}.`, `لا توجد مصروفات${onlyCat ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])}.`) : L(`No income ${inEn(span.label[0])}.`, `لا يوجد دخل ${inAr(span.label[1])}.`)); return; }
+      if (!rows.length) { out.push(type === "expense" ? T(onlyCat ? "Nothing spent on {c} {p}." : "Nothing spent {p}.", { c: catName(onlyCat), p: P }, `لا توجد مصروفات${onlyCat ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])}.`) : T("No income {p}.", { p: P }, `لا يوجد دخل ${inAr(span.label[1])}.`)); return; }
       const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => { const [c, cat] = k.split("|"); return `${catName(cat)} ${money(v, c)}`; });
       const big = rows.reduce((m, x) => (+x.amount > +m.amount ? x : m), rows[0]);
-      out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}**${onlyCat && type === "expense" ? L(" on " + catName(onlyCat), " على " + catName(onlyCat)) : ""} ${L(`${inEn(span.label[0])}`, `${inAr(span.label[1])}`)} · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}.`
+      const amt = curs.map((c) => money(sums[type + "|" + c], c)).join(" + "), one = rows.length === 1;
+      out.push((ar ? `**${head} ${amt}**${onlyCat && type === "expense" ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])} · ${rows.length} عملية.`
+        : tr(type === "income" ? (one ? "**You received {a}** {p} · 1 entry." : "**You received {a}** {p} · {n} entries.")
+          : onlyCat ? (one ? "**You spent {a}** on {c} {p} · 1 entry." : "**You spent {a}** on {c} {p} · {n} entries.") : (one ? "**You spent {a}** {p} · 1 entry." : "**You spent {a}** {p} · {n} entries."),
+          { a: amt, c: catName(onlyCat), p: P, n: rows.length }))
         + (onlyCat || top.length < 2 ? "" : "\n" + top.join(" · "))
         + (rows.length > 1 ? "\n" + L("Biggest: ", "الأكبر: ") + (big.note ? String(big.note).slice(0, 40) + " " : catName(big.cat) + " ") + money(+big.amount, cur(big)) + " · " + big.date : ""));
       return;
     }
-    if (!rows.length) { out.push(type === "expense" ? L(`No expenses are recorded for ${span.label[0]} (${span.from} → ${span.to}).`, `لا توجد مصروفات مسجّلة ${inAr(span.label[1])} (${span.from} → ${span.to}).`) : L(`No income is recorded for ${span.label[0]}.`, `لا يوجد دخل مسجّل ${inAr(span.label[1])}.`)); return; }
-    out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}** ${L(`${inEn(span.label[0])}`, `${inAr(span.label[1])}`)} (${span.from} → ${span.to}) · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}`);
+    if (!rows.length) { out.push(type === "expense" ? T("No expenses are recorded {p} ({f} → {t}).", { p: P, f: span.from, t: span.to }, `لا توجد مصروفات مسجّلة ${inAr(span.label[1])} (${span.from} → ${span.to}).`) : T("No income is recorded {p}.", { p: P }, `لا يوجد دخل مسجّل ${inAr(span.label[1])}.`)); return; }
+    { const amt = curs.map((c) => money(sums[type + "|" + c], c)).join(" + "), one = rows.length === 1;
+      out.push(ar ? `**${head} ${amt}** ${inAr(span.label[1])} (${span.from} → ${span.to}) · ${rows.length} عملية`
+        : tr(type === "income" ? (one ? "**You received {a}** {p} ({f} → {t}) · 1 entry" : "**You received {a}** {p} ({f} → {t}) · {n} entries") : (one ? "**You spent {a}** {p} ({f} → {t}) · 1 entry" : "**You spent {a}** {p} ({f} → {t}) · {n} entries"),
+          { a: amt, p: P, f: span.from, t: span.to, n: rows.length })); }
     out.push("", `| ${L("Category", "البند")} | ${L("Amount", "المبلغ")} |`, "|---|---:|");
     for (const [k, v] of Object.entries(by).sort((a, b) => b[1] - a[1])) { const [c, cat] = k.split("|"); out.push(`| ${catName(cat)} | ${money(v, c)} |`); }
     out.push("", L("**Each entry:**", "**كل عملية:**"));
     for (const x of rows.slice(0, 15)) out.push(`- ${x.date} · ${catName(x.cat)} · ${money(+x.amount || 0, cur(x))}${x.note ? " — " + String(x.note).replace(/[|\n]/g, " ").slice(0, 60) : ""}`);
-    if (rows.length > 15) out.push(L(`- …and ${rows.length - 15} more (open Money to see all).`, `- …و${rows.length - 15} أخرى (افتح «المال» لرؤيتها كلها).`));
+    if (rows.length > 15) out.push(T("- …and {n} more (open Money to see all).", { n: rows.length - 15 }, `- …و${rows.length - 15} أخرى (افتح «المال» لرؤيتها كلها).`));
     out.push("");
   };
   if (kind === "expense" || kind === "both") part("expense");
