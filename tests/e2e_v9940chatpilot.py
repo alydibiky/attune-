@@ -3,11 +3,12 @@ become Shopping items (also the ones that came while it was asking), a meme is k
 with Undo / Open chat / Never from this chat, a group is described in the person's own words, Mama's request is a to-do; Arabic too.
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v9940chatpilot.py
 """
-import json, time
+import json, time, datetime
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
-now = int(time.time() * 1000)
+NOW = datetime.datetime.now().replace(hour=14, minute=0, second=0, microsecond=0)   # (a fixed afternoon: "Kept quietly TODAY" must not cross midnight)
+now = int(NOW.timestamp() * 1000)
 def wa(i, title, text, ago, group=False, who=""):
     n = {"id": "n" + str(i), "app": "WhatsApp", "pkg": "com.whatsapp", "title": title, "text": text, "ts": now - ago * 60000}
     if group: n.update({"group": True, "convo": title, "who": who})
@@ -19,6 +20,7 @@ INIT = "try{localStorage.setItem('attune:start','home');localStorage.setItem('at
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
+    ctx.clock.set_fixed_time(NOW)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_selector("[data-testid=chatpilot]", timeout=15000); page.wait_for_timeout(500)
     ask = page.locator("[data-testid=cp-ask]")
     check(ask.count() == 1 and "Talabat" in ask.inner_text(), "K1: the new group Talabat is asked about")
@@ -63,6 +65,7 @@ with sync_playwright() as p:
     ctx.close()
     # Arabic: the same card in Egyptian Arabic
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + "try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
+    ctx.clock.set_fixed_time(NOW)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_selector("[data-testid=cp-ask]", timeout=15000); page.wait_for_timeout(300)
     t = page.locator("[data-testid=cp-ask]").inner_text()
     check("اللي فهمته" in t and "قايمة مشتريات" in t and "What I understood" not in t, "Arabic: «اللي فهمته» · «قايمة مشتريات مشتركة»")
