@@ -35,7 +35,10 @@ const AR = H ? H.ar : ["فين {x}؟", "{x} فين", "الاقي {x} فين", "�
 const FR = H ? H.fr : ["fen {x}", "{x} fen", "ezay efta7 {x}", "fein {x}"];
 const LOC = H ? H.loc : { fr: ["où est {x} ?", "où trouver {x}"], es: ["¿dónde está {x}?", "dónde encuentro {x}"], de: ["wo ist {x}?", "wo finde ich {x}"], tr: ["{x} nerede?", "{x} nerede bulurum"] };
 const NOT = H ? H.not : ["where is my passport?", "where did I put my keys", "where did i leave the car keys", "حطيت المفاتيح فين", "where is my wallet", "spent 200 on lunch", "remind me at 5 to call mom",
-  "how much did I spend this month", "Ahmed owes me 500", "what's the weather", "call Sara", "who is Hany", "where did I park"];
+  "how much did I spend this month", "Ahmed owes me 500", "what's the weather", "call Sara", "who is Hany", "where did I park",
+  // (the full test run, 16 Nov: a chat question with "where is it made?" inside got a feature; a world "how to" too)
+  "What is the capacity of an LTM 1100? How much does it cost? Where is it made?", "how to change a tyre", "how do I cook rice", "how to tie a tie", "how do i make my wife happy",
+  "ازاي اعمل مكرونه بشاميل", "where is the Eiffel tower", "how do I reset my router", "Who won the match? Where was it played?"];
 const fold = (s) => String(s || "").toLowerCase();
 const bad = {}; let pass = 0, made = 0, offered = 0; const seen = new Set();
 const ids = Object.keys(SAY).filter((id) => F.FEATURES.some((f) => f.id === id));

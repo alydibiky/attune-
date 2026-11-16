@@ -148,20 +148,30 @@ export function find(query, t = (s) => s) {
 const ASK = new RegExp("\\b(?:where(?:'s| is| are| do i| can i| would i)?|how (?:do|can) i|how to|find|is there|can attune|does attune|show me where|which page|fen|fein|feen|ezay|ezzay|ala2y|ala2i)\\b" +
   "|(?:^|\\s|[¿¡])(?:فين|فيين|ازاي|إزاي|هلاقي|القي|ألاقي|الاقي|ممكن ازاي|ينفع|où|comment trouver|dónde|donde|cómo encuentro|wo|wie finde|onde|dove|где|как найти|nerede|nasıl|di ?mana|bagaimana|کجا|کہاں|কোথায়|wapi|ở đâu|làm sao)(?=[\\s?؟,.!]|$)" +
   "|कहाँ|कहां|ที่ไหน|哪里|在哪|どこ|어디", "iu");
+// "where" itself (in the 20 languages) — a "how to" without it needs an app verb or the feature's name
+const WHERE = /\bwhere\b|(?:^|\s|[¿¡])(?:فين|فيين|موجود|où|dónde|donde|wo|onde|dove|где|nerede|di ?mana|dimana|کجا|کہاں|কোথায়|wapi|ở đâu)(?=[\s?؟,.!]|$)|\b(?:fen|fein|feen)\b|कहाँ|कहां|ที่ไหน|哪里|在哪|どこ|어디/iu;
+const APPV = /\b(?:open|find|get to|use|see|turn on|switch on|set up|add|go to|reach|is there|which page|show me|look for|in the app)\b|(?:^|\s)(?:افتح|الاقي|ألاقي|هلاقي|القي|استخدم|اوصل)(?=\s|$)|\b(?:efta7|ala2y|ala2i|aw2al)\b/i;
 // a THING you own / put somewhere — Mind's "where did I put …", never a feature
 const THING = /\bwhere did i\b|\b(?:did i (?:put|leave|keep|park)|i (?:put|left|kept|parked)\b|where(?:'s| is| are) my (?:keys?|wallet|glasses|phone charger|car|car keys|passport|id card|bag|jacket|charger|kids?|son|daughter|wife|husband)\b|\bparked\b)|(?:^|\s)(?:حطيت|سبت|ركنت|مفاتيحي|المفاتيح|محفظتي|نضارتي|الشاحن)(?=\s|$)/i;
 /** F3: the feature a "where is …" question means → { f, score } (sure) · { options: [f, f, f] } (2–3 close ones to tap — never a guess
  *  shown as the answer) · null (not a question about the app, or nothing near). */
 export function whereAsk(text, t = (s) => s) {
   const s = String(text || "").trim(); if (!s || s.length > 120 || !ASK.test(s) || THING.test(s)) return null;
+  // (the full test run: "What is the capacity of an LTM 1100? How much does it cost? Where is it made?" got a feature) several
+  // questions in one message, or a long one, are for the AI — never this
+  if ((s.match(/[?؟]/g) || []).length > 1 || /[?؟!]\s+\S/.test(s) || /\.\s+[A-Z\u0600-\u06ff]/.test(s) || s.split(/\s+/).length > 14) return null;
+  // "how do I / how to …" is about the app only when it names a feature or asks to open / find / use something ("how to change a tyre"
+  // is a question about the world)
+  const where = WHERE.test(s), appVerb = APPV.test(s);
   const r = find(s, t); if (!r.length) return null;
+  if (!where && !appVerb && !r[0].named) return null;
   // (a feature named in a longer phrase — "split with friends", "the habit tracker" — counts when nothing else comes close)
   const top = r[0], gap = top.score - (r[1] ? r[1].score : 0);
   const sure = (top.score >= 0.6 || (top.score >= 0.55 && gap >= 0.1) || ((top.named || top.said) && top.score >= 0.5 && gap >= 0.075))
     && !(r[1] && r[1].score >= top.score - 0.001 && r[1].f.open !== top.f.open && !(top.score >= 1.05));   // two equally likely → don't guess
   if (sure) return top;
-  // not sure: the closest 2–3 (each a real candidate), for one tap — when at least one is a fair match
-  if (top.score < 0.3) return null;
+  // not sure: the closest 2–3 (each a real candidate), for one tap — only for a "where is …", and when one is a fair match
+  if (!(where || appVerb) || top.score < 0.35) return null;
   const opts = []; for (const x of r) { if (x.score < Math.max(0.25, top.score * 0.55) || opts.length >= 3) break; if (!opts.some((o) => o.open === x.f.open && placeLine(o) === placeLine(x.f))) opts.push(x.f); }
   return opts.length ? { options: opts, score: top.score } : null;
 }

@@ -1,4 +1,4 @@
-# Finding a feature (F1 + F3) — 10000 questions, 8737 right (87.37%) — HELD-OUT · 1022 answered with 2–3 to tap
+# Finding a feature (F1 + F3) — 10000 questions, 8596 right (85.96%) — HELD-OUT · 881 answered with 2–3 to tap
 
 - **found coach instead of focus · en** × 153 — e.g. can you tell me where a study timer is → coach | where in the app is a study timer → coach | where should I look for a study timer? → coach
 - **found family instead of reminders · en** × 139 — e.g. where in the app is my reminders list → family | where should I look for my reminders list? → family | can you tell me where my reminders list is → family
@@ -14,7 +14,19 @@
 - **found family instead of reminders · fr** × 59 — e.g. my reminders list fen fel app → family | ezay ala2y my reminders list → family
 - **found memory instead of braindump · fr** × 32 — e.g. ezay ala2y sorting everything on my mind → memory | sorting everything on my mind fen fel app → memory
 - **found split instead of life · fr** × 28 — e.g. who owes me money fen fel app → split | ezay ala2y who owes me money → split
+- **found nothing for settings · loc** × 17 — e.g. wo kann ich Einstellungen finden?
+- **found nothing for habits · loc** × 15 — e.g. wo kann ich Gewohnheiten finden? | นิสัยอยู่ที่ไหน
 - **found nothing for money · loc** × 15 — e.g. 돈 어디에 있어요?
-- **found nothing for habits · loc** × 9 — e.g. นิสัยอยู่ที่ไหน
-- **found nothing for people · loc** × 8 — e.g. ผู้คนอยู่ที่ไหน
+- **found nothing for people · loc** × 14 — e.g. ผู้คนอยู่ที่ไหน | wo kann ich Menschen finden?
+- **found nothing for salary · loc** × 13 — e.g. wo kann ich Gehaltsplan finden?
+- **found nothing for errands · loc** × 12 — e.g. wo kann ich Erledigungen finden?
+- **found nothing for travel · loc** × 11 — e.g. wo kann ich Reisen finden?
+- **found nothing for booklib · loc** × 11 — e.g. wo kann ich Dokumente finden?
+- **found nothing for privacy · loc** × 10 — e.g. wo kann ich Datenschutz finden?
+- **found nothing for emergency · loc** × 10 — e.g. wo kann ich Notfallkarte finden?
+- **found nothing for braindump · loc** × 9 — e.g. wo kann ich Das ordnen finden?
+- **found nothing for translate · loc** × 8 — e.g. wo kann ich Übersetzen finden?
+- **found nothing for things · loc** × 8 — e.g. wo kann ich Meine Sachen finden?
 - **found guardian instead of money · loc** × 7 — e.g. wo kann ich Geld finden? → guardian
+- **found nothing for reminders · loc** × 7 — e.g. wo kann ich Erinnerungen finden?
+- **found nothing for planner · loc** × 7 — e.g. wo kann ich Monatsplan finden?

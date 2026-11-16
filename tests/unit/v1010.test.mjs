@@ -36,6 +36,8 @@ ok(F.whereAsk("where is the split thing?").f.id === "split" && F.placeLine(F.whe
 ok(F.whereAsk("فين الضمان؟").f.id === "things", "F3: «فين الضمان؟» → Things I own");
 ok(F.whereAsk("where is my passport?") === null && F.whereAsk("where did I put my keys") === null, "F3: a thing you put somewhere is Mind's, not a feature");
 ok(F.find("warranty").some((x) => x.f.id === "things"), "F1: searching “warranty” finds Things I own");
+// (the full test run, 16 Nov: a chat question with "Where is it made?" inside got a feature instead of the AI's answer)
+ok(F.whereAsk("What is the capacity of an LTM 1100? How much does it cost? Where is it made?") === null && F.whereAsk("how to change a tyre") === null && F.whereAsk("how do I cook rice") === null, "F3: several questions, and a how-to about the world, stay with the AI");
 // every place of the app has its line (so a new feature can't be added without being findable)
 const src = fs.readFileSync(new URL("../../web-src/attune.jsx", import.meta.url), "utf8"), tools = src.slice(src.indexOf("const MORE_TOOLS = ["), src.indexOf("const KNOW_ADMIN"));
 const ids = [...tools.matchAll(/^\s*\["([a-z]+)", "/gm)].map((x) => x[1]).filter((id) => !RM.hiddenFromMenus(id) && !["knowledge", "studio", "crane", "improve", "compress", "humanize", "copilot", "library", "remember"].includes(id));
