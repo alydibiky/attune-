@@ -94,6 +94,7 @@ vault-ui.jsx: <button role="switch" aria-checked={v.on} onClick={toggle} classNa
 ## Coming up
 actions-ui.jsx: <p className={label + " mt-0 mb-2.5"}>{tr("Coming up")} · <span className="tabular-nums">{upcoming.length}</span></p>
 money-pages-ui.jsx: <Card title={tr("Coming up")} testid="bills-list">
+spaces-ui.jsx: {dates.length ? <div className={card + " p-3 space-y-1"} data-testid="project-dates"><p className={sec}>{tr("Coming up")}</p>
 
 ## Delete
 actions-ui.jsx: <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="w-11 h-11 grid place-items-center 
@@ -293,7 +294,7 @@ cmdbox-ui.jsx: {l.open ? <button onClick={() => onOpen(l.open)} className="text-
 cmdbox-ui.jsx: {j.result.open ? <button onClick={() => onOpen(j.result.open)} className="h-9 px-3.5 rounded-full text-[13px] font-extrabold" style={surf} d
 home-now.js: actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", lab
 home-now.js: ref: x.pay || null, actions: x.pay ? [{ id: "paid", label: tr("Paid") }, ...(x.pay.kind === "radar" ? [{ id: "notRenewed", label: tr("No") }
-people-ui.jsx: <span className={"text-[12px] font-bold shrink-0 c-acc"}>{tr("Open")} ›</span></button>)}
+people-ui.jsx: <span className="text-[18px]">{pr.emoji || "📁"}</span><span className="flex-1 min-w-0 truncate text-[14px] font-bold" dir="auto">{pr.name}<
 
 ## See all
 agents-ui.jsx: <button onClick={() => setAt(1)} className="text-[12.5px] font-bold text-[var(--c-acc)] min-h-[32px]" data-testid="agent-see-all">{tr("See a
@@ -348,8 +349,8 @@ b5-ui.jsx: <button onClick={() => hide("touch")} className="min-h-[38px] px-3 ro
 life-ui.jsx: <span className={"text-end text-[11.5px] font-extrabold " + (s.paid ? "text-[var(--c-pos)]" : late ? "text-[var(--c-neg)]" : nx ? "text-[var
 setup-ui.jsx: <button onClick={() => { try { localStorage.setItem(HIDE, String(Date.now() + 86400000)); } catch (e) {} bump((x) => x + 1); }} className="h
 slides-ui.jsx: <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="min-h-[44px] rounded-[12px] border border-[
-timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
-timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onC
+timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => openItem(x)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() =>
+timeline-ui.jsx: {!act ? <><button className={BP} onClick={() => openItem(x)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() =>
 
 ## Reply
 agents-ui.jsx: </div> : <button onClick={() => pick(x)} className="text-[13px] font-extrabold c-acc min-h-[36px]" data-testid="reply-open">{draft ? tr("Dra
@@ -515,6 +516,7 @@ travel-ui.jsx: setMapBusy(tr("Starting…"));
 attune.jsx: <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 
 money-calm-ui.jsx: <h2 className="text-[18px] font-black tracking-tight m-0">{tr("Money")}</h2>
 money-sheets-ui.jsx: {!a ? <Field label={tr("Kind")}><Pills value={kind} onChange={setKind} testid="acc-kind" items={[["cash", tr("Money")], ["gold", tr("Gold")]
+spaces-ui.jsx: <div className={card + " p-3 space-y-1.5"} data-testid="project-money"><div className="flex items-center gap-2"><p className={sec + " flex-1
 yourday-ui.jsx: <T2 icon="💰" label={tr("Money")} onClick={() => navTo("money")} testid="simple-money" />
 
 ## Read it
@@ -1230,6 +1232,7 @@ guardian-ui.jsx: <span className="min-w-0 flex-1"><span className="block font-bo
 home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toUpperCase() + x.c.title.slice(1) : x.c.person || tr("Payment"), sub: x
 life.js: const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
 salary-ui.jsx: .map((c) => ({ id: "l" + c.id, name: c.kind === "rent" ? tr("Rent") : c.title || c.person || tr("Payment"), amount: c.amount }));
+spaces-ui.jsx: <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || tr("Payment")}<span className="text-[var(--c-mut)]"> · {shortDate(Date.parse
 
 ## Tip
 guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
@@ -1289,6 +1292,7 @@ life-ui.jsx: <span>{tickDay(s.date, c.kind === "regular")}</span><span className
 money-calm-ui.jsx: value={!zak ? "—" : zak.noPrice ? tr("Needs a price") : zak.due ? tr("Due") : zak.pct != null ? T("{p}% of niṣāb", { p: zak.pct }) : "—"}
 money-sheets-ui.jsx: {r.options ? <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p>{r.options.map((o, i) => <p key={i} className="m-0 text-[17px] 
 money-sheets-ui.jsx: : <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p><p className="m-0 text-[22px] font-black text-[var(--c-acc)] tabular-nums"
+spaces-ui.jsx: {dates.slice(0, 4).map((d, i) => <div key={i} className="flex items-start gap-2 text-[13.5px]" data-testid="project-date"><b className="tabu
 upkeep-ui.jsx: {l.dueNow ? <span className="text-[11px] font-extrabold c-warn">{tr("Due")}</span> : null}</div>
 
 ## Delete this?
@@ -1485,6 +1489,7 @@ pdfedit-ui.jsx: <button onClick={() => { setAt((a) => Math.min(order.length - 1,
 
 ## People
 people-ui.jsx: <div className="flex items-center justify-between gap-2"><h2 className={h1 + " flex items-center gap-2"}><Users size={20} className="c-acc" 
+spaces-ui.jsx: {ppl.length ? <div className={card + " p-3 space-y-1"} data-testid="project-people"><p className={sec}>{tr("People")}</p>
 travel-ui.jsx: <label><span className="c-sub">{tr("People")}</span><input type="number" min="1" max="9" value={trip.adults || 1} onChange={(e) => setTrip({
 
 ## Item
