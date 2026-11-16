@@ -1,0 +1,397 @@
+<title>Projects and Feature Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: an options sheet — each option is a row: words on the left, a phone mock-up on the right; a sticky pick bar at the bottom. */
+:root {
+  --bg: #F4F2F1; --surf: #FFFFFF; --soft: #F7ECEE; --ink: #1F1A1B; --mut: #6E6466; --ln: #E4DDDE;
+  --acc: #8C2F45; --on-acc: #FFFFFF; --pos: #2E7D5B; --warn: #A5650E; --phone: #FAF8F7; --frame: #2A2426;
+  --f: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161314; --surf: #211C1D; --soft: #33232A; --ink: #F1ECEC; --mut: #A99EA0; --ln: #3A3133;
+  --acc: #D97B93; --on-acc: #1A1214; --pos: #6CC59A; --warn: #E2A855; --phone: #1C1819; --frame: #000000; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #161314; --surf: #211C1D; --soft: #33232A; --ink: #F1ECEC; --mut: #A99EA0; --ln: #3A3133;
+  --acc: #D97B93; --on-acc: #1A1214; --pos: #6CC59A; --warn: #E2A855; --phone: #1C1819; --frame: #000000; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--f); font-size: 15px; line-height: 1.5; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 120px }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -0.01em }
+h2 { font-size: 13px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--acc); margin: 0 }
+.lead { color: var(--mut); max-width: 66ch; margin: 6px 0 0 }
+.lead b { color: var(--ink) }
+.why { background: var(--surf); border: 1px solid var(--ln); border-radius: 16px; padding: 16px 18px; display: grid; gap: 8px; max-width: 760px }
+.why p { margin: 0 }
+.group { display: grid; gap: 14px }
+.group > p { margin: 0; color: var(--mut); max-width: 70ch }
+.opt { background: var(--surf); border: 1.5px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 18px; align-items: start }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent) }
+@media (max-width: 680px) { .opt { grid-template-columns: minmax(0, 1fr) } .phone { justify-self: center } }
+.txt { display: grid; gap: 10px; min-width: 0 }
+.head { display: flex; gap: 10px; align-items: flex-start }
+.code { font-weight: 900; font-size: 13px; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 2px 8px; flex: none; font-variant-numeric: tabular-nums }
+.head h3 { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.3; text-wrap: balance }
+.rec { font-size: 11.5px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; color: var(--pos); border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px; white-space: nowrap }
+.txt ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+.txt .ar { color: var(--mut); font-size: 13.5px }
+.pick { display: flex; align-items: center; gap: 10px; font-weight: 800; cursor: pointer; min-height: 44px }
+.pick input { width: 22px; height: 22px; accent-color: var(--acc) }
+textarea { width: 100%; min-height: 64px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; resize: vertical }
+textarea:focus, .pick input:focus-visible, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+/* the phone */
+.phone { width: 270px; max-width: 100%; border: 8px solid var(--frame); border-radius: 30px; background: var(--phone); overflow: hidden; font-size: 12.5px; line-height: 1.35 }
+.bar { display: flex; justify-content: space-between; padding: 6px 14px 2px; font-size: 10.5px; font-weight: 800; color: var(--mut) }
+.scr { padding: 6px 12px 14px; display: grid; gap: 8px }
+.top { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 15px; padding-bottom: 4px; border-bottom: 1px solid var(--ln) }
+.top small { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--mut) }
+.c { background: var(--surf); border: 1px solid var(--ln); border-radius: 14px; padding: 9px 10px; display: grid; gap: 5px }
+.lbl { font-size: 10px; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; color: var(--mut) }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.row .t { flex: 1; min-width: 0; font-weight: 700 }
+.row .s { display: block; font-weight: 600; color: var(--mut); font-size: 11px }
+.num { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap }
+.chip { font-size: 10px; font-weight: 900; color: var(--acc); background: var(--soft); border-radius: 99px; padding: 1px 7px; white-space: nowrap }
+.dot { width: 26px; height: 26px; border-radius: 8px; background: var(--soft); color: var(--acc); display: grid; place-items: center; font-weight: 900; flex: none; font-size: 12px }
+.track { height: 6px; border-radius: 99px; background: var(--ln); overflow: hidden }
+.track i { display: block; height: 100%; background: var(--acc) }
+.btn { border-radius: 10px; background: var(--acc); color: var(--on-acc); font-weight: 900; text-align: center; padding: 7px }
+.ghost { border-radius: 10px; border: 1px solid var(--ln); font-weight: 800; text-align: center; padding: 6px; color: var(--ink) }
+.dim { opacity: 0.45 }
+.new { outline: 2px dashed var(--acc); outline-offset: 2px }
+.note { font-size: 11px; color: var(--mut) }
+.sheet { background: var(--surf); border-radius: 16px 16px 0 0; border: 1px solid var(--ln); padding: 10px; display: grid; gap: 6px; margin-top: 40px }
+.bubble { background: var(--surf); border: 1px solid var(--ln); border-radius: 12px; padding: 7px 9px }
+/* the pick bar */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surf); border-top: 1px solid var(--ln); z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) }
+.pickbar .in { max-width: 980px; margin: 0 auto; display: flex; gap: 12px; align-items: center }
+#picked { flex: 1; min-width: 0; font-size: 13.5px; white-space: pre-wrap; max-height: 64px; overflow-y: auto }
+#copy { border: 0; border-radius: 12px; background: var(--acc); color: var(--on-acc); font: inherit; font-weight: 900; padding: 11px 16px; cursor: pointer; flex: none; min-height: 44px }
+#copied { font-size: 12px; color: var(--pos); font-weight: 800 }
+#fallback { width: 100%; margin-top: 8px }
+@media (prefers-reduced-motion: no-preference) { .opt { transition: border-color .15s, box-shadow .15s } }
+
+.ok { border: 2px solid var(--acc); border-radius: 18px; background: var(--surf); padding: 16px; display: grid; gap: 14px }
+.under { display: grid; gap: 6px; margin: 0; padding-left: 18px }
+.shots { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center }
+.map { display: grid; gap: 14px }
+.place { background: var(--surf); border: 1px solid var(--ln); border-radius: 16px; overflow: hidden }
+.place h3 { margin: 0; padding: 10px 14px; font-size: 15px; font-weight: 900; background: var(--soft); color: var(--ink); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap }
+.place h3 small { font-weight: 700; color: var(--mut); font-size: 12.5px }
+.tbl { overflow-x: auto }
+table { width: 100%; border-collapse: collapse; font-size: 14px }
+td, th { text-align: left; padding: 8px 14px; border-top: 1px solid var(--ln); vertical-align: top }
+th { font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mut); border-top: 0 }
+td:first-child { font-weight: 800; width: 28% }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--soft); color: var(--acc); border-radius: 6px; padding: 1px 6px; white-space: nowrap }
+.new-tag { font-size: 10px; font-weight: 900; color: var(--warn); border: 1px solid currentColor; border-radius: 99px; padding: 0 6px; margin-left: 6px; white-space: nowrap }
+.tip { background: var(--surf); border: 1px solid var(--ln); border-left: 4px solid var(--acc); border-radius: 12px; padding: 12px 14px }
+.tip p { margin: 0 }
+</style>
+<div class="wrap">
+  <header>
+    <h1>Projects, My things and where everything is</h1>
+    <p class="lead">Two parts. <b>Part 1</b> is what I understood from your picks, drawn as one design: tick <b>OK</b> or write what to change. <b>Part 2</b> is the map of where every feature lives today, plus three ways to make them easier to find. Then press <b>Copy my picks</b> and paste it to me.</p>
+  </header>
+
+  <!-- ===================== PART 1 ===================== -->
+  <section class="ok" data-code="OK">
+    <h2>Part 1 · What I understood (P1 P2 P3 P4 W2 + T1 in Follow-ups)</h2>
+    <ul class="under">
+      <li><b>My things moves into Follow-ups</b> as its own chip, next to Money, Reminders and Dates. Each thing's price is <b>linked to its payment in Money</b>: tap the price and the payment opens. If the payment isn't in Money yet, saving the receipt adds it there (with Undo). The warranty end stays on the Follow-ups list with a warning before it. (Your T1 note.)</li>
+      <li><b>P1:</b> dates from a project's chats and files appear in Follow-ups with the project's name on them; a tap opens the project.</li>
+      <li><b>P2:</b> a project can have a budget; payments that name it are counted from Money. The project shows spent and left.</li>
+      <li><b>P3:</b> the people in a project are linked to their People cards, both ways.</li>
+      <li><b>P4:</b> share a message, file or photo to Attune and pick a project; or say "add this to Flat Maadi" in the Home box.</li>
+      <li><b>W2:</b> on the phone a project shows tasks, dates, money, people and "Decided / Still open". Files and asking about them are on the computer only. Everything syncs.</li>
+    </ul>
+    <div class="shots">
+      <div class="phone" aria-label="Follow-ups with the new Things chip and a project date">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Follow-ups</div>
+          <div class="row" style="gap:5px;flex-wrap:wrap"><span class="chip">All</span><span class="chip" style="background:transparent;color:var(--mut)">Money</span><span class="chip" style="background:transparent;color:var(--mut)">Reminders</span><span class="chip" style="background:transparent;color:var(--mut)">Dates</span><span class="chip new">Things</span></div>
+          <div class="c"><div class="lbl">Thursday 19 Nov</div>
+            <div class="row new"><span class="dot">✈</span><span class="t">Visa appointment, 10:30<span class="s">from a project chat</span></span><span class="chip">Umrah</span></div>
+            <div class="row"><span class="dot">₤</span><span class="t">Claude renews<span class="s">Baba pays · 22.8 USD</span></span></div></div>
+          <div class="c"><div class="lbl">12 Mar 2028</div>
+            <div class="row new"><span class="dot">▭</span><span class="t">TV warranty ends<span class="s">warns you 30 days before</span></span><span class="chip">Thing</span></div></div>
+        </div>
+      </div>
+      <div class="phone" aria-label="Follow-ups, Things chip open, with prices linked to Money">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Follow-ups <small>Things</small></div>
+          <div class="c">
+            <div class="row"><span class="dot">▭</span><span class="t">Samsung TV 55"<span class="s">B.TECH · bought 12 Mar 2026</span></span></div>
+            <div class="row new"><span class="t" style="font-weight:600">−24,999 · in Money ›</span><span class="chip">linked</span></div>
+            <div class="row"><span class="t" style="font-weight:600;color:var(--mut)">Warranty to 12 Mar 2028 · S/N 0Q4K…</span></div>
+          </div>
+          <div class="c">
+            <div class="row"><span class="dot">◎</span><span class="t">Washer<span class="s">Raya · 3 Jan 2025</span></span></div>
+            <div class="row new"><span class="t" style="font-weight:600">−18,400 · in Money ›</span><span class="chip">linked</span></div>
+          </div>
+          <div class="btn">+ From a receipt</div>
+          <div class="note">A receipt not in Money yet → added there too, with Undo.</div>
+        </div>
+      </div>
+      <div class="phone" aria-label="A project on the phone with tasks, dates, money and people">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Flat Maadi <small>‹ Projects</small></div>
+          <div class="c"><div class="lbl">Tasks · 2 of 5</div><div class="row"><span class="dot">☐</span><span class="t">Pick the kitchen colour</span></div><div class="row"><span class="dot">☐</span><span class="t">Pay Hany the rest<span class="s">8,000</span></span></div></div>
+          <div class="c"><div class="lbl">Coming up</div><div class="row"><span class="t">Tiles arrive</span><span class="num">Tue 24</span></div></div>
+          <div class="c"><div class="row"><span class="t">Spent 22,000 of 40,000</span></div><div class="track"><i style="width:55%"></i></div></div>
+          <div class="c"><div class="lbl">People</div><div class="row"><span class="dot">H</span><span class="t">Hany<span class="s">contractor · owed 8,000</span></span></div></div>
+          <div class="c"><div class="lbl">Decided</div><div>White kitchen, grey tiles 60×60</div></div>
+          <div class="note">Files and questions about them: on your computer.</div>
+        </div>
+      </div>
+      <div class="phone" aria-label="Sharing a message to a project">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="bubble"><b>Hany</b><br>the tiles will come on the 24th, 120 per metre</div>
+          <div class="sheet new">
+            <div class="lbl">Add to Attune</div>
+            <div class="row"><span class="dot">▦</span><span class="t">Flat Maadi<span class="s">project</span></span></div>
+            <div class="row"><span class="dot">✈</span><span class="t">Umrah · December<span class="s">project</span></span></div>
+            <div class="row"><span class="dot">+</span><span class="t">New project</span></div>
+            <div class="note">The 24th → Follow-ups · "120 per metre" → the project's notes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <label class="pick"><input type="checkbox" id="pk-OK">OK — build it as shown</label>
+    <textarea id="nt-OK" placeholder="Or write what to change before I build"></textarea>
+  </section>
+
+  <!-- ===================== PART 2 ===================== -->
+  <section class="group">
+    <h2>Part 2 · Where everything is today</h2>
+    <div class="tip"><p><b>The one trick that always works:</b> in the Home box, type <code>/</code> and the name (<code>/habits</code>, <code>/focus</code>, <code>/errands</code>), or write "open habits". Every feature below opens that way, in English or Arabic («افتح العادات»).</p></div>
+    <p>Grouped by the side menu (☰). <span class="new-tag">NEW</span> marks the features we added in the bulk batches (12–15 Nov).</p>
+    <div class="map">
+      <div class="place"><h3>Home <small>the first screen</small></h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Autopilot</td><td>Card on Home: shopping list from Talabat, Done for you, Kept quietly</td><td>—</td></tr>
+        <tr><td>Habits<span class="new-tag">NEW</span></td><td>Card on Home with this week's dots, after your first habit</td><td><code>/habits</code> or "habit: read 20 pages every day"</td></tr>
+        <tr><td>Countdowns<span class="new-tag">NEW</span></td><td>Chips under the Home box; tap one to open it</td><td>"wedding on 20 December"</td></tr>
+        <tr><td>On this day<span class="new-tag">NEW</span></td><td>Small card on Home when there is something from a year ago</td><td>—</td></tr>
+        <tr><td>Flight day<span class="new-tag">NEW</span></td><td>Card on Home on the day of a flight</td><td>—</td></tr>
+        <tr><td>Organise this (brain dump)<span class="new-tag">NEW</span></td><td>Paste or say everything on your mind; it splits into to-dos, reminders, lists, money</td><td><code>/organise this</code></td></tr>
+        <tr><td>Focus timer<span class="new-tag">NEW</span></td><td>Full-screen timer for one task</td><td>"focus on chapter 3 for 25 minutes"</td></tr>
+        <tr><td>Missions</td><td>A goal with a date that Attune works on daily</td><td><code>/missions</code></td></tr>
+        <tr><td>Recall</td><td>Find anything on the phone by meaning</td><td><code>/recall</code></td></tr>
+        <tr><td>Ask about a chat</td><td>Answer in the Home box</td><td>"when did Address East discuss the garage?"</td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>To-dos &amp; lists</h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Lists (Talabat, travel)</td><td>The page itself; pencil and bin on each item</td><td>"every Saturday: clean the flat"</td></tr>
+        <tr><td>Week plan<span class="new-tag">NEW</span></td><td>Button "Plan my week" on this page</td><td>"tender file, 3 hours, by Thursday"</td></tr>
+        <tr><td>Tables</td><td>Button "Tables" on this page</td><td>"track my books: title, author"</td></tr>
+        <tr><td>Widget</td><td>Open a list → Pin to the widget</td><td>—</td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>Money</h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Safe to spend</td><td>Top of Money</td><td>—</td></tr>
+        <tr><td>Month plan</td><td>Money → Plans</td><td><code>/month plan</code></td></tr>
+        <tr><td>Salary plan<span class="new-tag">NEW</span></td><td>Money → More → Salary plan</td><td><code>/salary plan</code></td></tr>
+        <tr><td>Split with anyone<span class="new-tag">NEW</span></td><td>Money → More → Split with anyone</td><td>"dinner 1,200 split with Ahmed and Sara"</td></tr>
+        <tr><td>Automations &amp; rules</td><td>Money → More → Automations</td><td>"when my salary arrives, put 20% in the car fund"</td></tr>
+        <tr><td>AI jobs at night<span class="new-tag">NEW</span></td><td>Money → More → Automations → Jobs</td><td>—</td></tr>
+        <tr><td>Done for you (log + Undo)<span class="new-tag">NEW</span></td><td>Money → More → Automations → Done for you</td><td>—</td></tr>
+        <tr><td>Categories that learn<span class="new-tag">NEW</span></td><td>Asked once when you change a category</td><td>—</td></tr>
+        <tr><td>Deal Check</td><td>Before you pay or sign</td><td><code>/deal check</code></td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>Follow-ups <small>the chips on top + the page links at the bottom</small></h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>People &amp; plans (debts, instalments, who pays)</td><td>Link at the bottom of Follow-ups</td><td>"Sheikh owes me 19,500, 2,500 a month"</td></tr>
+        <tr><td>Reminders (★ important, nag levels)<span class="new-tag">NEW</span></td><td>Link at the bottom; each reminder has a level</td><td>"remind me every 15 min until I call the bank"</td></tr>
+        <tr><td>Place reminders</td><td>Inside a reminder: add a place</td><td>"remind me when I get to Carrefour"</td></tr>
+        <tr><td>Dates (paperwork, bank card scan)<span class="new-tag">NEW</span></td><td>Link at the bottom → Scan</td><td><code>/dates</code></td></tr>
+        <tr><td>Errands + Upkeep<span class="new-tag">NEW</span></td><td>Link at the bottom → Errands (upkeep inside)</td><td><code>/errands</code></td></tr>
+        <tr><td>Money Guardian (overpaying, scam check)</td><td>Chip "Guardian"</td><td><code>/guardian</code></td></tr>
+        <tr><td>Chat X-Ray</td><td>Link at the bottom</td><td>—</td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>Health</h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Family health (medicines, labs)</td><td>The page itself</td><td>—</td></tr>
+        <tr><td>Emergency card<span class="new-tag">NEW</span></td><td>Health → Emergency tab (also on the lock screen)</td><td>—</td></tr>
+        <tr><td>Kids &amp; school<span class="new-tag">NEW</span></td><td>Health → a child → School</td><td>—</td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>Agents</h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Price watch, buy, flights, hotels</td><td>The page itself</td><td>"watch Huawei FreeClip 2 under 8,000"</td></tr>
+        <tr><td>Scheduled messages, auto-reply</td><td>Agents → Messages</td><td>—</td></tr>
+        <tr><td>Haggler</td><td>Inside an agent's offer</td><td>—</td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>More → My things <small>Shelf · Documents · People · Mind</small></h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>What I own (receipts)<span class="new-tag">NEW</span></td><td>My things → Documents → "From a receipt" (moves to Follow-ups if you OK Part 1)</td><td>—</td></tr>
+        <tr><td>Keep in touch<span class="new-tag">NEW</span></td><td>My things → People, top of the page</td><td>—</td></tr>
+        <tr><td>Occasions (birthdays)<span class="new-tag">NEW</span></td><td>My things → People, top of the page</td><td>—</td></tr>
+        <tr><td>Person page<span class="new-tag">NEW</span></td><td>My things → People → a name</td><td>—</td></tr>
+        <tr><td>Before you meet<span class="new-tag">NEW</span></td><td>A notification before a meeting with someone</td><td>—</td></tr>
+        <tr><td>WhatsApp groups library</td><td>Share a chat export to Attune</td><td><code>/whatsapp groups</code></td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>More → Go</h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Trip from bookings<span class="new-tag">NEW</span></td><td>Go → Travel → the trip</td><td>—</td></tr>
+        <tr><td>Trip money &amp; papers<span class="new-tag">NEW</span></td><td>Go → Travel → the trip → Money / Papers tabs</td><td>—</td></tr>
+        <tr><td>Maps, Metro</td><td>Go → Maps / Metro</td><td><code>/metro</code></td></tr>
+      </table></div></div>
+
+      <div class="place"><h3>Settings <small>bottom of the side menu</small></h3><div class="tbl"><table>
+        <tr><th>Feature</th><th>Where / how</th><th>Type</th></tr>
+        <tr><td>Set up your life<span class="new-tag">NEW</span></td><td>Settings → Set up your life (and the strip on top of the menu)</td><td>—</td></tr>
+        <tr><td>Sync phone ↔ computer</td><td>Backup → Sync → Wi-Fi</td><td>—</td></tr>
+        <tr><td>How to use</td><td>Bottom of the side menu (the bulk features are missing from it today)</td><td>—</td></tr>
+      </table></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>F · Making features easy to find</h2>
+    <p>Pick any number. I recommend F1 + F3.</p>
+
+    <article class="opt" data-code="F1">
+      <div class="txt">
+        <div class="head"><span class="code">F1</span><h3>"Find a feature" on top of the side menu</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>Type a word ("warranty", «عادة», "split") and every feature that matches shows with where it lives. Tap to open.</li>
+          <li>It also finds by what a feature does, not only its name.</li>
+        </ul>
+        <p class="ar">خانة «دوّر على ميزة» فوق القايمة الجانبية</p>
+        <label class="pick"><input type="checkbox" id="pk-F1">I want F1</label>
+        <textarea id="nt-F1" placeholder="Your note on F1 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Find a feature search in the side menu">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="ghost new" style="text-align:left">⌕ warranty</div>
+          <div class="c">
+            <div class="row"><span class="t">What I own<span class="s">Follow-ups → Things</span></span><span class="chip">Open</span></div>
+            <div class="row"><span class="t">Dates<span class="s">Follow-ups → Dates · warranty ends</span></span><span class="chip">Open</span></div>
+            <div class="row"><span class="t">Upkeep<span class="s">Follow-ups → Errands</span></span><span class="chip">Open</span></div>
+          </div>
+          <div class="c dim"><div class="row"><span class="t">Home</span></div><div class="row"><span class="t">To-dos &amp; lists</span></div><div class="row"><span class="t">Money</span></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="F2">
+      <div class="txt">
+        <div class="head"><span class="code">F2</span><h3>How to use becomes this map</h3></div>
+        <ul>
+          <li>How to use lists every feature by menu place, like Part 2, with an Open button on each and the NEW ones marked.</li>
+          <li>A test fails if a new feature is added without its line, so it can't fall behind again.</li>
+        </ul>
+        <p class="ar">«طريقة الاستخدام» تبقى خريطة كل الميزات بزرار «افتح»</p>
+        <label class="pick"><input type="checkbox" id="pk-F2">I want F2</label>
+        <textarea id="nt-F2" placeholder="Your note on F2 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="How to use as a map">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">How to use</div>
+          <div class="c"><div class="lbl">Home</div>
+            <div class="row"><span class="t">Habits<span class="s">card on Home · "habit: read 20 pages"</span></span><span class="chip">Open</span></div>
+            <div class="row"><span class="t">Countdowns<span class="s">chips under the box</span></span><span class="chip">Open</span></div></div>
+          <div class="c"><div class="lbl">Money</div>
+            <div class="row"><span class="t">Split with anyone<span class="s">Money → More</span></span><span class="chip">Open</span></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="F3">
+      <div class="txt">
+        <div class="head"><span class="code">F3</span><h3>Ask the Home box "where is …"</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>"where are my habits?", «فين الضمان؟», "how do I split a bill?" answer with the place, one line on what it does, and an Open button.</li>
+          <li>Works in all 20 languages.</li>
+        </ul>
+        <p class="ar">اسأل «فين …؟» في خانة الرئيسية وتلاقي الزرار</p>
+        <label class="pick"><input type="checkbox" id="pk-F3">I want F3</label>
+        <textarea id="nt-F3" placeholder="Your note on F3 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Asking where a feature is in the Home box">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="bubble" style="justify-self:end;background:var(--soft)">where is the split thing?</div>
+          <div class="c new">
+            <div><b>Split with anyone</b> is in Money → More.</div>
+            <div class="note">A trip or a flat: who paid what, and who pays whom.</div>
+            <div class="btn">Open Split</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="in">
+    <div id="picked">Nothing picked yet.</div>
+    <span id="copied" aria-live="polite"></span>
+    <button id="copy" type="button">Copy my picks</button>
+  </div>
+  <textarea id="fallback" readonly hidden aria-label="Your picks to copy"></textarea>
+</div>
+
+<script>
+(function () {
+  var KEY = "attune-mockup-projects-combined";
+  var codes = ["OK", "F1", "F2", "F3"];
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function text() {
+    var out = [];
+    codes.forEach(function (c) {
+      var s = state[c] || {};
+      if (s.on) out.push((c === "OK" ? "OK — build P1 P2 P3 P4 W2 T1 (My things in Follow-ups)" : c) + (s.note && s.note.trim() ? " — " + s.note.trim().replace(/\s+/g, " ") : ""));
+    });
+    var loose = codes.filter(function (c) { var s = state[c] || {}; return !s.on && s.note && s.note.trim(); })
+      .map(function (c) { return "(note on " + c + ", not picked) " + state[c].note.trim().replace(/\s+/g, " "); });
+    return out.concat(loose).join("\n");
+  }
+  function render() {
+    codes.forEach(function (c) {
+      var s = state[c] || {}, box = document.getElementById("pk-" + c), nt = document.getElementById("nt-" + c);
+      box.checked = !!s.on; if (document.activeElement !== nt) nt.value = s.note || "";
+      var el = document.querySelector('[data-code="' + c + '"]'); if (el && el.classList.contains("opt")) el.classList.toggle("on", !!s.on);
+    });
+    var t = text();
+    document.getElementById("picked").textContent = t || "Nothing picked yet.";
+  }
+  codes.forEach(function (c) {
+    var box = document.getElementById("pk-" + c), nt = document.getElementById("nt-" + c);
+    box.addEventListener("change", function () {
+      state[c] = state[c] || {}; state[c].on = box.checked;
+      // W and T are pick-one groups
+      var g = null;
+      if (g && box.checked) codes.forEach(function (o) { if (o !== c && o.charAt(0) === g && state[o]) state[o].on = false; });
+      save(); render();
+    });
+    nt.addEventListener("input", function () { state[c] = state[c] || {}; state[c].note = nt.value; save(); render(); });
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    var t = text(), msg = document.getElementById("copied"), fb = document.getElementById("fallback");
+    if (!t) { msg.textContent = "Tick at least one option first."; return; }
+    function fallback() { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); msg.textContent = "Selected — copy it."; }
+    try {
+      navigator.clipboard.writeText(t).then(function () { msg.textContent = "Copied ✓"; fb.hidden = true; }, fallback);
+    } catch (e) { fallback(); }
+  });
+  render();
+})();
+</script>
