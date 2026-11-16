@@ -123,6 +123,7 @@ scout-ui.jsx: <b className="block c-num text-[20px] font-black">{ps.length ? sho
 ## Hide
 agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex ite
 agents-ui.jsx: {others.length ? <button onClick={() => setMore(!more)} className={U.btnS} data-testid="agent-best-more">{more ? tr("Hide") : T("See {n} mor
+chatpilot-ui.jsx: <button onClick={() => setQuietChat(quietChat === c ? "" : c)} aria-expanded={quietChat === c} className="flex-1 min-w-0 min-h-[40px] text-s
 home-ui.jsx: <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] 
 paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
 paylog-ui.jsx: <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
@@ -1097,7 +1098,7 @@ shelf-ui.jsx: {["#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"].map((c) =
 shelf-ui.jsx: <p className={label + " mb-1.5"}>{tr("Colour")}</p>
 shelf-ui.jsx: <button key={c || "none"} onClick={() => patch({ color: c })} aria-label={tr("Colour")} data-testid="shelf-color"
 slides-ui.jsx: <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]">{tr("Colour")}<input type="color" value={"#" + String(k.color || 
-spaces-ui.jsx: <span className="text-[12px] font-bold text-[var(--c-mut)]">{tr("Colour")}</span>
+spaces-ui.jsx: <span className="text-[12px] font-bold text-[var(--c-mut)] shrink-0">{tr("Colour")}</span>
 
 ## Normal
 cv-ui.jsx: <Lbl t={tr("Spacing")}><Seg k="spacing" opts={[["compact", tr("Compact")], ["normal", tr("Normal")], ["airy", tr("Airy")]]} /></Lbl>
@@ -1140,7 +1141,7 @@ paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{op
 daily-ui.jsx: <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} da
 home-ui.jsx: <button className={UbtnS + " h-10! min-h-[40px]!"} onClick={() => { notYet(a.id, a.i); onDone(tr("I'll ask again tomorrow")); }} data-testid
 lesson-ui.jsx: {result === "wrong" ? <p className="c-neg text-[13px] m-0" data-testid="lesson-wrong"><X size={13} className="inline -mt-0.5" /> {tr("Not ye
-setup-ui.jsx: <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : t
+setup-ui.jsx: <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.id === "bank" && bankAllowed() ? tr("Allowed ✓ — waiti
 timeline-ui.jsx: ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.cu
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
 timeline-ui.jsx: {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B
@@ -1355,7 +1356,7 @@ photogate.js: box.append(p, mk(tr("See Pro"), "photo-pro-see", () => { close(); 
 plan-ui.jsx: <button type="button" onClick={openPlan} className="min-h-[44px] h-11 rounded-[12px] px-4 font-extrabold text-[14px] bg-[var(--c-btn,var(--c
 setup-ui.jsx: else { setRun(null); say(!pro && p.done < 8 ? { tone: "emerald", title: tr("Free sets up the first 3 steps. Pro sets up the rest with you.")
 setup-ui.jsx: : <button onClick={openPlan} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "va
-setup-ui.jsx: {s.done ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-
+setup-ui.jsx: {s.done || (s.id === "bank" && !s.locked && bankAllowed()) ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full t
 
 ## Pinned
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px
