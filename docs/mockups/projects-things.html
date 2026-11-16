@@ -1,0 +1,418 @@
+<title>Projects and My Things</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: an options sheet — each option is a row: words on the left, a phone mock-up on the right; a sticky pick bar at the bottom. */
+:root {
+  --bg: #F4F2F1; --surf: #FFFFFF; --soft: #F7ECEE; --ink: #1F1A1B; --mut: #6E6466; --ln: #E4DDDE;
+  --acc: #8C2F45; --on-acc: #FFFFFF; --pos: #2E7D5B; --warn: #A5650E; --phone: #FAF8F7; --frame: #2A2426;
+  --f: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161314; --surf: #211C1D; --soft: #33232A; --ink: #F1ECEC; --mut: #A99EA0; --ln: #3A3133;
+  --acc: #D97B93; --on-acc: #1A1214; --pos: #6CC59A; --warn: #E2A855; --phone: #1C1819; --frame: #000000; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #161314; --surf: #211C1D; --soft: #33232A; --ink: #F1ECEC; --mut: #A99EA0; --ln: #3A3133;
+  --acc: #D97B93; --on-acc: #1A1214; --pos: #6CC59A; --warn: #E2A855; --phone: #1C1819; --frame: #000000; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--f); font-size: 15px; line-height: 1.5; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 120px }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: -0.01em }
+h2 { font-size: 13px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--acc); margin: 0 }
+.lead { color: var(--mut); max-width: 66ch; margin: 6px 0 0 }
+.lead b { color: var(--ink) }
+.why { background: var(--surf); border: 1px solid var(--ln); border-radius: 16px; padding: 16px 18px; display: grid; gap: 8px; max-width: 760px }
+.why p { margin: 0 }
+.group { display: grid; gap: 14px }
+.group > p { margin: 0; color: var(--mut); max-width: 70ch }
+.opt { background: var(--surf); border: 1.5px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 18px; align-items: start }
+.opt.on { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent) }
+@media (max-width: 680px) { .opt { grid-template-columns: minmax(0, 1fr) } .phone { justify-self: center } }
+.txt { display: grid; gap: 10px; min-width: 0 }
+.head { display: flex; gap: 10px; align-items: flex-start }
+.code { font-weight: 900; font-size: 13px; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 2px 8px; flex: none; font-variant-numeric: tabular-nums }
+.head h3 { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.3; text-wrap: balance }
+.rec { font-size: 11.5px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; color: var(--pos); border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px; white-space: nowrap }
+.txt ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+.txt .ar { color: var(--mut); font-size: 13.5px }
+.pick { display: flex; align-items: center; gap: 10px; font-weight: 800; cursor: pointer; min-height: 44px }
+.pick input { width: 22px; height: 22px; accent-color: var(--acc) }
+textarea { width: 100%; min-height: 64px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; resize: vertical }
+textarea:focus, .pick input:focus-visible, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+/* the phone */
+.phone { width: 270px; max-width: 100%; border: 8px solid var(--frame); border-radius: 30px; background: var(--phone); overflow: hidden; font-size: 12.5px; line-height: 1.35 }
+.bar { display: flex; justify-content: space-between; padding: 6px 14px 2px; font-size: 10.5px; font-weight: 800; color: var(--mut) }
+.scr { padding: 6px 12px 14px; display: grid; gap: 8px }
+.top { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 15px; padding-bottom: 4px; border-bottom: 1px solid var(--ln) }
+.top small { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--mut) }
+.c { background: var(--surf); border: 1px solid var(--ln); border-radius: 14px; padding: 9px 10px; display: grid; gap: 5px }
+.lbl { font-size: 10px; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; color: var(--mut) }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.row .t { flex: 1; min-width: 0; font-weight: 700 }
+.row .s { display: block; font-weight: 600; color: var(--mut); font-size: 11px }
+.num { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap }
+.chip { font-size: 10px; font-weight: 900; color: var(--acc); background: var(--soft); border-radius: 99px; padding: 1px 7px; white-space: nowrap }
+.dot { width: 26px; height: 26px; border-radius: 8px; background: var(--soft); color: var(--acc); display: grid; place-items: center; font-weight: 900; flex: none; font-size: 12px }
+.track { height: 6px; border-radius: 99px; background: var(--ln); overflow: hidden }
+.track i { display: block; height: 100%; background: var(--acc) }
+.btn { border-radius: 10px; background: var(--acc); color: var(--on-acc); font-weight: 900; text-align: center; padding: 7px }
+.ghost { border-radius: 10px; border: 1px solid var(--ln); font-weight: 800; text-align: center; padding: 6px; color: var(--ink) }
+.dim { opacity: 0.45 }
+.new { outline: 2px dashed var(--acc); outline-offset: 2px }
+.note { font-size: 11px; color: var(--mut) }
+.sheet { background: var(--surf); border-radius: 16px 16px 0 0; border: 1px solid var(--ln); padding: 10px; display: grid; gap: 6px; margin-top: 40px }
+.bubble { background: var(--surf); border: 1px solid var(--ln); border-radius: 12px; padding: 7px 9px }
+/* the pick bar */
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surf); border-top: 1px solid var(--ln); z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) }
+.pickbar .in { max-width: 980px; margin: 0 auto; display: flex; gap: 12px; align-items: center }
+#picked { flex: 1; min-width: 0; font-size: 13.5px; white-space: pre-wrap; max-height: 64px; overflow-y: auto }
+#copy { border: 0; border-radius: 12px; background: var(--acc); color: var(--on-acc); font: inherit; font-weight: 900; padding: 11px 16px; cursor: pointer; flex: none; min-height: 44px }
+#copied { font-size: 12px; color: var(--pos); font-weight: 800 }
+#fallback { width: 100%; margin-top: 8px }
+@media (prefers-reduced-motion: no-preference) { .opt { transition: border-color .15s, box-shadow .15s } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Projects and My things</h1>
+    <p class="lead">Tick what you want, add a note on any option, then press <b>Copy my picks</b> and paste it to me. Nothing is built until you pick. My recommendation is marked on each group.</p>
+  </header>
+
+  <section class="why">
+    <h2>Is Projects bad on the phone?</h2>
+    <p><b>Partly.</b> The phone's AI can only read a few pages of a project's files at once, so "ask anything about all my files" is slow and weak there. The computer reads far more and is fast.</p>
+    <p>The <b>other</b> parts of a project are light and work fine on the phone: its tasks, its dates, its money, its people, and the summary of what was decided. So my advice is <b>W2</b>: keep a light Projects on the phone and put the heavy part (files and asking about them) on the computer only.</p>
+    <p class="ar">مشروع = Project · ملفات = Files · المتابعات = Follow-ups · حاجاتي = My things</p>
+  </section>
+
+  <!-- ===================== P: connect projects ===================== -->
+  <section class="group">
+    <h2>P · Connect a project to the rest of the app</h2>
+    <p>Today a project is a closed folder. These link it to what you already use every day. Pick any number. I recommend P1 + P2 + P3.</p>
+
+    <article class="opt" data-code="P1">
+      <div class="txt">
+        <div class="head"><span class="code">P1</span><h3>A project's dates show in Follow-ups</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>A date said in the project's chats or files ("the visa appointment is Thursday", "tiles arrive on the 24th") goes into Follow-ups, with the project's name on it.</li>
+          <li>Tap it and the project opens on that line.</li>
+          <li>Works the same on the phone and the computer.</li>
+        </ul>
+        <p class="ar">المواعيد اللي في المشروع تظهر في المتابعات باسم المشروع</p>
+        <label class="pick"><input type="checkbox" id="pk-P1">I want P1</label>
+        <textarea id="nt-P1" placeholder="Your note on P1 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option P1">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Follow-ups <small>This week</small></div>
+          <div class="c">
+            <div class="lbl">Thursday 19 Nov</div>
+            <div class="row new"><span class="dot">✈</span><span class="t">Visa appointment, 10:30<span class="s">from a chat in the project</span></span><span class="chip">Umrah</span></div>
+            <div class="row"><span class="dot">₤</span><span class="t">Gym renews<span class="s">You pay · 500</span></span></div>
+          </div>
+          <div class="c">
+            <div class="lbl">Tuesday 24 Nov</div>
+            <div class="row new"><span class="dot">▦</span><span class="t">Tiles arrive<span class="s">from "tiles come on the 24th"</span></span><span class="chip">Flat Maadi</span></div>
+            <div class="row"><span class="dot">₤</span><span class="t">Sheikh pays you<span class="s">2,500 · 1 of 8</span></span></div>
+          </div>
+          <p class="note">Dashed = what P1 adds.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="P2">
+      <div class="txt">
+        <div class="head"><span class="code">P2</span><h3>A project has its own money</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>Give it a budget once ("Umrah budget 60,000").</li>
+          <li>Payments that name it ("paid 6,000 hotel deposit for the Umrah") are counted for it, from Money. Nothing is typed twice.</li>
+          <li>The project shows spent, left, and the last payments. Money shows the project's name on those lines.</li>
+        </ul>
+        <p class="ar">كل مشروع ليه ميزانية والمصاريف اللي تخصه بتتحسب لوحدها من الفلوس</p>
+        <label class="pick"><input type="checkbox" id="pk-P2">I want P2</label>
+        <textarea id="nt-P2" placeholder="Your note on P2 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option P2">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Umrah · December <small>‹ Projects</small></div>
+          <div class="c new">
+            <div class="lbl">Money</div>
+            <div class="row"><span class="t">Spent 18,400 of 60,000</span><span class="num">41,600 left</span></div>
+            <div class="track"><i style="width:31%"></i></div>
+            <div class="row"><span class="t">Hotel deposit<span class="s">12 Nov · from Money</span></span><span class="num">−6,000</span></div>
+            <div class="row"><span class="t">Flights × 2<span class="s">9 Nov · from Money</span></span><span class="num">−12,400</span></div>
+          </div>
+          <div class="c"><div class="lbl">Decided</div><div>Pullman ZamZam, 4 nights from 10 Dec</div></div>
+          <div class="c dim"><div class="lbl">Still open</div><div>Which day to go to Madinah</div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="P3">
+      <div class="txt">
+        <div class="head"><span class="code">P3</span><h3>A project knows its people</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>People named in the project ("the contractor Hany", "Noudy") are linked to their People cards.</li>
+          <li>Their page shows "In projects: Flat Maadi", and the project shows who is in it, with what they owe or are owed.</li>
+          <li>If a name could be two people, Attune asks which one, as it does now.</li>
+        </ul>
+        <p class="ar">الناس اللي في المشروع بتترِبط بكروتهم في الناس</p>
+        <label class="pick"><input type="checkbox" id="pk-P3">I want P3</label>
+        <textarea id="nt-P3" placeholder="Your note on P3 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option P3">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Hany <small>‹ People</small></div>
+          <div class="c"><div class="row"><span class="dot">H</span><span class="t">Hany<span class="s">contractor · 010… 4521</span></span></div></div>
+          <div class="c new">
+            <div class="lbl">In projects</div>
+            <div class="row"><span class="t">Flat Maadi<span class="s">tiles, kitchen · 3 chats</span></span><span class="chip">Open</span></div>
+          </div>
+          <div class="c">
+            <div class="lbl">Money</div>
+            <div class="row"><span class="t">You paid</span><span class="num">22,000</span></div>
+            <div class="row"><span class="t">Still to pay</span><span class="num">8,000</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="P4">
+      <div class="txt">
+        <div class="head"><span class="code">P4</span><h3>Add anything to a project from anywhere</h3></div>
+        <ul>
+          <li>Share a WhatsApp message, a PDF or a photo to Attune and pick the project.</li>
+          <li>In Chat: "add this to Flat Maadi".</li>
+          <li>This answers the weak point I told you about: a project only helps if your work goes into it.</li>
+        </ul>
+        <p class="ar">ابعت أي رسالة أو ملف أو صورة للمشروع من أي مكان</p>
+        <label class="pick"><input type="checkbox" id="pk-P4">I want P4</label>
+        <textarea id="nt-P4" placeholder="Your note on P4 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option P4">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="bubble"><b>Hany</b><br>the tiles will come on the 24th, 120 per metre</div>
+          <div class="sheet new">
+            <div class="lbl">Add to Attune</div>
+            <div class="row"><span class="dot">▦</span><span class="t">Flat Maadi<span class="s">project · 3 chats, 4 files</span></span></div>
+            <div class="row"><span class="dot">✈</span><span class="t">Umrah · December<span class="s">project</span></span></div>
+            <div class="row"><span class="dot">+</span><span class="t">New project</span></div>
+            <div class="note">Then: date → Follow-ups, price → the project's notes.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== W: where Projects lives ===================== -->
+  <section class="group">
+    <h2>W · Where Projects lives</h2>
+    <p>Pick one. I recommend W2.</p>
+
+    <article class="opt" data-code="W1">
+      <div class="txt">
+        <div class="head"><span class="code">W1</span><h3>Full Projects on both</h3></div>
+        <ul>
+          <li>The phone keeps everything, including asking about all the files.</li>
+          <li>On the phone, those answers stay slow and read only part of the files.</li>
+        </ul>
+        <label class="pick"><input type="checkbox" id="pk-W1" data-one="W">I want W1</label>
+        <textarea id="nt-W1" placeholder="Your note on W1 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option W1">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Flat Maadi <small>‹ Projects</small></div>
+          <div class="c"><div class="lbl">Ask about this work</div><div class="ghost" style="text-align:left">What did Hany say about the kitchen?</div></div>
+          <div class="c"><div class="row"><span class="t">Files</span><span class="num">4 ›</span></div><div class="row"><span class="t">Saved</span><span class="num">2 ›</span></div><div class="row"><span class="t">Repeats</span><span class="num">1 ›</span></div></div>
+          <div class="note" style="color:var(--warn)">Reads 3 of 4 files on the phone · about 40 s</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="W2">
+      <div class="txt">
+        <div class="head"><span class="code">W2</span><h3>Light on the phone, full on the computer</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li><b>Phone:</b> tasks, dates, money, people, and "Decided / Still open". All fast, all synced.</li>
+          <li><b>Computer:</b> everything, plus files and "Ask about this work" with the bigger AI.</li>
+          <li>On the phone, one line says "Files and questions about them: on your computer".</li>
+        </ul>
+        <p class="ar">الموبايل: المهام والمواعيد والفلوس · الكمبيوتر: الملفات والأسئلة عليها</p>
+        <label class="pick"><input type="checkbox" id="pk-W2" data-one="W">I want W2</label>
+        <textarea id="nt-W2" placeholder="Your note on W2 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option W2">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Flat Maadi <small>‹ Projects</small></div>
+          <div class="c"><div class="lbl">Tasks · 2 of 5</div>
+            <div class="row"><span class="dot">☐</span><span class="t">Pick the kitchen colour</span></div>
+            <div class="row"><span class="dot">☐</span><span class="t">Pay Hany the rest<span class="s">8,000</span></span></div></div>
+          <div class="c"><div class="lbl">Coming up</div><div class="row"><span class="t">Tiles arrive</span><span class="num">Tue 24</span></div></div>
+          <div class="c"><div class="row"><span class="t">Spent 22,000 of 40,000</span></div><div class="track"><i style="width:55%"></i></div></div>
+          <div class="note">Files and questions about them: on your computer.</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="W3">
+      <div class="txt">
+        <div class="head"><span class="code">W3</span><h3>Computer only</h3></div>
+        <ul>
+          <li>Projects disappears from the phone's menu.</li>
+          <li>A project's dates and money still reach the phone (through P1 and P2) when you sync.</li>
+          <li>You can't tick a project's task on the phone.</li>
+        </ul>
+        <label class="pick"><input type="checkbox" id="pk-W3" data-one="W">I want W3</label>
+        <textarea id="nt-W3" placeholder="Your note on W3 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option W3">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Menu</div>
+          <div class="c"><div class="row"><span class="t">Home</span></div><div class="row"><span class="t">Money</span></div><div class="row"><span class="t">Follow-ups</span></div><div class="row"><span class="t">People</span></div><div class="row"><span class="t">Documents</span></div>
+            <div class="row dim"><span class="t" style="text-decoration:line-through">Projects</span><span class="chip">computer</span></div></div>
+          <div class="c"><div class="lbl">Follow-ups</div><div class="row"><span class="t">Tiles arrive</span><span class="chip">Flat Maadi</span></div></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== T: My things ===================== -->
+  <section class="group">
+    <h2>T · Where My things lives</h2>
+    <p>Today it sits on the Documents and books page, which is not where you'd look for your TV's warranty. Pick one. I recommend T1.</p>
+
+    <article class="opt" data-code="T1">
+      <div class="txt">
+        <div class="head"><span class="code">T1</span><h3>Inside Money, as "Things I own"</h3><span class="rec">Recommended</span></div>
+        <ul>
+          <li>A receipt is money, so it lives next to your payments.</li>
+          <li>The thing's price links to its payment in Money when there is one.</li>
+          <li>The warranty still goes to Dates and warns you before it ends.</li>
+        </ul>
+        <p class="ar">حاجاتي تبقى جوه الفلوس: «حاجات عندي»</p>
+        <label class="pick"><input type="checkbox" id="pk-T1" data-one="T">I want T1</label>
+        <textarea id="nt-T1" placeholder="Your note on T1 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option T1">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Money</div>
+          <div class="row" style="gap:6px"><span class="chip" style="background:transparent;color:var(--mut)">Spending</span><span class="chip" style="background:transparent;color:var(--mut)">Plans</span><span class="chip new">Things I own</span></div>
+          <div class="c">
+            <div class="row"><span class="dot">▭</span><span class="t">Samsung TV 55"<span class="s">B.TECH · 12 Mar 2026</span></span><span class="num">24,999</span></div>
+            <div class="row"><span class="t" style="font-weight:600;color:var(--mut)">Warranty to 12 Mar 2028</span><span class="chip">in Dates</span></div>
+          </div>
+          <div class="c"><div class="row"><span class="dot">◎</span><span class="t">Washer<span class="s">Raya · 3 Jan 2025</span></span><span class="num">18,400</span></div></div>
+          <div class="btn">+ From a receipt</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="T2">
+      <div class="txt">
+        <div class="head"><span class="code">T2</span><h3>Its own page in the menu</h3></div>
+        <ul>
+          <li>"My things" gets one row in the side menu, under More.</li>
+          <li>Easy to find, but one more row in a menu you found crowded before.</li>
+        </ul>
+        <label class="pick"><input type="checkbox" id="pk-T2" data-one="T">I want T2</label>
+        <textarea id="nt-T2" placeholder="Your note on T2 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option T2">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Menu</div>
+          <div class="c"><div class="lbl">More</div><div class="row"><span class="t">Students</span></div><div class="row"><span class="t">Daily</span></div><div class="row new"><span class="t">My things</span><span class="num">2</span></div></div>
+          <div class="c"><div class="row"><span class="dot">▭</span><span class="t">Samsung TV 55"<span class="s">warranty to Mar 2028</span></span></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opt" data-code="T3">
+      <div class="txt">
+        <div class="head"><span class="code">T3</span><h3>Stay in Documents, renamed</h3></div>
+        <ul>
+          <li>Stays where it is, called "Receipts and warranties", and moves above the books.</li>
+          <li>The smallest change.</li>
+        </ul>
+        <label class="pick"><input type="checkbox" id="pk-T3" data-one="T">I want T3</label>
+        <textarea id="nt-T3" placeholder="Your note on T3 (optional)"></textarea>
+      </div>
+      <div class="phone" aria-label="Phone mock-up of option T3">
+        <div class="bar"><span>9:41</span><span>●●● 88</span></div>
+        <div class="scr">
+          <div class="top">Documents</div>
+          <div class="c new"><div class="lbl">Receipts and warranties</div><div class="row"><span class="dot">▭</span><span class="t">Samsung TV 55"<span class="s">to Mar 2028</span></span></div><div class="ghost">+ From a receipt</div></div>
+          <div class="c dim"><div class="lbl">Books</div><div>No books yet</div></div>
+        </div>
+      </div>
+    </article>
+  </section>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="in">
+    <div id="picked">Nothing picked yet.</div>
+    <span id="copied" aria-live="polite"></span>
+    <button id="copy" type="button">Copy my picks</button>
+  </div>
+  <textarea id="fallback" readonly hidden aria-label="Your picks to copy"></textarea>
+</div>
+
+<script>
+(function () {
+  var KEY = "attune-mockup-projects-things";
+  var codes = ["P1", "P2", "P3", "P4", "W1", "W2", "W3", "T1", "T2", "T3"];
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function text() {
+    var out = [];
+    codes.forEach(function (c) {
+      var s = state[c] || {};
+      if (s.on) out.push(c + (s.note && s.note.trim() ? " — " + s.note.trim().replace(/\s+/g, " ") : ""));
+    });
+    var loose = codes.filter(function (c) { var s = state[c] || {}; return !s.on && s.note && s.note.trim(); })
+      .map(function (c) { return "(note on " + c + ", not picked) " + state[c].note.trim().replace(/\s+/g, " "); });
+    return out.concat(loose).join("\n");
+  }
+  function render() {
+    codes.forEach(function (c) {
+      var s = state[c] || {}, box = document.getElementById("pk-" + c), nt = document.getElementById("nt-" + c);
+      box.checked = !!s.on; if (document.activeElement !== nt) nt.value = s.note || "";
+      document.querySelector('.opt[data-code="' + c + '"]').classList.toggle("on", !!s.on);
+    });
+    var t = text();
+    document.getElementById("picked").textContent = t || "Nothing picked yet.";
+  }
+  codes.forEach(function (c) {
+    var box = document.getElementById("pk-" + c), nt = document.getElementById("nt-" + c);
+    box.addEventListener("change", function () {
+      state[c] = state[c] || {}; state[c].on = box.checked;
+      // W and T are pick-one groups
+      var g = box.getAttribute("data-one");
+      if (g && box.checked) codes.forEach(function (o) { if (o !== c && o.charAt(0) === g && state[o]) state[o].on = false; });
+      save(); render();
+    });
+    nt.addEventListener("input", function () { state[c] = state[c] || {}; state[c].note = nt.value; save(); render(); });
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    var t = text(), msg = document.getElementById("copied"), fb = document.getElementById("fallback");
+    if (!t) { msg.textContent = "Tick at least one option first."; return; }
+    function fallback() { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); msg.textContent = "Selected — copy it."; }
+    try {
+      navigator.clipboard.writeText(t).then(function () { msg.textContent = "Copied ✓"; fb.hidden = true; }, fallback);
+    } catch (e) { fallback(); }
+  });
+  render();
+})();
+</script>
