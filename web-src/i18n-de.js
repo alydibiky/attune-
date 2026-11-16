@@ -12830,4 +12830,8 @@ export const DE = {
   "{c} · 1 item still to buy:": "{c} · noch 1 Sache zu kaufen:",
   "Show the message": "Nachricht zeigen",
   "{t} came up in {c} on 1 day:": "{t} kam in {c} an einem Tag vor:",
+  "{c} · the 1 message kept:": "{c} · die 1 gespeicherte Nachricht:",
+  "{c} · the latest of {n} messages kept:": "{c} · die neuesten von {n} gespeicherten Nachrichten:",
+  "Pinned — it is on your “Attune · A list” widget now": "Angeheftet — sie ist jetzt auf deinem Widget „Attune · Eine Liste“",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Angeheftet — tippe in der Frage des Telefons auf „Hinzufügen“, um das Widget auf den Startbildschirm zu legen",
 };

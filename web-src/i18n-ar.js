@@ -9932,4 +9932,8 @@ export const AR = {
   "{c} · 1 item still to buy:": "{c} · لسه حاجة واحدة عايزين نشتريها:",
   "Show the message": "وريني الرسالة",
   "{t} came up in {c} on 1 day:": "{t} اتكلموا عنه في {c} يوم واحد:",
+  "{c} · the 1 message kept:": "{c} · الرسالة الوحيدة المحفوظة:",
+  "{c} · the latest of {n} messages kept:": "{c} · آخر الرسايل من {n} رسالة محفوظة:",
+  "Pinned — it is on your “Attune · A list” widget now": "اتثبتت — بقت على ويدجت «Attune · قايمة» دلوقتي",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "اتثبتت — دوس «إضافة» في سؤال الموبايل عشان الويدجت تتحط على الشاشة الرئيسية",
 };

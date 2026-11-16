@@ -32,7 +32,9 @@ export function chatIn(q0, chats = []) {
   for (const c of chats) {
     const words = fold(c.chat).split(" ").filter((w) => w.length >= 3 && !/^(?:group|chat|جروب)$/.test(w));
     const hit = words.filter((w) => t.includes(" " + w + " ") || t.includes(" " + STRIP(w) + " ") || t.includes(" ال" + w + " ")).length;
-    const s = words.length ? hit / words.length + hit * 0.01 : 0;
+    // (Ali, 16 Nov: "What are the talabat" answered "11 messages kept") two chats can carry the same name — the export's copy and the
+    // notifications' one: the one you described (its role) wins, a shopping list first
+    const s = words.length ? hit / words.length + hit * 0.01 + (c.role === "shopping" ? 0.002 : c.role ? 0.001 : 0) : 0;
     if (hit && s > score) { best = c; score = s; }
   }
   if (best) return best;
@@ -55,8 +57,12 @@ const iso = (ts) => { const d = new Date(ts); return d.getFullYear() + "-" + Str
 export function askChat(q, chats = [], messagesByChat = {}) {
   const c = chatIn(q, chats); if (!c) return null;
   const all = (messagesByChat[c.key] || []).slice().sort((a, b) => a.ts - b.ts);
-  if (c.role === "shopping" && /\b(?:all|everything|what(?:'s| is| are)|list|items)\b|ايه|كل|الطلبات/.test(fold(q)) && topicOf(q, c).length === 0) return { kind: "list", chat: c.chat, key: c.key };
-  const words = topicOf(q, c); if (!words.length) return { kind: "chat", chat: c.chat, key: c.key, total: all.length };
+  // (the list's own words are not a topic: "show me the talabat list", «ايه الطلبات»)
+  const LISTW = /^(?:list|lists|items?|shopping|grocer(?:y|ies)|talabat|طلبات|قايمه|قائمه|حاجات|مشتريات)$/;
+  if (c.role === "shopping" && topicOf(q, c).filter((w) => !LISTW.test(w)).length === 0) return { kind: "list", chat: c.chat, key: c.key };
+  // no topic ("what are the talabat?" before the chat is described, "what did the building group say?"): the latest real messages
+  // themselves — never only a count
+  const words = topicOf(q, c); if (!words.length) { const real = all.filter((m) => !m.noise); return { kind: "chat", chat: c.chat, key: c.key, total: real.length, ids: real.slice(-12).map((m) => m.id), allIds: real.map((m) => m.id) }; }
   const groups = words.map(forms);
   const used = all.filter((m) => { const t = " " + fold(m.text).split(" ").map(STRIP).join(" ") + " "; return groups.every((g) => g.some((f) => t.includes(" " + f + " ") || f.length >= 4 && t.includes(f))); });
   const days = [];

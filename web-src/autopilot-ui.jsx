@@ -7,6 +7,7 @@ import { tr, getLang } from "./i18n.js";
 import { loadLife, saveLife } from "./life.js";
 import { undoSubPay } from "./subpay.js";
 import * as AP from "./autopilot.js";
+import { ChatPilotCard } from "./chatpilot-ui.jsx";   // v10.0.1: ONE Autopilot card — the chats' part draws it, this file gives it the money part
 
 const T = (k, v) => tr(k, v);
 const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
@@ -94,22 +95,21 @@ export function AutopilotCard() {
     // v9.9 a subscription it added by itself: the plan (or this month's tick) and its expense are taken back
     try { if (d.kind === "subscription") { saveLife(undoSubPay(loadLife(), d.key)); if (!d.noMoney) window.__attuneUndoMoney && window.__attuneUndoMoney(d.amount, "expense"); } } catch (e) {}
     put(AP.undoDone(s, d.key)); };
-  const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5).slice(0, 5)   /* v9.9.30: deliveries too — they are done by themselves now */, week = AP.weekCount(s);
-  if (!waiting.length && !recent.length && !s.ask) return null;
-  return (
-    <section className="c-card p-3.5 space-y-2" style={{ borderColor: "color-mix(in srgb, var(--c-area-agents, var(--c-acc)) 35%, var(--c-ln))" }} data-testid="autopilot">
-      <div className="flex items-center gap-2"><Zap size={15} style={{ color: "var(--c-area-agents, var(--c-acc))" }} />
-        <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Autopilot")}</span>
-        {week ? <span className="text-[11.5px] c-sub" data-testid="autopilot-week">{T("{n} done this week", { n: week })}</span> : null}</div>
+  // (v10.0.1) a chat to-do the OLD Autopilot made before v10.0 ("Talabat: Noudy requested chicken strips") is the chats' part now —
+  // never listed twice
+  const waiting = list.filter((x) => !AP.isAuto(s, x)).slice(0, 4), recent = (s.done || []).filter((d) => d.at > Date.now() - 2 * 864e5 && (s.oldTodos || d.kind !== "todo")).slice(0, 5)   /* v9.9.30: deliveries too — they are done by themselves now */, week = AP.weekCount(s);
+  const has = !!(waiting.length || recent.length || s.ask);
+  const top = s.ask || waiting.length ? <>
       {s.ask ? <div className="rounded-[12px] bg-[var(--c-soft)] p-2.5 space-y-2" data-testid="autopilot-ask">
         <p className="m-0 text-[13px] font-bold" dir="auto">{T("You added {k} from {app} 3 times. Do these by yourself from now on?", { k: tr(LINE[s.ask.split(":")[0]] || "these"), app: s.ask.split(":").slice(1).join(":") })}</p>
         <div className="flex gap-2"><button onClick={() => put(AP.allow(s, s.ask, true))} className="min-h-[38px] px-3.5 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12.5px] font-extrabold" data-testid="autopilot-allow">{tr("Yes, by itself")}</button>
           <button onClick={() => put(AP.allow(s, s.ask, false))} className="min-h-[38px] px-3 rounded-[10px] border border-[var(--c-ln)] text-[12.5px] font-bold" data-testid="autopilot-keep-asking">{tr("Keep asking me")}</button></div></div> : null}
-      {waiting.map((x) => <Item key={x.key} x={x} open={open === x.key} setOpen={(v) => setOpen(v ? x.key : "")} add={add} no={no} done={(how) => { put(AP.accept(s, { ...x, kind: x.kind }, {})); setOpen(""); flash(how); }} />)}
-      {recent.length ? <div className="pt-1 space-y-1" data-testid="autopilot-done">
-        <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Done for you")}</p>
+      {waiting.length ? <div data-testid="autopilot-waiting">{waiting.map((x) => <Item key={x.key} x={x} open={open === x.key} setOpen={(v) => setOpen(v ? x.key : "")} add={add} no={no} done={(how) => { put(AP.accept(s, { ...x, kind: x.kind }, {})); setOpen(""); flash(how); }} />)}</div> : null}
+    </> : null;
+  const done = recent.length ? <div className="space-y-1" data-testid="autopilot-done">
         {recent.map((d) => <div key={d.key} className="flex items-center gap-2 text-[12.5px]"><Check size={13} className="c-pos shrink-0" /><span className="flex-1 truncate" dir="auto">{d.title || d.app}{d.amount ? " · " + fmt(d.amount) : ""}{d.kind === "subscription" ? " · " + tr("added to Subscriptions") : ""}</span>
           <button onClick={() => undo(d)} className="min-h-[32px] px-2 text-[12px] font-bold c-acc inline-flex items-center gap-1" data-testid="autopilot-undo"><Undo2 size={12} />{tr("Undo")}</button></div>)}
-      </div> : null}
-    </section>);
+      </div> : null;
+  const hidden = s.oldTodos ? 0 : (s.done || []).filter((d) => d.kind === "todo" && d.at > Date.now() - 7 * 864e5).length;
+  return <ChatPilotCard old={{ has, week: Math.max(0, week - hidden), top, done }} />;
 }

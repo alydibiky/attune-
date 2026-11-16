@@ -80,7 +80,10 @@ function MessageSheet({ d, close, undo, never }) {
     </div></div>;
 }
 
-export function ChatPilotCard() {
+/* (Ali, 16 Nov: "why there is 2 autopilot done for you") ONE Autopilot card on Home: `old` carries the money / bills / deliveries
+   part (autopilot-ui.jsx: { has, week, top, done }) — its waiting cards go under the chat question, its done lines under the same
+   single "Done for you". */
+export function ChatPilotCard({ old = null }) {
   const [st, setSt] = useState(CP.loadCP), [slot, setSlot] = useState(0), [sheet, setSheet] = useState(null), [quietOpen, setQuietOpen] = useState(false);
   useEffect(() => { const t = setInterval(() => setSlot((x) => x + 1), 60000); const f = () => setSlot((x) => x + 1); window.addEventListener("attune-lists", f);
     const g = () => { setSt(CP.loadCP()); setSlot((x) => x + 1); }; window.addEventListener("attune-chatpilot", g); window.addEventListener("attune-notifmind", f);
@@ -156,21 +159,26 @@ export function ChatPilotCard() {
   const lists = useMemo(() => L.loadLists().lists.filter((l) => l.chatKey && openItems(l).length), [slot, st]);
   const recent = st.done.filter((d) => !d.undone && d.at > Date.now() - 2 * 864e5).slice(0, 5);
   const q = CP.quietToday(st);
-  if (!ask && !lists.length && !recent.length && !q.total && !(st.review && st.review.total)) return null;
-  return <section className="c-card p-3.5 space-y-2" data-testid="chatpilot">
+  const mine = !!(ask || lists.length || recent.length || q.total || (st.review && st.review.total));
+  if (!mine && !(old && old.has)) return null;
+  const week = ((old && old.week) || 0) + st.done.filter((d) => !d.undone && d.kind !== "alert" && d.at > Date.now() - 7 * 864e5).length;
+  return <section className="c-card p-3.5" style={{ borderColor: "color-mix(in srgb, var(--c-area-agents, var(--c-acc)) 35%, var(--c-ln))" }} data-testid="autopilot"><div className="space-y-2" data-testid={mine ? "chatpilot" : "autopilot-only"}>
     <div className="flex items-center gap-2"><Zap size={15} style={{ color: "var(--c-area-agents, var(--c-acc))" }} />
-      <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Autopilot")}</span></div>
+      <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Autopilot")}</span>
+      {week ? <span className="text-[11.5px] c-sub" data-testid="autopilot-week">{tr("{n} done this week", { n: week })}</span> : null}</div>
     {ask ? <AskCard key={ask.key} a={ask} done={doneAsk} /> : null}
+    {old && old.top ? old.top : null}
     {lists.map((l) => { const its = openItems(l); return <button key={l.id} onClick={() => open("lists")} className="w-full flex items-center gap-3 text-start min-h-[48px]" data-testid="cp-shopping">
       <span className="w-9 h-9 rounded-[10px] bg-[var(--c-soft)] grid place-items-center shrink-0"><ShoppingCart size={16} className="c-acc" /></span>
       <span className="flex-1 min-w-0"><b className="block text-[14px]">{its.length === 1 ? tr("Shopping · 1 item") : tr("Shopping · {n} items", { n: its.length })}</b><span className="block c-sub text-[12px] truncate" dir="auto">{l.name} · {its.slice(-3).join(", ")}</span></span>
       <span className="text-[12.5px] font-extrabold c-acc">{tr("Open")}</span></button>; })}
+    {recent.length || (old && old.done) ? <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub" data-testid="ap-done-title">{tr("Done for you")}</p> : null}
     {recent.length ? <div className="space-y-1" data-testid="cp-done">
-      <p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub">{tr("Done for you")}</p>
       {recent.map((d) => { const I = ICON[d.kind] || Check; return <button key={d.id} onClick={() => setSheet(d)} className="w-full flex items-start gap-2 text-start min-h-[44px] py-1" data-testid="cp-line" data-kind={d.kind}>
         <I size={14} className="c-acc shrink-0 mt-1" /><span className="flex-1 min-w-0"><span className="block text-[13px] font-bold truncate" dir="auto">{lineOf(d)}</span>
           <span className="block text-[11.5px] c-sub truncate" dir="auto">{d.from.chat}{d.from.who ? " · " + d.from.who : ""} · {hm(d.from.ts || d.at)} · {tr("tap for the message")}</span></span></button>; })}
     </div> : null}
+    {old && old.done ? old.done : null}
     {st.review && st.review.total ? <div className="rounded-[12px] bg-[var(--c-surf-2)] p-2.5 space-y-1" data-testid="cp-review">
       <p className="m-0 text-[12.5px] font-extrabold">{tr("Computer checked: {n} · {f} fixed", { n: st.review.total, f: st.review.fixes.length })}</p>
       {st.review.fixes.slice(0, 3).map((f) => <p key={f.id} className="m-0 text-[12px] c-sub" dir="auto">“{String(f.from.text).slice(0, 60)}” — {f.reason || tr("fixed")}</p>)}
@@ -184,5 +192,5 @@ export function ChatPilotCard() {
           className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-bold" data-testid="cp-mattered">{tr("This mattered")}</button></div>)}</div> : null}
     </div> : null}
     {sheet ? <MessageSheet d={sheet} close={() => setSheet(null)} undo={undo} never={never} /> : null}
-  </section>;
+  </div></section>;
 }

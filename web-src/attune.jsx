@@ -160,10 +160,12 @@ try { setTimeout(loadExports, 1500); window.addEventListener("attune-wa-added", 
 function askChatsNow(q) {
   try { const N = typeof window !== "undefined" && window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
     const roles = cpLoadRoles(), mb = cpMessagesByChat(notes, WA_EXPORTS, roles);
-    const chats = mb.chats.map((c) => ({ ...c, role: (roles[c.key] || {}).role || c.role || "" }));
-    const r = cpAskChat(q, chats, mb.byKey); if (!r || (r.kind === "topic" && !r.total)) return null;
-    const ids = new Set(r.ids || []);
-    return { r, msgs: (mb.byKey[r.key] || []).filter((m) => ids.has(m.id)).map((m) => ({ who: m.who, ts: m.ts, text: m.text })) };
+    // (a chat's export and its notifications can name it two ways — one person / a group: what you said about either counts for both)
+    const twin = (k) => String(k).replace(/\|[gp]:/, (m) => (m === "|g:" ? "|p:" : "|g:"));
+    const chats = mb.chats.map((c) => ({ ...c, role: (roles[c.key] || {}).role || (roles[twin(c.key)] || {}).role || c.role || "" }));
+    const r = cpAskChat(q, chats, mb.byKey); if (!r || (r.kind === "topic" && !r.total) || (r.kind === "chat" && !r.total)) return null;
+    const pick = (list) => { const ids = new Set(list || []); return (mb.byKey[r.key] || []).filter((m) => ids.has(m.id)).map((m) => ({ who: m.who, ts: m.ts, text: m.text })); };
+    return { r, msgs: pick(r.kind === "chat" ? r.allIds : r.ids), last: r.kind === "chat" ? pick(r.ids) : [] };
   } catch (e) { return null; }
 }
 /** v9.9.40 K3 (Ali: "understand when I tell it I bought the shopping list"): the list chats' lists (Talabat…) and what this sentence
@@ -7869,7 +7871,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.0";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.0.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

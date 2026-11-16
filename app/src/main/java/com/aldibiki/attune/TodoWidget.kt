@@ -54,6 +54,15 @@ object Widgets {
         if (ids.isNotEmpty()) { val v = views(ctx, which); for (id in ids) mgr.updateAppWidget(id, v) }
     }
 
+    /** Put this widget on the home screen if it isn't there: "has" | "asked" | "no". */
+    fun pin(ctx: Context, which: String): String {
+        val mgr = AppWidgetManager.getInstance(ctx)
+        val cn = ComponentName(ctx, if (which == TODO) TodoWidget::class.java else ListWidget::class.java)
+        if (mgr.getAppWidgetIds(cn).isNotEmpty()) { refresh(ctx, which); return "has" }
+        if (android.os.Build.VERSION.SDK_INT < 26 || !mgr.isRequestPinAppWidgetSupported) return "no"
+        return if (mgr.requestPinAppWidget(cn, null, null)) "asked" else "no"
+    }
+
     /** A tick on the home screen: kept for the page, and the row leaves the widget now. */
     @Synchronized fun tick(ctx: Context, which: String, kind: String, id: String) {
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

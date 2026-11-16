@@ -12830,4 +12830,8 @@ export const JA = {
   "{c} · 1 item still to buy:": "{c} · まだ買う物 1 件：",
   "Show the message": "メッセージを表示",
   "{t} came up in {c} on 1 day:": "{t} は {c} で 1 日話題になりました：",
+  "{c} · the 1 message kept:": "{c} · 保存した 1 件のメッセージ：",
+  "{c} · the latest of {n} messages kept:": "{c} · 保存した {n} 件のうち最新のもの：",
+  "Pinned — it is on your “Attune · A list” widget now": "固定しました — 「Attune · リスト」ウィジェットに表示されています",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "固定しました — スマホの確認で「追加」をタップすると、ウィジェットがホーム画面に置かれます",
 };

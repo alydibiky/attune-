@@ -12830,4 +12830,8 @@ export const TH = {
   "{c} · 1 item still to buy:": "{c} · ยังต้องซื้ออีก 1 อย่าง:",
   "Show the message": "แสดงข้อความ",
   "{t} came up in {c} on 1 day:": "{t} ถูกพูดถึงใน {c} 1 วัน:",
+  "{c} · the 1 message kept:": "{c} · ข้อความ 1 รายการที่เก็บไว้:",
+  "{c} · the latest of {n} messages kept:": "{c} · ล่าสุดจาก {n} ข้อความที่เก็บไว้:",
+  "Pinned — it is on your “Attune · A list” widget now": "ปักหมุดแล้ว — ตอนนี้อยู่บนวิดเจ็ต “Attune · รายการ” ของคุณ",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "ปักหมุดแล้ว — แตะ “เพิ่ม” ในคำถามของโทรศัพท์เพื่อวางวิดเจ็ตบนหน้าจอหลัก",
 };

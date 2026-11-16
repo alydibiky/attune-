@@ -12830,4 +12830,8 @@ export const FA = {
   "{c} · 1 item still to buy:": "{c} · هنوز ۱ چیز برای خرید:",
   "Show the message": "نمایش پیام",
   "{t} came up in {c} on 1 day:": "{t} در {c} یک روز مطرح شد:",
+  "{c} · the 1 message kept:": "{c} · تنها پیام نگه‌داشته‌شده:",
+  "{c} · the latest of {n} messages kept:": "{c} · تازه‌ترین‌ها از {n} پیام نگه‌داشته‌شده:",
+  "Pinned — it is on your “Attune · A list” widget now": "سنجاق شد — اکنون روی ابزارک «Attune · یک فهرست» است",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "سنجاق شد — برای گذاشتن ابزارک روی صفحهٔ اصلی، در پرسش گوشی «افزودن» را بزنید",
 };

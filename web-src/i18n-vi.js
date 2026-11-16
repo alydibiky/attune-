@@ -12830,4 +12830,8 @@ export const VI = {
   "{c} · 1 item still to buy:": "{c} · còn 1 món cần mua:",
   "Show the message": "Xem tin nhắn",
   "{t} came up in {c} on 1 day:": "{t} được nhắc trong {c} vào một ngày:",
+  "{c} · the 1 message kept:": "{c} · 1 tin nhắn đã lưu:",
+  "{c} · the latest of {n} messages kept:": "{c} · mới nhất trong {n} tin nhắn đã lưu:",
+  "Pinned — it is on your “Attune · A list” widget now": "Đã ghim — giờ nó nằm trên tiện ích “Attune · Một danh sách” của bạn",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Đã ghim — chạm “Thêm” trong câu hỏi của điện thoại để đặt tiện ích lên màn hình chính",
 };

@@ -12830,4 +12830,8 @@ export const KO = {
   "{c} · 1 item still to buy:": "{c} · 아직 살 것 1개:",
   "Show the message": "메시지 보기",
   "{t} came up in {c} on 1 day:": "{t} 이야기가 {c}에서 하루 나왔어요:",
+  "{c} · the 1 message kept:": "{c} · 보관된 메시지 1개:",
+  "{c} · the latest of {n} messages kept:": "{c} · 보관된 메시지 {n}개 중 최신:",
+  "Pinned — it is on your “Attune · A list” widget now": "고정됨 — 이제 “Attune · 목록” 위젯에 있습니다",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "고정됨 — 휴대폰의 질문에서 “추가”를 눌러 위젯을 홈 화면에 놓으세요",
 };

@@ -102,6 +102,8 @@ export const removeList = (st, id) => ({ ...st, lists: st.lists.filter((l) => l.
 export const editList = (st, id, patch) => put(st, id, (l) => ({ ...l, ...patch, ...(patch.repeat ? { repeat: cleanRepeat(patch.repeat), cycle: "" } : {}) }));
 export const tick = (st, id, itemId, now = Date.now()) => put(st, id, (l) => { const c = current(l, now); return { ...c, items: c.items.map((x) => (x.id === itemId ? { ...x, done: !x.done } : x)) }; });
 export const addItem = (st, id, text) => put(st, id, (l) => ({ ...l, items: [...l.items, ...String(text || "").split(/\s*[,،\n]\s*/).map((t) => t.trim()).filter(Boolean).map((t) => ({ id: "i" + uid(), text: t.slice(0, 140), done: false }))] }));
+/** (Ali, 16 Nov: "I want option to delete one — or edit") the words of one item changed; its tick stays. */
+export const renameItem = (st, id, itemId, text) => { const t = String(text || "").trim().slice(0, 140); return t ? put(st, id, (l) => ({ ...l, items: l.items.map((x) => (x.id === itemId ? { ...x, text: t } : x)) })) : st; };
 export const removeItem = (st, id, itemId) => put(st, id, (l) => ({ ...l, items: l.items.filter((x) => x.id !== itemId) }));
 /** Bring every list to today (new rounds start empty) — the page saves it when something changed. */
 export function refresh(st, now = Date.now()) { let changed = false; const lists = st.lists.map((l) => { const c = current(l, now); if (c !== l) changed = true; return c; }); return changed ? { ...st, lists } : st; }

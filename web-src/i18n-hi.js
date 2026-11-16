@@ -12831,4 +12831,8 @@ export const HI = {
   "{c} · 1 item still to buy:": "{c} · अभी 1 चीज़ खरीदनी है:",
   "Show the message": "मैसेज दिखाएँ",
   "{t} came up in {c} on 1 day:": "{t} की बात {c} में एक दिन हुई:",
+  "{c} · the 1 message kept:": "{c} · रखा गया 1 संदेश:",
+  "{c} · the latest of {n} messages kept:": "{c} · रखे गए {n} संदेशों में से सबसे नए:",
+  "Pinned — it is on your “Attune · A list” widget now": "पिन हो गई — अब यह आपके “Attune · एक सूची” विजेट पर है",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "पिन हो गई — विजेट को होम स्क्रीन पर रखने के लिए फ़ोन के सवाल में “जोड़ें” दबाएँ",
 };

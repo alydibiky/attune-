@@ -1,5 +1,22 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (16 Nov 2026 — v10.0.1: Ali's 8 phone screenshots on v10.0, all fixed with tests)
+> 1 "What are the talabat" answered "11 messages kept" → the list's items (chatask.js: the described chat wins when the export's copy
+> has the same name; list words are not a topic), and a chat not described yet shows its latest messages + "Show all N".
+> 2 Two Autopilot cards with two "Done for you" → ONE card (autopilot-ui.jsx gives its money part to chatpilot-ui.jsx `old`); the old
+> card's chat to-dos from before v10.0 are not listed again. 3 "Pin to the widget does not work" → NativeBridge.pinListWidget
+> (Widgets.pin: Android's "Add to home screen" question; "has" / "asked" / "no"). 4 list items: pencil = reword, bin = delete
+> (lists.js renameItem). 5 Follow-ups said "You pay" for what Baba pays → "Baba pays" (timeline-ui.jsx kindLabel). 6 People "Who is
+> this?" shows the payment / note the name came from (people-ui.jsx namesToAsk `where`). 7 Agents: a price under a tenth of your limit
+> is never the product (agents.js believable — "EGP 120" for earbuds under 8,000), old such checks are not shown, and the buy card says
+> "Every 4 hours, even with Attune closed". 8 "the last time I went to get groceries" answered with a bus company's WhatsApp → only
+> Money and your own notes count for "I went / bought / did" (links.js I_DID); «السوبر جت» is not the supermarket.
+> Tests: tests/unit/v1001fixes.test.mjs, tests/e2e_v1001fixes.py. **Open / ask Ali:** (a) Noudy's "Fitness for" / "Fitness" became
+> items — she was correcting "Toast" → "Fitness toast" in 3 messages; now he can reword / delete, but joining a correction to the
+> message before it needs his pick (mock-ups first). (b) the ask card guessed «صادر ووارد الخزنة» (a money chat) as a shopping list —
+> guessRole should see amounts / "وارد / صادر" as money, not items. (c) Agents: if the stores still show no prices on his phone after
+> this build, the invisible browser's reading of Amazon / noon needs a look on a real phone (AgentWatch.kt day job).
+
 > ## START HERE (14 Nov 2026 night — v9.9.39 on main; the NEW AUTOPILOT is being built on branch ccr-7db1d9fc-iyie83)
 > Ali (14 Nov): "the whole autopilot idea is very stupid". Agreed SIX rules: 1 ignore by default · 2 not sure → don't act alone ·
 > 3 every action shows the original message + why + Undo / Open chat / Never from this chat · 4 everything kept and understood by

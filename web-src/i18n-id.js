@@ -12831,4 +12831,8 @@ export const IDN = {
   "{c} · 1 item still to buy:": "{c} · masih 1 barang untuk dibeli:",
   "Show the message": "Tampilkan pesan",
   "{t} came up in {c} on 1 day:": "{t} dibahas di {c} pada satu hari:",
+  "{c} · the 1 message kept:": "{c} · satu pesan yang disimpan:",
+  "{c} · the latest of {n} messages kept:": "{c} · yang terbaru dari {n} pesan yang disimpan:",
+  "Pinned — it is on your “Attune · A list” widget now": "Disematkan — sekarang ada di widget “Attune · Sebuah daftar”",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Disematkan — ketuk “Tambahkan” pada pertanyaan ponsel untuk menaruh widget di layar utama",
 };

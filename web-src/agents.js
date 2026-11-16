@@ -542,6 +542,9 @@ export function believable(o, a = {}) {
   const want = String(a.what || "") + " " + String(a.said || ""), cur = String((o && o.currency) || a.currency || "").toUpperCase();
   if (!o || !(o.price > 0)) return false;
   if (GADGET.test(want) && FLOOR8[cur] && o.price < FLOOR8[cur]) return false;
+  // (Ali, 16 Nov: "Checked: cheapest EGP 120 · Amazon" for earbuds he set "under 8,000" for) a price under a tenth of the person's
+  // own limit is not that product — a case, a part, a toy
+  if (a.below > 0 && o.price < a.below * 0.1) return false;
   return true;
 }
 /** Every offer of a round → the exact product, believable prices, the cheapest listing of each store, cheapest first (max 5). */
@@ -652,7 +655,7 @@ export function pickBuy(a, offers, skip = []) {
 /** After a round: waiting for the person ("confirm") with the offer, or still searching (with the cheapest close one it saw). */
 export function takeBuyRound(a, offers, now = Date.now()) {
   const pick = pickBuy(a, offers, a.skip);
-  const near = (offers || []).filter((o) => o && o.price > 0 && matchScore(a.what, o) >= 0.75).sort((x, y) => x.price - y.price)[0] || null;
+  const near = (offers || []).filter((o) => o && o.price > 0 && believable(o, a) && matchScore(a.what, o) >= 0.75).sort((x, y) => x.price - y.price)[0] || null;
   const checks = [...(a.checks || []), { at: now, how: "browser", ...(near ? { price: Math.round(near.price) } : { blocked: true }) }].slice(-30);
   if (pick) return { ...a, checks, step: "confirm", pending: { name: pick.name || a.what, price: Math.round(pick.price), currency: pick.currency || a.currency, href: pick.href || "", url: pick.url || a.url, site: pick.site || a.site, text: String(pick.text || "").slice(0, 200), rating: pick.rating || 0, at: now } };
   return { ...a, checks, step: "search", pending: null, nearest: near ? { name: near.name, price: Math.round(near.price), site: near.site || a.site } : a.nearest || null };
@@ -732,9 +735,11 @@ export function agentChat(a, now = Date.now()) {
   // v9.9.12 (Ali: "how do I know if the new findings are better than the current ones?"): every check with a price says it against the
   // best one before it — "New best", "the same as your best", or "no better: your best is still …"
   const all = (a.checks || []), from = Math.max(0, all.length - 12);
-  let best = 0; for (const c of all.slice(0, from)) if (c.price > 0 && (!best || c.price < best)) best = c.price;
+  let best = 0; for (const c of all.slice(0, from)) if (c.price > 0 && (a.kind !== "buy" || believable({ price: c.price, currency: a.currency }, a)) && (!best || c.price < best)) best = c.price;
+  // (an old check that kept a case's price — "EGP 120" for earbuds — is not shown as a price: it was not the product)
+  const real = (c) => c.price > 0 && (a.kind !== "buy" || believable({ price: c.price, currency: a.currency }, a));
   for (const c of all.slice(from)) {
-    if (c.price > 0) { miss = null;
+    if (real(c)) { miss = null;
       const d = (c.checkin ? " (" + c.checkin + " → " + (c.checkout || "") + ")" : "") + (c.site && !c.checkin ? " · " + c.site : "");   // v9.9.33: which store
       const T = !best ? ["Checked: cheapest {p}{d}.", { p: c.price, d }]
         : c.price < best ? ["New best: {p}{d} — {x} less than the best before ({b}).", { p: c.price, d, x: best - c.price, b: best }]

@@ -12831,4 +12831,8 @@ export const SW = {
   "{c} · 1 item still to buy:": "{c} · bado kitu 1 cha kununua:",
   "Show the message": "Onyesha ujumbe",
   "{t} came up in {c} on 1 day:": "{t} kilizungumzwa katika {c} siku moja:",
+  "{c} · the 1 message kept:": "{c} · ujumbe 1 uliohifadhiwa:",
+  "{c} · the latest of {n} messages kept:": "{c} · ya hivi karibuni kati ya jumbe {n} zilizohifadhiwa:",
+  "Pinned — it is on your “Attune · A list” widget now": "Imebandikwa — sasa iko kwenye wijeti yako ya “Attune · Orodha”",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Imebandikwa — gusa “Ongeza” kwenye swali la simu ili kuweka wijeti kwenye skrini ya mwanzo",
 };

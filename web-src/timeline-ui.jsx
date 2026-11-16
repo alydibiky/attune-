@@ -89,6 +89,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
     else { flash && flash(tr("I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”")); return false; }
   };
   // a payment with someone: tick it here when it is paid
+  // (Ali, 16 Nov: "why it's You pay, not Baba pays — although inside it says Baba pays, in Claude and Gemini") a payment someone else
+  // makes says who
+  const kindLabel = (x) => { if (x.kind === "pay" && x.page === "life") { const l = lifeOf(x), c = l && l.c; if (c && c.payer && c.payer !== "me") return c.payer === "none" ? tr("Nobody set — reminder only") : tr("{p} pays", { p: c.payer }); } return tr(KIND[x.kind] || x.kind); };
   const lifeOf = (x) => { const [, id, i] = x.id.split(":"); const c = (loadLife().items || []).find((y) => y.id === id); return c ? { c, i: +i } : null; };
   const paid = (c, i, v) => {
     const d = payAmount(loadLife(), c.id, i, v); saveLife(d); setV((y) => y + 1); setPay(null);
@@ -206,7 +209,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
             <button onClick={() => navTo && navTo(x.kind === "errand" ? "errands" : x.page)} className="w-full flex items-center gap-2.5 py-2 text-start">
               <I size={14} className="shrink-0 text-[var(--c-acc)]" />
               <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-bold break-words" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
-                <span className={"block text-[11.5px] " + U.muted}>{dayLabel(x.date)} · {tr(KIND[x.kind] || x.kind)}</span></span>
+                <span className={"block text-[11.5px] " + U.muted} data-testid="fu-kind">{dayLabel(x.date)} · {kindLabel(x)}</span></span>
               {x.amount ? <b className={"tabular-nums text-[13px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}</button></li>; })}
         </ul> : null}
       </section> : null}

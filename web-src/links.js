@@ -19,7 +19,7 @@ export const TOPICS = [
   ["school", "School", "المدرسة", /\b(school|tuition|fees|lessons?|tutor|uniform|books|university|college|madrasa)\b|مدرسه|مدرسة|المدرسه|مصاريف المدرسه|دروس|درس|الجامعه|جامعة|يونيفورم|كتب المدرسه/i],
   ["health", "Health", "الصحة", /\b(doctor|dr\.?|clinic|hospital|medicine|pharmacy|lab|tests?|x-?ray|scan|dentist|sugar|pressure|insulin|hba1c)\b|دكتور|الدكتور|دكتوره|عياده|عيادة|مستشفي|مستشفى|دوا|دواء|صيدليه|صيدلية|تحاليل|تحليل|اشعه|أشعة|سكر|ضغط|سنان|اسنان/i],
   ["travel", "Travel", "السفر", /\b(travel|trip|hotel|flight|airport|booking|visa|holiday|vacation|resort|sahel|sa7el)\b|سفر|السفر|سفريه|رحله|رحلة|فندق|طيران|مطار|تأشيره|فيزا|المصيف|الساحل/i],
-  ["groceries", "Groceries", "البقالة", /\b(groceries|supermarket|carrefour|spinneys|hyper|seoudi|kazyon|metro market)\b|سوبر ماركت|السوبر|بقاله|بقالة|كارفور|خضار|فاكهه/i],
+  ["groceries", "Groceries", "البقالة", /\b(groceries|supermarket|carrefour|spinneys|hyper|seoudi|kazyon|metro market)\b|سوبر ماركت|السوبر(?!\s*جي?ت)|بقاله|بقالة|كارفور|خضار|فاكهه/i],
   ["food", "Eating out", "الأكل برة", /\b(restaurant|lunch|dinner|delivery|talabat|elmenus|cafe|coffee|starbucks|kfc|mcdonald'?s|pizza)\b|مطعم|غدا|عشا|دليفري|طلبات|قهوه|كافيه/i],
   ["bills", "Bills", "الفواتير", /\b(bill|electricity|water|gas|internet|wifi|vodafone|orange|etisalat|phone bill|recharge)\b|فاتوره|فاتورة|كهربا|كهرباء|مياه|ميه|غاز|انترنت|نت|فودافون|اورنج|اتصالات|شحن/i],
   ["kids", "The kids", "الولاد", /\b(kids?|son|daughter|baby|nursery|diapers|toys)\b|الولاد|العيال|ابني|بنتي|البيبي|حضانه|حضانة|بامبرز|لعب/i],
@@ -76,6 +76,7 @@ export function tagOf(it, dir, goals = []) {
 
 const ASK_SUM = /\b(how much|how many|total|spent|paid|cost|owe|owes|so far)\b|كام|قد ايه|اد ايه|قديش|مجموع|اجمالي|إجمالي|صرفت|دفعت|كلف|كلفني|عليا|ليا|عليه|لحد دلوقتي/i;
 const ASK_LAST = /\b(last time|when did|when was|latest|most recent)\b|اخر مره|آخر مرة|اخر مرة|امتى اخر|إمتى آخر|امتي/i;
+const I_DID = /\b(?:i|we)\s+(?:last\s+|ever\s+)?(?:went|go|got|get|did|do|bought|buy|paid|pay|visited|visit|had|have|ate|eat|cut|took|take|filled|fill|changed|change|saw|see|cleaned|clean|washed|wash|ordered|order|shopped|shop)\b|(?:^|\s)(?:رحت|روحت|جبت|اشتريت|دفعت|عملت|غيرت|غيّرت|زرت|قصيت|حلقت|مليت|كلت|أكلت|طلبت|نضفت|غسلت|ro7t|gebt|eshtarait|eshtareit|dafa3t|3amalt|ghayart|2aset|7ala2t)(?=\s|$)/i;
 const ASK_OWE = /\b(owe|owes|owed|debt|lend|lent|borrow)\b|عليا|ليا عند|ليا|عليه|سلف|دين|مديون/i;
 /**
  * A question → everything in the app linked to what it names. → null (it names nothing on your cards, no topic, no goal) |
@@ -104,6 +105,11 @@ export function connect(question, stores = {}, dir = { items: [] }, { now = Date
     if (byPerson || byTopic || byGoal) items.push({ ...it, tags: t });
   }
   items.sort((a, b) => b.ts - a.ts);
+  // (Ali, 16 Nov: "when is the last time I went to get groceries" answered with a bus company's WhatsApp message and a Talabat offer)
+  // "the last time I went / bought / did …" is about what YOU did: Money and your own notes — a message or an offer that only mentions
+  // the word is never the answer
+  const didQ = !ids.size && ASK_LAST.test(q) && I_DID.test(q);
+  if (didQ) { const own = items.filter((x) => x.src !== "messages" && x.src !== "agents" && x.src !== "dates" && x.src !== "goals"); items.length = 0; items.push(...own); }
   const money = items.filter((x) => x.src === "money");
   const out = money.filter((x) => x.sign < 0).reduce((a, x) => a + x.amount, 0), inn = money.filter((x) => x.sign > 0).reduce((a, x) => a + x.amount, 0);
   const debts = items.filter((x) => x.src === "followups" && !x.done && (x.kind === "debt" || x.kind === "installment") && (x.left == null || x.left > 0));
@@ -117,6 +123,7 @@ export function connect(question, stores = {}, dir = { items: [] }, { now = Date
   // what code can answer by itself (sums, debts, the last time) — exact, at once
   let answer = null;
   if (ASK_OWE.test(q) && debts.length) answer = { en: `${name}: ${toMe ? "owes you " + n(toMe) + " " + cur : ""}${toMe && iOwe ? " · " : ""}${iOwe ? "you owe " + n(iOwe) + " " + cur : ""} (from Follow-ups).`, ar: `${nameAr}: ${toMe ? "ليك عنده " + n(toMe) + " " + cur : ""}${toMe && iOwe ? " · " : ""}${iOwe ? "عليك " + n(iOwe) + " " + cur : ""} (من المتابعات).` };
+  else if (didQ && !items.length) answer = { en: `I have no record of that — nothing in Money or your notes about ${name} yet. (Messages that only mention it don't count.)`, ar: `مفيش عندي حاجة متسجلة — مفيش في الفلوس ولا في ملاحظاتك حاجة عن ${nameAr} لسه. (الرسايل اللي بس جايبة سيرته مش بتتحسب.)` };
   else if (ASK_LAST.test(q) && items.length) { const x = items[0]; answer = { en: `Last time: ${when(x.ts)} — ${x.title}${x.amount ? " (" + n(x.amount) + " " + (x.cur || cur) + ")" : ""}.`, ar: `آخر مرة: ${when(x.ts, true)} — ${x.title}${x.amount ? " (" + n(x.amount) + " " + (x.cur || cur) + ")" : ""}.` }; }
   else if (ASK_SUM.test(q) && money.length) answer = { en: `${name}: ${out ? "you paid " + n(out) + " " + cur : ""}${out && inn ? " and " : ""}${inn ? "you got " + n(inn) + " " + cur : ""} — ${money.length} ${money.length === 1 ? "payment" : "payments"} in Money${money.length ? ", the last on " + when(money[0].ts) : ""}.`,
     ar: `${nameAr}: ${out ? "دفعت " + n(out) + " " + cur : ""}${out && inn ? " و" : ""}${inn ? "جالك " + n(inn) + " " + cur : ""} — ${money.length} ${money.length === 1 ? "عملية" : "عمليات"} في الفلوس${money.length ? "، آخرها " + when(money[0].ts, true) : ""}.` };

@@ -12830,4 +12830,8 @@ export const BN = {
   "{c} · 1 item still to buy:": "{c} · এখনো 1টি কেনার বাকি:",
   "Show the message": "বার্তাটি দেখান",
   "{t} came up in {c} on 1 day:": "{t} নিয়ে {c}-এ এক দিন কথা হয়েছে:",
+  "{c} · the 1 message kept:": "{c} · রাখা ১টি বার্তা:",
+  "{c} · the latest of {n} messages kept:": "{c} · রাখা {n}টি বার্তার সবচেয়ে নতুনগুলো:",
+  "Pinned — it is on your “Attune · A list” widget now": "পিন হয়েছে — এখন এটি আপনার “Attune · একটি তালিকা” উইজেটে আছে",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "পিন হয়েছে — উইজেটটি হোম স্ক্রিনে রাখতে ফোনের প্রশ্নে “যোগ করুন” চাপুন",
 };

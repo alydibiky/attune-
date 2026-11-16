@@ -850,6 +850,8 @@ function BuyCard({ a, busy, buyRound, confirmBuy, notThis, markDone, remove, tog
       {a.said ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-searching-as">{T("Searching the stores as: {q}", { q: a.what })}</p> : null}
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{storesLabel(a.site)}{a.below > 0 ? " · " + T("under {p}", { p: money(a.below, a.currency) }) : ""}{last ? " · " + T("checked {t}", { t: ago(last.at) }) : ""}</p>
       {(a.tries || []).length > 3 ? <p className="m-0 text-[12px] c-sub" dir="auto" data-testid="agent-buy-stores">{a.tries.map((x) => x.site).join(" · ")}</p> : null}
+      {/* (Ali, 16 Nov: "Agents still has Search now only") the card says it works by itself — Search now is only for "right now" */}
+      {a.step !== "ordered" ? <p className="m-0 mt-1 text-[12px] font-bold c-acc" data-testid="agent-buy-auto">{a.on === false ? tr("Paused — turn it on to check again") : T("Every {h} hours, even with Attune closed", { h: 4 })}</p> : null}
       <div className="mt-2 space-y-0.5" data-testid="agent-buy-plan">{A.buySteps(a).map((s, k) => <p key={k} className="m-0 text-[12px] flex items-center gap-1.5"><span className={s.done ? "text-[var(--c-acc)] font-black" : "c-sub"}>{s.done ? "✓" : "⏳"}</span><span className={s.done ? "" : "c-sub"}>{T(s.en, s.v && s.v.site ? { ...s.v, site: storesLabel(s.v.site) } : s.v)}</span></p>)}</div>
     </div>
     <AgentRules a={a} setRules={setRules} understand={understand} flash={flash} open={ro} setOpen={setRo} />

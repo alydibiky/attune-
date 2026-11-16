@@ -12831,4 +12831,8 @@ export const TRK = {
   "{c} · 1 item still to buy:": "{c} · alınacak 1 şey kaldı:",
   "Show the message": "Mesajı göster",
   "{t} came up in {c} on 1 day:": "{t}, {c} içinde bir gün konuşuldu:",
+  "{c} · the 1 message kept:": "{c} · saklanan tek mesaj:",
+  "{c} · the latest of {n} messages kept:": "{c} · saklanan {n} mesajın en yenileri:",
+  "Pinned — it is on your “Attune · A list” widget now": "Sabitlendi — artık “Attune · Bir liste” widget'ında",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Sabitlendi — widget'ı ana ekrana koymak için telefonun sorusunda “Ekle”ye dokun",
 };

@@ -29,9 +29,13 @@ export const srcName = (k, ar) => (SRC[k] ? (ar ? SRC[k][1] : tr(SRC[k][0])) : k
 /** Names Attune met (Money notes, your notes) with no card yet — newest first, at most 6. */
 export function namesToAsk(stores, dir) {
   const seen = new Map();
-  const add = (text, ts) => { for (const n of E.newNames(text, dir)) { const k = E.fold(n).trim(); const was = seen.get(k); if (!was) seen.set(k, { name: n, ts, n: 1 }); else { was.n++; was.ts = Math.max(was.ts, ts); } } };
-  for (const t of ((stores.ledger && stores.ledger.txns) || []).slice(-400)) if (t && t.note) add(t.note, Date.parse(t.date) || 0);
-  for (const r of (stores.memory || []).slice(-300)) if (r && (r.kind === "note" || (r.meta && r.meta.book))) add([r.title, r.text].join(" "), r.ts || 0);
+  // (Ali, 16 Nov: "how do I see the person before I say who it is") every place the name was met is kept — where: [{ src, ts, text,
+  // amount, sign }], newest first — so the question shows the payment or the note itself
+  const add = (text, ts, src, extra) => { for (const n of E.newNames(text, dir)) { const k = E.fold(n).trim(), w = { src, ts, text: String(text || "").replace(/\s+/g, " ").trim().slice(0, 160), ...(extra || {}) }; const was = seen.get(k);
+    if (!was) seen.set(k, { name: n, ts, n: 1, where: [w] }); else { was.n++; was.ts = Math.max(was.ts, ts); was.where.push(w); } } };
+  for (const t of ((stores.ledger && stores.ledger.txns) || []).slice(-400)) if (t && t.note) add(t.note, Date.parse(t.date) || 0, "money", { amount: +t.amount || 0, sign: t.type === "income" ? 1 : -1 });
+  for (const r of (stores.memory || []).slice(-300)) if (r && (r.kind === "note" || (r.meta && r.meta.book))) add([r.title, r.text].filter(Boolean).join(" — "), r.ts || 0, r.meta && r.meta.book ? "notes" : "mind");
+  for (const v of seen.values()) v.where.sort((a, b) => b.ts - a.ts);
   return [...seen.values()].sort((a, b) => b.n - a.n || b.ts - a.ts).slice(0, 6);
 }
 
@@ -95,7 +99,7 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
   const card0 = open ? dir.items.find((p) => p.id === open) : null;
   const linked = useMemo(() => { if (!card0) return null; try { return K.connect(card0.name, stores, dir, { pick: card0.id }); } catch (e) { return null; } }, [card0 && card0.id, stores, dir]);
   const sections = useMemo(() => { if (!card0) return { sections: [], count: 0 }; try { return personSections(card0, stores, dir); } catch (e) { return { sections: [], count: 0 }; } }, [card0 && card0.id, stores, dir]);
-  const [showAll, setShowAll] = useState({});
+  const [showAll, setShowAll] = useState({}), [askAll, setAskAll] = useState({});
   const waUrl = card0 && card0.contact && card0.contact.phone ? "https://wa.me/" + String(card0.contact.phone).replace(/[^\d]/g, "").replace(/^0(?=1\d{9}$)/, "20") : "";
 
   if (edit) return <div className="space-y-3" data-testid="people-page">
@@ -153,6 +157,14 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
       <p className={label + " m-0"}>{tr("Who is this?")}</p>
       {ask.map((a) => <div key={a.name} className="flex items-center gap-2 flex-wrap border-t border-[var(--c-ln)] first:border-t-0 pt-2 first:pt-0" data-testid="people-ask-row">
         <b className="text-[14.5px] flex-1 min-w-[90px]" dir="auto">{a.name}{a.n > 1 ? <span className={"text-[12px] font-bold " + muted}> · {tr("{n} times", { n: a.n })}</span> : null}</b>
+        {/* where Attune met this name — the payment or the note itself, so you know who it is before you answer */}
+        <div className="order-last w-full space-y-1" data-testid="people-ask-where">
+          {(a.where || []).slice(0, askAll[a.name] ? 20 : 1).map((w, i) => <button key={i} onClick={() => navTo && navTo(w.src === "money" ? "money" : "memory")} className="w-full text-start rounded-[10px] bg-[var(--c-soft)] px-2.5 py-1.5 flex items-start gap-2" data-testid="people-ask-seen">
+            <span className="flex-1 min-w-0"><span className="block text-[13px] break-words" dir="auto">“{w.text}”</span>
+              <span className={"block text-[11.5px] " + muted}>{[srcName(w.src, ar), w.ts ? new Date(w.ts).toLocaleDateString(dateLocale() || "en-GB", { day: "numeric", month: "short", year: new Date(w.ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" }) : ""].filter(Boolean).join(" · ")}</span></span>
+            {w.amount ? <b className={"tabular-nums text-[13px] shrink-0 " + (w.sign > 0 ? "c-acc" : "")} dir="ltr">{(w.sign > 0 ? "+" : "−") + Math.round(w.amount).toLocaleString("en-US")}</b> : null}</button>)}
+          {(a.where || []).length > 1 && !askAll[a.name] ? <button className="min-h-[36px] text-[12.5px] font-bold c-acc" onClick={() => setAskAll({ ...askAll, [a.name]: true })} data-testid="people-ask-more">{tr("Show all {n}", { n: a.where.length })}</button> : null}
+        </div>
         <button className={btnS + " h-10! min-h-[40px]!"} onClick={() => setEdit({ name: a.name })} data-testid="people-ask-new">{tr("New person")}</button>
         {dir.items.length ? <select className={inp + " w-auto! h-10! min-h-[40px]!"} value="" onChange={(e) => { const id = e.target.value; if (!id) return; const c = dir.items.find((x) => x.id === id); save(E.updateCard(dir, id, { aliases: [...new Set([...(c.aliases || []), a.name])] })); flash && flash(tr("{a} = {b}", { a: a.name, b: c.name })); }} data-testid="people-ask-is">
           <option value="">{tr("It's…")}</option>{dir.items.map((c) => <option key={c.id} value={c.id}>{E.labelOf(c)}</option>)}</select> : null}

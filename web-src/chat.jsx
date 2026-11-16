@@ -1109,11 +1109,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (route && !img && api.askChats) { const ac = api.askChats(typed);
       if (ac) { const cid = ensureChat(typed), r = ac.r, d = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return iso; } };
         let detail = "", actions = [];
-        if (r.kind === "list") { const l = (() => { try { return JSON.parse(localStorage.getItem("attune:lists:v1") || "{}").lists.find((x) => x.chatKey === r.key); } catch (e) { return null; } })(), its = l ? l.items.filter((i) => !i.done).map((i) => i.text) : [];
+        if (r.kind === "list") { const twin = String(r.key).replace(/\|[gp]:/, (m) => (m === "|g:" ? "|p:" : "|g:")), l = (() => { try { return JSON.parse(localStorage.getItem("attune:lists:v1") || "{}").lists.find((x) => x.chatKey === r.key || x.chatKey === twin); } catch (e) { return null; } })(), its = l ? l.items.filter((i) => !i.done).map((i) => i.text) : [];
           detail = its.length ? (its.length === 1 ? tr("{c} · 1 item still to buy:", { c: r.chat }) : tr("{c} · {n} items still to buy:", { c: r.chat, n: its.length })) + "\n" + its.map((x) => "• " + x).join("\n") : tr("{c}: nothing left to buy", { c: r.chat }); actions = [["Open the list", "open:lists"]]; }
         else if (r.kind === "topic") { detail = (r.days.length === 1 ? tr("{t} came up in {c} on 1 day:", { t: r.topic, c: r.chat }) : tr("{t} came up in {c} on {n} days:", { t: r.topic, c: r.chat, n: r.days.length })) + "\n" + r.days.map((x) => "• " + d(x.iso) + " — " + x.who.join(", ") + ": “" + String(x.quote.text).slice(0, 120) + "”").join("\n");
           actions = [[r.total === 1 ? tr("Show the message") : tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
-        else { detail = tr("{c}: {n} messages kept — ask about a topic, e.g. “when did {c} discuss the garage?”", { c: r.chat, n: r.total }); }
+        // (Ali, 16 Nov: "What are the talabat" → only "11 messages kept"): the latest messages themselves, then all of them on a tap
+        else { detail = (r.total === 1 ? tr("{c} · the 1 message kept:", { c: r.chat }) : tr("{c} · the latest of {n} messages kept:", { c: r.chat, n: r.total })) + "\n" + (ac.last || []).map((m) => "• " + new Date(m.ts).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + " — " + (m.who ? m.who + ": " : "") + "“" + String(m.text).slice(0, 120) + "”").join("\n");
+          if (r.total > (ac.last || []).length) actions = [[tr("Show all {n} messages", { n: r.total }), "chatmsgs"]]; }
         const amid = newId();
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
           { id: amid, role: "assistant", chatMsgs: ac.msgs, card: { tone: "emerald", title: tr("From your chats — {c}", { c: r.chat }), detail, actions } }] }));

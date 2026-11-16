@@ -6,7 +6,7 @@
      name, the items, and "Does it repeat?" — No · Every day · Every week (which days) · Every month (which day) · Before a date (a trip).
    The rules (when a list is needed, new rounds start empty): lists.js. Tests: tests/unit/v922lists.test.mjs, tests/e2e_v922lists.py. */
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Check, Trash2, ChevronRight, Repeat, X, ListChecks, CalendarDays } from "lucide-react";
+import { Plus, Check, Trash2, ChevronRight, Repeat, X, ListChecks, CalendarDays, Pencil } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as L from "./lists.js";
 import { startFocus } from "./focus-ui.jsx";
@@ -14,7 +14,7 @@ import { loadReminders, saveReminders } from "./actions.js";
 import * as U from "./ui-kit.jsx";
 import { YourDay } from "./yourday-ui.jsx";
 import { PIN_KEY } from "./widgets.js";
-import { widgetTodos } from "./widgets-ui.jsx";
+import { widgetTodos, pushWidgets } from "./widgets-ui.jsx";
 
 const WD = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WD_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -137,6 +137,7 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
   const [open, setOpen] = useState(() => { try { const v = localStorage.getItem("attune:lists:open"); localStorage.removeItem("attune:lists:open"); return v || null; } catch (e) { return null; } });
   const [todo, setTodo] = useState("");
   const [addTo, setAddTo] = useState({});
+  const [itemEdit, setItemEdit] = useState(null);   // { list, id, text } — the one item being reworded
   const now = Date.now();
   const todos = (records || []).filter((r) => r && r.meta && r.meta.todo && !r.meta.done).sort((a, b) => a.ts - b.ts);
   const rem = todayReminders(now);
@@ -187,14 +188,27 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
           <span className="text-end shrink-0"><b className="block text-[14px] tabular-nums">{p.done}/{p.of}</b>{here ? <span className={U.tag("green")}>{tr("On Home")}</span> : null}</span>
           <ChevronRight size={17} className={"c-sub transition-transform " + (isOpen ? "rotate-90" : "rtl:rotate-180")} /></button>
         {isOpen ? <div className="space-y-1 pt-1 border-t border-[var(--c-ln)]">
-          {l.items.map((x) => <Box key={x.id} on={x.done} onClick={() => put(L.tick(st, l.id, x.id, now))} label={x.text} testid="lists-item" />)}
+          {/* (Ali, 16 Nov: "I want option to delete one — or edit") each item: tick · reword · delete */}
+          {l.items.map((x) => itemEdit && itemEdit.list === l.id && itemEdit.id === x.id
+            ? <form key={x.id} onSubmit={(e) => { e.preventDefault(); if (itemEdit.text.trim()) put(L.renameItem(st, l.id, x.id, itemEdit.text)); setItemEdit(null); }} className="flex gap-2 py-1" data-testid="lists-item-edit">
+                <input autoFocus value={itemEdit.text} onChange={(e) => setItemEdit({ ...itemEdit, text: e.target.value })} dir="auto" className={U.inp + " flex-1"} aria-label={tr("Edit")} data-testid="lists-item-edit-input" />
+                <button className={U.btnS} data-testid="lists-item-edit-save">{tr("Save")}</button>
+                <button type="button" onClick={() => setItemEdit(null)} className="w-10 h-11 grid place-items-center c-sub" aria-label={tr("Cancel")}><X size={16} /></button></form>
+            : <div key={x.id} className="flex items-center gap-0.5" data-testid="lists-item-row">
+                <div className="flex-1 min-w-0"><Box on={x.done} onClick={() => put(L.tick(st, l.id, x.id, now))} label={x.text} testid="lists-item" /></div>
+                <button onClick={() => setItemEdit({ list: l.id, id: x.id, text: x.text })} className="w-10 h-11 grid place-items-center c-sub shrink-0" aria-label={tr("Edit") + " — " + x.text} data-testid="lists-item-rename"><Pencil size={15} /></button>
+                <button onClick={() => { put(L.removeItem(st, l.id, x.id)); flash && flash(tr("Removed")); }} className="w-10 h-11 grid place-items-center c-sub shrink-0" aria-label={tr("Delete") + " — " + x.text} data-testid="lists-item-delete"><Trash2 size={15} /></button></div>)}
           <form onSubmit={(e) => { e.preventDefault(); const t = (addTo[l.id] || "").trim(); if (!t) return; put(L.addItem(st, l.id, t)); setAddTo({ ...addTo, [l.id]: "" }); }} className="flex gap-2 pt-1">
             <input value={addTo[l.id] || ""} onChange={(e) => setAddTo({ ...addTo, [l.id]: e.target.value })} dir="auto" className={U.inp + " flex-1"} placeholder={tr("Add an item…")} data-testid="lists-item-input" />
             <button className={U.btnS} aria-label={tr("Add")}><Plus size={16} /></button></form>
           <button onClick={() => setEdit(l.id)} className={U.btnS + " w-full"} data-testid="lists-edit"><Repeat size={15} />{tr("Change the name, the items or when it repeats")}</button>
           {/* v9.3 (D2 C): this list on the home-screen widget "Attune · A list" */}
           {(() => { let pinned = ""; try { pinned = localStorage.getItem(PIN_KEY) || ""; } catch (e) {} const on = pinned === l.id;
-            return <button onClick={() => { try { on ? localStorage.removeItem(PIN_KEY) : localStorage.setItem(PIN_KEY, l.id); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-lists")); setTick((n) => n + 1); flash && flash(on ? tr("Taken off the widget") : tr("Pinned — add the “Attune · A list” widget to your home screen")); }}
+            // (Ali, 16 Nov: "Pin to the widget does not work" — it only chose the list, and the widget itself was never put on the
+            // home screen) pinning now asks the phone to add the "Attune · A list" widget when there is none yet
+            return <button onClick={() => { try { on ? localStorage.removeItem(PIN_KEY) : localStorage.setItem(PIN_KEY, l.id); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-lists")); setTick((n) => n + 1);
+                let how = ""; if (!on) { const N = window.AttuneNative; try { pushWidgets(N); how = (N && N.pinListWidget && N.pinListWidget()) || ""; } catch (e) {} }
+                flash && flash(on ? tr("Taken off the widget") : how === "has" ? tr("Pinned — it is on your “Attune · A list” widget now") : how === "asked" ? tr("Pinned — tap “Add” on the phone's question to put the widget on your home screen") : tr("Pinned — add the “Attune · A list” widget to your home screen")); }}
               className={U.btnS + " w-full"} aria-pressed={on} data-testid="lists-pin">{on ? tr("Take it off the widget") : tr("Pin to the widget")}</button>; })()}
         </div> : null}
       </div>; })}

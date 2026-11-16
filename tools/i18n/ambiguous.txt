@@ -58,6 +58,7 @@ lists-ui.jsx: if (edit === "new") { const l = L.makeList({ name, items: texts, r
 actions-ui.jsx: const remove = (id) => { setReminders(reminders.filter((r) => r.id !== id)); try { native && native.unschedule && native.unschedule(id); } c
 attune.jsx: if (gone) { setLexUndo(gone); flash(tr("Removed")); }
 attune.jsx: {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-
+lists-ui.jsx: <button onClick={() => { put(L.removeItem(st, l.id, x.id)); flash && flash(tr("Removed")); }} className="w-10 h-11 grid place-items-center c
 rules-ui.jsx: <button className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => { RS.removeRule(r.id, 
 
 ## When
@@ -136,7 +137,7 @@ donelog-ui.jsx: {!e.undone ? <><button className="min-h-[36px] px-2.5 rounded-fu
 donelog-ui.jsx: <p className={label + " m-0"}>{tr("Edit")}</p>
 emergency-ui.jsx: <button className={btnS} onClick={() => setEdit(true)} data-testid="em-edit">{tr("Edit")}</button>
 habits-ui.jsx: <button className={btnP} onClick={() => { setAdd({ ...open, days: open.days || [] }); setOpen(null); }} data-testid="habit-edit">{tr("Edit")
-people-ui.jsx: <div className="flex gap-1.5 flex-wrap"><button className={btnS} onClick={() => setEdit(p)} data-testid="people-edit">{tr("Edit")}</button>
+lists-ui.jsx: <input autoFocus value={itemEdit.text} onChange={(e) => setItemEdit({ ...itemEdit, text: e.target.value })} dir="auto" className={U.inp + " 
 
 ## yesterday
 agents-ui.jsx: const ago = (t, now = Date.now()) => { const m = Math.round((now - t) / 60000); return m < 60 ? T("{n} min ago", { n: Math.max(1, m) }) : m 
@@ -822,10 +823,6 @@ autopilot-ui.jsx: <button onClick={() => no(x, false)} onContextMenu={(e) => { e
 desk-ui.jsx: <button onClick={() => setSure(null)} className="h-10 px-5 rounded-full text-[13.5px] font-bold border border-[var(--c-ln)]" data-testid="de
 radar-ui.jsx: <button className={U.btnS + " w-11 px-0 " + U.muted} aria-label={tr("Not this")} onClick={() => { put(D.markSeen(data, [s.nid])); setSugg((x
 timeline-ui.jsx: <button className={B} onClick={() => setLog((g) => g.map((y) => (y.id === l.id ? { ...y, confirm: "", msg: tr("Not saved") } : y)))} data-te
-
-## Autopilot
-autopilot-ui.jsx: <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Aut
-chatpilot-ui.jsx: <span className="flex-1 text-[12px] font-extrabold tracking-wide uppercase" style={{ color: "var(--c-area-agents, var(--c-acc))" }}>{tr("Aut
 
 ## Paid
 b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), which: tr("Paid {a} — from which balance?"), done: tr("✓ {a} from {b}")

@@ -12830,4 +12830,8 @@ export const ZH = {
   "{c} · 1 item still to buy:": "{c} · 还有 1 样要买：",
   "Show the message": "显示消息",
   "{t} came up in {c} on 1 day:": "{t} 在 {c} 中被提到 1 天：",
+  "{c} · the 1 message kept:": "{c} · 保存的 1 条消息：",
+  "{c} · the latest of {n} messages kept:": "{c} · 已保存 {n} 条消息中最新的：",
+  "Pinned — it is on your “Attune · A list” widget now": "已固定 — 现在显示在“Attune · 一个清单”小组件上",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "已固定 — 在手机的询问中点“添加”，把小组件放到主屏幕",
 };

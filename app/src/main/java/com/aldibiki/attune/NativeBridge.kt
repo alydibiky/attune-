@@ -1207,6 +1207,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun setTodoWidget(json: String): Boolean = try { Widgets.save(ctx, Widgets.TODO, json); true } catch (e: Exception) { false }
     @JavascriptInterface
     fun setListWidget(json: String): Boolean = try { Widgets.save(ctx, Widgets.LIST, json); true } catch (e: Exception) { false }
+    /** v10.0.1 (Ali: "Pin to the widget does not work"): "has" when the list widget is on the home screen already, "asked" when the
+     *  launcher was asked to add it now (Android shows its own "Add to home screen" question), "no" when this launcher can't. */
+    @JavascriptInterface
+    fun pinListWidget(): String = try { Widgets.pin(ctx, Widgets.LIST) } catch (e: Exception) { "no" }
     @JavascriptInterface
     fun widgetTicks(): String = try { Widgets.ticks(ctx) } catch (e: Exception) { "[]" }
     @JavascriptInterface

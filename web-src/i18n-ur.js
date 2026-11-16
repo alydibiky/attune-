@@ -12831,4 +12831,8 @@ export const UR = {
   "{c} · 1 item still to buy:": "{c} · ابھی 1 چیز خریدنی ہے:",
   "Show the message": "پیغام دکھائیں",
   "{t} came up in {c} on 1 day:": "{t} کی بات {c} میں ایک دن ہوئی:",
+  "{c} · the 1 message kept:": "{c} · محفوظ کیا گیا 1 پیغام:",
+  "{c} · the latest of {n} messages kept:": "{c} · محفوظ {n} پیغامات میں سے تازہ ترین:",
+  "Pinned — it is on your “Attune · A list” widget now": "پن ہو گئی — اب یہ آپ کے «Attune · ایک فہرست» ویجٹ پر ہے",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "پن ہو گئی — ویجٹ کو ہوم اسکرین پر رکھنے کے لیے فون کے سوال میں «شامل کریں» دبائیں",
 };

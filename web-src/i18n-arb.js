@@ -12822,4 +12822,8 @@ export const ARB = {
   "{c} · 1 item still to buy:": "{c} · لا يزال عنصر واحد للشراء:",
   "Show the message": "اعرض الرسالة",
   "{t} came up in {c} on 1 day:": "ورد ذكر {t} في {c} في يوم واحد:",
+  "{c} · the 1 message kept:": "{c} · الرسالة الوحيدة المحفوظة:",
+  "{c} · the latest of {n} messages kept:": "{c} · أحدث الرسائل من {n} رسالة محفوظة:",
+  "Pinned — it is on your “Attune · A list” widget now": "تم التثبيت — هي الآن على أداة «Attune · قائمة»",
+  "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "تم التثبيت — اضغط «إضافة» في سؤال الهاتف لوضع الأداة على الشاشة الرئيسية",
 };
