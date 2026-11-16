@@ -289,6 +289,8 @@ export function offerOpen(a, o) {
   const href = cleanListing(o && o.href), kind = o && o.web && href ? "yes" : listingKind(href);
   if (kind === "yes") return { url: offerUrl(a, { ...o, href }), direct: true };
   const name = o && o.name && !isSiteName(o.name, a && a.site) ? String(o.name).slice(0, 120) : "";
+  // a flight's own booking link, or an offer with no name to find it by: its link is the only way in — opened as it is
+  if (kind === "maybe" && (!name || (a && a.fields && a.fields.flight))) return { url: offerUrl(a, { ...o, href }), direct: true };
   const results = (o && o.url) || (a && a.url) || "";
   const byName = offerUrl(a, { ...o, href: "" });
   return { url: /^https:\/\//.test(results) ? results : byName, direct: false, goto: { name, price: (o && o.price) || 0 }, fallback: kind === "maybe" ? href : byName !== results ? byName : "" };

@@ -12,8 +12,8 @@ def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"), full_page=True)
 now = int(time.time() * 1000)
 best = [{"name": "HUAWEI FreeClip 2 Open-Ear, Black", "price": 7800, "site": "facebook.com", "web": True, "href": "https://www.facebook.com/groups/1/posts/2", "key": "fb"},
-        {"name": "HUAWEI FreeClip 2 Open-Ear, Black", "price": 7950, "site": "Jumia", "href": "https://www.jumia.com.eg/huawei-freeclip-2.html", "key": "j"},
-        {"name": "HUAWEI FreeClip 2", "price": 8250, "site": "Amazon", "href": "https://www.amazon.eg/dp/B0XYZ", "key": "a"},
+        {"name": "HUAWEI FreeClip 2 Open-Ear, Black", "price": 7950, "site": "Jumia", "href": "https://www.jumia.com.eg/huawei-freeclip-2-black-98765432.html", "key": "j"},
+        {"name": "HUAWEI FreeClip 2", "price": 8250, "site": "Amazon", "href": "https://www.amazon.eg/dp/B0CQ4H3K2N", "key": "a"},
         {"name": "HUAWEI FreeClip 2", "price": 8300, "site": "noon", "href": "https://www.noon.com/egypt-en/p/1", "key": "n"},
         {"name": "HUAWEI FreeClip 2", "price": 8899, "site": "2B", "href": "https://2b.com.eg/freeclip-2", "key": "b"}]
 agent = {"id": "agx1", "kind": "watch", "title": "سماعة هواوي فري كليب 2 · Amazon, noon, Jumia…", "on": True, "created": now - 864e5 * 9, "what": "Huawei FreeClip 2", "said": "سماعة هواوي فري كليب 2", "q": "Huawei FreeClip 2 earbuds",
@@ -40,9 +40,9 @@ with sync_playwright() as p:
     check("Huawei FreeClip 2" in page.locator("[data-testid=agent-searching-as]").inner_text(), "his Arabic name kept; the stores searched in English")
     shot(page, "v905-deal-en")
     page.click("[data-testid=agent-deal-open]"); page.wait_for_timeout(200)
-    check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.jumia.com.eg/huawei-freeclip-2.html", "Open the listing opens THAT listing, not a search page")
+    check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.jumia.com.eg/huawei-freeclip-2-black-98765432.html", "Open the listing opens THAT listing, not a search page")
     page.locator("[data-testid=agent-deal-row]").nth(2).click(); page.wait_for_timeout(200)
-    check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.amazon.eg/dp/B0XYZ", "a bar opens its own store's listing")
+    check((page.evaluate("window.__agentOpen") or {}).get("url") == "https://www.amazon.eg/dp/B0CQ4H3K2N", "a bar opens its own store's listing")
     page.click("[data-testid=agents-view-board]"); page.wait_for_selector("[data-testid=agents-board]")
     check(page.locator("[data-testid=agents-board-card]").count() == 2, "Board: every agent as a small card in its column")
     page.locator("[data-testid=agents-board-card]").first.click(); page.wait_for_timeout(300)
