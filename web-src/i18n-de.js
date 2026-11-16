@@ -12834,4 +12834,9 @@ export const DE = {
   "{c} · the latest of {n} messages kept:": "{c} · die neuesten von {n} gespeicherten Nachrichten:",
   "Pinned — it is on your “Attune · A list” widget now": "Angeheftet — sie ist jetzt auf deinem Widget „Attune · Eine Liste“",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Angeheftet — tippe in der Frage des Telefons auf „Hinzufügen“, um das Widget auf den Startbildschirm zu legen",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "Erlaubt ✓ — Attune liest jetzt die Nachrichten deiner Bank und deines Wallets.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Dieser Schritt wird von selbst abgehakt, sobald die erste Zahlungsnachricht kommt — sonst ist nichts zu tun.",
+  "Allowed ✓ — waiting for the first message": "Erlaubt ✓ — wartet auf die erste Nachricht",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Hier stehen nur die letzten 200 gespeicherten Nachrichten — alle sind in Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Ich habe die Karte (·· {n}) gefunden, aber nicht ihr Ablaufdatum — tippe das aufgedruckte MM/JJ ein",
 };

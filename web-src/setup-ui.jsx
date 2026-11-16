@@ -21,7 +21,12 @@ export const quiet = () => { try { return localStorage.getItem("attune:test:quie
 const getRun = () => j(RUN, null);
 const setRun = (v) => { try { v ? localStorage.setItem(RUN, JSON.stringify(v)) : localStorage.removeItem(RUN); } catch (e) {} };
 const say = (card) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: { op: "say", card } })); } catch (e) {} };
-const ask = (s, pro) => ({ tone: "emerald", title: tr(s.ask), detail: s.eg ? tr("For example: {x}", { x: tr(s.eg) }) : "", setup: s.id,
+// v10.0.3 (Ali, 16 Nov: "I do this but nothing happens and it stays unticked"): notification access given, but no bank message has
+// come yet — the step says so (it is ticked by itself with the first real message), instead of asking to allow again
+const bankAllowed = () => { try { const N = window.AttuneNative; return !!(N && N.payAccess && N.payAccess()); } catch (e) { return false; } };
+const bankWaiting = () => ({ tone: "emerald", title: tr("Allowed ✓ — Attune now reads your bank and wallet messages."), detail: tr("This step is ticked by itself when the first payment message arrives — nothing more to do."), setup: "bank",
+  actions: [[tr("Skip this one"), "setup:skip"], [tr("Stop for now"), "setup:stop"]] });
+const ask = (s, pro) => s.id === "bank" && bankAllowed() ? bankWaiting() : ({ tone: "emerald", title: tr(s.ask), detail: s.eg ? tr("For example: {x}", { x: tr(s.eg) }) : "", setup: s.id,
   actions: [...(s.btn ? [[tr(s.btn), "setup:" + s.id]] : []), [tr("Skip this one"), "setup:skip"], [tr("Stop for now"), "setup:stop"]] });
 
 /** Starts (or continues) the interview in Chat at the first step not done — or at `id`. */
@@ -66,6 +71,7 @@ export function SetupDriver({ trial }) {
       }
       if (!run) return;
       const cur = p.steps.find((s) => s.id === run.id);
+      if (cur && !cur.done && run.id === "bank" && !run.told && bankAllowed()) { setRun({ ...run, told: true }); say(bankWaiting()); }
       if (cur && cur.done) {
         const nx = p.steps.find((s) => !s.done && !s.locked && !(run.skipped || []).includes(s.id));
         say({ tone: "emerald", title: tr("✓ {t} — done ({n} of 8).", { t: tr(cur.title), n: p.done }), detail: "", actions: [] });
@@ -117,8 +123,8 @@ export function SetupPage({ back }) {
       {p.steps.map((s) => <div key={s.id} className="flex items-center gap-3 min-h-[56px] py-1.5" data-testid="setup-step" data-id={s.id} data-done={s.done ? "1" : "0"}>
         <span className={"w-6 h-6 rounded-[7px] grid place-items-center text-[12px] font-black shrink-0 " + (s.done ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "border-2 border-[var(--c-ln)]")}>{s.done ? "✓" : s.locked ? "🔒" : ""}</span>
         <span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{tr(s.title)}</b>
-          <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : tr("Not yet")}</span></span>
-        {s.done ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]">{tr("See Pro")}</button>
+          <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.id === "bank" && bankAllowed() ? tr("Allowed ✓ — waiting for the first message") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : tr("Not yet")}</span></span>
+        {s.done || (s.id === "bank" && !s.locked && bankAllowed()) ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]">{tr("See Pro")}</button>
           : <button onClick={() => startSetup(s.id)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr("Do it")}</button>}
       </div>)}
     </div>

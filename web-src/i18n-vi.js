@@ -12834,4 +12834,9 @@ export const VI = {
   "{c} · the latest of {n} messages kept:": "{c} · mới nhất trong {n} tin nhắn đã lưu:",
   "Pinned — it is on your “Attune · A list” widget now": "Đã ghim — giờ nó nằm trên tiện ích “Attune · Một danh sách” của bạn",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Đã ghim — chạm “Thêm” trong câu hỏi của điện thoại để đặt tiện ích lên màn hình chính",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "Đã cho phép ✓ — Attune giờ đọc tin nhắn từ ngân hàng và ví của bạn.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Bước này tự đánh dấu khi tin nhắn thanh toán đầu tiên đến — bạn không cần làm gì thêm.",
+  "Allowed ✓ — waiting for the first message": "Đã cho phép ✓ — đang chờ tin nhắn đầu tiên",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Ở đây chỉ hiện 200 tin nhắn được giữ gần nhất — tất cả đều có trong Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Đã thấy thẻ (·· {n}) nhưng không thấy ngày hết hạn — hãy nhập MM/YY in trên thẻ",
 };

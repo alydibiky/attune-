@@ -12835,4 +12835,9 @@ export const SW = {
   "{c} · the latest of {n} messages kept:": "{c} · ya hivi karibuni kati ya jumbe {n} zilizohifadhiwa:",
   "Pinned — it is on your “Attune · A list” widget now": "Imebandikwa — sasa iko kwenye wijeti yako ya “Attune · Orodha”",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Imebandikwa — gusa “Ongeza” kwenye swali la simu ili kuweka wijeti kwenye skrini ya mwanzo",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "Imeruhusiwa ✓ — Attune sasa inasoma jumbe za benki na pochi yako.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Hatua hii itawekwa alama yenyewe ujumbe wa kwanza wa malipo ukifika — hakuna kingine cha kufanya.",
+  "Allowed ✓ — waiting for the first message": "Imeruhusiwa ✓ — inasubiri ujumbe wa kwanza",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Hapa zinaonyeshwa jumbe 200 za mwisho zilizohifadhiwa tu — zote ziko kwenye Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Nimepata kadi (·· {n}) lakini si tarehe yake ya kuisha — andika MM/YY iliyochapishwa juu yake",
 };

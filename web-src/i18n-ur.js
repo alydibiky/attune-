@@ -12835,4 +12835,9 @@ export const UR = {
   "{c} · the latest of {n} messages kept:": "{c} · محفوظ {n} پیغامات میں سے تازہ ترین:",
   "Pinned — it is on your “Attune · A list” widget now": "پن ہو گئی — اب یہ آپ کے «Attune · ایک فہرست» ویجٹ پر ہے",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "پن ہو گئی — ویجٹ کو ہوم اسکرین پر رکھنے کے لیے فون کے سوال میں «شامل کریں» دبائیں",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "اجازت مل گئی ✓ — Attune اب آپ کے بینک اور والٹ کے پیغامات پڑھتا ہے۔",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "پہلا ادائیگی کا پیغام آتے ہی یہ مرحلہ خود ٹک ہو جائے گا — اور کچھ نہیں کرنا۔",
+  "Allowed ✓ — waiting for the first message": "اجازت مل گئی ✓ — پہلے پیغام کا انتظار",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "یہاں صرف آخری 200 محفوظ پیغامات دکھتے ہیں — سب Recall میں ہیں۔",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "کارڈ مل گیا (·· {n}) لیکن اس کی میعاد ختم ہونے کی تاریخ نہیں — اس پر چھپا MM/YY لکھیں",
 };

@@ -12834,4 +12834,9 @@ export const JA = {
   "{c} · the latest of {n} messages kept:": "{c} · 保存した {n} 件のうち最新のもの：",
   "Pinned — it is on your “Attune · A list” widget now": "固定しました — 「Attune · リスト」ウィジェットに表示されています",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "固定しました — スマホの確認で「追加」をタップすると、ウィジェットがホーム画面に置かれます",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "許可済み ✓ — Attune は銀行とウォレットのメッセージを読むようになりました。",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "最初の支払いメッセージが届くと、このステップは自動でチェックされます — ほかに何もする必要はありません。",
+  "Allowed ✓ — waiting for the first message": "許可済み ✓ — 最初のメッセージを待っています",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "ここには保存した最新 200 件だけが表示されます — すべて Recall にあります。",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "カード（·· {n}）は見つかりましたが有効期限が見つかりません — カードに印字された MM/YY を入力してください",
 };

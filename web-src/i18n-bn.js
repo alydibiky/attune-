@@ -12834,4 +12834,9 @@ export const BN = {
   "{c} · the latest of {n} messages kept:": "{c} · রাখা {n}টি বার্তার সবচেয়ে নতুনগুলো:",
   "Pinned — it is on your “Attune · A list” widget now": "পিন হয়েছে — এখন এটি আপনার “Attune · একটি তালিকা” উইজেটে আছে",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "পিন হয়েছে — উইজেটটি হোম স্ক্রিনে রাখতে ফোনের প্রশ্নে “যোগ করুন” চাপুন",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "অনুমতি দেওয়া হয়েছে ✓ — Attune এখন আপনার ব্যাংক ও ওয়ালেটের বার্তা পড়ে।",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "প্রথম পেমেন্ট বার্তা এলেই এই ধাপটি নিজে থেকে টিক হবে — আর কিছু করতে হবে না।",
+  "Allowed ✓ — waiting for the first message": "অনুমতি দেওয়া হয়েছে ✓ — প্রথম বার্তার অপেক্ষায়",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "এখানে শুধু শেষ ২০০টি রাখা বার্তা দেখা যায় — সবগুলো Recall-এ আছে।",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "কার্ডটি পেয়েছি (·· {n}) কিন্তু মেয়াদ শেষের তারিখ নয় — এতে ছাপা MM/YY লিখুন",
 };

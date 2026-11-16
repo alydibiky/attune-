@@ -84,7 +84,7 @@ function MessageSheet({ d, close, undo, never }) {
    part (autopilot-ui.jsx: { has, week, top, done }) — its waiting cards go under the chat question, its done lines under the same
    single "Done for you". */
 export function ChatPilotCard({ old = null }) {
-  const [st, setSt] = useState(CP.loadCP), [slot, setSlot] = useState(0), [sheet, setSheet] = useState(null), [quietOpen, setQuietOpen] = useState(false);
+  const [st, setSt] = useState(CP.loadCP), [slot, setSlot] = useState(0), [sheet, setSheet] = useState(null), [quietOpen, setQuietOpen] = useState(false), [quietChat, setQuietChat] = useState("");
   useEffect(() => { const t = setInterval(() => setSlot((x) => x + 1), 60000); const f = () => setSlot((x) => x + 1); window.addEventListener("attune-lists", f);
     const g = () => { setSt(CP.loadCP()); setSlot((x) => x + 1); }; window.addEventListener("attune-chatpilot", g); window.addEventListener("attune-notifmind", f);
     return () => { clearInterval(t); window.removeEventListener("attune-lists", f); window.removeEventListener("attune-chatpilot", g); }; }, []);
@@ -159,6 +159,8 @@ export function ChatPilotCard({ old = null }) {
   const lists = useMemo(() => L.loadLists().lists.filter((l) => l.chatKey && openItems(l).length), [slot, st]);
   const recent = st.done.filter((d) => !d.undone && d.at > Date.now() - 2 * 864e5).slice(0, 5);
   const q = CP.quietToday(st);
+  const today0 = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
+  const keptOf = (chat) => (st.kept || []).filter((m) => m.from && m.from.chat === chat && m.at >= today0).sort((x, y) => y.at - x.at);
   const mine = !!(ask || lists.length || recent.length || q.total || (st.review && st.review.total));
   if (!mine && !(old && old.has)) return null;
   const week = ((old && old.week) || 0) + st.done.filter((d) => !d.undone && d.kind !== "alert" && d.at > Date.now() - 7 * 864e5).length;
@@ -187,9 +189,17 @@ export function ChatPilotCard({ old = null }) {
       <button onClick={() => setQuietOpen((v) => !v)} className="w-full flex items-center gap-2 text-start min-h-[44px]" data-testid="cp-quiet-line">
         <span className="text-[16px]" aria-hidden="true">🤫</span><span className="flex-1 min-w-0"><b className="block text-[13px]">{tr("Kept quietly today: {n}", { n: q.total })}</b>
           <span className="block c-sub text-[11.5px] truncate" dir="auto">{q.byChat.slice(0, 3).map(([c, n]) => c + " " + n).join(" · ")}</span></span><span className="text-[12px] font-bold c-acc">{tr("See")}</span></button>
-      {quietOpen ? <div className="space-y-1 pt-1">{q.byChat.map(([c, n]) => <div key={c} className="flex items-center gap-2 text-[12.5px]"><span className="flex-1 truncate" dir="auto">{c} · {n}</span>
+      {/* v10.0.3 (Ali, 16 Nov: "Kept quietly today: 61 — I want to tap a chat and see the messages before I say it mattered"): a tap on
+          a chat's row opens what it kept today, in full */}
+      {quietOpen ? <div className="space-y-1 pt-1">{q.byChat.map(([c, n]) => <div key={c} data-testid="cp-quiet-chat"><div className="flex items-center gap-2 text-[12.5px]">
+        <button onClick={() => setQuietChat(quietChat === c ? "" : c)} aria-expanded={quietChat === c} className="flex-1 min-w-0 min-h-[40px] text-start flex items-center gap-1.5" data-testid="cp-quiet-row"><span className="truncate font-bold" dir="auto">{c} · {n}</span><span className="c-acc text-[12px] font-bold shrink-0">{quietChat === c ? tr("Hide") : tr("See")}</span></button>
         <button onClick={() => { const k = Object.keys(CR.loadRoles()).find((x) => x.endsWith(":" + c.toLowerCase())) || ""; put({ ...st, ask: [{ key: k || "whatsapp|g:" + c.toLowerCase(), chat: c, group: true, guess: { role: "" }, at: Date.now() }, ...st.ask] }); setQuietOpen(false); }}
-          className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-bold" data-testid="cp-mattered">{tr("This mattered")}</button></div>)}</div> : null}
+          className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-bold shrink-0" data-testid="cp-mattered">{tr("This mattered")}</button></div>
+        {quietChat === c ? <div className="rounded-[12px] bg-[var(--c-surf-2)] p-2 mt-1 space-y-1.5 max-h-[320px] overflow-y-auto" data-testid="cp-quiet-msgs">
+          {keptOf(c).map((m) => <div key={m.id} className="text-[12.5px]"><span className="block c-sub text-[11px]" dir="auto">{m.from.who ? m.from.who + " · " : ""}{new Date(m.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
+            <span className="block whitespace-pre-wrap break-words" dir="auto">{m.from.text || "—"}</span></div>)}
+          {keptOf(c).length < n ? <p className="m-0 text-[11.5px] c-sub">{tr("Only the last 200 kept messages are shown here — all of them are in Recall.")}</p> : null}
+        </div> : null}</div>)}</div> : null}
     </div> : null}
     {sheet ? <MessageSheet d={sheet} close={() => setSheet(null)} undo={undo} never={never} /> : null}
   </div></section>;

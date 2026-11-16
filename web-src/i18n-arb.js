@@ -12826,4 +12826,9 @@ export const ARB = {
   "{c} · the latest of {n} messages kept:": "{c} · أحدث الرسائل من {n} رسالة محفوظة:",
   "Pinned — it is on your “Attune · A list” widget now": "تم التثبيت — هي الآن على أداة «Attune · قائمة»",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "تم التثبيت — اضغط «إضافة» في سؤال الهاتف لوضع الأداة على الشاشة الرئيسية",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "تم السماح ✓ — يقرأ Attune الآن رسائل البنك والمحفظة.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "تُعلَّم هذه الخطوة تلقائيًا عند وصول أول رسالة دفع — لا شيء آخر عليك.",
+  "Allowed ✓ — waiting for the first message": "تم السماح ✓ — بانتظار أول رسالة",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "تظهر هنا آخر 200 رسالة محفوظة فقط — جميعها في Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "وجدتُ البطاقة (·· {n}) لكن ليس تاريخ انتهائها — اكتب الشهر/السنة المطبوعين عليها",
 };

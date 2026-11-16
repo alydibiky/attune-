@@ -12835,4 +12835,9 @@ export const TRK = {
   "{c} · the latest of {n} messages kept:": "{c} · saklanan {n} mesajın en yenileri:",
   "Pinned — it is on your “Attune · A list” widget now": "Sabitlendi — artık “Attune · Bir liste” widget'ında",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Sabitlendi — widget'ı ana ekrana koymak için telefonun sorusunda “Ekle”ye dokun",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "İzin verildi ✓ — Attune artık banka ve cüzdan mesajlarını okuyor.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Bu adım ilk ödeme mesajı geldiğinde kendiliğinden işaretlenir — başka bir şey yapmana gerek yok.",
+  "Allowed ✓ — waiting for the first message": "İzin verildi ✓ — ilk mesaj bekleniyor",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Burada yalnızca saklanan son 200 mesaj görünür — hepsi Recall'da.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Kartı buldum (·· {n}) ama son kullanma tarihini bulamadım — üzerindeki AA/YY'yi yaz",
 };

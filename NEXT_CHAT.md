@@ -1,5 +1,16 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (16 Nov 2026, evening — v10.0.3: Ali's second phone list of 16 Nov)
+> 1 Agents: his "Huawei free clips 2" never matched the stores' "HUAWEI FreeClip 2" → every round recorded "no price" (so "12 quick
+> checks couldn't read the prices") while Google showed 7,400. matchScore (agents.js) + AgentWatch.kt matches(): words written apart
+> = one word in the name and the reverse ("free clips" = "FreeClip", "air pods" = "AirPods"), and "2 days" is not model number 2.
+> 2 Setup → Bank messages: with notification access on and no bank message yet it said nothing → now "Allowed ✓ — waiting for the
+> first message" (setup-ui.jsx bankAllowed). 3 Kept quietly: a tap on a chat shows its kept messages of today (chatpilot-ui.jsx).
+> 4 Settings sheet scrolled sideways on a phone: the nine colour dots (spaces-ui.jsx ThemePicker) wrap now + overflow-x-hidden.
+> 5 Dates → scan of a bank card: bankcard.js (10,000 + held-out) — expiry from VALID THRU, ONLY the last 4 digits kept.
+> Tests: tests/unit/v1003fixes.test.mjs, tests/e2e_v1003fixes.py, tests/bankcard/. **Asked Ali:** what was wrong in his Documents
+> screenshot (it came without a note). Sync phone ↔ computer: Wi-Fi sync works now; Google Drive needs SETUP_CLOUD.md §A (his part).
+>
 > ## START HERE (16 Nov 2026, later — v10.0.2: "agents still does not open to the specific listing so fix it for good")
 > Causes found in the code (NOT seen on a real store — store sites are blocked from cloud sessions): (1) agent-rules.js isOwnPage
 > called ANY non-search link a listing (brand shop, seller, category, Jumia /catalog/, B.TECH /catalogsearch/) and opened it as the

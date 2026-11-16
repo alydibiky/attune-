@@ -12834,4 +12834,9 @@ export const ZH = {
   "{c} · the latest of {n} messages kept:": "{c} · 已保存 {n} 条消息中最新的：",
   "Pinned — it is on your “Attune · A list” widget now": "已固定 — 现在显示在“Attune · 一个清单”小组件上",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "已固定 — 在手机的询问中点“添加”，把小组件放到主屏幕",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "已允许 ✓ — Attune 现在会读取你的银行和钱包消息。",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "收到第一条付款消息时，这一步会自动打勾 — 无需再做什么。",
+  "Allowed ✓ — waiting for the first message": "已允许 ✓ — 正在等第一条消息",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "这里只显示最近保存的 200 条消息 — 全部都在 Recall 里。",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "找到了卡片（·· {n}），但没找到有效期 — 请输入卡上印的 MM/YY",
 };

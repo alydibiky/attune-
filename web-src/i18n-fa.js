@@ -12834,4 +12834,9 @@ export const FA = {
   "{c} · the latest of {n} messages kept:": "{c} · تازه‌ترین‌ها از {n} پیام نگه‌داشته‌شده:",
   "Pinned — it is on your “Attune · A list” widget now": "سنجاق شد — اکنون روی ابزارک «Attune · یک فهرست» است",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "سنجاق شد — برای گذاشتن ابزارک روی صفحهٔ اصلی، در پرسش گوشی «افزودن» را بزنید",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "اجازه داده شد ✓ — Attune اکنون پیام‌های بانک و کیف پول شما را می‌خواند.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "این مرحله با رسیدن نخستین پیام پرداخت خودش تیک می‌خورد — کار دیگری لازم نیست.",
+  "Allowed ✓ — waiting for the first message": "اجازه داده شد ✓ — در انتظار نخستین پیام",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "اینجا فقط ۲۰۰ پیام نگه‌داشته‌شدهٔ آخر نمایش داده می‌شود — همه در Recall هستند.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "کارت را پیدا کردم (·· {n}) اما تاریخ انقضایش را نه — ماه/سال چاپ‌شده روی آن را بنویسید",
 };

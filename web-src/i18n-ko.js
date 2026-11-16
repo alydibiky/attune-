@@ -12834,4 +12834,9 @@ export const KO = {
   "{c} · the latest of {n} messages kept:": "{c} · 보관된 메시지 {n}개 중 최신:",
   "Pinned — it is on your “Attune · A list” widget now": "고정됨 — 이제 “Attune · 목록” 위젯에 있습니다",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "고정됨 — 휴대폰의 질문에서 “추가”를 눌러 위젯을 홈 화면에 놓으세요",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "허용됨 ✓ — 이제 Attune이 은행과 지갑 메시지를 읽습니다.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "첫 결제 메시지가 오면 이 단계는 자동으로 체크됩니다 — 더 할 일은 없습니다.",
+  "Allowed ✓ — waiting for the first message": "허용됨 ✓ — 첫 메시지를 기다리는 중",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "여기에는 보관된 최근 메시지 200개만 표시됩니다 — 모두 Recall에 있습니다.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "카드(·· {n})는 찾았지만 유효기간은 찾지 못했어요 — 카드에 인쇄된 MM/YY를 입력하세요",
 };

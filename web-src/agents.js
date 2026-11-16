@@ -632,7 +632,14 @@ const wordsOf = (s) => fold(s).replace(/[^\p{L}\p{N} ]+/gu, " ").split(/\s+/).fi
 export function matchScore(what, o) {
   const want = wordsOf(what), name = fold((o && (o.name || "")) + " " + ((o && o.text) || "")).replace(/[^\p{L}\p{N} ]+/gu, " ");
   if (!want.length || !o) return 0;
-  const has = (w) => new RegExp("(^|\\s)" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/^\d+$/.test(w) ? "(st|nd|rd|th)?" : "(s|es)?") + "(?=\\s|$)", "u").test(name) || (w.length > 4 && name.includes(w));
+  const has0 = (w) => new RegExp("(^|\\s)" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/^\d+$/.test(w) ? "(st|nd|rd|th)?(?!\\s+(?:days?|hours?|years?|months?|weeks?|pack|pcs|pieces?|يوم|ايام|سنه|سنين)(?:\\s|$))" : "(s|es)?") + "(?=\\s|$)", "u").test(name) || (w.length > 4 && name.includes(w));
+  // v10.0.3 (Ali, 16 Nov: he typed "Huawei free clips 2"; every store writes "HUAWEI FreeClip 2" — nothing ever matched, so the agent
+  // found nothing while Google showed it at 7,400): two words the person wrote apart are one word in the name (free clips = FreeClip),
+  // and one word the person wrote is two in the name (freeclip = Free Clip) — with or without the plural s
+  const sg = (w) => w.replace(/(?<=\p{L}{3})s$/u, ""), toks = name.split(/\s+/).filter(Boolean), tokS = new Set(toks.map(sg)), pairS = new Set(toks.slice(0, -1).map((t, i) => sg(t + toks[i + 1])));
+  const glued = new Set();
+  for (let i = 0; i + 1 < want.length; i++) if (!/^\d+$/.test(want[i]) && !/^\d+$/.test(want[i + 1]) && tokS.has(sg(want[i] + want[i + 1]))) { glued.add(want[i]); glued.add(want[i + 1]); }
+  const has = (w) => has0(w) || glued.has(w) || (w.length >= 6 && !/\d/.test(w) && pairS.has(sg(w)));
   const VAR = /^(pro|max|plus|ultra|mini|lite|se|air|fe)$/;
   const hard = want.filter((w) => /\d/.test(w) || VAR.test(w));
   if (hard.some((w) => !has(w))) return 0;

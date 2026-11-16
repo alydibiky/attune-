@@ -12835,4 +12835,9 @@ export const IDN = {
   "{c} · the latest of {n} messages kept:": "{c} · yang terbaru dari {n} pesan yang disimpan:",
   "Pinned — it is on your “Attune · A list” widget now": "Disematkan — sekarang ada di widget “Attune · Sebuah daftar”",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Disematkan — ketuk “Tambahkan” pada pertanyaan ponsel untuk menaruh widget di layar utama",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "Diizinkan ✓ — Attune sekarang membaca pesan bank dan dompetmu.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Langkah ini tercentang sendiri saat pesan pembayaran pertama datang — tidak perlu melakukan apa-apa lagi.",
+  "Allowed ✓ — waiting for the first message": "Diizinkan ✓ — menunggu pesan pertama",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Di sini hanya tampil 200 pesan tersimpan terakhir — semuanya ada di Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Kartu ditemukan (·· {n}) tetapi tanggal kedaluwarsanya tidak — ketik BB/TT yang tercetak di kartu",
 };

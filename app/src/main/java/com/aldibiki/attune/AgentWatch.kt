@@ -95,7 +95,17 @@ object AgentWatch {
     fun matches(what: String, name: String): Boolean {
         val want = words(what); if (want.isEmpty()) return true
         val n = " " + words(name).joinToString(" ") + " "
-        fun has(w: String) = n.contains(" $w ") || n.contains(" ${w}s ") || (w.length > 4 && n.contains(w))
+        // v10.0.3 (Ali typed "Huawei free clips 2"; stores write "HUAWEI FreeClip 2" — nothing matched): words written apart are one word
+        // in the name and one word is two in the name, with or without the plural s (the same rule as agents.js matchScore)
+        fun sg(w: String) = if (w.length > 3 && w.endsWith("s")) w.dropLast(1) else w
+        val toks = n.trim().split(" ").filter { it.isNotEmpty() }
+        val tokS = toks.map { sg(it) }.toSet()
+        val pairS = (0 until (toks.size - 1).coerceAtLeast(0)).map { sg(toks[it] + toks[it + 1]) }.toSet()
+        val glued = HashSet<String>()
+        for (i in 0 until want.size - 1) if (!want[i].all(Char::isDigit) && !want[i + 1].all(Char::isDigit) && sg(want[i] + want[i + 1]) in tokS) { glued.add(want[i]); glued.add(want[i + 1]) }
+        val unit = Regex("^\\d+ (days?|hours?|years?|months?|weeks?|pack|pcs|pieces?)$")
+        fun has(w: String) = (if (w.all(Char::isDigit)) Regex("(^|\\s)" + w + "(st|nd|rd|th)?(\\s|$)").findAll(n).any { m -> !unit.containsMatchIn(n.substring(m.range.first).trim().split(" ").take(2).joinToString(" ")) } else n.contains(" $w ") || n.contains(" ${w}s ") || (w.length > 4 && n.contains(w))) ||
+            w in glued || (w.length >= 6 && w.none(Char::isDigit) && sg(w) in pairS)
         if (want.filter { it.any(Char::isDigit) || VARIANT.matches(it) }.any { !has(it) }) return false
         if (!ACCESSORY.containsMatchIn(what) && ACCESSORY.containsMatchIn(name)) {
             val first = want.map { n.indexOf(" $it") }.filter { it >= 0 }.minOrNull() ?: Int.MAX_VALUE

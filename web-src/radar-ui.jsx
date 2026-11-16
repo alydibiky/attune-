@@ -4,6 +4,7 @@
    (the phone reads it), paste or type a sentence, or "Add by hand" (a form). Each item gets a reminder before its deadline;
    "Cancelled it" / "Returned it" / "Claimed" count in the Guardian's honest "saved" counter.
    Free: 3 active deadlines; Pro: as many as you like, plus the receipt vault. Tests: tests/e2e_v727radar.py.            */
+import { readBankCard, cardTitle } from "./bankcard.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
 import { readMrz } from "./mrz.js";
@@ -227,6 +228,13 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     if (mz && mz.expiry) { setMrz({ ...mz, photo: key }); return; }
     const eg = txt ? findIds(txt).map((n) => decodeId(n)).find((x) => x.ok) : null;
     if (eg) { const exp = D.readDeadlines(txt, opts()).find((x) => x.kind === "expiry"); setEgid({ number: eg.number, expiry: exp ? exp.date : "", photo: key }); return; }
+    // v10.0.3 (Ali, 16 Nov: his bank card's scan put "CB WealthEGP5576 0199 17 3251…" in the note and found no date): a bank card is
+    // read as one — its expiry (VALID THRU MM/YY), the bank, and ONLY the last 4 digits; its number is never written anywhere
+    const bc = txt ? readBankCard(txt) : null;
+    if (bc) { const title = cardTitle(bc, tr(D.DOC_NAME.card));
+      if (bc.expiry) setDrafts([{ kind: "expiry", doc: "card", title, date: bc.expiry, note: "", photo: key, source: "photo", _k: key + ":0" }]);
+      else { setEdit({ kind: "expiry", doc: "card", title, photo: key, source: "photo", note: "" }); setMode("form"); flash && flash(tr("I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it", { n: bc.last4 })); }
+      return; }
     const found = txt ? D.readDeadlines(txt, opts()) : [];
     if (found.length) setDrafts(found.map((x, i) => ({ ...x, photo: key, source: "photo", _k: key + ":" + i })));
     else if (!anyway && !/\d/.test(txt)) { setRetake({ why: "unread", file }); }

@@ -12834,4 +12834,9 @@ export const RU = {
   "{c} · the latest of {n} messages kept:": "{c} · последние из {n} сохранённых сообщений:",
   "Pinned — it is on your “Attune · A list” widget now": "Закреплено — теперь он на вашем виджете «Attune · Список»",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "Закреплено — нажмите «Добавить» в вопросе телефона, чтобы поместить виджет на главный экран",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "Разрешено ✓ — Attune теперь читает сообщения банка и кошелька.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "Этот шаг отметится сам, когда придёт первое сообщение об оплате — больше ничего делать не нужно.",
+  "Allowed ✓ — waiting for the first message": "Разрешено ✓ — ждём первое сообщение",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "Здесь показаны только последние 200 сохранённых сообщений — все они есть в Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "Нашёл карту (·· {n}), но не срок её действия — введите напечатанный на ней ММ/ГГ",
 };

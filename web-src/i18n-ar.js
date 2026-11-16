@@ -9936,4 +9936,9 @@ export const AR = {
   "{c} · the latest of {n} messages kept:": "{c} · آخر الرسايل من {n} رسالة محفوظة:",
   "Pinned — it is on your “Attune · A list” widget now": "اتثبتت — بقت على ويدجت «Attune · قايمة» دلوقتي",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "اتثبتت — دوس «إضافة» في سؤال الموبايل عشان الويدجت تتحط على الشاشة الرئيسية",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "اتسمح ✓ — Attune بيقرا رسايل البنك والمحفظة دلوقتي.",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "الخطوة دي هتتعلّم لوحدها لما توصل أول رسالة دفع — مش محتاج تعمل حاجة تانية.",
+  "Allowed ✓ — waiting for the first message": "اتسمح ✓ — مستني أول رسالة",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "هنا بتظهر آخر 200 رسالة محفوظة بس — كلهم موجودين في Recall.",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "لقيت الكارت (·· {n}) بس ملقتش تاريخ انتهاؤه — اكتب الشهر/السنة المطبوعين عليه",
 };

@@ -7871,7 +7871,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.0.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.0.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -11800,7 +11800,7 @@ export default function App() {
         </div>
       ) : moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
-          <div className="calm att-scroll att-shift absolute start-0 end-0 bg-[var(--c-surf)]! text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-2xl rounded-t-[20px]! px-4 pb-4 pt-2 max-h-[75vh] overflow-y-auto shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
+          <div className="calm att-scroll att-shift absolute start-0 end-0 bg-[var(--c-surf)]! text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-2xl rounded-t-[20px]! px-4 pb-4 pt-2 max-h-[75vh] overflow-y-auto overflow-x-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
               <span className="block mx-auto mb-3 w-10 h-1.5 rounded-full bg-[var(--c-ln)]" aria-hidden="true" />

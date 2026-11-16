@@ -594,9 +594,10 @@ export function ThemePicker({ theme, setTheme }) {
   const pick = (t) => { const next = { ...theme, ...t }; saveTheme(next); applyTheme(next); setTheme(next); };
   return (
     <div className="calm bg-transparent!" data-testid="theme-picker">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[12px] font-bold text-[var(--c-mut)]">{tr("Colour")}</span>
-        <div className="flex gap-0.5">
+      {/* v10.0.3 (Ali, 16 Nov: Settings scrolled sideways — the nine colour dots were wider than the phone): the dots wrap */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-[12px] font-bold text-[var(--c-mut)] shrink-0">{tr("Colour")}</span>
+        <div className="flex flex-wrap justify-end gap-0.5 min-w-0">
           {ACCENTS.map(([id, label]) => (
             <button key={id} onClick={() => pick({ accent: id })} title={tr(label)} aria-label={tr(label)} data-testid={"accent-" + id}
               className={`w-11 h-11 rounded-full border-2 flex items-center justify-center p-1.5 ${theme.accent === id ? "border-[var(--c-ink)]" : "border-transparent"}`}

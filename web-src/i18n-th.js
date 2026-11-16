@@ -12834,4 +12834,9 @@ export const TH = {
   "{c} · the latest of {n} messages kept:": "{c} · ล่าสุดจาก {n} ข้อความที่เก็บไว้:",
   "Pinned — it is on your “Attune · A list” widget now": "ปักหมุดแล้ว — ตอนนี้อยู่บนวิดเจ็ต “Attune · รายการ” ของคุณ",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "ปักหมุดแล้ว — แตะ “เพิ่ม” ในคำถามของโทรศัพท์เพื่อวางวิดเจ็ตบนหน้าจอหลัก",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "อนุญาตแล้ว ✓ — ตอนนี้ Attune อ่านข้อความจากธนาคารและกระเป๋าเงินของคุณ",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "ขั้นตอนนี้จะติ๊กเองเมื่อข้อความชำระเงินแรกมาถึง — ไม่ต้องทำอะไรเพิ่ม",
+  "Allowed ✓ — waiting for the first message": "อนุญาตแล้ว ✓ — รอข้อความแรก",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "ที่นี่แสดงเฉพาะ 200 ข้อความล่าสุดที่เก็บไว้ — ทั้งหมดอยู่ใน Recall",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "พบบัตรแล้ว (·· {n}) แต่ไม่พบวันหมดอายุ — พิมพ์ ดด/ปป ที่พิมพ์อยู่บนบัตร",
 };

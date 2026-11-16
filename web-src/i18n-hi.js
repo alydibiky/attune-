@@ -12835,4 +12835,9 @@ export const HI = {
   "{c} · the latest of {n} messages kept:": "{c} · रखे गए {n} संदेशों में से सबसे नए:",
   "Pinned — it is on your “Attune · A list” widget now": "पिन हो गई — अब यह आपके “Attune · एक सूची” विजेट पर है",
   "Pinned — tap “Add” on the phone's question to put the widget on your home screen": "पिन हो गई — विजेट को होम स्क्रीन पर रखने के लिए फ़ोन के सवाल में “जोड़ें” दबाएँ",
+  "Allowed ✓ — Attune now reads your bank and wallet messages.": "अनुमति मिली ✓ — Attune अब आपके बैंक और वॉलेट के संदेश पढ़ता है।",
+  "This step is ticked by itself when the first payment message arrives — nothing more to do.": "पहला भुगतान संदेश आते ही यह चरण अपने-आप टिक हो जाएगा — और कुछ नहीं करना है।",
+  "Allowed ✓ — waiting for the first message": "अनुमति मिली ✓ — पहले संदेश का इंतज़ार",
+  "Only the last 200 kept messages are shown here — all of them are in Recall.": "यहाँ केवल पिछले 200 रखे गए संदेश दिखते हैं — सभी Recall में हैं।",
+  "I found the card (·· {n}) but not its expiry date — type the MM/YY printed on it": "कार्ड मिला (·· {n}) पर उसकी समाप्ति तिथि नहीं — उस पर छपा MM/YY लिखें",
 };
