@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import * as FT from "./features.js";   // v10.1 F1 + F3
 import { enterSends } from "./keys.js";
 import * as BR from "./brain.js";
 import * as LIB from "./library.js";   // v6.46 "Remember this": chapters of a saved book
@@ -1104,6 +1105,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           actions: [...cx.people.slice(0, 1).map((p) => [p.name, "person:" + p.id]), ...opens.map((o) => [OPEN[o], "open:" + o]), ["Just answer", "answer"]] } }] }));
       setText("");
     };
+    // v10.1 F3 (Ali picked F3: "where is …" in the Home box): a question about where a feature is → its place, what it does, Open —
+    // or, when not sure, the 2–3 closest to tap (features.js; "where did I put my keys" is Mind's, never this)
+    if (route && !img) { const wf = FT.whereAsk(typed, tr);
+      if (wf) { const cid = ensureChat(typed);
+        const card = wf.f ? { tone: "emerald", title: tr("{n} is in {p}", { n: tr(wf.f.name), p: FT.placeLine(wf.f, tr) }), detail: tr(wf.f.does), actions: [[tr("Open {n}", { n: tr(wf.f.name) }), "feature:" + wf.f.id]] }
+          : { tone: "emerald", title: tr("Did you mean one of these?"), detail: wf.options.map((f) => "• " + tr(f.name) + " — " + FT.placeLine(f, tr)).join("\n"), actions: wf.options.map((f) => [tr(f.name), "feature:" + f.id]) };
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", card, feature: true }] }));
+        setText(""); return; } }
     // v9.9.40 K5 / AS-2 (Ali's OK): "when did Address East discuss the garage?", "what are all the talabat?" — from the kept messages of
     // that chat (notifications + the exports shared to Attune): every day it came up, who wrote, and every message used, in full
     if (route && !img && api.askChats) { const ac = api.askChats(typed);
@@ -2189,6 +2198,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "where-no") patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("OK — nothing changed."), detail: "", actions: [] } });
     else if (act.startsWith("setup:")) { try { window.dispatchEvent(new CustomEvent("attune-setup-act", { detail: act.slice(6) })); } catch (e) {} }   // v9.9.35 the guide's buttons
     else if (act.startsWith("rec:")) { if (api.openRecord) api.openRecord(act.slice(4)); }
+    else if (act.startsWith("feature:")) { const f = FT.FEATURES.find((x) => x.id === act.slice(8)); FT.openFeature(f); }   // v10.1 F3
     else if (act.startsWith("person:")) { try { localStorage.setItem("attune:people:open", act.slice(7)); } catch (e) {} window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "people" } })); }
     else if (act.startsWith("who:")) {   // v8.8 "Which Ahmed?" → this one: remembered, and the question answered for him
       const q = m.askText || ""; pickPerson(q, act.slice(4));

@@ -12,6 +12,8 @@ import { loadPots } from "./planner.js";
 import { askConfirm } from "./confirm.jsx";
 import { PeopleB5, PersonB5 } from "./b5-ui.jsx";
 import { personSections, openOriginal } from "./personpage.js";
+import { projectsOf } from "./projlinks.js";   // v10.1 P3
+import { loadProjects, openProject } from "./spaces.js";
 import { readCard } from "./bizcard.js";
 import { shrinkPhoto } from "./money-pages-ui.jsx";
 import { photoOk, askRetake } from "./photogate.js";
@@ -128,6 +130,11 @@ export function PeoplePage({ nativeCall, navTo, flash }) {
         {linked.owe.toMe ? <div className={cardPad}><p className={label + " m-0"}>{tr("Owes you")}</p><b className="text-[18px] tabular-nums c-acc" dir="ltr">{Math.round(linked.owe.toMe).toLocaleString("en-US")}</b></div> : null}
         {linked.owe.iOwe ? <div className={cardPad}><p className={label + " m-0"}>{tr("You owe")}</p><b className="text-[18px] tabular-nums text-[var(--c-warn)]" dir="ltr">{Math.round(linked.owe.iOwe).toLocaleString("en-US")}</b></div> : null}
       </div> : null}
+      {/* v10.1 P3 (Ali picked P3): the projects this person is in — a tap opens the project */}
+      {(() => { let ps = []; try { ps = projectsOf(p.id, loadProjects(), JSON.parse(localStorage.getItem("attune:chats:v1") || "[]"), dir); } catch (e) {}
+        return ps.length ? <div className={cardPad + " space-y-1"} data-testid="person-projects"><p className={label + " m-0"}>{tr("In projects")}</p>
+          {ps.map((pr) => <button key={pr.id} onClick={() => { openProject(pr.id); navTo && navTo("projects"); }} className="w-full min-h-[44px] flex items-center gap-2 text-start border-t border-[var(--c-ln)] first:border-t-0" data-testid="person-project">
+            <span className="text-[18px]">{pr.emoji || "📁"}</span><span className="flex-1 min-w-0 truncate text-[14px] font-bold" dir="auto">{pr.name}</span><span className="text-[12px] font-bold c-acc">{tr("Open")} ›</span></button>)}</div> : null; })()}
       {/* v9.9.22 P1 / P3: how often to talk, and their birthday / dates */}
       <PersonB5 p={p} dir={dir} save={save} />
       {/* v9.9.23 N1 (Ali picked A — "and let me open the original things"): sections; every line opens ITS original */}

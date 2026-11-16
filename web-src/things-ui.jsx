@@ -4,7 +4,8 @@
    (warned 30 days before). Photos go through the clarity check (photogate.js). Reader: things.js. */
 import React, { useRef, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
-import { readReceipt, readBox } from "./things.js";
+import { readReceipt, readBox, paymentFor, expenseFor } from "./things.js";
+import { openOriginal } from "./personpage.js";
 import { shrinkPhoto } from "./money-pages-ui.jsx";
 import { photoOk, askRetake } from "./photogate.js";
 import { choosePhoto } from "./photopick.js";
@@ -22,8 +23,19 @@ async function readPhoto(file, input) {
   try { r = call ? await call("readText", { b64: url.split(",")[1] }) : null; } catch (e) {}
   return { url, lines: (r && r.lines && r.lines.length ? r.lines : String((r && r.text) || "").split("\n")).map((l) => (l && l.text != null ? l.text : l)), text: (r && r.text) || "" };
 }
-export function MyThings({ flash }) {
-  const [items, setItems] = useState(load), [edit, setEdit] = useState(null), [busy, setBusy] = useState(false);
+// v10.1 T1: the Money book, and a thing's payment in it (linked by paymentFor — never a guess)
+const ledger = () => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null") || { txns: [] }; } catch (e) { return { txns: [] }; } };
+const txOf = (id) => (ledger().txns || []).find((x) => x.id === id) || null;
+/** A thing's payment: the one already linked (if it is still in Money), else found now. → { items (with links saved), changed } */
+export function linkAll(items0) {
+  const txns = ledger().txns || []; let changed = false;
+  const items = items0.map((x) => (x.txId && !txns.some((t) => t.id === x.txId) ? (changed = true, { ...x, txId: "", addedTx: false }) : x));
+  for (let i = 0; i < items.length; i++) { const x = items[i]; if (x.txId || !(x.price > 0)) continue;
+    const id = paymentFor(x, txns, items.map((y) => y.txId).filter(Boolean)); if (id) { items[i] = { ...x, txId: id }; changed = true; } }
+  return { items, changed };
+}
+export function MyThings({ flash, navTo }) {
+  const [items, setItems] = useState(() => { const r = linkAll(load()); if (r.changed) save(r.items); return r.items; }), [edit, setEdit] = useState(null), [busy, setBusy] = useState(false);
   const rcp = useRef(null), box = useRef(null);
   const fromReceipt = async (f) => { if (!f) return; setBusy(true); const p = await readPhoto(f, rcp.current); setBusy(false); if (!p) return;
     const x = readReceipt(p.lines);
@@ -35,10 +47,22 @@ export function MyThings({ flash }) {
     setEdit({ ...edit, serial: b.serial || edit.serial, imei: b.imei || edit.imei, model: b.model || edit.model, sure: { ...(edit.sure || {}), serial: true } }); };
   const put = () => { const e = edit, m = +e.warrantyMonths || 0;
     let until = e.until; if (m && e.date && !until) { const [y, mo, d] = e.date.split("-").map(Number); const dt = new Date(y, mo - 1 + m, 1); until = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(Math.min(d, new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate())).padStart(2, "0"); }
-    const it = { ...e, id: e.id || "t" + Date.now().toString(36), price: +e.price || 0, warrantyMonths: m, until };
+    let it = { ...e, id: e.id || "t" + Date.now().toString(36), price: +e.price || 0, warrantyMonths: m, until }; delete it.sure;
+    // v10.1 T1: its payment in Money — the one already there, else (a new receipt) it is added to Money now, with Undo on the card
+    let added = false;
+    if (it.price > 0 && !(it.txId && txOf(it.txId))) {
+      const taken = items.filter((y) => y.id !== it.id).map((y) => y.txId).filter(Boolean);
+      let id = paymentFor(it, ledger().txns || [], taken);
+      if (!id && !e.id) { try { const today = new Date().toISOString().slice(0, 10), before = new Set((ledger().txns || []).map((t) => t.id));
+        window.__attuneApplyActions && window.__attuneApplyActions([{ kind: "money", items: [expenseFor(it, today)] }]);
+        const mine = (ledger().txns || []).find((t) => !before.has(t.id) && t.type === "expense"); if (mine) { id = mine.id; added = true; } } catch (x) {} }
+      it = { ...it, txId: id || "", addedTx: added };
+    }
     setItems(save(e.id ? items.map((x) => (x.id === e.id ? it : x)) : [...items, it]));
     if (until && !e.id) { try { const r = D.addDeadline(D.loadRadar(), { kind: "warranty", title: it.name || tr("Warranty"), date: until, amount: it.price, note: [it.store, it.serial].filter(Boolean).join(" · "), source: "things" }); D.saveRadar(r.data); } catch (x) {} }
-    setEdit(null); flash && flash(until ? tr("Saved — Dates warns you before the warranty ends") : tr("Saved")); };
+    setEdit(null); flash && flash(added ? tr("Saved — and added to Money") : until ? tr("Saved — Dates warns you before the warranty ends") : tr("Saved")); };
+  const undoAdd = (x) => { try { const l = ledger(); l.txns = (l.txns || []).filter((t) => t.id !== x.txId); localStorage.setItem("ledger.v3", JSON.stringify(l)); window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {}
+    setItems(save(items.map((y) => (y.id === x.id ? { ...y, txId: "", addedTx: false } : y)))); flash && flash(tr("Taken out of Money")); };
   const F = (k, l, type) => <div className="flex items-center gap-2 border-t border-[var(--c-ln)] first:border-t-0 py-1.5">
     <span className={label + " w-[30%] shrink-0"}>{tr(l)}</span>
     <input value={edit[k] == null ? "" : edit[k]} onChange={(x) => setEdit({ ...edit, [k]: x.target.value, sure: { ...(edit.sure || {}), [k === "date" ? "date" : k]: true } })} type={type || "text"} dir="auto"
@@ -54,11 +78,18 @@ export function MyThings({ flash }) {
       <div className="flex flex-wrap gap-2 pt-1"><button className={btnP} onClick={put} data-testid="thing-save">{tr("Save")}</button>
         <button className={btnS} onClick={() => choosePhoto(box.current)} data-testid="thing-box">{tr("Add the box photo (serial)")}</button>
         <button className={btnS} onClick={() => setEdit(null)}>{tr("Cancel")}</button></div></div> : null}
-    {items.map((x) => <button key={x.id} onClick={() => setEdit({ ...x, sure: {} })} className="w-full text-start rounded-[16px] border p-3" style={{ borderColor: "var(--c-ln)", background: "var(--c-surf)" }} data-testid="thing-row">
-      <b className="block text-[14.5px]" dir="auto">{x.name || tr("Thing")}</b>
-      <span className="block text-[12.5px] c-sub" dir="auto">{[x.price ? n0(x.price) : "", x.date ? day(x.date) : "", x.store].filter(Boolean).join(" · ")}</span>
-      {x.until ? <span className="block text-[12.5px] c-acc">{tr("Warranty until {d}", { d: day(x.until) })}</span> : null}
-      {x.serial || x.imei ? <span className="block text-[12px] c-sub" dir="ltr">{x.imei ? "IMEI " + x.imei : "S/N " + x.serial}</span> : null}</button>)}
+    {items.map((x) => { const tx = x.txId ? txOf(x.txId) : null;
+      return <div key={x.id} className="rounded-[16px] border p-3 space-y-1" style={{ borderColor: "var(--c-ln)", background: "var(--c-surf)" }} data-testid="thing-row">
+      <button onClick={() => setEdit({ ...x, sure: {} })} className="w-full text-start" data-testid="thing-open">
+        <b className="block text-[14.5px]" dir="auto">{x.name || tr("Thing")}</b>
+        <span className="block text-[12.5px] c-sub" dir="auto">{[x.store, x.date ? tr("bought {d}", { d: day(x.date) }) : ""].filter(Boolean).join(" · ")}</span>
+        {x.until ? <span className="block text-[12.5px] c-acc">{tr("Warranty until {d}", { d: day(x.until) })}</span> : null}
+        {x.serial || x.imei ? <span className="block text-[12px] c-sub" dir="ltr">{x.imei ? "IMEI " + x.imei : "S/N " + x.serial}</span> : null}</button>
+      {/* v10.1 T1: the price is its payment in Money — a tap opens THAT payment */}
+      {tx ? <div className="flex items-center gap-2 flex-wrap"><button onClick={() => openOriginal({ mode: "money", key: "attune:money:open", id: "tx:" + tx.id }, navTo)} className="min-h-[36px] text-[13px] font-extrabold c-acc" data-testid="thing-money">{tr("−{a} · in Money ›", { a: n0(tx.amount) })}</button>
+          {x.addedTx ? <button onClick={() => undoAdd(x)} className="min-h-[36px] px-2 text-[12px] font-bold c-sub underline" data-testid="thing-money-undo">{tr("Undo adding to Money")}</button> : null}</div>
+        : x.price ? <span className="block text-[12.5px] c-sub" data-testid="thing-nomoney">{tr("{a} · not found in Money", { a: n0(x.price) })}</span> : null}
+    </div>; })}
     {!items.length && !edit ? <p className="m-0 text-[13px] c-sub" data-testid="things-empty">{tr("Take a photo of a receipt — the TV, the washer, the phone — and Attune keeps the price, the date and the warranty, and warns you before it ends.")}</p> : null}
   </div>;
 }

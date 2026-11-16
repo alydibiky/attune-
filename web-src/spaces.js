@@ -88,10 +88,15 @@ export function upsertProject(p) {
     repeats: (p.repeats || []).map((r) => ({ id: r.id || newSpaceId("r"), text: String(r.text || "").trim().slice(0, 600), every: EVERY.includes(r.every) ? r.every : "", last: +r.last || 0 })).filter((r) => r.text).slice(0, 20),
     // v9.2 (Ali picked 6 = A + B "in a smart and organised way"): the work's tasks, on a board To do · Doing · Done
     tasks: (p.tasks || []).map((t) => ({ id: t.id || newSpaceId("t"), text: String(t.text || "").trim().slice(0, 200), col: TASK_COLS.includes(t.col) ? t.col : "todo", ts: +t.ts || Date.now() })).filter((t) => t.text).slice(0, 200),
+    // v10.1 P2 (Ali picked P2): the project's budget and the words its payments use in Money (empty = its distinctive name words)
+    budget: Math.max(0, +p.budget || 0), moneyWords: (Array.isArray(p.moneyWords) ? p.moneyWords : []).map((w) => String(w).trim().slice(0, 40)).filter(Boolean).slice(0, 8),
     created: p.created || Date.now(), updated: Date.now() };
   if (!saveProjectList([clean, ...list])) return null;       // storage full
   return clean;
 }
+/** v10.1: open the Projects page on one project from elsewhere (a Follow-ups date, a person's page) — read once by ProjectsPage. */
+export const OPEN_PROJECT_KEY = "attune:projects:open";
+export function openProject(id) { try { localStorage.setItem(OPEN_PROJECT_KEY, String(id)); } catch (e) {} }
 export function deleteProject(id) { saveProjectList(loadProjects().filter((x) => x.id !== id)); }
 
 /* ---- v9.2 a project's tasks (Ali, 4 Nov: "make the app like Trello in the tasks I give it" — the board where things move through

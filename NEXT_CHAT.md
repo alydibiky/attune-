@@ -1,5 +1,20 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (16 Nov 2026, night — v10.1: Ali's picks P1 P2 P3 P4 W2 T1 + F1 F3 built — combined page OK'd)
+> Page: docs/mockups/projects-combined.html (https://claude.ai/artifact/LSwKU9ZuNeFL2d1b1L4Ziw). Built:
+> **T1** My things → Follow-ups "Things I own" (timeline-ui.jsx section; things-ui.jsx MyThings): each price linked to its payment in Money
+> (things.js paymentFor — 10,000 + held-out, tests/thingpay); a new receipt not in Money is added (Undo on the card). (The OK'd mock-up
+> showed a "Things" chip, but Follow-ups no longer has a chips row — it is a section on the page; tell Ali if he wants a chip row back.)
+> **P1–P4** web-src/projlinks.js (10,000 + held-out, tests/projlinks): P1 a project's dates (your messages, notes, open tasks, due) on
+> Follow-ups as "Project · name" → opens THAT project (spaces.js openProject / OPEN_PROJECT_KEY — navTo("projects") clears the sticky);
+> P2 budget + money words, spent from Money; P3 people both ways (person page "In projects"); P4 "Add to a project" on the shared-text
+> banner (Mind). **W2** on the phone a project is light (no ask box / Files / Saved / Repeats / Answers as; "Files and questions about
+> them: on your computer"); a computer keeps everything. **F1** side menu search finds features (web-src/features.js FEATURES = every
+> feature + where it lives; a unit test fails when a page has no line). **F3** "where is …" in the Home box / Chat → the place + Open, or
+> 2–3 to tap when unsure (tests/features: 100% · held-out 100% · the second held-out — never tuned on — 87%).
+> Fixed on the way: deadlines.js datesIn missed "24/05/2027." (a date before a full stop) everywhere.
+> Tests: tests/unit/v1010.test.mjs, tests/e2e_v1010.py.
+>
 > ## START HERE (16 Nov 2026, evening — v10.0.3: Ali's second phone list of 16 Nov)
 > 1 Agents: his "Huawei free clips 2" never matched the stores' "HUAWEI FreeClip 2" → every round recorded "no price" (so "12 quick
 > checks couldn't read the prices") while Google showed 7,400. matchScore (agents.js) + AgentWatch.kt matches(): words written apart

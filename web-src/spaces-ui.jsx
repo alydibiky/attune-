@@ -7,6 +7,10 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { tr, dateLocale, getLang } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
 import { brainOf } from "./projectbrain.js";
+import { projectDates, projectMoney, projectPeople, moneyWords } from "./projlinks.js";   // v10.1 P1 P2 P3
+import { loadDir as loadPeople, labelOf as personLabel } from "./entities.js";
+import { openPerson } from "./people-ui.jsx";
+import { openOriginal } from "./personpage.js";
 import { htmlDoc } from "./sandbox.js";
 import { fixMessages, applyFix } from "./code.js";
 import {
@@ -15,7 +19,7 @@ import {
   loadArtifacts, saveArtifact, deleteArtifact, latest, fileNameFor,
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
   rulesFor, setRules, exportAssistant, importAssistant,
-  STARTERS, TASK_COLS, taskProgress, addTasks, moveTask, removeTask,
+  STARTERS, TASK_COLS, taskProgress, addTasks, moveTask, removeTask, OPEN_PROJECT_KEY,
 } from "./spaces.js";
 import { load as loadUserSkills } from "./userskills.js";
 import { PANES, GRID3 } from "./desk.jsx";
@@ -177,13 +181,14 @@ function dueText(due) {
 const COL_NAME = { todo: "To do", doing: "Doing", done: "Done" };
 export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flash }) {
   const [list, setList] = useState(() => loadProjects());
-  const [openId, setOpenId] = useSticky("projects:open", null);
+  const [openId, setOpenId] = useSticky("projects:open", () => { try { const v = localStorage.getItem(OPEN_PROJECT_KEY); if (v) { localStorage.removeItem(OPEN_PROJECT_KEY); return v; } } catch (e) {} return null; });
   const [sub, setSub] = useState(null);             // files | saved | repeats | answers | chats
   const [edit, setEdit] = useState(null);
   const [note, setNote] = useState(null);           // { name, text } being added
   const [q, setQ] = useState("");
   const [rep, setRep] = useState(null);             // { text, every } being added
   const [taskIn, setTaskIn] = useState("");
+  const [budgetEdit, setBudgetEdit] = useState(null);   // v10.1 P2
   const [arts, setArts] = useState(() => loadArtifacts());
   useSubBack(!!openId, () => { setOpenId(null); setSub(null); });   // Back — the work → all projects
   useSubBack(!!sub, () => setSub(null));                            //        a row → the work
@@ -368,6 +373,13 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   }
 
   if (cur) {
+    // v10.1 W2 (Ali picked W2: "if it will be bad on the phone then we can make it on a computer only"): on the phone a project is
+    // light — tasks, dates, money, people, what was decided; its files and asking about them are on the computer
+    const N = typeof window !== "undefined" ? window.AttuneNative : null, phone = !(N && N.desktop) && !wideNow();
+    const dates = projectDates(cur, allChats), led = (() => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null") || { txns: [] }; } catch (e) { return { txns: [] }; } })();
+    const money = projectMoney(cur, led.txns || []), dirP = loadPeople(), ppl = projectPeople(cur, allChats, dirP).filter((x) => !x.maybe).slice(0, 8);
+    const brain = phone ? brainOf(cur, allChats) : null, curCode = led.currency || "";
+    const n0 = (v) => Math.round(+v || 0).toLocaleString("en-US");
     const asst = cur.assistantId ? assistants.find((a) => a.id === cur.assistantId) : null;
     const due = dueRepeats(cur).length, nSaved = artifactsFor(cur.id, arts).length, nFiles = (cur.knowledge || []).length, nRep = (cur.repeats || []).length;
     const tp = taskProgress(cur);
@@ -377,7 +389,36 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
       ["saved", "Saved", nSaved ? String(nSaved) : tr("None yet")],
       ["repeats", "Repeats", due ? tr("{n} due", { n: due }) : nRep ? String(nRep) : tr("None yet"), !!due],
       ["answers", "Answers as", asst ? asst.emoji + " " + tr(asst.name) : tr("Just Attune")],
-    ];
+    ].filter((r) => !phone || r[0] === "tasks");
+    const [bEdit, setBEdit] = [budgetEdit, setBudgetEdit];
+    const sec = "text-[11.5px] font-extrabold tracking-[0.06em] uppercase text-[var(--c-mut)] m-0";
+    const linked = <>
+      {/* P1: the days coming up — from your messages, notes and tasks (also on Follow-ups, with this project's name) */}
+      {dates.length ? <div className={card + " p-3 space-y-1"} data-testid="project-dates"><p className={sec}>{tr("Coming up")}</p>
+        {dates.slice(0, 4).map((d, i) => <div key={i} className="flex items-start gap-2 text-[13.5px]" data-testid="project-date"><b className="tabular-nums shrink-0" dir="ltr">{shortDate(Date.parse(d.date + "T12:00:00"))}</b><span className="flex-1 min-w-0 break-words" dir="auto">{d.src === "due" ? tr("Due") : d.text}</span></div>)}</div> : null}
+      {/* P2: its money — a budget, and the payments in Money that are this project's */}
+      <div className={card + " p-3 space-y-1.5"} data-testid="project-money"><div className="flex items-center gap-2"><p className={sec + " flex-1"}>{tr("Money")}</p>
+          <button onClick={() => setBEdit(bEdit ? null : { budget: cur.budget || "", words: (cur.moneyWords && cur.moneyWords.length ? cur.moneyWords : moneyWords(cur)).join(", ") })} className="min-h-[34px] px-2 text-[12px] font-bold text-[var(--c-acc)]" data-testid="project-budget-edit">{money.budget ? tr("Change") : tr("Set a budget")}</button></div>
+        {bEdit ? <div className="space-y-1.5" data-testid="project-budget-form">
+          <input value={bEdit.budget} onChange={(e) => setBEdit({ ...bEdit, budget: e.target.value })} inputMode="decimal" placeholder={tr("Budget, e.g. 60000")} className={input} data-testid="project-budget-input" />
+          <input value={bEdit.words} onChange={(e) => setBEdit({ ...bEdit, words: e.target.value })} dir="auto" placeholder={tr("Words its payments use, e.g. umrah, عمرة")} className={input} data-testid="project-words-input" />
+          <p className="m-0 text-[11.5px] text-[var(--c-mut)]">{tr("A payment in Money counts for this project when its note has one of these words.")}</p>
+          <button onClick={() => { if (save({ ...cur, budget: parseFloat(String(bEdit.budget).replace(/,/g, "")) || 0, moneyWords: String(bEdit.words).split(/[,،]/).map((x) => x.trim()).filter(Boolean) })) { setBEdit(null); flash && flash(tr("Saved")); } }} className={btnMain} data-testid="project-budget-save">{tr("Save")}</button></div> : null}
+        {money.budget ? <><div className="flex items-baseline gap-2 text-[13.5px]"><b className="flex-1" data-testid="project-spent">{tr("Spent {a} of {b}", { a: n0(money.spent), b: n0(money.budget) })}</b><span className={"tabular-nums " + (money.left < 0 ? "text-[var(--c-neg)] font-bold" : "text-[var(--c-mut)]")}>{money.left < 0 ? tr("{a} over", { a: n0(-money.left) }) : tr("{a} left", { a: n0(money.left) })}</span></div>
+          <div className="h-1.5 rounded-full bg-[var(--c-ln)] overflow-hidden"><i className="block h-full bg-[var(--c-acc)]" style={{ width: Math.min(100, Math.round(100 * money.spent / money.budget)) + "%" }} /></div></>
+          : money.items.length ? <b className="block text-[13.5px]" data-testid="project-spent">{tr("Spent {a}", { a: n0(money.spent) + (curCode ? " " + curCode : "") })}</b> : null}
+        {money.items.slice(0, 3).map((t) => <button key={t.id} onClick={() => openOriginal({ mode: "money", key: "attune:money:open", id: "tx:" + t.id }, openPage)} className="w-full flex items-center gap-2 min-h-[36px] text-start text-[13px]" data-testid="project-pay">
+          <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || tr("Payment")}<span className="text-[var(--c-mut)]"> · {shortDate(Date.parse(t.date + "T12:00:00"))}</span></span><b className="tabular-nums" dir="ltr">−{n0(t.amount)}</b></button>)}
+        {!money.items.length && !bEdit ? <p className="m-0 text-[12.5px] text-[var(--c-mut)]">{tr("No payments yet. A payment counts here when its note says “{w}”.", { w: moneyWords(cur).join(" / ") || cur.name })}</p> : null}
+      </div>
+      {/* P3: the people it names, linked to their People cards */}
+      {ppl.length ? <div className={card + " p-3 space-y-1"} data-testid="project-people"><p className={sec}>{tr("People")}</p>
+        <div className="flex flex-wrap gap-1.5">{ppl.map((x) => { const c = dirP.items.find((y) => y.id === x.id); return c ? <button key={x.id} onClick={() => openPerson(x.id, openPage)} className="min-h-[36px] px-3 rounded-full bg-[var(--c-soft)] text-[13px] font-bold text-[var(--c-acc)]" dir="auto" data-testid="project-person">{personLabel(c)}</button> : null; })}</div></div> : null}
+      {/* W2: what was decided / still open, read from its chats (the phone shows it here; the computer has it under Earlier chats) */}
+      {brain && (brain.decisions.length || brain.open.length) ? <div className={card + " p-3 space-y-1"} data-testid="project-brain-phone">
+        {brain.decisions.length ? <><p className={sec + " text-[var(--c-pos)]!"}>{tr("Decided")}</p>{brain.decisions.slice(0, 3).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">• {x.text}</p>)}</> : null}
+        {brain.open.length ? <><p className={sec + " text-[var(--c-warn)]! pt-1"}>{tr("Still open")}</p>{brain.open.slice(0, 3).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">• {x.text}</p>)}</> : null}</div> : null}
+    </>;
     return (
       <div className="calm att-in space-y-4 lg:max-w-3xl" data-testid="project-page">
         <button onClick={() => setOpenId(null)} className="hidden lg:inline-flex min-h-[44px] items-center text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
@@ -388,12 +429,13 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
           <button onClick={() => setEdit({ ...cur })} className={iconBtn} title={tr("Edit")} data-testid="project-edit-btn"><PenLine size={16} /></button>
         </div>
         {/* the one big box: whatever is asked here goes to a new chat in this work, with its files, its role and what it always knows */}
-        <div className={card + " p-3"} data-testid="project-ask">
+        {phone ? null : <div className={card + " p-3"} data-testid="project-ask">
           <textarea value={q} onChange={(e) => setQ(e.target.value)} rows={3} dir="auto" data-testid="project-ask-input"
             onKeyDown={(e) => { if (enterSends(e) && wideNow()) { e.preventDefault(); askHere(q); } }}
             placeholder={tr("Ask about this work…")} className="w-full bg-transparent outline-none resize-none text-[16px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] p-1" />
           <div className="flex justify-end"><button onClick={() => askHere(q)} disabled={!q.trim()} className={btnMain + " flex items-center gap-1.5"} data-testid="project-new-chat"><MessageSquare size={15} /> {tr("Ask")}</button></div>
-        </div>
+        </div>}
+        {linked}
         <div className={card + " p-1.5"}>
           {rows.map(([id, label, val, warn], i) => (
             <button key={id} onClick={() => setSub(id)} className={"w-full min-h-[52px] flex items-center gap-3 px-3 rounded-[12px] text-start hover:bg-[var(--c-surf-2)] " + (i ? "border-t border-[var(--c-ln)]" : "")} data-testid={"project-row-" + id}>
@@ -403,6 +445,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
             </button>))}
         </div>
         {chats.length ? <button onClick={() => setSub("chats")} className="min-h-[44px] px-1 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-acc)]" data-testid="project-row-chats">{tr("Earlier chats ({n})", { n: chats.length })} ›</button> : null}
+        {phone ? <p className="m-0 text-[12.5px] text-[var(--c-mut)] px-1" data-testid="project-on-computer">{tr("Files and questions about them: on your computer.")}</p> : null}
       </div>
     );
   }

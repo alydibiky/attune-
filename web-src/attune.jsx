@@ -180,6 +180,7 @@ function boughtFromLists(text) {
   return null;
 }
 import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
+import { addShared as addSharedToProject } from "./projlinks.js";   // v10.1 P4
 import { ListChecks } from "lucide-react";
 import { WritingBox } from "./writing-ui.jsx";
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
@@ -7871,7 +7872,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.0.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -10892,6 +10893,12 @@ export default function App() {
                   <button onClick={() => setShareIn(null)}
                     className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500">{tr("Just keep it")}</button>
                 </div>
+                {/* v10.1 P4 (Ali picked P4): add what was shared to a project — its dates then show on Follow-ups with the project's name */}
+                {(() => { const ps = loadProjectsList(); return ps.length ? <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="share-to-project">
+                  <span className="text-xs text-slate-400">{tr("Add to a project:")}</span>
+                  {ps.slice(0, 8).map((pr) => <button key={pr.id} onClick={() => { const nx = addSharedToProject(pr, shareIn.text); if (upsertProjectRec(nx)) { setMemory((m) => m.filter((r) => r.id !== shareIn.id)); setShareIn(null); flash(tr("Added to {p}", { p: pr.name })); } }}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-teal-700 text-teal-200" dir="auto" data-testid="share-project">{(pr.emoji || "📁") + " " + pr.name}</button>)}
+                </div> : null; })()}
               </div>
             ) : null}
             note={memNote ? (

@@ -64,3 +64,33 @@ export function readReceipt(lines, now = Date.now()) {
   return { name, store, price: price || 0, date, warrantyMonths: wm, until,
     sure: { price: !!price && hasTotal, date: ds.length === 1, name: !!name, store: !!store, warranty: !!wm } };
 }
+
+/* ---- v10.1 T1 (Ali, 16 Nov 2026: My things lives in Follow-ups "and can be linked to Money"): a thing's price ↔ its payment in Money.
+   paymentFor(thing, txns, taken) → the id of the expense that IS this purchase, or "":
+     · the amount is the price (within 1%, at least 1 — "24,999" vs 25,000.00 card fee rounding is not the same payment: 1% max);
+     · bought on a date → the payment is within 3 days of it (a card posts a day or two later); no date → only when ONE expense of
+       that amount exists in the last 60 days (else unsure → nothing linked);
+     · a payment already linked to another thing, an income, a transfer → never;
+     · two that fit → the one whose note names the shop or the thing, else the closest day; still two → "" (never a guess).
+   expenseFor(thing) → the Money line saved when the receipt isn't in Money yet. Tests: tests/thingpay/gen.mjs (10,000 cases). */
+const wordsOf = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").split(" ").filter((w) => w.length >= 3);
+const dayMs = 864e5, dOf = (s) => (s ? Date.parse(String(s).slice(0, 10) + "T12:00:00") : NaN);
+export function paymentFor(t, txns = [], taken = [], now = Date.now()) {
+  const price = +(t && t.price) || 0; if (!(price > 0)) return "";
+  const tk = new Set(taken || []), bought = dOf(t.date);
+  const fits = (txns || []).filter((x) => x && x.type === "expense" && !tk.has(x.id) && Math.abs((+x.amount || 0) - price) <= Math.max(1, price * 0.01)).filter((x) => {
+    const d = dOf(x.date); if (isNaN(d)) return false;
+    return !isNaN(bought) ? Math.abs(d - bought) <= 3 * dayMs : now - d <= 60 * dayMs && d <= now + dayMs;
+  });
+  if (!fits.length) return "";
+  if (fits.length === 1) return fits[0].id;
+  // (the 10,000 run: "2B" and "B.TECH" are short / dotted — the shop is also matched as one squeezed word inside the note)
+  const want = new Set([...wordsOf(t.store), ...wordsOf(t.name)]), sq = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ""), shop = sq(t.store);
+  const named = fits.filter((x) => { const note = [x.note, x.payee, x.merchant].join(" "); return wordsOf(note).some((w) => want.has(w)) || (shop.length >= 2 && new RegExp("(^|[^\\p{L}\\p{N}])" + shop.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^\\p{L}\\p{N}])", "iu").test(note.toLowerCase().replace(/[.\-]/g, ""))); });
+  if (named.length === 1) return named[0].id;
+  const pool = named.length ? named : fits;
+  if (isNaN(bought)) return "";
+  const byDay = pool.map((x) => [Math.abs(dOf(x.date) - bought), x]).sort((a, b) => a[0] - b[0]);
+  return byDay.length === 1 || byDay[0][0] < byDay[1][0] ? byDay[0][1].id : "";
+}
+export const expenseFor = (t, today) => ({ type: "expense", amount: Math.round((+t.price || 0) * 100) / 100, cat: "shopping", note: [t.name, t.store].filter(Boolean).join(" · ").slice(0, 120) || "Purchase", date: t.date || today, source: "things" });

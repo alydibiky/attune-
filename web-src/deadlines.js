@@ -63,7 +63,7 @@ export function datesIn(text, { now = Date.now(), order = "dmy" } = {}) {
   const RE1 = /(?<!\d)(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?!\d)/g;
   while ((m = RE1.exec(t))) push(+m[1], +m[2] - 1, +m[3], m.index, m[0].length, "full");
   // 12/11/2026, 11-12-26, 12.11.2026
-  const RE2 = /(?<![\d\/.-])(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})(?![\d\/.-])/g;
+  const RE2 = /(?<![\d\/.-])(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})(?![\d\/-]|\.\d)/g;   // (v10.1: "24/05/2027." — a sentence's full stop ends the date)
   while ((m = RE2.exec(t))) {
     let a = +m[1], b = +m[2];
     let d = a, mo = b;
@@ -80,9 +80,9 @@ export function datesIn(text, { now = Date.now(), order = "dmy" } = {}) {
   const RE5 = new RegExp("(?<![\\p{L}\\d])" + MONTH_ANY + "\\s+(\\d{4})(?!\\d)", "giu");
   while ((m = RE5.exec(t))) { const mo = monthIdx(m[1]); if (mo < 0 || overlaps(out, m.index)) continue; push(+m[2], mo, lastDay(+m[2], mo), m.index, m[0].length, "monthyear"); }
   // v8.6: "renewal 15/12" — a day/month with no year, only when the day can't be a month (13–31): the next time it comes
-  const RE7 = /(?<![\d\/.-])(1[3-9]|2\d|3[01])\s?\/\s?(0?[1-9]|1[0-2])(?![\d\/.-])/g;
+  const RE7 = /(?<![\d\/.-])(1[3-9]|2\d|3[01])\s?\/\s?(0?[1-9]|1[0-2])(?![\d\/-]|\.\d)/g;
   while ((m = RE7.exec(t))) { if (overlaps(out, m.index)) continue; const mo = +m[2] - 1, d = +m[1]; push(yearFor(mo, d, now), mo, d, m.index, m[0].length, "daymonth"); }
-  const RE6 = /(?<![\d\/.-])(0?[1-9]|1[0-2])\s?\/\s?(\d{4}|\d{2})(?![\d\/.-])/g;
+  const RE6 = /(?<![\d\/.-])(0?[1-9]|1[0-2])\s?\/\s?(\d{4}|\d{2})(?![\d\/-]|\.\d)/g;
   while ((m = RE6.exec(t))) { if (overlaps(out, m.index)) continue; const y = yr(m[2]); push(y, +m[1] - 1, lastDay(y, +m[1] - 1), m.index, m[0].length, "monthyear"); }
   // persona 6: "insurance expires next month" → the 1st of next month (early rather than late; the person can set the day);
   // "warranty ends 2028" → 1 January 2028 — only next to words that say "ends / until / in"

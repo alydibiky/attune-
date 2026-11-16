@@ -1,8 +1,11 @@
 /* ---- v9.9: FU6 — Attune asks, you answer (the FU1 page is in archive/followups-fu1/). Before: v6.38 (upgrade M3) — Follow-ups → Timeline: everything coming up on one list by day — reminders, dates, People & plans
    payments, bills, debts and the promises people made in chats — each with "what slips if you skip this" and a tap that opens
    the page that owns it. Code only (timeline.js), from the same stores those pages keep. */
+import { projectDates } from "./projlinks.js";   // v10.1 P1
+import { loadProjects, openProject } from "./spaces.js";
+import { MyThings } from "./things-ui.jsx";   // v10.1 T1
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Bell, Radar, Users, Wallet, MessageSquare, AlertTriangle, ShieldCheck as ShieldAlert, Plus, Check, ChevronLeft, ChevronRight, SlidersHorizontal as MoreHorizontal } from "lucide-react";
+import { CalendarDays, Bell, Radar, Users, Wallet, MessageSquare, AlertTriangle, ShieldCheck as ShieldAlert, Plus, Check, ChevronLeft, ChevronRight, SlidersHorizontal as MoreHorizontal, Folder } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { timeline, byDay, totals, daysFrom, GROUP_OF, weekDays, searchItems, byDayLate, feedOf, actionOf } from "./timeline.js";
 import { tickRegular } from "./regular.js";
@@ -17,7 +20,7 @@ import { NoteAskCard, LearnedButton, currentAsks } from "./notelabels-ui.jsx";
 import { PayerAsk, PaidStep } from "./payer-ui.jsx";   // v9.9.13 who pays a subscription added by itself   // v9.9.11 A1 + L (Ali: "ask me, I tell it, it remembers")
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
-const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert };
+const ICON = { reminders: Bell, radar: Radar, life: Users, money: Wallet, xray: MessageSquare, guardian: ShieldAlert, projects: Folder };
 // v8.2 (Ali picked 1A): the chips on top — All · Money · Reminders · Dates · Guardian
 const CHIPS = [["all", "All"], ["money", "Money"], ["reminders", "Reminders"], ["dates", "Dates"], ["guardian", "Guardian"]];
 // the parts' own pages [page, name, the chip it belongs to]
@@ -64,13 +67,21 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const days = Math.max(30, (week + 1) * 7 + 1);
   const [v, setV] = useState(0);
   const [chip, setChip] = useState("all");
+  const [thingsOpen, setThingsOpen] = useState(() => { try { return localStorage.getItem("attune:fu:things") === "1"; } catch (e) { return false; } });
+  useEffect(() => { try { localStorage.setItem("attune:fu:things", thingsOpen ? "1" : "0"); } catch (e) {} }, [thingsOpen]);
+  const thingsN = (() => { try { return (JSON.parse(localStorage.getItem("attune:things:v1") || "{}").items || []).length; } catch (e) { return 0; } })();
   const [say, setSay] = useState("");
   const [pay, setPay] = useState(null);   // { key, i, v } — v8.3: what really came for this payment
   useEffect(() => { const on = () => { if (document.visibilityState === "visible") setV((x) => x + 1); }; document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on); }, []);
   const all = useMemo(() => {
     const ledger = j("ledger.v3", null), life = j("attune:life:v1", null);
     let guardian = []; try { guardian = guardianFindings({ ledger, life, dismissed: (loadGuardian().dismissed || []), lang: getLang() }); } catch (e) {}
-    return timeline({ reminders: loadReminders(), radar: j("attune:radar:v1", null), life, ledger, xray: j("attune:xray:v1", []), guardian, errands: j("attune:errands:v1", []), days });
+    const base = timeline({ reminders: loadReminders(), radar: j("attune:radar:v1", null), life, ledger, xray: j("attune:xray:v1", []), guardian, errands: j("attune:errands:v1", []), days });
+    // v10.1 P1 (Ali picked P1): the days coming up in each project — what you wrote in its chats, notes and tasks — with its name
+    const until = new Date(Date.now() + days * 864e5).toISOString().slice(0, 10), chats = j("attune:chats:v1", []), proj = [];
+    try { for (const p of loadProjects()) projectDates(p, chats).forEach((d, i) => { if (d.date <= until) proj.push({ id: "proj:" + p.id + ":" + i, date: d.date, kind: "project", page: "projects", pid: p.id, project: p.name,
+      what: d.src === "due" ? tr("{p} is due", { p: p.name }) : d.text, late: false }); }); } catch (e) {}
+    return [...base, ...proj].sort((a, b) => String(a.date).localeCompare(String(b.date)));
   }, [days, v]);
   const count = (c) => (c === "all" ? all.length : all.filter((x) => GROUP_OF[x.kind] === c).length);
   // v9.6: one box searches the list as you type (and adds what you send); the kind filter sits behind ⋯
@@ -91,7 +102,9 @@ export function TimelinePage({ navTo, doIt, flash }) {
   // a payment with someone: tick it here when it is paid
   // (Ali, 16 Nov: "why it's You pay, not Baba pays — although inside it says Baba pays, in Claude and Gemini") a payment someone else
   // makes says who
-  const kindLabel = (x) => { if (x.kind === "pay" && x.page === "life") { const l = lifeOf(x), c = l && l.c; if (c && c.payer && c.payer !== "me") return c.payer === "none" ? tr("Nobody set — reminder only") : tr("{p} pays", { p: c.payer }); } return tr(KIND[x.kind] || x.kind); };
+  // v10.1 P1: a project's date opens THAT project
+  const openItem = (x) => { if (x.kind === "project" && x.pid) openProject(x.pid); navTo && navTo(x.kind === "errand" ? "errands" : x.page); };
+  const kindLabel = (x) => { if (x.kind === "project") return tr("Project · {p}", { p: x.project }); if (x.kind === "pay" && x.page === "life") { const l = lifeOf(x), c = l && l.c; if (c && c.payer && c.payer !== "me") return c.payer === "none" ? tr("Nobody set — reminder only") : tr("{p} pays", { p: c.payer }); } return tr(KIND[x.kind] || x.kind); };
   const lifeOf = (x) => { const [, id, i] = x.id.split(":"); const c = (loadLife().items || []).find((y) => y.id === id); return c ? { c, i: +i } : null; };
   const paid = (c, i, v) => {
     const d = payAmount(loadLife(), c.id, i, v); saveLife(d); setV((y) => y + 1); setPay(null);
@@ -115,7 +128,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
     if (act === "ask") { setAsking(asking === x.id ? "" : x.id); return; }
     if (act === "done") { markDone(x.id + "@" + x.date); flash && flash(tr("Done")); return; }
     if (act === "errand") { navTo && navTo("errands"); return; }
-    navTo && navTo(x.page);
+    openItem(x);
   };
   // ---- v9.9 FU6 (Ali picked "Attune asks, you answer", 8 Nov): one short question for each thing that needs you, answered with one
   // button (or by voice / the box); each answer is done at once, with Undo. What's coming is one line below; the box adds AND changes
@@ -194,7 +207,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                     {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B} onClick={() => later(x, tr("Not yet"))} data-testid="fu-no">{tr("Not yet")}</button>}</> : null}
                   {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={() => later(x, tr("Tomorrow"))} data-testid="fu-no">{tr("Tomorrow")}</button></> : null}
                   {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}
-                  {!act ? <><button className={BP} onClick={() => navTo && navTo(x.page)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() => later(x, tr("Later"))} data-testid="fu-no">{tr("Later")}</button></> : null}
+                  {!act ? <><button className={BP} onClick={() => openItem(x)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() => later(x, tr("Later"))} data-testid="fu-no">{tr("Later")}</button></> : null}
                 </div></>}
           </div>; })}
         {!qs.length && !asks.length ? <div className={bubble} data-testid="fu-clear"><p className="m-0 text-[14.5px] font-bold">{nextUp ? tr("All clear until {d}", { d: dayLabel(nextUp.date) }) : tr("All clear")}</p>
@@ -206,13 +219,20 @@ export function TimelinePage({ navTo, doIt, flash }) {
           <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr("See all ({n})", { n: coming.length })}</span></button>
         {allOpen ? <ul className="m-0 mt-2 p-0 list-none" data-testid="fu-coming-all">
           {coming.map((x) => { const I = ICON[x.page] || Bell; return <li key={x.id + "@" + x.date} className="border-t border-[var(--c-ln)]" data-testid="timeline-item" data-kind={x.kind}>
-            <button onClick={() => navTo && navTo(x.kind === "errand" ? "errands" : x.page)} className="w-full flex items-center gap-2.5 py-2 text-start">
+            <button onClick={() => openItem(x)} className="w-full flex items-center gap-2.5 py-2 text-start">
               <I size={14} className="shrink-0 text-[var(--c-acc)]" />
               <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-bold break-words" dir="auto">{x.T ? tr(x.T[0], x.T[1]) : x.what}</span>
                 <span className={"block text-[11.5px] " + U.muted} data-testid="fu-kind">{dayLabel(x.date)} · {kindLabel(x)}</span></span>
               {x.amount ? <b className={"tabular-nums text-[13px] shrink-0 " + tone(x)} dir="ltr">{money(x)}</b> : null}</button></li>; })}
         </ul> : null}
       </section> : null}
+      {/* v10.1 T1 (Ali picked T1: "better in Follow-ups and can be linked to Money"): what you own — receipts, warranties, each price
+          linked to its payment in Money */}
+      <section className={U.card + " p-3"} data-testid="fu-things">
+        <button onClick={() => setThingsOpen(!thingsOpen)} className="w-full min-h-[40px] text-start text-[13.5px] flex items-center gap-2" aria-expanded={thingsOpen} data-testid="fu-things-toggle">
+          <b className="flex-1 min-w-0">{tr("Things I own")}{thingsN ? " · " + thingsN : ""}</b><span className={U.muted}>{thingsOpen ? tr("Hide") : tr("See")}</span></button>
+        {thingsOpen ? <div className="pt-2"><MyThings flash={flash} navTo={navTo} /></div> : null}
+      </section>
       {doIt ? <U.PageBox value={say} setValue={setSay} onSend={(t) => say2(t)} hint={tr("Say or type it — “the maid is now 700”")} sendLabel={tr("Send")}
         ids={{ box: "fu-add-form", input: "fu-add", go: "fu-add-go" }} /> : null}
       {navTo ? <div className={"flex flex-wrap items-center gap-1.5 text-[12.5px] pt-1 " + U.muted} data-testid="fu-pages">

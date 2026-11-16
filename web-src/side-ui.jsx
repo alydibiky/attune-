@@ -2,6 +2,7 @@
 // (Ali, 12 Oct 2026: "I want it like Claude and ChatGPT"): a sidebar on the start side with
 // New chat, search, the main places, every tool, and the recent chats; the open chat or tool
 // fills the rest, and the chat reads in a centred column. Phones keep the bottom bar.
+import * as FT from "./features.js";   // v10.1 F1
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock, HelpCircle, Bot, Folder, Sparkles, Brain } from "lucide-react";
 import { loadAssistants, loadProjects } from "./spaces.js";   // v7.4 Workspaces in the sidebar
@@ -97,6 +98,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   const nq = q.trim().toLowerCase();
   const shown = useMemo(() => list.filter((c) => !nq || String(tr(c.title)).toLowerCase().includes(nq)).slice(0, 80), [list, nq]);
   const toolHits = nq ? tools.filter(([id, label, sub]) => (tr(label) + " " + tr(sub) + " " + label).toLowerCase().includes(nq)) : [];
+  // v10.1 F1 (Ali picked F1: "Find a feature" in the side menu): every feature by its name or by what it does, with where it lives
+  const featHits = nq.length >= 2 ? FT.find(q, tr).filter((x) => x.score >= 0.3).slice(0, 6) : [];
   // v8.6 (persona 2, a normal user: searching "pro", "plan", "language" found nothing): the app's own screens are found too
   const setHits = nq.length >= 2 ? [["pro plan plans billing subscription upgrade price premium trial اشتراك خطة الخطط برو الدفع", "Plans & billing", Crown, openUpgrade],
     ["settings language arabic english theme dark light font country لغة اللغة الإعدادات اعدادات الوضع الداكن البلد", "Settings", LayoutGrid, openSettings],
@@ -124,12 +127,18 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
           <span className="w-7 h-7 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center"><Plus size={16} /></span>{tr("New chat")}</button>
         <div className="flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-3 focus-within:border-[var(--c-acc)] transition-colors duration-150">
           <Search size={15} className="text-[var(--c-mut)]" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats and tools")} dir="auto" data-testid="side-search"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a feature or a chat")} dir="auto" data-testid="side-search"
             className="flex-1 min-w-0 min-h-[44px] bg-transparent py-2 text-[13.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none" />
         </div>
       </div>
       <div className="att-scroll flex-1 overflow-y-auto px-2.5 pt-2 pb-3">
-        {toolHits.length ? (
+        {featHits.length ? <div className="mb-2" data-testid="side-feature-hits">
+          <p className="px-3 pt-1 pb-1 text-[11.5px] font-black uppercase tracking-[0.08em] text-[var(--c-acc)] m-0">{tr("Features")}</p>
+          {featHits.map(({ f }) => <button key={f.id} onClick={() => { FT.openFeature(f, navTo); setQ(""); }} data-testid="side-feature" data-id={f.id}
+            className="w-full min-h-[48px] flex flex-col justify-center px-3 py-1.5 rounded-[12px] text-start text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]">
+            <span className="text-[14px] font-bold truncate w-full" dir="auto">{tr(f.name)}</span>
+            <span className="text-[11.5px] text-[var(--c-mut)] truncate w-full" dir="auto">{FT.placeLine(f, tr)}</span></button>)}</div>
+          : toolHits.length ? (
           <div className="mb-2" data-testid="side-tool-hits">{toolHits.slice(0, 8).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>) : null}
         {setHits.filter((x) => x[3]).length ? <div className="mb-2" data-testid="side-set-hits">{setHits.filter((x) => x[3]).map(([, label, Icon, go]) => <button key={label} onClick={go} data-testid={"side-set-" + label.split(" ")[0].toLowerCase()}
           className="w-full min-h-[44px] flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-[14px] font-bold text-start text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]"><Icon size={17} className="text-[var(--c-mut)]" /><span className="truncate">{tr(label)}</span></button>)}</div> : null}

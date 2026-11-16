@@ -1,0 +1,20 @@
+# Finding a feature (F1 + F3) — 10000 questions, 8737 right (87.37%) — HELD-OUT · 1022 answered with 2–3 to tap
+
+- **found coach instead of focus · en** × 153 — e.g. can you tell me where a study timer is → coach | where in the app is a study timer → coach | where should I look for a study timer? → coach
+- **found family instead of reminders · en** × 139 — e.g. where in the app is my reminders list → family | where should I look for my reminders list? → family | can you tell me where my reminders list is → family
+- **found convert instead of booklib · en** × 139 — e.g. where in the app is my files → convert | where should I look for my files? → convert | can you tell me where my files is → convert
+- **found upkeep instead of settings · en** × 137 — e.g. where should I look for changing the language? → upkeep | where in the app is changing the language → upkeep | help me find changing the language → upkeep
+- **answered a question that isn't about the app → … · not** × 126 — e.g. where did the kids go  → school | where did the kids go? → school | where did the kids go → school
+- **found memory instead of braindump · en** × 73 — e.g. can you tell me where sorting everything on my mind is → memory | where in the app is sorting everything on my mind → memory | where should I look for sorting everything on my mind? → memory
+- **found convert instead of booklib · fr** × 72 — e.g. my files fen fel app → convert | ezay ala2y my files → convert
+- **found nothing for care · ar** × 69 — e.g. دوايا فين في التطبيق؟ | الاقي دوايا فين؟ | ممكن اعرف دوايا فين
+- **found coach instead of focus · fr** × 69 — e.g. ezay ala2y a study timer → coach | a study timer fen fel app → coach
+- **found split instead of life · en** × 66 — e.g. where in the app is who owes me money → split | help me find who owes me money → split | where should I look for who owes me money? → split
+- **found upkeep instead of settings · fr** × 62 — e.g. changing the language fen fel app → upkeep | ezay ala2y changing the language → upkeep
+- **found family instead of reminders · fr** × 59 — e.g. my reminders list fen fel app → family | ezay ala2y my reminders list → family
+- **found memory instead of braindump · fr** × 32 — e.g. ezay ala2y sorting everything on my mind → memory | sorting everything on my mind fen fel app → memory
+- **found split instead of life · fr** × 28 — e.g. who owes me money fen fel app → split | ezay ala2y who owes me money → split
+- **found nothing for money · loc** × 15 — e.g. 돈 어디에 있어요?
+- **found nothing for habits · loc** × 9 — e.g. นิสัยอยู่ที่ไหน
+- **found nothing for people · loc** × 8 — e.g. ผู้คนอยู่ที่ไหน
+- **found guardian instead of money · loc** × 7 — e.g. wo kann ich Geld finden? → guardian

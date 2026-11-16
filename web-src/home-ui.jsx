@@ -4,6 +4,7 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import * as FT from "./features.js";   // v10.1 F3
 import { SetupHomeCard, quiet as quietTests } from "./setup-ui.jsx";
 import { BrainHome } from "./brain-ui.jsx";
 import { pricesFor } from "./billing.js";
@@ -265,6 +266,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       if (a && a.kind === "world" && cmd) { show({ type: "chat", text: t, web: true }, t); return; }
       setLife({ q: t, a }); return;
     }
+    // v10.1 F3 (Ali picked F3): "where is the split thing?" / «فين الضمان؟» is about the app — Chat answers with the place and Open
+    // (before the box's own reader, which would send "where is …" to the map)
+    if (t && !t.startsWith("/") && !tr2 && !web && FT.whereAsk(t, tr)) { setText(""); onAsk(t); return; }
     if (minimal && cmd) {
       if (tr2 && t && !t.startsWith("/")) t = "/translate " + t;
       if (web && t && !t.startsWith("/")) { setText(""); show({ type: "chat", text: t, web: true }, t); return; }

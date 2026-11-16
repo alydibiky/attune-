@@ -992,6 +992,11 @@ notelabels-ui.jsx: <button onClick={notNow} className={CHIP + " c-sub inline-fle
 chatpilot-ui.jsx: <p className="m-0" dir="auto"><b>{tr("Why")}</b> {T(d.why)}</p></div>
 missions-ui.jsx: <button className="min-h-[44px] px-2 rounded-[12px] text-[13px] font-bold flex items-center gap-1.5 c-sub hover:text-[var(--c-ink)]" onClick
 
+## See
+chatpilot-ui.jsx: <span className="block c-sub text-[11.5px] truncate" dir="auto">{q.byChat.slice(0, 3).map(([c, n]) => c + " " + n).join(" · ")}</span></span
+chatpilot-ui.jsx: <button onClick={() => setQuietChat(quietChat === c ? "" : c)} aria-expanded={quietChat === c} className="flex-1 min-w-0 min-h-[40px] text-s
+timeline-ui.jsx: <b className="flex-1 min-w-0">{tr("Things I own")}{thingsN ? " · " + thingsN : ""}</b><span className={U.muted}>{thingsOpen ? tr("Hide") : t
+
 ## You owe
 chatxray-ui.jsx: <div className="rounded-[20px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3.5"><p className="text-[12px] font-bold text-[var(-
 money-sheets-ui.jsx: <span className="block text-[12px] c-sub">{d.type === "owed_to_me" ? tr("Owes you") : tr("You owe")} · <b className="tabular-nums" dir="ltr"
