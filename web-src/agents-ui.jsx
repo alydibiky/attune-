@@ -409,7 +409,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     upd(a.id, (y) => ({ ...y, step: "ordering" }));
     if (N && N.agentOpen && nativeCall) {
       try {
-        const r = await nativeCall("agentOpen", { url: p.href || p.url, title: p.name, profile: prof, rules: {}, labels: agentLabels(), search: false, buy: true });
+        // (v10.0.2) "Order it" presses Buy now on the PRODUCT's page — a find without its own link is first found on the results
+        const how = R.offerOpen(a, p);
+        const r = await nativeCall("agentOpen", { url: how.url, title: p.name, profile: prof, rules: {}, labels: agentLabels(), search: false, buy: true, ...(how.direct ? {} : { goto: how.goto, gotoFallback: how.fallback || "" }) });
         const done = !!(r && (r.payment || r.bought));
         upd(a.id, (y) => ({ ...y, step: done ? "ordered" : "confirm", ordered: done ? { at: Date.now(), ...p, paid: !!r.payment } : null }));
         flash && flash(done ? tr("Taken to checkout — your details are filled; you pay there. Tap Done here once ordered.") : tr("Not finished — tap Order it again whenever you want."));
@@ -429,9 +431,16 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     // v9.8 (Ali, 7 Nov: "fix it for good"): an offer whose link is its OWN page opens it (phone's browser / the site's app); an offer
     // with no such link is never sent to the search page — Attune's browser opens the results, finds THAT offer by name / price and
     // goes into its page (agent-kit goTo), and "Open in my browser" then carries the listing itself
+    // v10.0.2 (Ali, 16 Nov: "still does not open to the specific listing so fix it for good"): only a link whose shape IS a listing
+    // is opened directly (ad links unwrapped, Amazon cut to /dp/…); anything else → Attune's browser finds the offer by name, with a
+    // fallback link if it can't; the page it lands on is kept on the offer, so the next tap is direct
     const how = R.offerOpen(a, o);
-    if (!how.direct && N && N.agentOpen && nativeCall) { try { await nativeCall("agentOpen", { url: how.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: { ...agentLabels(), opening: tr("Opening this offer's own page…") }, search: false, goto: how.goto }); } catch (e) {} return; }
-    const url = how.direct ? how.url : R.offerUrl(a, o);   // v9.0: the exact listing, not the store's search page
+    if (!how.direct && N && N.agentOpen && nativeCall) {
+      try { const r = await nativeCall("agentOpen", { url: how.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: { ...agentLabels(), opening: tr("Opening this offer's own page…") }, search: false, goto: how.goto, gotoFallback: how.fallback || "" });
+        const got = r && !r.fallback ? R.cleanListing(r.landed || r.opened || "") : "";
+        if (got && R.isOwnPage(got)) upd(a.id, (y) => R.keepListing(y, o, got)); } catch (e) {}
+      return; }
+    const url = how.direct ? how.url : how.fallback || how.url;   // v9.0: the exact listing, not the store's search page
     // v9.5 (Ali, 5 Nov: "it still does not open the specific listing … if you can't do it in the app make it browser like the old"):
     // the exact listing opens in the phone's own browser — store apps often drop a link on their home page
     if (N && N.openInBrowser) { try { if (N.openInBrowser(url)) return; } catch (e) {} }

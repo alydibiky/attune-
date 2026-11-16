@@ -58,6 +58,10 @@ class AgentBrowser : Activity() {
     // find THAT offer by its name / price and go into its own page (goTo in agent-kit.js), once
     private var gotoWant = ""
     private var gotoDone = false
+    // v10.0.2 (Ali: "still does not open the specific listing — fix it for good"): when the offer can't be found on the results by its
+    // name / price (3 tries), this link is opened instead — never left standing on the search page
+    private var gotoFallback = ""
+    private var gotoFallbackArmed = false
     private var refreshSec = 0
     private var refreshArmed = false
     private var round = 0
@@ -97,6 +101,7 @@ class AgentBrowser : Activity() {
         buyMode = intent.getBooleanExtra("buy", false)
         fillAuto = intent.getBooleanExtra("fillAuto", false)
         gotoWant = intent.getStringExtra("goto") ?: ""
+        gotoFallback = (intent.getStringExtra("gotoFallback") ?: "").let { if (it.startsWith("https://")) it else "" }
         slotMode = intent.getBooleanExtra("slot", false)              // v9.4 G2: a visa / appointment page — its words go back to the page
         refreshSec = intent.getIntExtra("refresh", 0).coerceIn(0, 3600) // v9.4 G2: "watch while open" — reload every N seconds
         rounds = try { org.json.JSONArray(intent.getStringExtra("rounds") ?: "") } catch (e: Exception) { org.json.JSONArray() }
@@ -232,6 +237,10 @@ class AgentBrowser : Activity() {
                 // checkout pages get the person's details — the payment itself stays the person's (the kit never touches it)
                 // v9.4 G2: the appointment page's words (after the person logged in) — read twice as it draws
                 if (gotoWant.isNotEmpty() && !gotoDone) for (ms in longArrayOf(2500L, 5000L, 9000L)) v.postDelayed({ if (!closed && !gotoDone) run("window.__attuneAgent&&window.__attuneAgent.goTo&&window.__attuneAgent.goTo($gotoWant)") }, ms)
+                if (gotoWant.isNotEmpty() && !gotoDone && gotoFallback.isNotEmpty() && !gotoFallbackArmed) { gotoFallbackArmed = true
+                    v.postDelayed({ if (!closed && !gotoDone) { gotoDone = true; try { result.put("opened", gotoFallback).put("fallback", true) } catch (e: Exception) {}; try { web.loadUrl(gotoFallback) } catch (e: Exception) {} } }, 12500L) }
+                // the page the person ended on after the offer was found — kept, so the next tap opens it directly
+                if (gotoDone && u.startsWith("https://")) try { result.put("landed", u) } catch (e: Exception) {}
                 if (slotMode) for (ms in longArrayOf(2500L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.slot&&window.__attuneAgent.slot()") }, ms)
                 if (slotMode && refreshSec >= 30 && !refreshArmed) { refreshArmed = true; val loop = object : Runnable { override fun run() { if (closed) return; try { web.reload() } catch (e: Exception) {}; web.postDelayed(this, refreshSec * 1000L) } }; web.postDelayed(loop, refreshSec * 1000L) }
                 if (fillAuto && profile != "{}") for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, ms)

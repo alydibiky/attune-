@@ -88,7 +88,9 @@
   // Amazon / noon / Jumia / eBay / most shops
   // v9.8 (Ali, 7 Nov: "the agents still don't open the specific listing"): Agoda (/name/hotel/makkah-sa.html), Trip.com (hotelId=),
   // Google Hotels (/entity/), Kayak (.ksp), Almosafer / Wego (/hotels/…/id), Jumia / noon product pages too
-  const LISTING = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
+  // (v10.0.2: the SAME pattern as agent-rules.js LISTING_RE — tests/unit/v1002listing.test.mjs keeps them equal; Jumia / B.TECH /
+  // 2B / Raya / Dubizzle / Google Shopping product pages are known now)
+  const LISTING = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/gp\/(?:product|aw\/d)\/[a-z0-9]{10}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\/|\/shopping\/product\/\d|\/ad\/[^/?#]*\d|-\d{5,}\.html?(?:$|[?#])|\/[a-z0-9]+(?:-[a-z0-9]+){3,}\.html?(?:$|[?#])|\/[a-z0-9]+(?:-[a-z0-9]+)+-\d{4,}\/?(?:$|[?#])/i;
   const listingLinks = (el) => [...(el.querySelectorAll ? el.querySelectorAll("a[href]") : [])].filter((a) => /^https:\/\//.test(a.href) && LISTING.test(a.href.split("#")[0]));
   const listingKey = (a) => { try { const u = new URL(a.href); return u.hostname + u.pathname; } catch (e) { return a.href; } };
   const listingKeys = (el) => new Set(listingLinks(el).map(listingKey)).size;
@@ -122,17 +124,28 @@
   }
   // v9.8: an offer's link is its OWN page only — a listing link, or the card's link when it leads somewhere else than this search,
   // a map, a filter or the reviews (that was "Book" opening the search again). No such link → "" (the offer is then found by name)
+  const words = (x) => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").split(" ").filter((w) => w.length > 1);
   const NOT_LISTING = /[?&#](?:map|sort|order|filter|nflt|page|offset|rows)=|\/(?:search|searchresults|map|reviews?|filter|login|signin|account|help|deals)(?:[/.?#]|$)|javascript:/i;
+  // v10.0.2 (Ali, 16 Nov: "still does not open to the specific listing — fix it for good"): the first link of a card was taken — on
+  // many shops that is the brand, the seller's shop, "sponsored" or the category. Now every link of the card is weighed: a listing
+  // link wins; then the link that carries the offer's NAME (or wraps its name / photo); a brand / seller / category / results link
+  // is never the offer's page.
+  const LIST_PAGE = /\/(?:reviews?|search|searchresults|catalogsearch|catalog|s|sch|category|categories|cat|c|brand|brands|seller|sellers|shop|shops|store|stores|mlp|b|browse|list|all|offers|deals)(?:[/.?#]|$)|[?&](?:k|q|query|keyword|keywords|search|searchTerm|text|textToSearch|ss)=[^&]/i;
   function hrefOf(o) {
     const l = listingLink(o.el); if (l) return l.href;
+    const nameEl = o.el.querySelector && o.el.querySelector(NAME_SEL), nm = new Set(words(cardName(o)));
+    let best = null, top = 0;
     for (const a of [o.el.closest && o.el.closest("a[href]"), ...(o.el.querySelectorAll ? o.el.querySelectorAll("a[href]") : [])]) {
       if (!a || !/^https:\/\//.test(a.href) || NOT_LISTING.test(a.href)) continue;
-      try { const u = new URL(a.href); if (u.hostname === location.hostname && u.pathname === location.pathname) continue; if (u.pathname.length < 6) continue; } catch (e) { continue; }
-      return a.href; }
-    return "";
+      let u; try { u = new URL(a.href); } catch (e) { continue; }
+      if ((u.hostname === location.hostname && u.pathname === location.pathname) || u.pathname.length < 6) continue;
+      if (LIST_PAGE.test(u.pathname + u.search)) continue;
+      const tw = words((a.innerText || a.textContent || "") + " " + (a.getAttribute("aria-label") || "") + " " + (a.getAttribute("title") || "")), hit = tw.filter((w) => nm.has(w)).length;
+      const sc = 1 + (nm.size ? 3 * hit / nm.size : 0) + (nameEl && (a.contains(nameEl) || nameEl.contains(a)) ? 3 : 0) + (a.querySelector && a.querySelector("img,picture") ? 1 : 0) + (a === (o.el.closest && o.el.closest("a[href]")) ? 2 : 0);
+      if (sc > top) { top = sc; best = a; } }
+    return best ? best.href : "";
   }
   // v9.8: on a results page, go to ONE offer's own page — found by its name (else its price): its listing link, else a tap on it
-  const words = (x) => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").split(" ").filter((w) => w.length > 1);
   function goTo(want) {
     want = want || {}; const list = offers(), ww = words(want.name);
     const score = (o) => { const have = new Set(words(cardName(o) + " " + o.text)); const hit = ww.filter((w) => have.has(w)).length;

@@ -1,5 +1,19 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (16 Nov 2026, later — v10.0.2: "agents still does not open to the specific listing so fix it for good")
+> Causes found in the code (NOT seen on a real store — store sites are blocked from cloud sessions): (1) agent-rules.js isOwnPage
+> called ANY non-search link a listing (brand shop, seller, category, Jumia /catalog/, B.TECH /catalogsearch/) and opened it as the
+> product; (2) ad links (Amazon /sspa/click, Google /url?q=, /aclk) were opened as they are; (3) agent-kit.js hrefOf took the FIRST
+> link of a card (often the brand / "sponsored" / seller) and did not know Jumia / B.TECH / 2B / Raya / Dubizzle product pages.
+> Now: cleanListing() unwraps hops, cuts Amazon to /dp/ASIN, drops tracking; listingKind() = yes / no / maybe by the link's SHAPE
+> (LISTING_RE, the same in agent-kit.js — a unit test keeps them equal); offerOpen(): yes → the phone's browser; else Attune's
+> browser finds the offer by name on the results (goTo), with `gotoFallback` (AgentBrowser.kt, 12.5 s) so it never stays on the
+> search page; the page it lands on is kept on the offer (keepListing) so the next tap is direct; "Order it" goes the same way.
+> hrefOf weighs every link of the card (listing shape, carries the name, wraps the name / photo). Tests: tests/listing/gen.mjs
+> (10,000 links, 100%) + heldout.mjs (100%), tests/unit/v1002listing.test.mjs, tests/e2e_v1002listing.py.
+> **If Ali still sees a wrong page: ask WHICH store and which offer** (a screenshot of the card + where it landed) — that store's
+> link shape goes into LISTING_RE / the generator.
+>
 > ## START HERE (16 Nov 2026 — v10.0.1: Ali's 8 phone screenshots on v10.0, all fixed with tests)
 > 1 "What are the talabat" answered "11 messages kept" → the list's items (chatask.js: the described chat wins when the export's copy
 > has the same name; list words are not a topic), and a chat not described yet shows its latest messages + "Show all N".

@@ -224,20 +224,80 @@ export function withHotelFilters(url, R = {}) {
 }
 /** v9.8 (Ali, 7 Nov: "the agents still don't redirect to the specific listing — fix it for good"): is this link an offer's OWN page
  *  (a hotel, a room, a product) — not a search, a map, a filter or a site's home? The same patterns as agent-kit.js LISTING. */
-export const LISTING_RE = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\//i;
+// v10.0.2 (Ali, 16 Nov: "agents still does not open to the specific listing so fix it for good"). What was wrong: (1) ANY link that
+// was not a search / map counted as "its own page" — a brand's page, a seller's shop, a category, Jumia's /catalog/, B.TECH's
+// /catalogsearch/ — and was opened as if it were the product; (2) an ad link (Amazon's /sspa/click, Google's /url?q=, /aclk) was kept
+// as it is, and the phone's browser dropped it on the store's home; (3) Jumia / B.TECH / 2B / Raya / Dubizzle product pages were
+// not known at all. Now a link is a listing ONLY when its shape says so (LISTING_RE — kept the same in agent-kit.js); an ad link is
+// unwrapped to the page inside it; Amazon is cut to /dp/ASIN; anything else is "maybe": Attune's browser finds THAT offer by name on
+// the results and goes into it, and falls back to the link only if it can't. Tests: tests/listing/gen.mjs (10,000 links).
+export const LISTING_RE = /\/hotel\/[a-z]{2}\/|\/hotel\/[^/?#]+\.html|[?&]hotel_?id=\d|\/hotels?\/detail|\/travel\/hotels\/[^?#]*entity|\.ksp(?:$|[?#])|\/hotel-detail|\/hotels\/[a-z-]+\/[a-z0-9-]*\d|\/hotels?\/[^?]*\d|\/rooms\/\d|\.h\d+\.hotel|hotel-information|\/ho\d+|\/property\/|\/dp\/[a-z0-9]{6,}|\/gp\/(?:product|aw\/d)\/[a-z0-9]{10}|\/itm\/|\/p\/?(?:$|[?#])|\/p\/[a-z0-9-]+|-p-\d|\/product\/|\/products\/|\/ip\/|\/item\/|\/shopping\/product\/\d|\/ad\/[^/?#]*\d|-\d{5,}\.html?(?:$|[?#])|\/[a-z0-9]+(?:-[a-z0-9]+){3,}\.html?(?:$|[?#])|\/[a-z0-9]+(?:-[a-z0-9]+)+-\d{4,}\/?(?:$|[?#])/i;
 const NOT_OWN = /[?&#](?:map|sort|order|filter|nflt|page|offset|rows)=|\/(?:search|searchresults|map|reviews?|filter|login|signin|account|help|deals)(?:[/.?#]|$)/i;
-export function isOwnPage(href) {
-  if (!href || !/^https:\/\//.test(href)) return false;
-  try { const u = new URL(href); if (LISTING_RE.test(u.pathname + u.search)) return true; if (NOT_OWN.test(href) || u.pathname.length < 6) return false; return true; } catch (e) { return false; }
+// a results / category / brand / seller page — never one listing, whatever else its link holds
+const LIST_PAGE = /\/(?:reviews?|search|searchresults|catalogsearch|catalog|s|sch|category|categories|cat|c|brand|brands|seller|sellers|shop|shops|store|stores|stores\/page|mlp|b|browse|list|all|offers|deals)(?:[/.?#]|$)|[?&](?:k|q|query|keyword|keywords|search|searchTerm|text|textToSearch|ss)=[^&]/i;
+// an ad / tracking hop: the real page is inside one of its parameters
+const HOP = /\/sspa\/click|\/gp\/slredirect|\/gp\/r\.html|\/aclk|\/url(?:[?#]|$)|\/pagead\/|\/redirect(?:[/.?#]|$)|\/redir(?:[/.?#]|$)|\/click(?:[/.?#]|$)|\/out(?:[/.?#]|$)|\/track(?:[/.?#]|$)|\/go\/|\/r\/\?|\/l\/\?|\/deeplink/i;
+const HOP_HOST = /(?:^|\.)(?:googleadservices\.com|doubleclick\.net|awin1\.com|linksynergy\.com|adjust\.com|app\.link|onelink\.me|clk\.[a-z0-9-]+\.[a-z]+|click\.[a-z0-9-]+\.[a-z]+|track\.[a-z0-9-]+\.[a-z]+|go\.[a-z0-9-]+\.[a-z]+|l\.facebook\.com|t\.co|bit\.ly)$/i;
+const HOP_KEYS = ["url", "q", "u", "adurl", "murl", "ulp", "redirect", "redirect_url", "redirect_uri", "redirectUrl", "target", "dest", "destination", "to", "link", "deeplink", "deep_link", "r", "rd", "location", "href", "continue"];
+const TRACK = /^(?:utm_[a-z_]+|gclid|gclsrc|gbraid|wbraid|fbclid|msclkid|dclid|yclid|mc_[ce]id|ref|ref_|refRID|tag|linkCode|linkId|camp|creative|creativeASIN|ascsubtag|qid|sr|sprefix|crid|dib|dib_tag|keywords|pd_rd_[a-z]+|pf_rd_[a-z]+|content-id|psc|spm|scm|algo_[a-z]+|aff_[a-z_]+|affid|irclickid|irgwc|srsltid|_branch_match_id|si|igshid|mibextid|label|aid|sid|srpvid|srepoch|all_sr_blocks|highlighted_blocks|matching_block_id|sr_pri_blocks|sr_order|ucfs|hpos|hapos|from|from_sustainable_property_sr|activeTab|lang_click)$/i;
+const isHop = (u) => HOP_HOST.test(u.hostname) || HOP.test(u.pathname + (u.search ? "?" : ""));
+/** A link as it was read on a page → the listing's own clean link ("" when it is not https). Ad hops are opened up (twice at most),
+ *  Amazon becomes /dp/ASIN, tracking parameters go; the dates / guests / variant of the listing stay. */
+export function cleanListing(href0, base = "") {
+  let href = String(href0 || "").trim();
+  for (let i = 0; i < 3; i++) {
+    let u; try { u = new URL(href, base || undefined); } catch (e) { return ""; }
+    if (u.protocol !== "https:") return "";
+    href = u.toString();
+    if (!isHop(u)) break;
+    let inner = "";
+    for (const k of HOP_KEYS) { let v = u.searchParams.get(k); if (!v) continue;
+      for (let n = 0; n < 2 && /%2F|%3A/i.test(v); n++) { try { v = decodeURIComponent(v); } catch (e) { break; } }
+      if (/^https:\/\//i.test(v)) { inner = v; break; }
+      if (/^\/[^/]/.test(v) && !HOP_HOST.test(u.hostname)) { inner = u.origin + v; break; } }
+    if (!inner || inner === href) break;
+    href = inner;
+  }
+  let u; try { u = new URL(href); } catch (e) { return ""; }
+  const am = /(?:^|\.)amazon\.[a-z.]+$/i.test(u.hostname) && /\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?#]|$)/i.exec(u.pathname);
+  if (am) return u.origin + "/dp/" + am[1].toUpperCase();
+  for (const k of [...u.searchParams.keys()]) if (TRACK.test(k)) u.searchParams.delete(k);
+  u.hash = "";
+  return u.toString().replace(/\?$/, "");
 }
-/** How to open one offer: { url, direct } — direct = its own page (open it as it is, in the phone's browser);
- *  else the results page it came from + `goto` {name, price} so Attune's browser finds THAT offer and goes into its page. */
+/** "yes" — the link's shape says it is ONE listing's own page; "no" — a results / category / seller / ad page or nothing;
+ *  "maybe" — a real page of the site whose shape says nothing (it is tried only after the offer wasn't found by its name). */
+export function listingKind(href0, base = "") {
+  const href = cleanListing(href0, base); if (!href) return "no";
+  let u; try { u = new URL(href); } catch (e) { return "no"; }
+  if (isHop(u)) return "no";
+  const path = u.pathname + u.search;
+  // (a product's own page can carry ?q= from the search it came from — Amazon /dp/ is cut already; /products/ and /p/ are sure)
+  const sure = /\/dp\/[A-Z0-9]{10}$|\/products?\/[^/?#]{3,}|\/p\/[a-z0-9-]+|\/itm\/\d|\/hotel\/[a-z]{2}\/[^/?#]+\.html|\/rooms\/\d|\/shopping\/product\/\d|\/ad\/[^/?#]*\d/i.test(u.pathname);
+  if (!sure && LIST_PAGE.test(path)) return "no";
+  if (LISTING_RE.test(path)) return "yes";
+  if (NOT_OWN.test(href) || u.pathname.length < 6) return "no";
+  return "maybe";
+}
+export function isOwnPage(href) { return listingKind(href) === "yes"; }
+/** How to open one offer:
+ *  { url, direct: true } — its own page, clean: opened as it is in the phone's browser;
+ *  { url, direct: false, goto: { name, price }, fallback } — the results page it came from: Attune's browser finds THAT offer by its
+ *  name / price and goes into its page; `fallback` (a "maybe" link, else the store's search for the offer's name) is opened only when
+ *  it can't be found there. */
 export function offerOpen(a, o) {
-  const url = offerUrl(a, o);
-  if (o && o.href && isOwnPage(o.href)) return { url, direct: true };
+  const href = cleanListing(o && o.href), kind = o && o.web && href ? "yes" : listingKind(href);
+  if (kind === "yes") return { url: offerUrl(a, { ...o, href }), direct: true };
   const name = o && o.name && !isSiteName(o.name, a && a.site) ? String(o.name).slice(0, 120) : "";
-  const results = (o && o.url) || (a && a.url) || url;
-  return { url: results, direct: false, goto: { name, price: (o && o.price) || 0 } };
+  const results = (o && o.url) || (a && a.url) || "";
+  const byName = offerUrl(a, { ...o, href: "" });
+  return { url: /^https:\/\//.test(results) ? results : byName, direct: false, goto: { name, price: (o && o.price) || 0 }, fallback: kind === "maybe" ? href : byName !== results ? byName : "" };
+}
+/** The listing page an offer was found on is kept on it (best3, the find waiting, the day table) — the next tap opens it directly. */
+export function keepListing(a, o, href) {
+  const same = (x) => x && o && (x === o || (x.key && x.key === o.key) || (x.name && x.name === o.name && x.price === o.price && (x.site || "") === (o.site || "")));
+  const fix = (x) => (same(x) ? { ...x, href } : x);
+  return { ...a, ...(a.best3 ? { best3: a.best3.map(fix) } : {}), ...(a.pending ? { pending: fix(a.pending) } : {}), ...(a.byDay ? { byDay: a.byDay.map((d) => (d && d.offers ? { ...d, offers: d.offers.map(fix) } : d)) } : {}) };
 }
 export function offerUrl(a, o) {
   if (o && o.href && /^https:\/\//.test(o.href)) {

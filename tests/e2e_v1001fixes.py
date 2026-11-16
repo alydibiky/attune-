@@ -41,9 +41,9 @@ with sync_playwright() as p:
     check("Added chicken strips to Talabat" in card, "the chat lines are there (Added chicken strips to Talabat)")
     # 2. Chat: "What are the talabat" → the items themselves
     open_mode(page, "chat", "[data-testid=chat-input]")
-    page.fill("[data-testid=chat-input]", "What are the talabat"); page.keyboard.press("Enter"); page.wait_for_timeout(900)
+    page.fill("[data-testid=chat-input]", "What are the talabat"); page.locator("button[title='Send']").click(); page.wait_for_timeout(900)
     body = page.inner_text("body")
-    check("items still to buy" in body and "tortilla" in body and "chicken strips" in body and "messages kept" not in body, "“What are the talabat” → the 3 items still to buy (not “11 messages kept”)")
+    check("items still to buy" in body and "tortilla" in body and "chicken strips" in body and "messages kept" not in body, "“What are the talabat” → the 3 items still to buy (not “11 messages kept”): " + body[-400:].replace("\n", " | "))
     # 3. To-dos & lists: reword one item, delete one, pin
     open_mode(page, "lists", "[data-testid=lists-page]")
     page.locator("[data-testid=lists-row-head]").first.click(); page.wait_for_selector("[data-testid=lists-item-row]", timeout=3000)
