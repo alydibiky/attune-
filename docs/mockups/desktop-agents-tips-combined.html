@@ -1,0 +1,226 @@
+<title>Attune Picks Combined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = mock-up + what it is + pick/note. Mock-ups use Attune's own light look. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43; --warn: #a3620a;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif;
+  /* the mock-ups always show the app's light theme */
+  --m-bg: #f4f2f1; --m-surf: #ffffff; --m-ink: #231c1e; --m-mut: #7a6f73; --m-ln: #e8e1e3; --m-acc: #7a2a45; --m-soft: #f7e9ee;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #f0b45a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #f0b45a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 140px }
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 20px; font-weight: 900; margin: 0 0 4px; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; color: var(--ink); font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 760px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px }
+.pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+/* ---- mock-ups ---- */
+.mock { background: var(--m-bg); color: var(--m-ink); border-radius: 14px; border: 1px solid var(--m-ln); overflow: hidden; font-size: 11px; line-height: 1.35; min-width: 0 }
+.mock .bar { display: flex; gap: 6px; align-items: center; padding: 6px 10px; background: var(--m-surf); border-bottom: 1px solid var(--m-ln); font-weight: 800 }
+.mock .dots { display: flex; gap: 4px } .mock .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-ln); display: block }
+.desk { display: grid; grid-template-columns: 92px minmax(0, 1fr); min-height: 250px }
+.side { background: var(--m-surf); border-inline-end: 1px solid var(--m-ln); padding: 8px 6px; display: grid; gap: 3px; align-content: start; font-weight: 700; font-size: 10px }
+.side span { padding: 3px 6px; border-radius: 6px } .side .on { background: var(--m-soft); color: var(--m-acc) }
+.main { padding: 10px; min-width: 0; display: grid; gap: 8px; align-content: start }
+.c { background: var(--m-surf); border: 1px solid var(--m-ln); border-radius: 10px; padding: 8px; min-width: 0 }
+.c b { font-weight: 900 } .mut { color: var(--m-mut) } .acc { color: var(--m-acc); font-weight: 800 }
+.row { display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 4px 0; border-top: 1px solid var(--m-ln) } .row:first-of-type { border-top: 0 }
+.g2 { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 8px }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.g4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.chip { display: inline-block; border: 1px solid var(--m-ln); border-radius: 99px; padding: 1px 7px; background: var(--m-surf); font-weight: 700; font-size: 10px }
+.chip.on { background: var(--m-soft); color: var(--m-acc); border-color: var(--m-acc) }
+.btn { display: inline-block; border-radius: 99px; padding: 3px 9px; font-weight: 800; font-size: 10px; background: var(--m-acc); color: #fff }
+.btn.o { background: var(--m-surf); color: var(--m-acc); border: 1px solid var(--m-acc) }
+.sel { background: var(--m-soft); border-radius: 6px; padding: 4px 6px }
+.phone { width: 230px; max-width: 100%; margin: 0 auto; border-radius: 22px; border: 6px solid #2b2426; background: var(--m-bg); overflow: hidden }
+.phone .scr { padding: 8px; display: grid; gap: 7px; min-height: 380px; align-content: start }
+.ph { height: 64px; border-radius: 8px; background: linear-gradient(135deg, #e9e3e5, #d9cfd3); display: grid; place-items: center; color: var(--m-mut); font-weight: 800 }
+.ok { color: #1e7a43; font-weight: 800 } .warn { color: #a3620a; font-weight: 800 }
+.tipdark { background: #2a2526; color: #f6eff1; border-radius: 10px; padding: 7px 9px }
+.tipsoft { background: var(--m-soft); border: 1px solid #e9c9d5; border-radius: 10px; padding: 7px 9px }
+.tbl { width: 100%; border-collapse: collapse; font-size: 10px } .tbl td, .tbl th { text-align: start; padding: 3px 4px; border-top: 1px solid var(--m-ln) } .tbl th { color: var(--m-mut); font-weight: 800 }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1060px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+.note { font-size: 13px; color: var(--mut) }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style><style>
+.u { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 760px) { .u { grid-template-columns: minmax(0, 1fr) } }
+.u ol { margin: 6px 0 0; padding-inline-start: 20px; display: grid; gap: 5px }
+.shots { display: grid; gap: 10px; min-width: 0 }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px } @media (max-width: 560px) { .pair { grid-template-columns: minmax(0, 1fr) } }
+.lab { font-size: 12px; font-weight: 800; color: var(--mut); margin: 0 0 4px }
+.step { display: flex; gap: 6px; align-items: center; font-size: 10px; padding: 3px 0 } .step i { width: 14px; height: 14px; border-radius: 50%; background: #1e7a43; color: #fff; font-style: normal; display: grid; place-items: center; font-size: 9px; font-weight: 900 }
+.url { font-family: ui-monospace, Menlo, monospace; font-size: 9.5px; background: var(--m-bg); border: 1px solid var(--m-ln); border-radius: 6px; padding: 3px 5px; word-break: break-all }
+</style>
+<div class="wrap">
+  <header>
+    <h1>Your picks, put together</h1>
+    <p class="lede">You picked <b>D1</b>, <b>L1</b> (with a condition) and <b>T1 + T2 + T3</b>. This page shows how I joined them. Read "What I understood" next to each; if something is off, tick it and write what to change. If all is right, tick OK. Nothing is built until you say OK.</p>
+  </header>
+
+  <!-- ============ D1 ============ -->
+  <section>
+    <h2>D1 · The computer: list on the left, details on the right</h2>
+    <div class="u" data-code="OK-D1">
+      <div class="shots">
+        <p class="lab">Travel (today: a column of country chips in the middle)</p>
+        <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune</div>
+          <div class="desk"><div class="side"><span>Home</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span class="on">Go</span></div>
+            <div class="main"><div><b style="font-size:13px">Travel</b> <span class="chip">Find a country</span></div>
+              <div class="g2">
+                <div class="c"><b>Country packs · 43</b>
+                  <div class="row sel"><span><b>🇸🇦 Saudi Arabia</b><br><span class="mut">Umrah · SAR · weekend Fri–Sat</span></span><span class="acc">›</span></div>
+                  <div class="row"><span><b>🇹🇷 Turkey</b><br><span class="mut">TRY · e-visa</span></span>›</div>
+                  <div class="row"><span><b>🇦🇪 UAE</b><br><span class="mut">AED · visa on arrival</span></span>›</div>
+                  <div class="row"><span><b>🇬🇪 Georgia</b></span>›</div></div>
+                <div class="c"><b style="font-size:12px">🇸🇦 Saudi Arabia</b>
+                  <div class="row"><span>Money</span><b>1 SAR = 13.2 EGP</b></div>
+                  <div class="row"><span>Emergency</span><b>911 · Red Crescent 997</b></div>
+                  <div class="row"><span>Your trip</span><b>Umrah 12 → 15 Dec</b></div>
+                  <div class="row"><span>Phrases</span><b>12 saved</b></div>
+                  <div style="margin-top:6px"><span class="btn o">Phrases</span> <span class="btn o">Paste a booking</span></div></div>
+              </div></div></div></div>
+        <div class="pair">
+          <div><p class="lab">Family health → Medicines</p><div class="mock"><div class="main"><div class="g2"><div class="c"><div class="row sel"><b>Concor 5 mg</b></div><div class="row">Vitamin D</div><div class="row">Glucophage</div></div><div class="c"><b>Concor 5 mg · Baba</b><div class="row"><span>Next</span><b>8:00</b></div><div class="row"><span>Box ends</span><b class="warn">5 days</b></div></div></div></div></div></div>
+          <div><p class="lab">Projects</p><div class="mock"><div class="main"><div class="g2"><div class="c"><div class="row sel"><b>Flat renovation</b></div><div class="row">Job hunt</div><div class="row">Study plan</div></div><div class="c"><b>Flat renovation</b><div class="row"><span>Budget</span><b>EGP 120,000</b></div><div class="row"><span>Spent</span><b>46,500</b></div><div class="row"><span>Next</span><b>Tiles, Sat</b></div></div></div></div></div></div>
+        </div>
+      </div>
+      <div class="info"><h3>What I understood</h3>
+        <ol>
+          <li>Only on a computer (a wide window). The phone stays as it is.</li>
+          <li>Every page with a list (Travel, Medicines, Lab results, Family, Projects, People, Money's payments, Follow-ups, Agents, Documents, My things) shows the list on the left and the picked item's details on the right, in the same window.</li>
+          <li>The first item is open when you arrive, so the right side is never empty.</li>
+          <li>Editing happens in the right pane, not in a phone pop-up.</li>
+          <li>The page uses the full width; no narrow column in the middle with empty space below.</li>
+          <li>↑ ↓ moves through the list.</li>
+        </ol>
+        <div class="pick"><label><input type="checkbox" id="pick-OK-D1"> OK, build D1 like this</label><textarea id="note-OK-D1" placeholder="Anything to change?"></textarea></div></div>
+    </div>
+  </section>
+
+  <!-- ============ L1 ============ -->
+  <section>
+    <h2>L1 · The offer's page, and Open goes straight to the exact listing</h2>
+    <p class="lede">Your condition: <i>"it should still redirect me to the right listing, because I don't want to open the product in search and search again by myself."</i></p>
+    <div class="u" data-code="OK-L1">
+      <div class="shots"><div class="pair">
+        <div><p class="lab">1 · The offer in Attune</p>
+          <div class="phone" style="width:100%"><div class="scr">
+            <div class="ph">photo from the listing</div>
+            <b style="font-size:12.5px">HUAWEI FreeClip 2 Open-Ear, Black</b>
+            <div><b style="font-size:15px">EGP 7,400</b> <span class="ok">· under 8,000 ✓</span></div>
+            <div class="c"><div class="row"><span>Store</span><b>Amazon.eg</b></div><div class="row"><span>Seller</span><b>Amazon</b></div><div class="row"><span>Delivery</span><b>Thu 20 Nov</b></div><div class="row"><span>Checked</span><b>10 min ago</b></div></div>
+            <div class="c"><span class="ok">✓ Exact listing saved</span><div class="url">amazon.eg/dp/B0DJ…K7</div></div>
+            <span class="btn" style="text-align:center;padding:7px">Open this listing in Amazon ↗</span>
+          </div></div></div>
+        <div><p class="lab">2 · How it is sure the link is the listing</p>
+          <div class="c" style="background:var(--m-surf);color:var(--m-ink)">
+            <div class="step"><i>1</i> The agent finds the offer on the results</div>
+            <div class="step"><i>2</i> Attune's own browser opens that offer once, out of sight</div>
+            <div class="step"><i>3</i> It checks the page: same name, same price, a product page (not a search)</div>
+            <div class="step"><i>4</i> It saves that exact address (Amazon /dp/…, the hotel's page with your dates)</div>
+            <div class="step"><i>5</i> "Open" uses that saved address</div>
+            <p class="mut" style="margin:6px 0 0">If a store hides its links: "Open" takes you there through Attune's browser, which taps the offer for you and lands on the listing. You are never left on a search page.</p>
+          </div>
+          <p class="lab" style="margin-top:8px">Hotel: the dates go with it</p>
+          <div class="c" style="background:var(--m-surf);color:var(--m-ink)"><b>Le Méridien Pyramids</b><div class="row"><span>12 → 15 Dec · 2 adults · 1 room</span><b>EGP 21,300</b></div><div class="url">booking.com/hotel/eg/le-meridien-pyramids…?checkin=2026-12-12&amp;checkout=2026-12-15&amp;group_adults=2</div></div>
+        </div></div></div>
+      <div class="info"><h3>What I understood</h3>
+        <ol>
+          <li>Tapping an offer opens its own page inside Attune first: photo, exact name, price, store, seller, delivery, rating, when it was checked; for hotels the dates, guests, room and total.</li>
+          <li>"Open in the store" must land on that exact listing, never on a search page.</li>
+          <li>To be sure, when an agent finds an offer, Attune opens it once by itself and keeps the address only if the page really is that product (same name and price). It then shows "✓ Exact listing saved".</li>
+          <li>Hotels and flights keep your dates and guests in the address.</li>
+          <li>If a store gives no direct address, "Open" goes through Attune's browser, which clicks through to the listing for you.</li>
+          <li>The same on the phone and the computer (on the computer, the offer page is the right pane of D1).</li>
+        </ol>
+        <div class="pick"><label><input type="checkbox" id="pick-OK-L1"> OK, build L1 like this</label><textarea id="note-OK-L1" placeholder="Anything to change?"></textarea></div></div>
+    </div>
+  </section>
+
+  <!-- ============ T1+T2+T3 ============ -->
+  <section>
+    <h2>T1 + T2 + T3 · Tips</h2>
+    <div class="u" data-code="OK-T">
+      <div class="shots"><div class="pair">
+        <div><p class="lab">Phone: a line in the page (T1), 💡 to see it again (T3)</p>
+          <div class="phone" style="width:100%"><div class="scr">
+            <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Money</b><span class="chip on">💡</span></div>
+            <div class="tipsoft"><b class="acc">Tip</b> · Add your salary as a repeating income, and "safe to spend" counts right up to payday.<br><span class="acc">Got it</span> · <span class="acc">More tips</span></div>
+            <div class="c"><b>Safe to spend</b><br><b style="font-size:15px">EGP 4,350</b> <span class="mut">until 25 Nov</span></div>
+            <div class="c"><div class="row"><span>Talabat · koshary</span><b>-120</b></div><div class="row"><span>Maid · Saturday</span><b>-600</b></div></div>
+          </div></div></div>
+        <div><p class="lab">Computer: a small card in the corner (T2), 💡 by the title (T3)</p>
+          <div class="mock"><div class="desk" style="position:relative;min-height:220px"><div class="side"><span>Home</span><span class="on">Money</span><span>Agents</span></div>
+            <div class="main"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">Money</b><span class="chip on">💡</span></div><div class="c"><b>Safe to spend</b> EGP 4,350</div><div class="c"><div class="row"><span>Talabat · koshary</span><b>-120</b></div></div></div>
+            <div class="tipsoft" style="position:absolute;inset-inline-end:10px;bottom:10px;width:150px;box-shadow:0 4px 14px rgba(0,0,0,.12)"><b class="acc">Tip</b> · Add your salary as a repeating income…<br><span class="acc">Got it</span></div></div></div></div>
+      </div></div>
+      <div class="info"><h3>What I understood</h3>
+        <ol>
+          <li><b>Phone (T1):</b> the tip is a soft line under the page title, in the theme's colours. It never covers a card or the chat box.</li>
+          <li><b>Computer (T2):</b> a small card in the bottom corner of the page area, never over the side menu.</li>
+          <li><b>Both (T3):</b> a 💡 next to the page title whenever that page has tips. Tap it to read them again after "Got it", or to read one that hasn't shown yet.</li>
+          <li>Still one new tip a day at most, and only where it helps; "Show the tips again" stays in Settings.</li>
+        </ol>
+        <div class="pick"><label><input type="checkbox" id="pick-OK-T"> OK, build the tips like this</label><textarea id="note-OK-T" placeholder="Anything to change?"></textarea></div></div>
+    </div>
+  </section>
+</div>
+
+<div class="bar-pick"><div class="in">
+  <div class="codes" id="codes">Nothing ticked yet</div>
+  <button type="button" id="copy">Copy my picks</button>
+  <textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea>
+</div></div>
+<script>
+(() => {
+  const KEY = "attune-mock-desk-combined";
+  const codes = [...document.querySelectorAll(".u")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: st[c] && st[c].on || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>

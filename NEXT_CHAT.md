@@ -20,6 +20,8 @@
 > shows the listing it found ("fix the opening and filling the details … even if displaying it another way"; Recommended L1 the offer's
 > own page inside Attune, from what the agent read), T1–T3 where tips appear (Recommended T1 a line in the page).
 > Tests: tests/unit/v1020fixes.test.mjs, tests/e2e_v1020fixes.py, desktop/test/unit.js (orderAttempts, phaseOf).
+> **Ali picked D1, L1 ("but it should still redirect me to the right listing"), T1 T2 T3** → combined page with "What I understood":
+> https://claude.ai/artifact/CkbzEJEpupPdYdBKbjtxdn (docs/mockups/desktop-agents-tips-combined.html) — **waiting for his OK** before building.
 >
 > ## START HERE (16 Nov 2026, night — v10.1: Ali's picks P1 P2 P3 P4 W2 T1 + F1 F3 built — combined page OK'd)
 > Page: docs/mockups/projects-combined.html (https://claude.ai/artifact/LSwKU9ZuNeFL2d1b1L4Ziw). Built:
