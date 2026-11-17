@@ -21,6 +21,7 @@ import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats, applyChatCmd } from "./chat.jsx";
 import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
+import { lazyPage, preloadPages } from "./lazy.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale, LANGS as UI_LANGS } from "./i18n.js";
 import * as UND from "./understand.js";
@@ -37,15 +38,15 @@ import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
 import { candidates as tuneCandidates, choose as tuneChoose, TUNE_PROMPT, TUNE_TOKENS } from "./tuner.js";   // v6.41 X2   // v6.40 Recall (agent C)
-import { ShelfPage } from "./shelf-ui.jsx";
+const ShelfPage = lazyPage(() => import("./shelf-ui.jsx"), "ShelfPage");
 import * as SH from "./shelf.js";
 import { notesFromText } from "./shelf-import.js";
 import { shareLink } from "./ai-import.js";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { WaLibrary } from "./wagroups-ui.jsx";
-import { FileConverter } from "./convert-ui.jsx";
-import { SlidesReports } from "./slides-ui.jsx";
+const FileConverter = lazyPage(() => import("./convert-ui.jsx"), "FileConverter");
+const SlidesReports = lazyPage(() => import("./slides-ui.jsx"), "SlidesReports");
 import { DaySettings, SimpleHome, useDayset } from "./yourday-ui.jsx";
 import { useWidgets } from "./widgets-ui.jsx";
 import { MoneyShareSheet } from "./moneyshare-ui.jsx";
@@ -79,13 +80,13 @@ import { syncPhone } from "./notelabels-ui.jsx";   // v9.9.11 A2
 import { categorise } from "./paylog.js";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { FamilyPage } from "./family-ui.jsx";
-import { PlannerPage } from "./planner-ui.jsx";
+const PlannerPage = lazyPage(() => import("./planner-ui.jsx"), "PlannerPage");
 import { inviteReady, inviteHello, inviteRedeem, loadInvite, bonusUntil, addBonus } from "./referral.js";   // v8.7 invite friends (Google account)   // v8.7 (Ali picked the planner's option A)
 import { guess as guessRoute } from "./homeroute.js";   // v8.7 the Home router, shadow mode: recorded, not acted on yet   // v8.7 (persona 4, idea 13)
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels, myCountry, bookingLine } from "./agent-ui.jsx";
-import { CarePage } from "./care-ui.jsx";
-import { GuidePage } from "./guide-ui.jsx";
+const CarePage = lazyPage(() => import("./care-ui.jsx"), "CarePage");
+const GuidePage = lazyPage(() => import("./guide-ui.jsx"), "GuidePage");
 import { PrivacyPage } from "./privacy-ui.jsx";
 import { VaultGate } from "./vault-ui.jsx";
 import { loadVault, vaulted, stillOpen } from "./vault.js";
@@ -198,7 +199,7 @@ import * as B1W from "./b1wire.js";
 import * as RS from "./rulestore.js";
 import { DoneForYouPage } from "./donelog-ui.jsx";
 import { SalaryPage } from "./salary-ui.jsx";   // v9.9.18 M1 salary sorter
-import { GroupsPage } from "./groups-ui.jsx";   // v9.9.18 M3 split with anyone   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
+const GroupsPage = lazyPage(() => import("./groups-ui.jsx"), "GroupsPage");   // v9.9.18 M3 split with anyone   // v9.9.18 B1: nag levels, notification Paid → balance, Done for you
 import { myCountry as countryOfPerson, setCountry as setCountrySaved, COUNTRIES as COUNTRY_LIST, weekendOf, WEEK_KEY, countryWeekStart } from "./country.js";
 // v8.0 Agents: the country the person chose in Attune (Egypt → EGP, Talabat, Uber/Careem), else Booking details, else Egypt
 const agentCountry = () => (countryOfPerson() || loadBooking().country || "EG").toUpperCase();
@@ -224,10 +225,10 @@ setExtraSchedule((list) => { try { return beforeMeet(list, loadLifeStores(), loa
 // v9.9.25 TR2: the flight day's notifications (check-in open, leave now, gate / delay from the airline) — kept in step the same way
 setExtraSchedule(() => { try { return flightAlerts(loadTripStore()); } catch (e) { return []; } }, "flight");
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll, studioPaused } from "./device.js";
-import { TravelPage } from "./travel-ui.jsx";
+const TravelPage = lazyPage(() => import("./travel-ui.jsx"), "TravelPage");
 import { OwedHost } from "./owed-ui.jsx";
 import { ReadHost } from "./readaloud-ui.jsx";
-import { TranslatePage } from "./translate-ui.jsx";
+const TranslatePage = lazyPage(() => import("./translate-ui.jsx"), "TranslatePage");
 import { findPlaces } from "./mapsearch.js";
 import { KnowledgePage } from "./knowledge-ui.jsx";
 import { LibraryPage } from "./library-ui.jsx";
@@ -250,7 +251,7 @@ import { loadOffPacks, teachChat } from "./teach-ui.jsx";
 import * as TEACH from "./teach.js";
 import * as KNOW from "./knowledge.js";
 import { kindOf as mindKindOf } from "./mind.js";
-import { CVPage } from "./cv-ui.jsx";
+const CVPage = lazyPage(() => import("./cv-ui.jsx"), "CVPage");
 import * as USK from "./userskills.js";
 try { USK.seedOnce(); } catch (e) {}   // v6.12: the engineering skill, added once (it can be switched off or deleted)
 import { placeFor } from "./places.js";

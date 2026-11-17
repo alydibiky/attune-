@@ -1285,6 +1285,10 @@ wagroups-ui.jsx: setAdding(null); setBusy(tr("Adding…"));
 knowledge-ui.jsx: <button className={ghost} onClick={() => setPaste({ title: "", text: "" })} data-testid="kn-paste"><ClipboardPaste size={14} />{tr("Paste te
 library-ui.jsx: <button className={btnS} disabled={!!busy} onClick={() => setPaste(paste ? null : { title: "", text: "" })} data-testid="lib-add-paste"><Cli
 
+## Opening…
+lazy.jsx: const Page = (props) => <React.Suspense fallback={<div className="calm p-6 text-[13px] text-[var(--c-mut)]" data-testid="page-loading">{tr("
+pdfchat-ui.jsx: setErr(""); setBusy(tr("Opening…")); pics.current.clear(); thumbs.current.clear(); wordCache.current.clear(); setOutline(null); setEvid(null
+
 ## Due today
 learning-report-ui.jsx: const dueText = (p) => p.status === "late" ? (p.days === -1 ? tr("1 day late") : T("{n} days late", { n: -p.days })) : p.status === "today" 
 spaces-ui.jsx: return n < 0 ? tr("Was due {d}", { d: when }) : n === 0 ? tr("Due today") : tr("Due {d} · in {n} days", { d: when, n });

@@ -217,7 +217,7 @@ class MainActivity : AppCompatActivity() {
         val p = url.path ?: return r
         when {
             p.endsWith(".wasm") -> r.mimeType = "application/wasm"
-            p.endsWith(".mjs") -> r.mimeType = "text/javascript"
+            p.endsWith(".mjs") || p.endsWith(".js") -> r.mimeType = "text/javascript"   // v10.2: the app's pages load as modules (www/app/)
             p.endsWith(".whl") || p.endsWith(".zip") -> r.mimeType = "application/zip"
             p.endsWith(".json") -> r.mimeType = "application/json"
         }

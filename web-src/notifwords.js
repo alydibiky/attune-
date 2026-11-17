@@ -7,7 +7,7 @@
    Pure; tests: tests/unit/v9917notifs.test.mjs and the 10,000 run (bash tests/notifs/run.sh).                                      */
 
 // a one-time code — also when it names the purchase it is for ("397519 is your verification code for … purchase of EGP 567")
-export const CODE_W = /\b(otp|one[- ]time|verification code|security code|passcode|auth(?:entication)? code|2fa)\b|\b(?:use|enter) (?:the )?code \d{4,8}\b|\b\d{4,8} is your\b|رمز التحقق|كود التحقق|كود التفعيل|رمز التفعيل|كلمة المرور لمرة|الرمز السري|لا تشارك(?:ه|ها)?\s|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|doğrulama kodu|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)(?![\p{L}])/iu;
+export const CODE_W = /\b(otp|one[- ]time|verification code|security code|passcode|auth(?:entication)? code|2fa)\b|\b(?:use|enter) (?:the )?code \d{4,8}\b|\b\d{4,8} is your\b|رمز التحقق|كود التحقق|كود التفعيل|رمز التفعيل|كلمة المرور لمرة|الرمز السري|لا تشارك(?:ه|ها)?\s(?!بيانات|معلومات|حساب|ارقام|أرقام)|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|doğrulama kodu|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)(?![\p{L}])/iu;
 // it did NOT happen: declined, failed, not charged
 export const FAILED_W = /\b(couldn'?t (?:charge|process|complete|renew)|could not (?:charge|process|complete|renew)|unable to (?:charge|process|renew)|declined|(?:was|were|is|has) not (?:been )?(?:charged|completed|processed|deducted|successful|debited)|not charged|wasn'?t charged|won'?t be charged|unsuccessful|failed|couldn'?t (?:process|complete|be delivered)|could not be (?:processed|completed)|rejected|insufficient (?:funds|balance)|no amount was deducted|was released|released back)\b|تم رفض|رفض العملية|مرفوضة|فشلت|فشل (?:تجديد|عملية|الدفع|التحويل)|لم يتم خصم|لم تتم|لم يتم|تم ايقاف العملية|تم إيقاف العملية|لعدم كفاية|(?<![\p{L}])(refus[ée]e?|échou[ée]e?|rechazad[oa]|fallid[oa]|abgelehnt|fehlgeschlagen|reddedildi|başarısız|basarisiz|ditolak|gagal|recusad[oa]|rifiutat[oa])(?![\p{L}])/iu;
 // it has not happened YET: due, will be charged, to be paid on delivery, a quote, a request, a limit, something maturing
@@ -22,7 +22,12 @@ export const POST_W = /\bshared (?:a |an |your )?(?:reel|post|video|story|photo|
 const LINK = /https?:\/\/|\bbit\.ly\/|\btinyurl\.com\/|\b[\w-]+\.(?:xyz|top|win|help|click|icu|buzz|live|site|online|info)\b/i;
 const LURE = /\b(claim|verify (?:now|your)|confirm your (?:pin|card|data|account|details)|update your (?:card|data|details|payment)|cancel here|click (?:here|the link)|by mistake|suspended|will be closed|closed today|held at customs|final notice|unpaid toll)\b|اضغط|بالخطأ|بالغلط|لتحديث بياناتك|تحديث البيانات/iu;
 const PRIZE = /\b(congratulations|you(?:'ve| have)? won|you are (?:a |the )?winner|you are selected|your prize|claim your)\b|مبروك (?:كسبت|ربحت)|كسبت [\d٠-٩]|ربحت|الجايزة|الجائزة|by mistake.{0,40}\b(?:refund|return|send)\b|بالخطأ.{0,40}(?:اعادة|إعادة|رجع)/iu;
-export const isScam = (text) => { const t = String(text || ""); return PRIZE.test(t) || (LINK.test(t) && LURE.test(t)); };
+// v10.2 (Ali's CIB offer: "…اضغط هنا: https://cib.eg/0p1z", sent by CIB): a link to the SENDER's own site is not a lure — "click here"
+// with a link is a scam only when the link goes somewhere else (a fake "cib-eg.help" from "CIB" still is)
+const ownLink = (t, sender) => { const who = String(sender || "").toLowerCase().replace(/[^a-z0-9]/g, ""); if (who.length < 2) return false;
+  const hosts = [...String(t).matchAll(/https?:\/\/([^\/\s]+)/gi)].map((m) => m[1].toLowerCase()); if (!hosts.length) return false;
+  return hosts.every((h) => { const base = h.replace(/^www\./, "").split("."); return base[0] === who && /^(?:eg|com|net|com\.eg|ae|sa|co|io|bank|me)$/.test(base.slice(1).join(".")); }); };
+export const isScam = (text, sender = "") => { const t = String(text || ""); return PRIZE.test(t) || (LINK.test(t) && LURE.test(t) && !ownLink(t, sender)); };
 /** An SMS whose sender is a person's phone number, not a bank's name ("+20 10…", "0101…") — people TALK about money there, like in a chat. */
 export const fromPhoneNumber = (n) => !!n && /messag|\bsms\b|mms|رسائل/i.test(String(n.app || "") + " " + String(n.pkg || "")) && /^\s*\+?[\d\s().-]{7,}\s*$/.test(String(n.title || ""));
 const HAPPENED = /\b(debited|credited|charged|you paid|you sent|you received|was deducted|refunded)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|دفع|سداد)|استلمت|وصلك/iu;
@@ -31,7 +36,7 @@ const HAPPENED = /\b(debited|credited|charged|you paid|you sent|you received|was
 export function notAPayment(text, n = null) {
   const t = String(text || "");
   if (CODE_W.test(t)) return "code";
-  if (isScam(t)) return "scam";
+  if (isScam(t, n && n.title)) return "scam";
   if (n && fromPhoneNumber(n)) return "person";
   if (FAILED_W.test(t)) return "failed";
   if (NOTYET_W.test(t)) return "notyet";

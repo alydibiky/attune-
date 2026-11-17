@@ -1,0 +1,1 @@
+var r={};function o(n){let t=String(n||"").toUpperCase();if(t in r)return r[t];let e=2;try{e=new Intl.NumberFormat("en",{style:"currency",currency:t}).resolvedOptions().maximumFractionDigits}catch{}return r[t]=e}var i=(n,t)=>Math.round((+n||0)*10**o(t)),s=(n,t)=>n/10**o(t);export{o as a,i as b,s as c};

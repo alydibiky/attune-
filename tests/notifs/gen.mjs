@@ -42,7 +42,15 @@ const W = { money: (m, dir, cur) => ({ t: "money", a: m.v, dir, ...(cur ? { cur 
   is: (t) => ({ t }), quiet: { t: "quiet" }, nomoney: { t: "nomoney" }, ask: { t: "ask" } };
 
 // ---- 1–2 Egypt: banks, InstaPay, wallets ------------------------------------------------------------------------------------------
-add("bank_eg_out", 600, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), sa = pick(SHOPS_AR), ar = rnd() < 0.5 ? m.s : m.ar;
+// v10.2 Ali's own CIB messages (17 Nov 2026, his phone): their exact shapes — instant transfer, debit card with the balance after it,
+// and CIB's own offer with a cib.eg link (not a payment, not a scam). 200 taken from bank_eg_out so the run stays 10,000.
+add("bank_cib_real", 200, () => { const m = money(), v = m.v.toFixed(2), d = new Date(Date.UTC(2026, int(0, 11), int(1, 28), int(0, 23), int(0, 59))), iso = d.toISOString().slice(0, 16).replace("T", " "),
+    dmy = String(d.getUTCDate()).padStart(2, "0") + "/" + String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + String(d.getUTCFullYear()).slice(2) + " " + iso.slice(11), hex = Math.floor(rnd() * 0xffffffff).toString(16).padStart(8, "0");
+  const k = rnd();
+  if (k < 0.45) return [N(SMS, "CIB", `يرجى العلم انه تم تنفيذ تحويل لحظي بمبلغ ${v} جم من حسابك المنتهي بـ ********${t4()} برقم مرجعي ${hex} بتاريخ ${iso} للمزيد، برجاء الاتصال بـ 19666`), W.money(m, "out"), "bank"];
+  if (k < 0.85) return [N(SMS, "CIB", `تم خصم مبلغ EGP ${v}  من بطاقة الخصم المباشر المنتهية بـ **${t4()} عند ${pick(SHOPS).toUpperCase()} في ${dmy} ، الرصيد المتاح EGP ${(int(1000, 2000000) + 0.4).toFixed(2)}`), W.money(m, "out"), "bank"];
+  return [N(SMS, "CIB", `استمتع ببطاقة CIB ${pick(["Platinum", "Gold", "World Elite"])} الائتمانية والتي تتيح لك ${pick(["٦", "٥", "١٠"])}٪ من قيمة مشترياتك في صورة نقاط SHARE لدى وجهات ماجد الفطيم، بحد أقصى ${pick(["٣،٠٠٠", "٢،٠٠٠", "٥،٠٠٠"])} جم شهريًا. لمعرفة المزيد، اضغط هنا: https://cib.eg/${hex.slice(0, 4)} أو تواصل مع مدير علاقات CIB Wealth الخاص بك. لا تشارك بياناتك البنكية مع أي شخص. تُطبق الشروط والأحكام. ${int(1, 99999)}`), W.nomoney, ""]; });
+add("bank_eg_out", 400, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), sa = pick(SHOPS_AR), ar = rnd() < 0.5 ? m.s : m.ar;
   const [src, title, text] = pick([[SMS, b, `Your debit card ending ${t4()} was charged EGP ${m.s} at ${s} on ${date()}. Available balance EGP ${bal()}`], [SMS, b, `Your account was debited with EGP ${m.s} at ${s} on ${date()}`],
     [{ app: b, pkg: "com." + b.toLowerCase().replace(/\W/g, "") + ".mobile" }, b, `Purchase of EGP ${m.s} approved on card ${t4()} at ${s}`], [SMS, b, `EGP ${m.s} was withdrawn from ATM using card ending ${t4()} on ${date()}. Avl bal EGP ${bal()}`],
     [SMS, b, `Dear customer, a POS transaction of EGP ${m.s} at ${s} was made with your card **${t4()}`], [{ app: "InstaPay", pkg: "com.egyptianbanks.instapay" }, "InstaPay", `You transferred EGP ${m.s} to ${pick(PEOPLE)} via InstaPay. Ref ${ref()}`],

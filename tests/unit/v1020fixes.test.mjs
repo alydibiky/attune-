@@ -9,6 +9,7 @@ import * as W from "../../web-src/notifwords.js";
 import { shownToolGroups, toolCount } from "../../web-src/hubs.js";
 import * as CR from "../../web-src/chatroles.js";
 import * as AP from "../../web-src/autopilot2.js";
+import * as PL from "../../web-src/paylog.js";
 let fail = 0, n = 0; const ok = (c, m) => { n++; if (!c) { console.log("FAIL " + m); fail++; } };
 const now = Date.UTC(2026, 10, 17, 0, 45);
 const claude = "Secure link to log in to Claude.ai\nClick the link below to log in to Claude.ai. This link will expire in 1 hour and can only be used once.";
@@ -40,6 +41,18 @@ ok(CR.readDescModel('{"role":"orders","care":[],"whenMe":false}').role === "orde
   ok(CR.readDescription("The bag of everything I get from Amazon!", CR.loadLearned(st)).role === "orders", "taught once → understood next time, written a little differently"); }
 { const out = execFileSync("node", [new URL("../chatroles/never.mjs", import.meta.url).pathname, "2500"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
   const p = +((/\(([\d.]+)%\)/.exec(out) || [])[1] || 0); ok(p === 100, "10,000 descriptions never stuck, 2,500 sample: " + p + "%"); }
+// Ali's own CIB messages, word for word (17 Nov 2026) — Money reads each payment; the balance is never the amount; CIB's own offer is no payment and no scam
+{ const sms = (t) => ({ id: "c" + t.length, app: "Messages", pkg: "com.google.android.apps.messaging", title: "CIB", text: t, ts: Date.parse("2026-11-17T13:56:00") });
+  const CIB = [["يرجى العلم انه تم تنفيذ تحويل لحظي بمبلغ 1160.00 جم من حسابك المنتهي بـ ********9279 برقم مرجعي ebe405c0 بتاريخ 2026-11-17 13:56 للمزيد، برجاء الاتصال بـ 19666", 1160, ""],
+    ["تم خصم مبلغ EGP 800.00  من بطاقة الخصم المباشر المنتهية بـ **8251 عند FACES في 16/11/26 17:06 ، الرصيد المتاح EGP 1105065.40", 800, "FACES"],
+    ["يرجى العلم انه تم تنفيذ تحويل لحظي بمبلغ 100.00 جم من حسابك المنتهي بـ ********9279 برقم مرجعي f50c9d30 بتاريخ 2026-11-16 19:46 للمزيد، برجاء الاتصال بـ 19666", 100, ""],
+    ["يرجى العلم انه تم تنفيذ تحويل لحظي بمبلغ 80.00 جم من حسابك المنتهي بـ ********9279 برقم مرجعي ed6a371c بتاريخ 2026-11-16 21:37 للمزيد، برجاء الاتصال بـ 19666", 80, ""]];
+  for (const [t, a, party] of CIB) { const r = PL.readNotification(sms(t), { home: "EGP" }), m = M.comprehend(sms(t));
+    ok(r && r.amount === a && r.currency === "EGP" && r.direction === "out" && (!party || r.party === party) && m.amount && m.amount.dir === "out", "CIB " + a + " EGP → money out" + (party ? " at " + party : "") + ": " + JSON.stringify(r && [r.amount, r.direction, r.party]) + " / " + JSON.stringify(m.amount)); }
+  const ad = "استمتع ببطاقة CIB Platinum الائتمانية والتي تتيح لك ٦٪ من قيمة مشترياتك في صورة نقاط SHARE لدى وجهات ماجد الفطيم، بحد أقصى ٣،٠٠٠ جم شهريًا. لمعرفة المزيد، اضغط هنا: https://cib.eg/0p1z أو تواصل مع مدير علاقات CIB Wealth الخاص بك. لا تشارك بياناتك البنكية مع أي شخص. تُطبق الشروط والأحكام. رقم التسجيل الضريبي: ٢٠٤-٨٩١-٩٤٩";
+  const am = M.comprehend(sms(ad));
+  ok(PL.readNotification(sms(ad), { home: "EGP" }) === null && am.cat !== "code" && am.intent !== "alert", "CIB's own Platinum offer: no payment, not a login code, not a scam (" + am.cat + "/" + am.intent + ")");
+  ok(W.isScam("حسابك هيتوقف اضغط هنا https://cib-eg.help/x", "CIB"), "…but a fake link that only looks like CIB's is still a scam"); }
 // tools: the count on Home = what the page lists
 const groups = [["A", ["lists", "money", "crane"]], ["B", ["lists", "fit"]]];
 const shown = shownToolGroups(groups, ["lists", "money", "crane", "fit"], (id) => id === "crane");

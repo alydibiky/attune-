@@ -2,19 +2,20 @@
 
 - Became money when it is NOT a payment: **0** (added by itself, without a tap: **0**)
 - Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **0**
-- What it is (the kind Recall files it under): 4903 of 4903 right (100.0%)
+- What it is (the kind Recall files it under): 4885 of 4885 right (100.0%)
 
 | area | notifications | wrong | right % | kind wrong |
 |---|---|---|---|---|
-| bank_eg_out | 600 | 0 | 100.0 | 0 of 578 |
+| bank_cib_real | 200 | 0 | 100.0 | 0 of 172 |
+| bank_eg_out | 400 | 0 | 100.0 | 0 of 376 |
 | bank_eg_in | 400 | 0 | 100.0 | 0 of 400 |
 | bank_gulf | 400 | 0 | 100.0 | 0 of 400 |
 | bank_world | 700 | 0 | 100.0 | – |
-| bank_not_money | 600 | 0 | 100.0 | 0 of 18 |
+| bank_not_money | 600 | 0 | 100.0 | 0 of 21 |
 | receipts | 500 | 0 | 100.0 | – |
 | subscriptions | 400 | 0 | 100.0 | – |
 | sub_future | 300 | 0 | 100.0 | – |
-| ads | 700 | 0 | 100.0 | 0 of 615 |
+| ads | 700 | 0 | 100.0 | 0 of 624 |
 | media | 500 | 0 | 100.0 | – |
 | delivery | 600 | 0 | 100.0 | 0 of 592 |
 | rides | 250 | 0 | 100.0 | 0 of 250 |

@@ -36,7 +36,12 @@ node_modules/.bin/tailwindcss -i build/tw.css -o "$TMP/app.css" --minify >/dev/n
 test -s "$TMP/app.css" || { echo "CSS build failed"; exit 1; }
 
 # 2. JS: the app, bundled.
-node build/bundle.mjs "$TMP/app.js" "$TMP/meta.json"   # v10.2: esbuild API (i18n-ar.js → its own file, see build/bundle.mjs)
+# v10.2 (Ali: "really smooth" on phone and computer): the app is ES modules in www/app/ — entry.js + the pieces it shares, and each
+# rarely used page in its own file (lazy.jsx), read only when that page opens or quietly after the first screen
+APPDIR="$HERE/../app/src/main/assets/www/app"
+rm -rf "$APPDIR"; mkdir -p "$APPDIR"
+SPLIT="$APPDIR" node build/bundle.mjs - "$TMP/meta.json"
+test -s "$APPDIR/entry.js" || { echo "JS build failed"; exit 1; }
 
 # 2b. (v9.1: the Business website template is archived with Business — archive/business/build/, see archive/business/README.md)
 
@@ -68,7 +73,7 @@ ys = (here/'yusr/index.new.html').read_text(encoding='utf-8')
 assert ys.count('/*__V613__*/') == 1, 'Yusr v6.13 placeholder missing'
 ys = ys.replace('/*__V613__*/', (here/'yusr/yusr-v613.js').read_text(encoding='utf-8'))   # Write it, Bills (v6.13)
 b64 = base64.b64encode(ys.encode('utf-8')).decode('ascii')
-put('<script>__APP__</script>', f'<script type="text/plain" id="yusr-src">{b64}</script>\n<script>' + (tmp/'app.js').read_text(encoding='utf-8') + '</script>')
+put('<script>__APP__</script>', f'<script type="text/plain" id="yusr-src">{b64}</script>\n<script type="module" src="app/entry.js"></script>')
 out.write_text(shell, encoding='utf-8')
 print(f'{out}  {len(shell.encode())/1e6:.2f} MB')
 # (v9.1: business-site.html is no longer built — Business is archived)
