@@ -898,7 +898,7 @@ mind-ui.jsx: <button onClick={() => setBrowse(true)} className={btnS + " w-full"
 
 ## Organise this
 braindump-ui.jsx: <div className="flex items-center gap-2"><button onClick={close} className={btnS} aria-label={tr("Back")} data-testid="braindump-back">‹</bu
-home-ui.jsx: {minimal && !rep && worthOrganising(text) ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text
+home-ui.jsx: {minimal && !rep && organiseOk ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text } }))} cla
 
 ## Me
 care-ui.jsx: const ensureMember = () => { if (data.members.length) return data; const r = H.addMember(data, { name: tr("Me") }); return r.data; };
