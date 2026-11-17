@@ -14,6 +14,7 @@ import * as H from "./care.js";
 import { EmergencyTab } from "./emergency-ui.jsx";
 import { SchoolPanel } from "./school-ui.jsx";
 import { PANES, PANES_WIDE_LEFT, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { SplitView, useWide } from "./split-ui.jsx";
 import { cardPad, btnP, chip, area, page, h1 } from "./ui-kit.jsx";
 
 const TABS = [["today", "Today"], ["meds", "Medicines"], ["labs", "Lab results"], ["family", "Family"], ["emergency", "Emergency"]];   // v9.9.24 X4
@@ -128,7 +129,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
       for (const m of meds) { try { byMed[m.id] = (await search(m.name + " interactions", ["medicines"], 12)) || []; } catch (e) { byMed[m.id] = []; } }
       if (live) setWarn(H.interactions(meds, byMed));
     })();
-    return () => { live = false; };
+  return () => { live = false; };
   }, [data.meds.map((m) => m.id + (m.stopped ? "x" : "")).join()]);
 
   const ensureMember = () => { if (data.members.length) return data; const r = H.addMember(data, { name: tr("Me") }); return r.data; };
@@ -165,6 +166,47 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
   const saveSugar = () => { const v = +String(sugar).replace(",", "."); if (!(v > 0)) return; const d = ensureMember(); put(H.addGlucose(d, d.members[0].id, v, sugarUnit)); setSugar(""); if (H.mgdl(v, sugarUnit) < 70) { flash && flash(tr("Low blood sugar — see the steps below")); remind && remind({ id: "sugar-recheck", at: Date.now() + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar.") }); } };
   const tests = [...new Set(data.labs.map((x) => x.test))];
 
+  // v10.2 D1 (Ali OK'd "OK-D1"): the pieces of the Medicines tab, shared by the phone layout and the computer's list + details
+  const medBtns = (<>
+          <div className="grid grid-cols-3 gap-2">
+            <button className={cardPad + " text-center py-3"} onClick={() => choosePhoto(fileRx.current)} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
+            <button className={cardPad + " text-center py-3"} onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
+            <button className={cardPad + " text-center py-3"} onClick={() => setDrafts((x) => [...x, { _k: "h" + Date.now() }])} data-testid="care-rx-hand"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Add by hand")}</span></button>
+          </div>
+          <input ref={fileRx} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "rx"); e.target.value = ""; }} data-testid="care-rx-file" />
+  </>);
+  const medForms = (<>
+          {typing === "rx" ? <div className={cardPad + " space-y-2"}><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="auto" placeholder={tr("e.g. Amoxicillin 500 mg — 1 cap 3 times daily for 7 days")} className={field} style={st} data-testid="care-rx-text" /><button className={btnP} disabled={!text.trim()} onClick={() => { readRx(text); setTyping(""); }} data-testid="care-rx-read">{tr("Read it")}</button></div> : null}
+          {drafts.map((d) => <MedForm key={d._k} init={d} members={members} onCancel={() => setDrafts((x) => x.filter((y) => y._k !== d._k))} onSave={(m) => { const { _k, missing, raw0, ...rest } = m; saveMed(rest); setDrafts((x) => x.filter((y) => y._k !== d._k)); }} />)}
+  </>);
+  const medWarn = (<>
+          {warn && warn.length ? (
+            <div className={cardPad + " space-y-2"} style={{ borderColor: "var(--c-warn)" }} data-testid="care-warnings">
+              <b className="flex items-center gap-2 c-warn"><AlertTriangle size={16} />{tr("Check with your pharmacist")}</b>
+              {warn.map((w, i) => <div key={i} className="text-[13px]"><b dir="auto">{w.a} + {w.b}</b><p className="c-sub m-0 mt-0.5" dir="ltr">“{w.quote}”</p><span className="c-sub text-[11px]">{tr("From the official label of {m}", { m: w.a })}{w.url ? " · " : ""}{w.url ? <a href={w.url} target="_blank" rel="noreferrer" className="underline">{tr("source")}</a> : null}</span></div>)}
+            </div>) : null}
+          {!packOk && data.meds.filter((m) => !m.stopped).length > 1 ? (
+            <div className={cardPad} data-testid="care-pack"><b>{tr("Check medicines together")}</b><p className="c-sub text-[13px] m-0 mt-1">{tr("Download the Medicines pack (official drug labels, 39 MB, offline) and Attune checks each pair against what the labels say.")}</p>
+              {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); setPackOk(true); } catch (e) { flash && flash(String(e.message || e)); } setBusy(""); }}>{tr("Download")}</button> : null}</div>) : null}
+  </>);
+  const medCard = (m) => {
+            const left = m.days > 0 ? m.days - Math.round((Date.parse(H.isoDay(Date.now()) + "T12:00:00") - Date.parse(m.start + "T12:00:00")) / 86400000) : null;
+            return (
+              <div key={m.id} className={cardPad + " flex items-start gap-3"} data-testid="care-med">
+                <div className="c-ic"><Pill size={16} /></div>
+                <div className="flex-1 min-w-0"><b className="block" dir="auto">{m.name} {m.strength}</b>
+                  <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : "", H.daysOfSupply(data, m) != null ? tr("supply for {n} days", { n: H.daysOfSupply(data, m) }) : ""].filter(Boolean).join(" · ")}</span>
+                  {m.stock > 0 ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => refill(m)} data-testid="care-med-refill">{tr("Update how many are left")}</button> : null}
+                  {webSearch ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => findPrice(m)} data-testid="care-price">{prices[m.id] === "busy" ? tr("Looking…") : tr("Cheapest price")}</button> : null}
+                  {Array.isArray(prices[m.id]) ? (prices[m.id].length ? <div className="mt-1 space-y-0.5" data-testid="care-prices">
+                    {prices[m.id].map((x) => <a key={x.site} href={x.url} target="_blank" rel="noreferrer" className="flex justify-between text-[12.5px] gap-2"><span className="truncate" dir="auto">{x.site}</span><b className="c-num">{x.price} {tr("EGP")}</b></a>)}
+                    <span className="c-sub text-[11px] block">{tr("Prices from the web — check at the pharmacy; the same box size matters.")}</span></div>
+                    : <span className="c-sub text-[12px] block mt-0.5" data-testid="care-prices-none">{tr("No price found online")}</span>) : null}</div>
+                <button className="c-sub min-h-[44px] min-w-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
+              </div>); };
+  const [medSel, setMedSel] = useState(null);
+  const wide = useWide();
+  const memberOf = (id) => (members.length > 1 && members.find((p) => p.id === id) ? members.find((p) => p.id === id).name : "");
   return (
     <div className={page + " rounded-2xl p-4 md:p-6 space-y-4"} style={{ minHeight: "70vh" }} data-testid="care-page">
       <div><h2 className={"att-h1 " + h1 + " flex items-center gap-2"}><Heart size={20} className="c-acc" />{tr("Family health")}</h2>
@@ -195,18 +237,19 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
             </button>))}
         </div>) : null}
 
-      {tab === "meds" ? (
+      {/* v10.2 D1: on a computer, the medicines on the left and the picked one open on the right; adding opens in the right pane */}
+      {tab === "meds" && wide && data.meds.some((m) => !m.stopped) ? <div data-testid="care-meds">
+        <SplitView testid="care-split" listLabel={tr("Medicines")} find findHint="Find a medicine"
+          items={data.meds.filter((m) => !m.stopped).map((m) => ({ key: m.id, icon: "💊", title: (m.name + " " + (m.strength || "")).trim(), sub: [memberOf(m.member), m.dose, tr(m.freq)].filter(Boolean).join(" · "), end: (m.times || [])[0] || "" }))}
+          sel={medSel} onSel={(k) => { setMedSel(k); setDrafts([]); setTyping(""); }}
+          head={<div className="space-y-2 pb-1">{medBtns}</div>}
+          detail={<div className="space-y-3" data-testid="care-split-pane">{drafts.length || typing === "rx" ? medForms : <>{medWarn}{data.meds.filter((m) => m.id === medSel).map((m) => medCard(m))}</>}</div>} />
+      </div> : tab === "meds" ? (
         <div className="space-y-3" data-testid="care-meds">
           {/* v6.27 computer layout A: the ways in and the forms on the left, the warnings and the medicines on the right */}
           <div className={PANES}><div className={L3}>
-          <div className="grid grid-cols-3 gap-2">
-            <button className={cardPad + " text-center py-3"} onClick={() => choosePhoto(fileRx.current)} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
-            <button className={cardPad + " text-center py-3"} onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
-            <button className={cardPad + " text-center py-3"} onClick={() => setDrafts((x) => [...x, { _k: "h" + Date.now() }])} data-testid="care-rx-hand"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Add by hand")}</span></button>
-          </div>
-          <input ref={fileRx} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "rx"); e.target.value = ""; }} data-testid="care-rx-file" />
-          {typing === "rx" ? <div className={cardPad + " space-y-2"}><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="auto" placeholder={tr("e.g. Amoxicillin 500 mg — 1 cap 3 times daily for 7 days")} className={field} style={st} data-testid="care-rx-text" /><button className={btnP} disabled={!text.trim()} onClick={() => { readRx(text); setTyping(""); }} data-testid="care-rx-read">{tr("Read it")}</button></div> : null}
-          {drafts.map((d) => <MedForm key={d._k} init={d} members={members} onCancel={() => setDrafts((x) => x.filter((y) => y._k !== d._k))} onSave={(m) => { const { _k, missing, raw0, ...rest } = m; saveMed(rest); setDrafts((x) => x.filter((y) => y._k !== d._k)); }} />)}
+          {medBtns}
+          {medForms}
           </div><div className={(warn && warn.length) || data.meds.some((m) => !m.stopped) ? R3 : "min-w-0"}>
           {warn && warn.length ? (
             <div className={cardPad + " space-y-2"} style={{ borderColor: "var(--c-warn)" }} data-testid="care-warnings">
@@ -216,21 +259,7 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
           {!packOk && data.meds.filter((m) => !m.stopped).length > 1 ? (
             <div className={cardPad} data-testid="care-pack"><b>{tr("Check medicines together")}</b><p className="c-sub text-[13px] m-0 mt-1">{tr("Download the Medicines pack (official drug labels, 39 MB, offline) and Attune checks each pair against what the labels say.")}</p>
               {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); setPackOk(true); } catch (e) { flash && flash(String(e.message || e)); } setBusy(""); }}>{tr("Download")}</button> : null}</div>) : null}
-          {data.meds.filter((m) => !m.stopped).map((m) => {
-            const left = m.days > 0 ? m.days - Math.round((Date.parse(H.isoDay(Date.now()) + "T12:00:00") - Date.parse(m.start + "T12:00:00")) / 86400000) : null;
-            return (
-              <div key={m.id} className={cardPad + " flex items-start gap-3"} data-testid="care-med">
-                <div className="c-ic"><Pill size={16} /></div>
-                <div className="flex-1 min-w-0"><b className="block" dir="auto">{m.name} {m.strength}</b>
-                  <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : "", H.daysOfSupply(data, m) != null ? tr("supply for {n} days", { n: H.daysOfSupply(data, m) }) : ""].filter(Boolean).join(" · ")}</span>
-                  {m.stock > 0 ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => refill(m)} data-testid="care-med-refill">{tr("Update how many are left")}</button> : null}
-                  {webSearch ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => findPrice(m)} data-testid="care-price">{prices[m.id] === "busy" ? tr("Looking…") : tr("Cheapest price")}</button> : null}
-                  {Array.isArray(prices[m.id]) ? (prices[m.id].length ? <div className="mt-1 space-y-0.5" data-testid="care-prices">
-                    {prices[m.id].map((x) => <a key={x.site} href={x.url} target="_blank" rel="noreferrer" className="flex justify-between text-[12.5px] gap-2"><span className="truncate" dir="auto">{x.site}</span><b className="c-num">{x.price} {tr("EGP")}</b></a>)}
-                    <span className="c-sub text-[11px] block">{tr("Prices from the web — check at the pharmacy; the same box size matters.")}</span></div>
-                    : <span className="c-sub text-[12px] block mt-0.5" data-testid="care-prices-none">{tr("No price found online")}</span>) : null}</div>
-                <button className="c-sub min-h-[44px] min-w-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-neg)]" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
-              </div>); })}
+          {data.meds.filter((m) => !m.stopped).map((m) => medCard(m))}
           {!data.meds.some((m) => !m.stopped) ? <DeskEmpty icon={Pill} title={tr("Your medicines appear here")} testid="care-desk-empty" /> : null}
           </div></div>
         </div>) : null}

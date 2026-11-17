@@ -9,6 +9,7 @@ import { Plane, Languages, RefreshCw, Loader2, Copy, Volume2, AlertTriangle, Max
 import { tr } from "./i18n.js";
 import * as T from "./travel.js";
 import * as K from "./ui-kit.jsx";
+import { SplitView } from "./split-ui.jsx";
 import * as D from "./deadlines.js";
 import { speakNow } from "./lesson-ui.jsx";
 import { openOwed } from "./owed-ui.jsx";
@@ -111,7 +112,7 @@ export function TravelPage(p) {
 
 
   </>);
-  return (
+  const page = (
     <div className="calm bg-[var(--c-bg)] text-[var(--c-ink)] rounded-[20px] p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="travel-page">
       {/* the country — one line; the full list opens only when asked */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -124,10 +125,10 @@ export function TravelPage(p) {
               {syncing ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}{tr("Update everything")}</button>
           </p>
         </div>
-        <button onClick={() => setPick((v) => !v)} className={K.btnS} data-testid="travel-change">{pick ? tr("Done") : pack ? tr("Change country") : tr("Pick a country")}</button>
+        {wide ? null : <button onClick={() => setPick((v) => !v)} className={K.btnS} data-testid="travel-change">{pick ? tr("Done") : pack ? tr("Change country") : tr("Pick a country")}</button>}
       </div>
 
-      {pick || !pack ? (
+      {!wide && (pick || !pack) ? (
         <Section title="Country packs" testid="travel-packs" right={<span className="c-sub">{Object.keys(CPACKS).length}</span>}>
           <p data-intro="" className="c-sub m-0">{tr("Download once on Wi-Fi — everything then works on a plane, in a tunnel, or with roaming switched off.")}</p>
           {installedPacks.length ? <div className="flex flex-wrap gap-1.5">{installedPacks.filter((k) => CPACKS[k]).map((k) => (
@@ -329,4 +330,10 @@ export function TravelPage(p) {
         </div>) : null}
     </div>
   );
+  // v10.2 D1 (Ali OK'd "OK-D1"): on a computer the countries are a list on the left and the picked country's page on the right
+  if (!wide) return page;
+  const items = [...installedPacks.filter((k) => CPACKS[k]), ...Object.keys(CPACKS).filter((k) => !installedPacks.includes(k))]
+    .map((k) => ({ key: k, icon: CPACKS[k].flag, title: countryShown(k, CPACKS[k].name), sub: installedPacks.includes(k) ? tr("On this device") + (CPACKS[k].cur ? " · " + CPACKS[k].cur : "") : CPACKS[k].cur || "" }));
+  return <SplitView items={items} sel={activePack || null} onSel={(k) => { if (k !== activePack) { installPack(k); setPick(false); } }} detail={page}
+    find findHint="Find a country…" listLabel={tr("Country packs")} testid="travel-split" />;
 }
