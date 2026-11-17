@@ -23,8 +23,8 @@ with sync_playwright() as p:
     check(vis in (0, 1), "at most ONE thing Attune noticed is shown (%s)" % vis)
     tip = page.locator("[data-testid=coach-tip]")
     if tip.count():
-        pad = page.evaluate("parseInt(getComputedStyle(document.body).paddingBottom) || 0")
-        check(pad >= tip.bounding_box()["height"], "a tip makes room for itself — the last card can scroll out from under it (%dpx)" % pad)
+        # v10.2 T1 (Ali OK'd): on the phone the tip is a line IN the page — it never floats over a card
+        check(page.evaluate("getComputedStyle(document.querySelector('[data-testid=coach-tip]')).position") != "fixed", "the tip is part of the page, never over a card")
     # My report keeps everything that left Home
     page.click("[data-testid=home-see-report]"); page.wait_for_timeout(700)
     check(page.locator("[data-testid=home-line]").count() == 1, "My report: Your day")

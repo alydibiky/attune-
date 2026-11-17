@@ -12925,4 +12925,5 @@ export const KO = {
   "the store": "스토어",
   "Copy link": "링크 복사",
   "Check it now": "지금 확인",
+  "Tips for this page": "이 페이지 팁",
 };

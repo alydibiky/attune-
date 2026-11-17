@@ -12926,4 +12926,5 @@ export const SW = {
   "the store": "duka",
   "Copy link": "Nakili kiungo",
   "Check it now": "Kagua sasa",
+  "Tips for this page": "Vidokezo vya ukurasa huu",
 };

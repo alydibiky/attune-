@@ -7,7 +7,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
-import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost } from "./setup-ui.jsx";
+import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost, TipBulb } from "./setup-ui.jsx";
 import { BrainPage, brainKnown } from "./brain-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
@@ -8624,6 +8624,7 @@ export default function App() {
     pdfchat: "Ask a PDF", booklib: "Documents", people: "People", write: "Writing", shelf: "Shelf" /* v9.2 Ali: "make notes called shelf like it was" */, remember: "Attune remembers", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
+  const barHidden = mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && (OWN_TITLE.has(mode) || BAR_TITLES[mode] || ["tables", "timetable", "errands"].includes(mode)));   // (v10.2: named, so the 💡 knows where the title is)
   const hubTabsEl = (() => {
     const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
     const t = tabsFor(mode, avail);
@@ -8632,7 +8633,7 @@ export default function App() {
       <button onClick={() => navTo(pp[0])} data-testid="part-back" className="calm inline-flex items-center gap-1 min-h-[36px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! px-3.5 mb-3 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)]">
         <ChevronLeft size={15} />{tr(pp[0] === "timeline" ? "All follow-ups" : TAB_SHORT[pp[0]] || MODE_TITLES[pp[0]] || pp[0])}</button>); }
     return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
-      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={false} /> : null;   // v8.7 (P5-A option 2): no bottom bars — Business too has its tabs on top
+      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={false} end={!wide && barHidden ? <TipBulb mode={mode} /> : null} /> : null;   // v8.7 (P5-A option 2): no bottom bars — Business too has its tabs on top
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
   useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); document.documentElement.classList.add("att-min"); } catch (e) {} }, []);
@@ -10610,7 +10611,7 @@ export default function App() {
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && (OWN_TITLE.has(mode) || BAR_TITLES[mode] || ["tables", "timetable", "errands"].includes(mode))) ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (barHidden ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <>
@@ -10624,6 +10625,7 @@ export default function App() {
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
           <p className="text-[17px] font-extrabold tracking-tight text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || BAR_TITLES[mode] || (MORE_TOOLS.find((x) => x[0] === mode) || [])[1] || "Attune")}</p>
           <div className="flex-1" />
+          {!wide && !barHidden ? <Guard name="tipbulb"><TipBulb mode={mode} className="shrink-0" /></Guard> : null}
           {/* v6.31 minimal: the model is a small dot and a name, not a big outlined button */}
           {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 min-h-[40px] text-[12px] font-bold px-3 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
             <Cpu size={12} />{engineText}</button>
@@ -10635,6 +10637,9 @@ export default function App() {
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="w-11 h-11 grid place-items-center rounded-[12px] text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); navTo("home"); }} className="att-icon-btn h-11! min-w-[44px]! rounded-[12px]! border-transparent! bg-transparent! text-slate-200!" aria-label={tr("New chat")} data-testid="chat-new-home"><Plus size={20} /></button> : null}
         </header>
+        {/* v10.2 T1 + T3 (Ali OK'd "OK-T"): the phone's tip is a line inside the page; the 💡 by the title shows a page's tips again */}
+        {wide || (barHidden && mode === "home") ? <div className="relative h-0"><Guard name="tipbulb"><TipBulb mode={mode} className={"absolute end-0 z-[40] " + (mode === "home" && !wide ? "top-3" : "top-1")} /></Guard></div> : null}
+        {!wide && mode !== "home" ? <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} inline /></Guard> : null}
 
         {/* The morning line — shown on every tab, once a day, only when there
             is something real to say. Computed, never generated. */}
@@ -10665,7 +10670,7 @@ export default function App() {
         ) : mode === "home" && !wide && dayset.simple ? (
           <SimpleHome navTo={navTo} openMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} />
         ) : mode === "home" && !wide ? (
-          <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })(), bought: isPro(tier), pro: isPro(tier) || testingPro() || bonusUntil() > 0, open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
+          <PhoneHome tipSlot={<Guard name="coach"><CoachHost mode="home" hold={showOnboard || showUpgrade} inline /></Guard>} cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })(), bought: isPro(tier), pro: isPro(tier) || testingPro() || bonusUntil() > 0, open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"} toolsN={toolCount(groupsShown)}
@@ -11756,7 +11761,7 @@ export default function App() {
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
       <Guard name="setup"><SetupDriver trial={{ left: trialLeft, bought: isPro(tier), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })() }} /></Guard>   {/* v9.9.35 the "Set up your life" interview */}
-      <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} /></Guard>   {/* v9.9.35 GD-5 one-time tips */}
+      {wide ? <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} /></Guard> : null}   {/* v9.9.35 GD-5 one-time tips */}
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>
       </div>
       <Guard name="notifmind"><MindRunner ready={modelUsable} ask={(messages) => callChat(messages, null, { maxTokens: 220, temperature: 0, think: false })} /></Guard>

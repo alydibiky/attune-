@@ -12926,4 +12926,5 @@ export const ES = {
   "the store": "la tienda",
   "Copy link": "Copiar enlace",
   "Check it now": "Comprobar ahora",
+  "Tips for this page": "Consejos para esta página",
 };

@@ -10030,4 +10030,5 @@ export const AR = {
   "the store": "المتجر",
   "Copy link": "انسخ اللينك",
   "Check it now": "اتأكد دلوقتي",
+  "Tips for this page": "نصايح للصفحة دي",
 };

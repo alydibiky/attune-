@@ -137,27 +137,38 @@ export function SetupPage({ back }) {
 
 /* ---- v9.9.35 GD-5: one-time tips (coach.js) — a small card above the bottom bar on the page where the tip helps. */
 import * as C from "./coach.js";
-export function CoachHost({ mode, hold = false }) {
+export function CoachHost({ mode, hold = false, inline = false }) {
+  // v10.2 T1 + T2 + T3 (Ali OK'd the combined page: "OK-T"): on the PHONE the tip is a soft line inside the page, under its title
+  // (inline — never over a card or the chat box); on a COMPUTER a small card in the page's bottom corner; on both a 💡 next to the
+  // title (TipBulb) shows the page's tips again. Still one new tip a day at most; "Show the tips again" in Settings starts over.
   const [st, setSt] = useState(() => j(C.COACH_KEY, {})), [more, setMore] = useState(false);
-  const [tip, setTip] = useState(null);
-  useEffect(() => { if (hold) { setTip(null); return; } const t = setTimeout(() => { const s = j(C.COACH_KEY, {}); setSt(s); setTip(C.tipFor(mode, s, Date.now(), more)); }, 1200); return () => clearTimeout(t); }, [mode, hold, more]);
-  // v9.9.39 UI-1 (Ali picked it: "one tip at a time, never over a card"): while a tip shows, the page grows by its height, so the
-  // last card can always scroll out from under it
-  const box = React.useRef(null), shown = !!(tip && !quiet());
-  useEffect(() => { if (!shown) return; const el = box.current; if (!el) return; const set = () => { try { document.body.style.paddingBottom = (el.offsetHeight + 96) + "px"; } catch (e) {} };
-    set(); let ro = null; try { ro = new ResizeObserver(set); ro.observe(el); } catch (e) {} return () => { try { ro && ro.disconnect(); document.body.style.paddingBottom = ""; } catch (e) {} }; }, [shown, tip && tip.id]);
-  if (!tip || quiet()) return null;
-  const done = (again) => { const n = C.markSeen(tip.id, st); try { localStorage.setItem(C.COACH_KEY, JSON.stringify(n)); } catch (e) {} setSt(n); setTip(again ? C.tipFor(mode, n, Date.now(), true) : null); setMore(again); };
-  // v10.2 (Ali, 17 Nov: "tips don't appear good on the mobile and computer"): the theme's own colours (it was a fixed brown card
-  // with pink words in every theme); on a computer a small card in the page's bottom corner, never across the sidebar
-  const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
-  return <div ref={box} className={"fixed z-[55] rounded-[16px] p-3.5 space-y-1.5 border border-[var(--c-acc)] bg-[var(--c-surf)] text-[var(--c-ink)] shadow-[0_8px_28px_rgba(0,0,0,0.18)] " + (wide ? "end-6 w-[360px]" : "inset-x-3 mx-auto max-w-[520px]")}
-    style={{ bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom, 0px))" }} data-testid="coach-tip" data-id={tip.id} role="status">
-    <b className="block text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>
-    <p className="m-0 text-[13.5px] leading-snug" dir="auto">{tr(tip.text)}</p>
-    <div className="flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)]"><button onClick={() => done(false)} className="min-h-[36px]" data-testid="coach-ok">{tr("Got it")}</button>
-      <button onClick={() => done(true)} className="min-h-[36px]" data-testid="coach-more">{tr("Show me more tips")}</button></div>
-  </div>;
+  const [tip, setTip] = useState(null), [asked, setAsked] = useState(0);   // asked = the 💡 was tapped: the page's tips in turn
+  useEffect(() => { setAsked(0); if (hold) { setTip(null); return; } const t = setTimeout(() => { const s = j(C.COACH_KEY, {}); setSt(s); setTip(C.tipFor(mode, s, Date.now(), more)); }, 1200); return () => clearTimeout(t); }, [mode, hold, more]);
+  useEffect(() => { const on = (e) => { if (!e.detail || e.detail.mode !== mode) return; const all = C.TIPS.filter((x) => x.mode === mode); if (!all.length) return;
+      setAsked((n) => { const k = n % all.length; setTip(all[k]); return n + 1; }); };
+    window.addEventListener("attune-tip-show", on); return () => window.removeEventListener("attune-tip-show", on); }, [mode]);
+  const shown = !!(tip && (asked || !quiet()));
+  if (!shown) return null;
+  const done = (again) => { const n = C.markSeen(tip.id, st); try { localStorage.setItem(C.COACH_KEY, JSON.stringify(n)); } catch (e) {} setSt(n);
+    if (asked && again) { const all = C.TIPS.filter((x) => x.mode === mode); setAsked((k) => { setTip(all[k % all.length]); return k + 1; }); return; }
+    setAsked(0); setTip(again ? C.tipFor(mode, n, Date.now(), true) : null); setMore(again); };
+  const body = <>
+    <b className="text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>{inline ? " · " : null}
+    {inline ? <span className="text-[13.5px] leading-snug" dir="auto">{tr(tip.text)}</span> : <p className="m-0 text-[13.5px] leading-snug" dir="auto">{tr(tip.text)}</p>}
+    <span className={"flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)] " + (inline ? "mt-1" : "")}><button onClick={() => done(false)} className="min-h-[36px]" data-testid="coach-ok">{tr("Got it")}</button>
+      <button onClick={() => done(true)} className="min-h-[36px]" data-testid="coach-more">{tr("Show me more tips")}</button></span></>;
+  // the phone: a line in the page (T1)
+  if (inline) return <div className="calm rounded-[14px] px-3.5 pt-2.5 pb-1 mb-3 border border-[var(--c-ln)] text-[var(--c-ink)]" style={{ background: "var(--c-soft)" }} data-testid="coach-tip" data-id={tip.id} data-inline="1" role="status">{body}</div>;
+  // the computer: a small card in the page's corner (T2)
+  return <div className="fixed z-[55] end-6 bottom-6 w-[360px] max-w-[calc(100vw-48px)] rounded-[16px] p-3.5 space-y-1.5 border border-[var(--c-acc)] bg-[var(--c-surf)] text-[var(--c-ink)] shadow-[0_8px_28px_rgba(0,0,0,0.18)]"
+    data-testid="coach-tip" data-id={tip.id} role="status">{body}</div>;
+}
+/** v10.2 T3: the 💡 next to a page's title when the page has tips — a tap shows them (again), one after another. */
+export function TipBulb({ mode, className = "" }) {
+  if (!C.TIPS.some((x) => x.mode === mode) || quiet()) return null;
+  return <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-tip-show", { detail: { mode } })); } catch (e) {} }}
+    className={"w-9 h-9 rounded-full grid place-items-center border border-[var(--c-ln)] bg-[var(--c-surf)] text-[16px] " + className}
+    aria-label={tr("Tips for this page")} title={tr("Tips for this page")} data-testid="tip-bulb">💡</button>;
 }
 
 /** v9.9.39 SB-4 (Ali picked it: "the left sidebar is very crowded with the 2 additions"): a slim strip at the top of the sidebar —

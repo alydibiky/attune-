@@ -12926,4 +12926,5 @@ export const HI = {
   "the store": "स्टोर",
   "Copy link": "लिंक कॉपी करें",
   "Check it now": "अभी जाँचें",
+  "Tips for this page": "इस पेज के टिप्स",
 };

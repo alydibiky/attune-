@@ -12926,4 +12926,5 @@ export const PT = {
   "the store": "a loja",
   "Copy link": "Copiar link",
   "Check it now": "Verificar agora",
+  "Tips for this page": "Dicas para esta página",
 };

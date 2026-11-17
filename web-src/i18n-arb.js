@@ -12917,4 +12917,5 @@ export const ARB = {
   "the store": "المتجر",
   "Copy link": "نسخ الرابط",
   "Check it now": "تحقّق الآن",
+  "Tips for this page": "نصائح لهذه الصفحة",
 };

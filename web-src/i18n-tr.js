@@ -12926,4 +12926,5 @@ export const TRK = {
   "the store": "mağaza",
   "Copy link": "Bağlantıyı kopyala",
   "Check it now": "Şimdi kontrol et",
+  "Tips for this page": "Bu sayfa için ipuçları",
 };

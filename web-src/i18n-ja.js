@@ -12925,4 +12925,5 @@ export const JA = {
   "the store": "ストア",
   "Copy link": "リンクをコピー",
   "Check it now": "今すぐ確認",
+  "Tips for this page": "このページのヒント",
 };

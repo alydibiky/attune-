@@ -11,7 +11,7 @@ const PART_TITLE = { guardian: "Guardian", radar: "Dates", reminders: "Reminders
   booklib: "Books & PDFs", pdfchat: "One file", remember: "Attune remembers", memory: "Mind", recall: "Recall" };   // v8.5: Documents (W3), Mind · Recall (R2)   // (v6.36 Follow-ups)
 // v6.43 (Ali: "the business apps on their own"): on a phone, Business is its own app — its parts are a bottom bar with icons
 const BAR_ICON = { business: Briefcase, fleet: Truck, crane: Building2, field: HardHat, tools: Wrench };
-export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false }) {
+export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false, end = null }) {
   const on = (m) => m === mode || INSIDE[mode] === m;
   const rowRef = useRef(null);
   const [more, setMore] = useState(false);
@@ -32,6 +32,7 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [], asBar = false 
   return (
     <>
     <div className="relative">
+    {end ? <div className="absolute end-0 top-1 z-[2]">{end}</div> : null}{/* v10.2 T3: the page's 💡 */}
     <div ref={rowRef} onScroll={check} className="calm bg-transparent! att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-[var(--c-ln)]" role="tablist" data-testid="hub-tabs">
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}

@@ -12925,4 +12925,5 @@ export const TH = {
   "the store": "ร้านค้า",
   "Copy link": "คัดลอกลิงก์",
   "Check it now": "ตรวจตอนนี้",
+  "Tips for this page": "เคล็ดลับสำหรับหน้านี้",
 };

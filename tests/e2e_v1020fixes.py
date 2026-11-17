@@ -31,7 +31,17 @@ with sync_playwright() as p:
                    surf: getComputedStyle(document.documentElement).getPropertyValue('--c-surf').trim() }; }""")
         check(r["bg"] not in ("rgb(42, 37, 38)",), "%s: the tip uses the theme, not the old brown card (%s)" % ("computer" if wide else "phone", r["bg"]))
         if wide: check(r["right"] > r["vw"] - 60 and r["w"] <= 380 and r["left"] > r["sideRight"], "computer: a small card in the page's corner, not over the side menu: %s" % r)
-        else: check(r["left"] >= 0 and r["right"] <= r["vw"], "phone: inside the screen")
+        else:
+            check(r["left"] >= 0 and r["right"] <= r["vw"], "phone: inside the screen")
+            # T1: a line in the page, under Home's title; T3: the 💡 shows the tips again after Got it
+            pos = page.evaluate("(() => { const t = document.querySelector('[data-testid=coach-tip]'), h = document.querySelector('[data-testid=phone-home] h1'); return [getComputedStyle(t).position, t.getBoundingClientRect().top >= h.getBoundingClientRect().bottom]; })()")
+            check(pos[0] != "fixed" and pos[1], "phone: the tip is a line in the page, under the title: %s" % pos)
+            page.click("[data-testid=coach-ok]"); page.wait_for_timeout(200)
+            check(page.locator("[data-testid=coach-tip]").count() == 0 and page.locator("[data-testid=tip-bulb]").count() == 1, "Got it → the tip goes, the 💡 stays")
+            page.click("[data-testid=tip-bulb]"); page.wait_for_timeout(200)
+            check(page.locator("[data-testid=coach-tip]").count() == 1, "the 💡 shows Home's tips again")
+            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'agents'}}))"); page.wait_for_timeout(600)
+            check(page.locator("header [data-testid=tip-bulb]").count() == 1, "on a page with a title bar, the 💡 sits next to the title")
         ctx.close()
     # 3. a model loading: the side menu says Loading… (no counter that redraws the app every second)
     ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=(1500, 900), extra_init=QUIET + """

@@ -12925,4 +12925,5 @@ export const DE = {
   "the store": "dem Shop",
   "Copy link": "Link kopieren",
   "Check it now": "Jetzt prüfen",
+  "Tips for this page": "Tipps für diese Seite",
 };

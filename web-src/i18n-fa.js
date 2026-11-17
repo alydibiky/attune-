@@ -12925,4 +12925,5 @@ export const FA = {
   "the store": "فروشگاه",
   "Copy link": "کپی پیوند",
   "Check it now": "همین حالا بررسی کن",
+  "Tips for this page": "نکته‌های این صفحه",
 };

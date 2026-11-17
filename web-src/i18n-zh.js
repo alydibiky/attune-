@@ -12925,4 +12925,5 @@ export const ZH = {
   "the store": "商店",
   "Copy link": "复制链接",
   "Check it now": "立即核对",
+  "Tips for this page": "本页小贴士",
 };

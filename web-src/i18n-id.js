@@ -12926,4 +12926,5 @@ export const IDN = {
   "the store": "toko",
   "Copy link": "Salin tautan",
   "Check it now": "Periksa sekarang",
+  "Tips for this page": "Tips untuk halaman ini",
 };

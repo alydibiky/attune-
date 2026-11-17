@@ -142,7 +142,7 @@ export function PersonAsk({ x, onDone }) {
   </div>;
 }
 
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null, tipSlot = null }) {
   const [text, setText] = useState("");
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
   const [files, setFiles] = useState([]);
@@ -292,6 +292,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         {/* v6.29 (Ali: "a sidebar where I can see the history of my chats"): ☰ opens it — chats, search, places, pinned tools */}
         {openSide ? <button onClick={openSide} aria-label={tr("Chats and menu")} className="w-9 h-9 -ms-1.5 mt-1 rounded-full grid place-items-center c-sub shrink-0" data-testid="home-menu"><Menu size={21} /></button> : null}
         <div className="min-w-0"><p className="c-sub m-0">{date}</p><h1 className="text-[24px] font-black m-0 tracking-tight">{tr(greeting(now))}{name ? ", " + name : ""}</h1></div></div>}
+      {/* v10.2 T1: the day's tip under the title (a line in the page, never over a card) */}
+      {minimal && rep ? null : tipSlot}
       {minimal && rep ? (
         <div className="flex items-center gap-2.5" data-testid="my-report">
           <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center shrink-0" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid="my-report-back">

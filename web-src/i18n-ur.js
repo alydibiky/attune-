@@ -12926,4 +12926,5 @@ export const UR = {
   "the store": "اسٹور",
   "Copy link": "لنک کاپی کریں",
   "Check it now": "ابھی چیک کریں",
+  "Tips for this page": "اس صفحے کے مشورے",
 };

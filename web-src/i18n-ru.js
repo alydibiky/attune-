@@ -12925,4 +12925,5 @@ export const RU = {
   "the store": "магазине",
   "Copy link": "Копировать ссылку",
   "Check it now": "Проверить сейчас",
+  "Tips for this page": "Советы для этой страницы",
 };

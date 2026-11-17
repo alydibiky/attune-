@@ -12925,4 +12925,5 @@ export const VI = {
   "the store": "cửa hàng",
   "Copy link": "Sao chép liên kết",
   "Check it now": "Kiểm tra ngay",
+  "Tips for this page": "Mẹo cho trang này",
 };
