@@ -20,6 +20,13 @@
 > shows the listing it found ("fix the opening and filling the details … even if displaying it another way"; Recommended L1 the offer's
 > own page inside Attune, from what the agent read), T1–T3 where tips appear (Recommended T1 a line in the page).
 > Tests: tests/unit/v1020fixes.test.mjs, tests/e2e_v1020fixes.py, desktop/test/unit.js (orderAttempts, phaseOf).
+> **Smooth (Ali: "I want it really smooth and reliable")**, measured at mid-phone speed (CPU ×4, scratch scripts: perf = open + page switches +
+> typing, CDP profile): opening the app 3.7 s → 2.5 s (the 1.4 s block left is the phone compiling the 5.9 MB script — NEXT: load rare
+> pages only when opened: convert, slides, cv, pdfchat, guide + guide-demo, fit-cuisines/foods, shelf, knowledge, money-sheets ≈ 18 %),
+> Money's first open 0.35 → 0.2 s (attune.jsx yusrDocumentHtml decodes once, warmed in the background), typing in Home's box no freeze
+> (home-ui.jsx: "Organise this" checked after a 0.3 s pause). The Egyptian Arabic dictionary is www/i18n/ar.js (build/bundle.mjs swaps
+> web-src/i18n-ar.js for build/i18n-ar-shim.js in the bundle; shell.html loads it for Arabic; in English it loads after the first screen
+> for the Arabic app names in the Home box). Flaky in the cloud only: e2e_v5 (the tiny test engine times out late in a full run; passes alone).
 > **Ali picked D1, L1 ("but it should still redirect me to the right listing"), T1 T2 T3** → combined page with "What I understood":
 > https://claude.ai/artifact/CkbzEJEpupPdYdBKbjtxdn (docs/mockups/desktop-agents-tips-combined.html) → **Ali: "OK-D1 OK-L1 OK-T"** (asked if D1 is
 > what professional computer apps look like — yes: Mail, Outlook, Notion, Slack, Linear, Todoist, Things; Apple split view / Microsoft list-details).

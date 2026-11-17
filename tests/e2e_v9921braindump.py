@@ -15,7 +15,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1500)
     check(page.locator("[data-testid=home-organise]").count() == 0, "no Organise button on an empty box")
-    page.fill("[data-testid=home-ask]", TEXT); page.wait_for_timeout(300)
+    page.fill("[data-testid=home-ask]", TEXT); page.wait_for_timeout(700)   # (v10.2: checked once typing pauses, 0.3 s)
     check(page.locator("[data-testid=home-organise]").count() == 1, "several things written → Organise this appears under the box")
     page.click("[data-testid=home-organise]"); page.wait_for_selector("[data-testid=braindump]", timeout=4000)
     types = page.locator("[data-testid=braindump-item]").evaluate_all("els => els.map(e => e.dataset.type)")
