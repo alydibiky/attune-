@@ -143,7 +143,11 @@ export function PersonAsk({ x, onDone }) {
 }
 
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null, trial = null, tipSlot = null }) {
+  // v10.2 (Ali: "I want it really smooth"): "Organise this" is checked once typing pauses (0.3 s) — not on every key press, where it
+  // froze the box for up to 0.4 s on a mid-range phone
+  const [organiseOk, setOrganiseOk] = useState(false);
   const [text, setText] = useState("");
+  useEffect(() => { if (String(text || "").trim().length < 12) { setOrganiseOk(false); return; } const t = setTimeout(() => setOrganiseOk(worthOrganising(text)), 300); return () => clearTimeout(t); }, [text]);
   // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
   const [files, setFiles] = useState([]);
   const [web, setWeb] = useState(false);
@@ -357,7 +361,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {minimal && !rep && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
       {minimal && !rep && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
       {/* v9.9.21 T1: several things written in the box → "Organise this" sorts them (nothing saved before you tick) */}
-      {minimal && !rep && worthOrganising(text) ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text } }))} className="w-full min-h-[44px] rounded-[14px] font-extrabold text-[13.5px] inline-flex items-center justify-center gap-1.5" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} data-testid="home-organise"><Sparkles size={15} />{tr("Organise this")}</button> : null}
+      {minimal && !rep && organiseOk ? <button onClick={() => window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text } }))} className="w-full min-h-[44px] rounded-[14px] font-extrabold text-[13.5px] inline-flex items-center justify-center gap-1.5" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }} data-testid="home-organise"><Sparkles size={15} />{tr("Organise this")}</button> : null}
       {/* v9.9.19 T3 (Ali picked A, "make it openable"): countdown chips under the box; tap → the big card */}
       {minimal && !rep ? <CountdownChips /> : null}
       {!rep ? <JobsHomeCard /> : null}

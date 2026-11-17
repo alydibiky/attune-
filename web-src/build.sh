@@ -36,12 +36,7 @@ node_modules/.bin/tailwindcss -i build/tw.css -o "$TMP/app.css" --minify >/dev/n
 test -s "$TMP/app.css" || { echo "CSS build failed"; exit 1; }
 
 # 2. JS: the app, bundled.
-node_modules/.bin/esbuild build/entry.jsx --bundle --format=iife --minify \
-  --jsx=transform --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2018 --charset=utf8 \
-  --alias:react="$HERE/build/react-shim.js" \
-  --alias:react-dom/client="$HERE/build/reactdom-shim.js" \
-  --alias:lucide-react="$HERE/build/lucide-shim.js" \
-  --outfile="$TMP/app.js" --log-level=warning
+node build/bundle.mjs "$TMP/app.js" "$TMP/meta.json"   # v10.2: esbuild API (i18n-ar.js → its own file, see build/bundle.mjs)
 
 # 2b. (v9.1: the Business website template is archived with Business — archive/business/build/, see archive/business/README.md)
 
@@ -50,7 +45,7 @@ node_modules/.bin/esbuild build/entry.jsx --bundle --format=iife --minify \
 mkdir -p "$HERE/../app/src/main/assets/www/i18n"
 node --input-type=module -e '
 import fs from "fs";
-const M = { arb: "ARB", fr: "FR", es: "ES", tr: "TRK", pt: "PT", hi: "HI", id: "IDN", ur: "UR", de: "DE", it: "IT", ru: "RU", zh: "ZH", ja: "JA", ko: "KO", fa: "FA", bn: "BN", vi: "VI", th: "TH", sw: "SW" };
+const M = { ar: "AR", arb: "ARB", fr: "FR", es: "ES", tr: "TRK", pt: "PT", hi: "HI", id: "IDN", ur: "UR", de: "DE", it: "IT", ru: "RU", zh: "ZH", ja: "JA", ko: "KO", fa: "FA", bn: "BN", vi: "VI", th: "TH", sw: "SW" };
 for (const [l, n] of Object.entries(M)) {
   const d = (await import(process.cwd() + "/i18n-" + l + ".js"))[n];
   fs.writeFileSync(process.argv[1] + "/" + l + ".js", "(window.__ATTUNE_DICTS=window.__ATTUNE_DICTS||{})[" + JSON.stringify(l) + "]=" + JSON.stringify(d).replace(/<\/script/gi, "<\\/script") + ";\n");

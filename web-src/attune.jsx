@@ -6170,6 +6170,7 @@ const TIER_LIMITS = { free: { templates: 3, history: 5 }, pro: { templates: 20, 
 // pointed at a local asset; in this build the same document is embedded and
 // handed to the iframe as a blob, which keeps its own origin and so its own
 // ledger.v3 — the storage key is never renamed, on either platform.
+let YUSR_BYTES = null, YUSR_DOC = null;
 function yusrDocumentHtml() {
   if (typeof document === "undefined") return null;
   const el = document.getElementById("yusr-src");
@@ -6177,7 +6178,8 @@ function yusrDocumentHtml() {
   try {
     // Byte-exact decode. The document is full of Arabic; a string round-trip
     // through atob alone would mangle every multi-byte character.
-    const bytes = Uint8Array.from(atob(el.textContent.trim()), (c) => c.charCodeAt(0));
+    // v10.2 (Ali: "really smooth"): decoded ONCE — Money opened slowly because the whole ledger was decoded again on every open
+    const bytes = YUSR_BYTES || (YUSR_BYTES = Uint8Array.from(atob(el.textContent.trim()), (c) => c.charCodeAt(0)));
     // v7.1 (Ali: "Gemini's interface in everything"): the Money ledger takes Direction 2 "Quiet Atelier" — its own colour
     // variables pointed at the app's stone / sage-white, jade and terracotta, Nunito, 22-px corners; light follows the app
     const light = document.documentElement.classList.contains("att-light");
@@ -6196,7 +6198,7 @@ function yusrDocumentHtml() {
       // v7.9: Attune draws Yusr's tabs (and the +) itself, under every Yusr screen — Yusr's own bar and + would be a second set;
       // Invoices moved to Business → Books
       + `body>div>nav,nav:has(button[data-scr]){display:none!important}.fab{display:none!important}#inv-set-btn{display:none!important}section[id^=scr-]{padding-bottom:96px!important}</style>`;   // room under the last row for the +
-    const doc = new TextDecoder("utf-8").decode(bytes);
+    const doc = YUSR_DOC || (YUSR_DOC = new TextDecoder("utf-8").decode(bytes));
     return doc.includes("</head>") ? doc.replace("</head>", qa + "</head>") : qa + doc;
   } catch (e) { return null; }
 }
@@ -7964,12 +7966,20 @@ const STUDIO_OFF = true;   // v9.1: Studio is removed (archive/studio/)
 
 // v6.50 (Ali, 22 Oct: "I want everything in the app to be available via home chat"): every tool can be opened from the Home box —
 // "/money", «/الفلوس», "open fit", «افتح الفلوس» (commands.js setApps / appNamed). Its name in English, Arabic and the UI language.
-K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[label] || "", local: tr(label) })),
+// v10.2 (smooth start): the Egyptian Arabic dictionary is its own file now (www/i18n/ar.js, 844 KB no longer read at every start for
+// other languages); in English it is loaded quietly after the first screen, and the Arabic app names are filled in then
+const setAppNames = (AR_DICT) => K2.setApps([...MORE_TOOLS.map(([id, label]) => ({ id, en: label, ar: AR_DICT[label] || "", local: tr(label) })),
   { id: "food-photo", en: "Food photo", ar: AR_DICT["Food photo"] || "صورة أكل" }, { id: "read", en: "Read it to me", ar: AR_DICT["Read it to me"] || "اقرالي" },
   { id: "all", en: "All apps", ar: "كل التطبيقات" }, { id: "voice", en: "Ya Attune (voice)", ar: "يا أتيون (صوت)" }, { id: "report", en: "My report", ar: "تقريري" },
   { id: "privacy", en: "Privacy", ar: AR_DICT["Privacy"] || "الخصوصية" }, { id: "panel:profile", en: "Profile", ar: AR_DICT["Profile"] || "البروفايل" },
   { id: "panel:plan", en: "Plan", ar: AR_DICT["Plan"] || "الباقة" }, { id: "panel:backup", en: "Backup", ar: AR_DICT["Backup"] || "النسخة الاحتياطية" }, { id: "money", en: "Money", ar: AR_DICT["Money"] || "الفلوس" },
   /* v9.1: "Fleet & rentals" is archived (removed.js) */]);
+const arDict = () => (typeof window !== "undefined" && window.__ATTUNE_DICTS && window.__ATTUNE_DICTS.ar) || AR_DICT || {};
+setAppNames(arDict());
+if (typeof window !== "undefined" && typeof document !== "undefined" && !Object.keys(arDict()).length) {
+  const later = () => { try { const sc = document.createElement("script"); sc.src = "i18n/ar.js"; sc.async = true; sc.onload = () => setAppNames(arDict()); document.head.appendChild(sc); } catch (e) {} };
+  setTimeout(() => { try { (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(later, { timeout: 4000 }); } catch (e) { later(); } }, 2500);
+}
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
