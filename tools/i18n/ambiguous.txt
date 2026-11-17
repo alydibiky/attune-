@@ -422,6 +422,15 @@ cv-ui.jsx: <button className={ghost + " w-full flex items-center justify-center 
 agents-ui.jsx: else if (s.k === "cabin") body = chipRow([["economy", tr("Economy")], ["premium", tr("Premium economy")], ["business", tr("Business")], ["fi
 attune.jsx: {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => 
 
+## Dates
+agents-ui.jsx: stay && o.checkin ? [tr("Dates"), o.checkin + " → " + (o.checkout || "") + (nights ? " · " + T("{n} nights", { n: nights }) : "")] : null,
+spaces-ui.jsx: {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[12px] font-extrabold uppercase tracking-[0.08em] mb-1 text-[var
+
+## Checked
+agents-ui.jsx: o.verified ? [tr("Checked"), ago(o.verified.at)] : (a.checks || []).length ? [tr("Checked"), ago(a.checks[a.checks.length - 1].at)] : null].
+agents-ui.jsx: o.verified ? [tr("Checked"), ago(o.verified.at)] : (a.checks || []).length ? [tr("Checked"), ago(a.checks[a.checks.length - 1].at)] : null].
+travel-ui.jsx: <p className="c-warn text-[12px] m-0">{tr("Checked")} {entry.asOf}{tr(". Entry rules change with no notice and the cost of being wrong is a 
+
 ## Jobs
 aijobs-ui.jsx: <p className={label + " m-0"}>{tr("Jobs")} · {s.jobs.length}</p>
 tools-hub-ui.jsx: <Tile testid="fam-rep-week" label={fam === "writing" ? tr("Prompts improved") : fam === "files" ? tr("Files converted") : fam === "studio" ?
@@ -569,7 +578,7 @@ chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
 chat.jsx: else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title
-setup-ui.jsx: <div className="flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)]"><button onClick={() => done(false)} className="min-h-[36px]" data
+setup-ui.jsx: <span className={"flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)] " + (inline ? "mt-1" : "")}><button onClick={() => done(false)} 
 
 ## Ready
 attune.jsx: const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? tr("Loadi
@@ -783,6 +792,7 @@ radar-ui.jsx: <span className={U.label + " block pt-1.5"}>{tr("Details")}</span>
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa
 attune.jsx: <div className="flex items-center justify-between text-xs text-slate-300 mb-2"><span>{n.dlStage || tr("Downloading…")}</span><span>{dlPct}%<
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
+care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
 
 ## Use
 attune.jsx: : <button disabled={busy} onClick={() => n.useInstalled(m.id)} className="text-[11px] px-2 py-1 rounded-full bg-teal-500 text-slate-950 disa
@@ -896,8 +906,13 @@ wagroups-ui.jsx: const fresh = W.addedItems({ text, files, who: getLang() === "a
 
 ## Download
 care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
+care-ui.jsx: {installPack ? <button className={btnP + " mt-2"} onClick={async () => { setBusy(tr("Downloading…")); try { await installPack("medicines"); 
 knowledge-ui.jsx: {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download
 travel-ui.jsx: {x.key === "map" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer shrink-0" onClick={ge
+
+## Medicines
+care-ui.jsx: <SplitView testid="care-split" listLabel={tr("Medicines")} find findHint="Find a medicine"
+yourday-ui.jsx: <T2 icon="💊" label={tr("Medicines")} onClick={() => navTo("care")} testid="simple-meds" />
 
 ## School
 care-ui.jsx: <button className="min-h-[40px] px-3 rounded-full text-[12.5px] font-bold c-acc border border-[var(--c-ln)]" onClick={() => setSchoolFor(p.i
@@ -1038,6 +1053,7 @@ shelf-ui.jsx: <p className="text-[14.5px] font-extrabold text-[var(--c-ink)] tru
 shelf-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r
 shelf-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r
 shelf-ui.jsx: <span className="text-[14.5px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
+spaces-ui.jsx: items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due
 
 ## draft
 code-ui.jsx: <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-[var(--c-pos)]" : p.status === "failing" ? "text-[var(--c-neg)]" 
@@ -1237,7 +1253,7 @@ spaces-ui.jsx: <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || t
 ## Tip
 guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
 guide-ui.jsx: <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:
-setup-ui.jsx: <b className="block text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>
+setup-ui.jsx: <b className="text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>{inline ? " · " : null}
 
 ## Cranes out
 home-now.js: try { if (fleet && live(fleet.cranes || []).length) { const k = fleetKpis(fleet); out.push({ k: "cranes", label: tr("Cranes out"), value: `$
@@ -1292,6 +1308,7 @@ life-ui.jsx: <span>{tickDay(s.date, c.kind === "regular")}</span><span className
 money-calm-ui.jsx: value={!zak ? "—" : zak.noPrice ? tr("Needs a price") : zak.due ? tr("Due") : zak.pct != null ? T("{p}% of niṣāb", { p: zak.pct }) : "—"}
 money-sheets-ui.jsx: {r.options ? <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p>{r.options.map((o, i) => <p key={i} className="m-0 text-[17px] 
 money-sheets-ui.jsx: : <><p className="m-0 text-[12px] font-bold c-sub">{tr("Due")}</p><p className="m-0 text-[22px] font-black text-[var(--c-acc)] tabular-nums"
+spaces-ui.jsx: items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due
 spaces-ui.jsx: {dates.slice(0, 4).map((d, i) => <div key={i} className="flex items-start gap-2 text-[13.5px]" data-testid="project-date"><b className="tabu
 upkeep-ui.jsx: {l.dueNow ? <span className="text-[11px] font-extrabold c-warn">{tr("Due")}</span> : null}</div>
 
