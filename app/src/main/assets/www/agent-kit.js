@@ -302,6 +302,28 @@
   try { new MutationObserver(watch).observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
   // v9.4 G2: an appointment page (visa, consulate, clinic) — its visible words go back to Attune, which decides what they mean
   const slot = () => { const t = String((document.body && document.body.innerText) || "").replace(/\s+/g, " ").trim().slice(0, 6000); const out = { kind: "slot", text: t, url: location.href }; report(out); return out; };
-  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy, slot, goTo, hrefOf };
+  // v10.2 L1 (Ali OK'd: "it should still redirect me to the right listing — I don't want to open the product in search and search
+  // again"): the listing page Attune landed on, read once — its name, price, photo, rating, seller, delivery and its own address —
+  // so Attune can check it IS the offer (listing.js verifyListing) before keeping the address. Read only; nothing is clicked.
+  const product = () => {
+    const meta = (k) => { const m = document.querySelector('meta[property="' + k + '"], meta[name="' + k + '"], meta[itemprop="' + k + '"]'); return m ? String(m.getAttribute("content") || "").trim() : ""; };
+    let ld = {}; for (const sc of document.querySelectorAll('script[type="application/ld+json"]')) { try { const j = JSON.parse(sc.textContent || "null"); const all = [].concat(j && j["@graph"] ? j["@graph"] : j);
+      const it = all.find((x) => x && /Product|Hotel|LodgingBusiness|Offer|Accommodation|Vehicle/i.test(String(x["@type"] || ""))); if (it) { ld = it; break; } } catch (e) {} }
+    const h1 = document.querySelector("h1"), h1t = h1 ? (h1.innerText || h1.textContent || "").replace(/\s+/g, " ").trim() : "";
+    const name = String(ld.name || h1t || meta("og:title") || document.title || "").replace(/\s+/g, " ").trim().slice(0, 200);
+    const off = [].concat(ld.offers || [])[0] || {};
+    let price = +String(off.price || off.lowPrice || meta("product:price:amount") || meta("og:price:amount") || meta("price") || "").replace(/[^\d.]/g, "") || 0, currency = String(off.priceCurrency || meta("product:price:currency") || meta("og:price:currency") || meta("priceCurrency") || "");
+    if (!price) { const near = [...document.querySelectorAll('[itemprop="price"], [class*="price" i], [data-testid*="price" i], [id*="price" i]')].filter(visible).slice(0, 12);
+      for (const el of near) { const pr = priceIn((el.getAttribute("content") ? el.getAttribute("content") + " " : "") + (el.innerText || "")); if (pr && !TAXLINE.test(el.innerText || "")) { price = pr.price; currency = currency || pr.currency; break; } } }
+    const ag = ld.aggregateRating || {}, txt = String((document.body && document.body.innerText) || "").replace(/\s+/g, " ").slice(0, 8000);
+    const deliv = (/(?:delivery|deliver(?:ed)? by|arrives?|get it by|التوصيل|يوصل|هيوصل)[^.|\n]{0,40}/i.exec(txt) || [""])[0].slice(0, 60);
+    const seller = String((off.seller && off.seller.name) || (/(?:sold by|seller|البائع)\s*:?\s*([^|·\n]{2,40})/i.exec(txt) || [, ""])[1] || "").trim().slice(0, 40);
+    const canon = (document.querySelector('link[rel="canonical"]') || {}).href || "";
+    const out = { kind: "product", url: location.href, canonical: /^https:\/\//.test(canon) ? canon : "", name, price, currency: String(currency).slice(0, 8),
+      photo: String(meta("og:image") || [].concat(ld.image || [])[0] || "").slice(0, 400), rating: +ag.ratingValue || 0, reviews: +(ag.reviewCount || ag.ratingCount) || 0, seller, delivery: deliv,
+      many: offers().length };   // many > 3: still a results page
+    report(out); return out;
+  };
+  window.__attuneAgent = { offers: () => offers().map((o) => ({ price: o.price, currency: o.currency, hour: o.hour, stops: o.stops, text: o.text })), best, fill, payment, rank, buy, slot, goTo, hrefOf, product };
   watch();
 })();

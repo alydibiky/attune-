@@ -64,6 +64,10 @@ class AgentBrowser : Activity() {
     private var gotoFallbackArmed = false
     private var refreshSec = 0
     private var refreshArmed = false
+    // v10.2 L1 (Ali: "it should still redirect me to the right listing"): check mode — open the offer (directly, or found by name on
+    // the results), read its page once (agent-kit product()), report it and close; the page decides if it IS the offer
+    private var resolveMode = false
+    private var resolveArmed = false
     private var round = 0
     private var roundArmed = -1
     // v9.1 (Ali, 3 Nov: "it keeps loading me to different dates and doesn't get the lowest price in the time span"): each day is
@@ -102,6 +106,8 @@ class AgentBrowser : Activity() {
         fillAuto = intent.getBooleanExtra("fillAuto", false)
         gotoWant = intent.getStringExtra("goto") ?: ""
         gotoFallback = (intent.getStringExtra("gotoFallback") ?: "").let { if (it.startsWith("https://")) it else "" }
+        resolveMode = intent.getBooleanExtra("resolve", false)
+        if (resolveMode) gotoFallback = ""   // check mode never opens a search instead: not found = not confirmed
         slotMode = intent.getBooleanExtra("slot", false)              // v9.4 G2: a visa / appointment page — its words go back to the page
         refreshSec = intent.getIntExtra("refresh", 0).coerceIn(0, 3600) // v9.4 G2: "watch while open" — reload every N seconds
         rounds = try { org.json.JSONArray(intent.getStringExtra("rounds") ?: "") } catch (e: Exception) { org.json.JSONArray() }
@@ -241,6 +247,10 @@ class AgentBrowser : Activity() {
                     v.postDelayed({ if (!closed && !gotoDone) { gotoDone = true; try { result.put("opened", gotoFallback).put("fallback", true) } catch (e: Exception) {}; try { web.loadUrl(gotoFallback) } catch (e: Exception) {} } }, 12500L) }
                 // the page the person ended on after the offer was found — kept, so the next tap opens it directly
                 if (gotoDone && u.startsWith("https://")) try { result.put("landed", u) } catch (e: Exception) {}
+                // v10.2 L1 check mode: on the listing (the start page when it is one, else the page goTo opened) — read it, then close;
+                // at most 22 s in all, so a page that never finishes can't keep the window open
+                if (resolveMode && (gotoWant.isEmpty() || gotoDone)) for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.product&&window.__attuneAgent.product()") }, ms)
+                if (resolveMode && !resolveArmed) { resolveArmed = true; v.postDelayed({ if (!closed) finishWith("done") }, 22000L) }
                 if (slotMode) for (ms in longArrayOf(2500L, 7000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.slot&&window.__attuneAgent.slot()") }, ms)
                 if (slotMode && refreshSec >= 30 && !refreshArmed) { refreshArmed = true; val loop = object : Runnable { override fun run() { if (closed) return; try { web.reload() } catch (e: Exception) {}; web.postDelayed(this, refreshSec * 1000L) } }; web.postDelayed(loop, refreshSec * 1000L) }
                 if (fillAuto && profile != "{}") for (ms in longArrayOf(2500L, 6000L)) v.postDelayed({ if (!closed) run("window.__attuneAgent&&window.__attuneAgent.fill($profile)") }, ms)
@@ -405,6 +415,10 @@ class AgentBrowser : Activity() {
                         if (o.optBoolean("payment")) payment()
                     }
                     "page" -> if (o.optBoolean("payment")) payment()
+                    "product" -> if (resolveMode) {   // v10.2 L1: the listing read — the second read (6 s) wins if the first was early
+                        result.put("product", o)
+                        if (o.optString("name").isNotEmpty() && (o.optDouble("price", 0.0) > 0 || result.has("productSeen"))) finishWith("done") else result.put("productSeen", true)
+                    }
                     "goto" -> if (o.optBoolean("ok")) { gotoDone = true; result.put("opened", o.optString("href")); status.text = L("opening", "Opening this offer's own page…") }
                     "slot" -> {   // v9.4 G2: what the appointment page says; a change while watching → a sound and a line on top
                         val t = o.optString("text").take(6000)

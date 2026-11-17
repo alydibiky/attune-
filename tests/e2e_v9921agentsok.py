@@ -4,7 +4,7 @@
 """
 import json, time, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, through_offer
 env = Env(); errors = []
 now = int(time.time() * 1000); H = 3600000
 d0 = datetime.date.today() + datetime.timedelta(days=40); d1 = d0 + datetime.timedelta(days=4)
@@ -48,7 +48,7 @@ with sync_playwright() as p:
     first = clean(offs.nth(0).inner_text())
     check("Swissôtel" in first and "5★" in first and "41,495" in first and "a night" in first and "m away" in first and "booking" in first.lower(), "OK-2: each written clearly (name, stars, distance, dates, site, total, per night): " + first[:200])
     for i in (0, 6, 9):
-        offs.nth(i).locator("[data-testid=agent-offer-open]").click(); page.wait_for_timeout(250)
+        offs.nth(i).locator("[data-testid=agent-offer-open]").click(); through_offer(page, 300)   # v10.2 L1
     op = page.evaluate("window.__opened")
     check(any("/hotel/sa/h0.html" in u for u in op) and any("/hotel/sa/h6.html" in u for u in op) and any("/hotel/sa/h9.html" in u for u in op), "OK-2: Open on offers 1, 7 and 10 goes to EACH one's own page: " + json.dumps(op)[:300])
     check(not any("searchresults" in u for u in op), "OK-2: never the search page")

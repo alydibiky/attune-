@@ -4,7 +4,7 @@ Month plan = Month · Calendar · Table with goals that fill themselves (P2 + P4
 """
 import json, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, through_offer
 env = Env(); errors = []
 NOW = datetime.datetime(2026, 11, 5, 13, 0, 0)
 ms = lambda d: int(d.timestamp() * 1000)
@@ -51,7 +51,7 @@ with sync_playwright() as p:
     dates = page.locator("[data-testid=agent-grid-date]")
     check(dates.count() == 3, "more than 1 option on more than 1 date: 3 dates in the grid (%d)" % dates.count())
     check(page.locator("[data-testid=agent-grid-offer]").count() + page.locator("[data-testid=agent-grid-best]").count() == 6 and page.locator("[data-testid=agent-grid-best]").count() == 1, "6 offers, the cheapest marked")
-    page.locator("[data-testid=agent-grid-offer]").first.click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=agent-grid-offer]").first.click(); through_offer(page)   # v10.2 L1
     op = page.evaluate("window.__w.opened")
     check(len(op) == 1 and "booking.com/hotel/sa/" in op[0] and "checkin=" in op[0], "an offer opens that exact hotel on its dates, in the phone's browser: " + str(op))
     page.fill("[data-testid=agent-chat-input]", "only 5 stars"); page.click("[data-testid=agent-chat-send]"); page.wait_for_timeout(300)

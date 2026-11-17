@@ -5,7 +5,7 @@ library with kinds + one ask-all box on top.
 """
 import json, datetime
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, through_offer
 env = Env(); errors = []
 NOW = datetime.datetime(2026, 11, 5, 13, 0, 0)
 ms = lambda d: int(d.timestamp() * 1000)
@@ -29,7 +29,7 @@ POTS = {"v": 1, "pots": [{"id": "pot1", "name": "House", "kind": "other", "targe
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:agents:view2','new');localStorage.setItem('attune:rem:open','[]');localStorage.setItem('attune:reminders:v1', JSON.stringify([{id:'r1',title:'Call Ahmed about the crane rental contract for the Sokhna site and the deposit he still owes',at:0,repeat:'none'},{id:'r2',title:'Pay the car wash',at:0,repeat:'none'}]));localStorage.setItem('ledger.v3', %s);localStorage.setItem('attune:agents:v1', %s);"
         "localStorage.setItem('attune:life:v1', %s);localStorage.setItem('attune:pots:v1', %s)}catch(e){}") % tuple(json.dumps(json.dumps(x)) for x in (L, AGENTS, LIFE, POTS))
 MOCK = """(() => { window.__w = { opened: [] }; function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5);
-  N.openInBrowser = (u) => { window.__w.opened.push(u); return true; }; N.agentOpen = (id, arg) => { window.__agentOpen = JSON.parse(arg); }; } w(); })();"""
+  N.openInBrowser = (u) => { window.__w.opened.push(u); return true; }; N.agentOpen = (id, arg) => { window.__agentOpen = JSON.parse(arg); setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ reason: "done" })), 30); }; } w(); })();"""
 def open_mode(page, m, sel):
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'%s'}}))" % m); page.wait_for_selector(sel, timeout=10000); page.wait_for_timeout(300)
 with sync_playwright() as p:
@@ -49,7 +49,7 @@ with sync_playwright() as p:
     air = cards.filter(has_text="AirPods")
     check("9,000" in air.locator("[data-testid=agent-a5-wait]").inner_text(), "A5: a card with no offer says what it waits for: " + air.inner_text().replace("\n", " · ")[:120])
     check(page.locator("[data-testid=agents-chips]").count() == 0 and page.locator("[data-testid=agents-board]").count() == 0, "A5: no starter tiles and no board on the page (one tap away)")
-    hotel.locator("[data-testid=agent-a5-open]").click(); page.wait_for_timeout(200)
+    hotel.locator("[data-testid=agent-a5-open]").click(); through_offer(page)   # v10.2 L1
     opened = page.evaluate("window.__w.opened")
     check(len(opened) == 1 and "/hotel/sa/swissotel" in opened[0], "A5: Open the listing opens Swissotel's own page: %s" % opened)
     if page.locator("[data-testid=header-menu]").count(): page.locator("[data-testid=header-menu]").first.click(); page.wait_for_timeout(300)

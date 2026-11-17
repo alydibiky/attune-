@@ -5,7 +5,7 @@ row of its days and price, and its button says what it opens (the site's hotels 
 """
 import json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, through_offer
 env = Env(); errors = []
 U = "https://www.booking.com/searchresults.html?ss=Madrid&checkin=%s&checkout=%s"
 def bare(k, p, ci, co): return {"key": k, "name": "Booking.com", "price": p, "currency": "EGP", "checkin": ci, "checkout": co, "url": U % (ci, co), "text": "4 nights, 2 adults EGP %d" % p, "site": "Booking.com"}
@@ -32,14 +32,14 @@ with sync_playwright() as p:
     # (v9.9.21, Ali: "01/08 → 01/12 — January or August?"): the days in words with the weekday
     check("Offer" not in txt and "Jan 1 →" in txt and "Jan 5" in txt and "01/01" not in txt, "a row shows its days in words, never 'Offer 3' or 01/01: %r" % txt[:120])
     check("Hotels on Booking" in page.inner_text("[data-testid=agent-date-open] >> nth=0"), "its button says what it opens")
-    page.click("[data-testid=agent-best-open]"); page.wait_for_timeout(300)
+    page.click("[data-testid=agent-best-open]"); through_offer(page)   # v10.2 L1
     o = page.evaluate("window.__opened") or ""
     check(o.startswith("https://www.booking.com/hotel/es/alicia.html") and "checkin=2027-01-04" in o and "group_adults=2" in o, "Book opens THAT hotel's own page with its days and guests: %s" % o)
     page.click("[data-testid=agent-best]"); page.wait_for_timeout(400)
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(300)
     check((page.evaluate("window.__opened") or "").startswith("https://www.booking.com/hotel/es/alicia.html"), "…and so does the full-screen sheet's Book")
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(300)
-    page.locator("[data-testid=agent-date-open]").first.click(); page.wait_for_timeout(300)
+    page.locator("[data-testid=agent-date-open]").first.click(); through_offer(page)
     o = page.evaluate("window.__opened") or ""
     check("checkin=2027-01-01" in o and "checkout=2027-01-05" in o, "a row's button opens the site for exactly those days: %s" % o)
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

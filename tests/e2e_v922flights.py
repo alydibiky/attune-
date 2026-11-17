@@ -5,7 +5,7 @@ sites is one row; Cheapest · Fastest · Direct · Best time; the cheapest price
 """
 import json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, through_offer
 env = Env(); errors = []
 AGENT = """(() => { function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5); N.agentWatchPlan = () => 'ok'; N.agentWatchTake = () => '{}'; N.appsList = () => '[]';
   N.agentOpen = (id, arg) => { const a = JSON.parse(arg); window.__opens = (window.__opens || []).concat([a]);
@@ -45,7 +45,7 @@ with sync_playwright() as p:
     check("EgyptAir" in best and "9,790" in best and "3 sites" in txt(page.locator("[data-testid=flight-best-sites]")), "Direct: EgyptAir 9,790 — on 3 sites, cheapest on Kayak: " + txt(page.locator("[data-testid=flight-best-sites]")))
     check(page.locator("[data-testid=flight-day]").count() == 3, "the cheapest price of each day (7, 8, 9 Jan)")
     check(page.locator("[data-testid=flight-row]").count() == 3, "the other flights by price, one row each")
-    page.click("[data-testid=flight-book]"); page.wait_for_timeout(200)
+    page.click("[data-testid=flight-book]"); through_offer(page)   # v10.2 L1: the offer's page first
     check("Kayak" in (page.evaluate("window.__booked") or ""), "Book opens that flight on the site where it was cheapest")
     # a rule changes the answer
     card.locator("[data-testid=agent-menu]").click(); card.locator("[data-testid=agent-rules-open]").click()

@@ -758,6 +758,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 .putExtra("buy", a.optBoolean("buy", false))
                 .putExtra("fillAuto", a.optBoolean("fillAuto", false))   // v9.9.7 W1: fill the saved details + the task's date / time / people on each page
                 .putExtra("slot", a.optBoolean("slot", false))      // v9.4 G2: read an appointment page's words
+                .putExtra("resolve", a.optBoolean("resolve", false))   // v10.2 L1: check one offer's own page
                 .putExtra("goto", a.optJSONObject("goto")?.toString() ?: "")   // v9.8: find this offer on the results and open its own page
                 .putExtra("gotoFallback", a.optString("gotoFallback"))   // v10.0.2: opened only when that offer can't be found on the results
                 .putExtra("refresh", a.optInt("refresh", 0))        // v9.4 G2: reload every N seconds while open   // v8.6: a buy agent the person confirmed — Buy now, then their details

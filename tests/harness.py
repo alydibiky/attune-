@@ -212,3 +212,11 @@ def doc_bytes(page, blur=0, dark=False):
     """The same real-size document photo as doc_png, as PNG bytes (for set_input_files buffers)."""
     import tempfile
     f = os.path.join(tempfile.mkdtemp(), "doc.png"); doc_png(page, f, blur, dark); b = open(f, "rb").read(); os.remove(f); return b
+
+def through_offer(page, wait=600):
+    """v10.2 L1: a tap on an offer shows its own page in Attune first — tap "Open this listing" there, then come back."""
+    try: page.wait_for_selector("[data-testid=offer-page]", timeout=4000)
+    except Exception: return False
+    page.click("[data-testid=offer-open]"); page.wait_for_timeout(wait)
+    if page.locator("[data-testid=offer-back]").count(): page.click("[data-testid=offer-back]"); page.wait_for_timeout(300)
+    return True

@@ -9,6 +9,7 @@ import { Send, ShoppingCart, Building2 as Hotel, Package, Utensils as UtensilsCr
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./agents.js";
 import * as R from "./agent-rules.js";
+import * as LS from "./listing.js";
 import * as E from "./agentedit.js";
 import * as HG from "./haggle.js";
 import { HaggleView } from "./haggle-ui.jsx";
@@ -341,6 +342,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         const next0 = A.addCheck(cur, { price: w && w.price, how: "browser", href: w && (w.href || w.url), name: w && w.name, site: w && w.site });
         upd(a.id, () => ({ ...next0, best3: best.length ? best : cur.best3 || [], compared: seen.length, stores: [...new Set(seen.map((o) => o.site))].length }));
         flash && flash(w ? T("Cheapest now: {p} on {site}", { p: money(w.price, a.currency), site: w.site }) : tr("Couldn't see that exact product yet — I'll keep looking."));
+        if (w) await verifyOffers(a.id);   // v10.2 L1
       } catch (e) { flash && flash(String((e && e.message) || e)); }
       finally { setBusy(""); }
       return;
@@ -381,6 +383,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
         const next = byDay.length >= 2 ? { ...next0b, byDay } : next0b;
         put({ ...st, agents: st.agents.map((x) => (x.id === a.id ? next : x)) });
         flash && flash(best ? (best.checkin ? T("Cheapest now: {p} ({d})", { p: money(best.price, a.currency), d: best.checkin + " → " + best.checkout }) : T("Cheapest now: {p}", { p: money(best.price, a.currency) })) : tr("No prices on that page — search on the site, then tap Best offer"));
+        if (seen.length) await verifyOffers(a.id);   // v10.2 L1
       } catch (e) { flash && flash(String((e && e.message) || e)); }
       finally { setBusy(""); }
       return;
@@ -400,6 +403,7 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
       upd(a.id, () => next);
       flash && flash(next.pending ? T("Found it: {n} — {p}. Order it?", { n: next.pending.name.slice(0, 50), p: money(next.pending.price, next.pending.currency) })
         : next.nearest ? T("Not under your limit yet — closest {p} on {site}. I'll keep looking.", { p: money(next.nearest.price, a.currency), site: next.nearest.site }) : tr("Couldn't see that exact product yet — I'll keep looking."));
+      if (all.length) await verifyOffers(a.id);   // v10.2 L1
     } catch (e) { flash && flash(String((e && e.message) || e)); }
     finally { setBusy(""); }
   };
@@ -427,7 +431,57 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   // v8.7 (idea 2 "Attune Saves"): ordered below the first price seen → the difference is counted as saved (Guardian's log)
   const markDone = (a) => { try { if (a.pending && a.pending.price > 0) G.saveGuardian(G.agentSaved(G.loadGuardian(), a, a.pending.price)); } catch (e) {} upd(a.id, (y) => ({ ...y, step: "ordered", on: false })); };
   // v8.2 (2A): one of the best 3 — opens in Attune's browser on those days, ready for "Fill my details" (you choose and pay)
-  const openBest = async (a, o) => {
+  // v10.2 L1 (Ali OK'd the combined page: "OK-L1" + "it should still redirect me to the right listing because I don't want to open
+  // the product in search and search again by myself"): a tap on any offer opens ITS page in Attune first (OfferPage: photo, exact
+  // name, price, store, seller, delivery, rating, when it was checked, for a stay the dates / guests); "Open this listing" goes to the
+  // address Attune checked is that offer (listing.js verifyListing) — never a store's search page
+  const [offerPg, setOfferPg] = useState(null);
+  useSubBack(!!offerPg, () => setOfferPg(null));
+  const openBest = (a, o, opts = {}) => { if (opts.direct) return openStore(a, o); setOfferPg({ id: a.id, o }); };
+  // open the offer once in Attune's browser (check mode: it reads the page it lands on and closes), and keep the address if it IS it
+  const checkOffer = async (a, o) => {
+    const how = R.offerOpen(a, o);
+    const r = await nativeCall("agentOpen", { url: how.url, title: o.name || a.title, profile: {}, rules: {}, labels: { ...agentLabels(), opening: tr("Checking this offer's own page…") },
+      search: false, resolve: true, autoClose: true, ...(how.direct ? {} : { goto: how.goto }) });
+    const res = LS.verifyListing(a, o, r && r.product, (r && (r.landed || r.opened)) || "");
+    upd(a.id, (y) => LS.markVerified(y, o, res));
+    return { ...res, closed: !!(r && r.reason === "closed" && !r.product) };
+  };
+  // after a round: the best 3 (and the find waiting) are checked one by one, so "Open" is direct the first time
+  const verifyOffers = async (id) => {
+    if (!(N && N.agentOpen && nativeCall)) return;
+    const a0 = A.loadAgents().agents.find((y) => y.id === id); if (!a0 || (a0.fields && a0.fields.flight)) return;
+    const list = LS.toVerify(a0, 3);
+    for (let i = 0; i < list.length; i++) {
+      flash && flash(T("Checking each offer's own page ({i} of {n})…", { i: i + 1, n: list.length }));
+      try { const cur = A.loadAgents().agents.find((y) => y.id === id) || a0; const res = await checkOffer(cur, list[i]); if (res.closed) break; } catch (e) { break; }
+    }
+  };
+  const openStore = async (a, o) => {
+    // v10.2 L1: a checked address opens directly; an unchecked one is checked first; one that can't be confirmed is never swapped
+    // for a search page — Attune's browser opens the results and taps that offer itself
+    if (o && o.verified && o.verified.url) return openDirect(a, o, o.verified.url);
+    if (N && N.agentOpen && nativeCall && !(a.fields && a.fields.flight)) {
+      let res = null; try { res = await checkOffer(a, o); } catch (e) {}
+      if (res && res.ok) return openDirect(a, o, res.url);
+      if (res && res.closed) return;
+      // the page couldn't be read (a slow or blocked site) but the link IS a listing's own page by its shape: open it as before
+      { const how0 = R.offerOpen(a, o); if ((!res || res.why === "no page") && how0.direct) return openDirect(a, o, how0.url); }
+      flash && flash(tr("I couldn't confirm this offer's own page — Attune's browser opens the results and taps it for you."));
+      const how = R.offerOpen(a, o);
+      try { await nativeCall("agentOpen", { url: how.url, title: o.name || a.title, profile: loadBooking(), rules: { cheapest: true }, labels: { ...agentLabels(), opening: tr("Opening this offer's own page…") }, search: false,
+        ...(how.direct ? {} : { goto: how.goto, gotoFallback: how.fallback && R.listingKind(how.fallback) !== "no" ? how.fallback : "" }) }); } catch (e) {}
+      return;
+    }
+    return openBestOld(a, o);
+  };
+  // the store's own page, outside Attune: the phone's browser, else the store's app
+  const openDirect = (a, o, url) => {
+    if (N && N.openInBrowser) { try { if (N.openInBrowser(url)) return; } catch (e) {} }
+    if (N && N.openInApp) { try { const r = JSON.parse(N.openInApp(url) || "{}"); if (r.ok) return; } catch (e) {} }
+    try { window.open(url, "_blank"); } catch (e) {}
+  };
+  const openBestOld = async (a, o) => {
     // v9.8 (Ali, 7 Nov: "fix it for good"): an offer whose link is its OWN page opens it (phone's browser / the site's app); an offer
     // with no such link is never sent to the search page — Attune's browser opens the results, finds THAT offer by name / price and
     // goes into its page (agent-kit goTo), and "Open in my browser" then carries the listing itself
@@ -592,6 +646,11 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
     ...scout.map((g) => ({ id: "scout-" + g.id, label: A.agentTab({ kind: "scout", title: g.text }).label, dot: !!(g.unseen || []).length, kind: "scout" })),
     ...(alerts.some((x) => !String(x.id).startsWith("agent-")) ? [{ id: "alerts", label: tr("Message alerts"), dot: false, kind: "alert" }] : [])];
   const tab = A.pickTab(tabs.map((x) => x.id), tabWant, tabs.filter((x) => x.dot).map((x) => x.id));
+  // (on top of the page, so the agent's conversation underneath keeps where it was)
+  const oa = offerPg ? st.agents.find((x) => x.id === offerPg.id) : null;
+  const offerLayer = oa ? <div className="fixed inset-0 z-[300] overflow-y-auto bg-[var(--c-bg)] text-[var(--c-ink)] px-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(16px,env(safe-area-inset-bottom))]" role="dialog" aria-modal="true">
+    <div className="max-w-[640px] mx-auto"><OfferPage a={oa} o0={offerPg.o} back={() => setOfferPg(null)} open={(o) => openStore(oa, o)} check={N && N.agentOpen && nativeCall && !(oa.fields && oa.fields.flight) ? (o) => checkOffer(oa, o) : null} notThis={(o) => { skipBest(oa, o); setOfferPg(null); }} /></div></div> : null;
+  const withOffer = (el) => (offerLayer ? <>{el}{offerLayer}</> : el);
   if (rep) return <AgentsReport st={st} scout={scout} alerts={alerts} back={() => setRep(false)} />;
   const r = A.agentsReport(st, scout, alerts);
   const alertRules = alerts.filter((x) => !String(x.id).startsWith("agent-"));
@@ -637,9 +696,9 @@ export function AgentsPage({ native: N, nativeCall, navTo, flash, onScout, onRes
   if (msgs) return <MessagesPage back={() => { setMsgs(""); setSt(A.loadAgents()); }} flash={flash} nativeCall={nativeCall} drafter={drafter} startNew={msgs === "new"} />;
   const open = chat && cards.find((c) => c.id === chat);
   if (open && open.a && open.a.kind === "haggle") return <HaggleView a={A.loadAgents().agents.find((x) => x.id === open.id) || open.a} back={() => setChat("")} upd={upd} flash={flash} send={sendHaggle} />;
-  if (open) return <AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} toggle={toggle} checkNow={checkNow} busy={busy === open.id}
-    remove={remove} saveEdit={(b) => { upd(b.id, () => b); flash && flash(tr("Saved — checking again")); setTimeout(() => { const fresh = A.loadAgents().agents.find((x) => x.id === b.id); if (fresh && b.kind === "watch") checkNow(fresh); }, 60); }} />;
-  return (
+  if (open) return withOffer(<AgentChat c={open} back={() => setChat("")} openBest={openBest} setRules={setRules} understand={understandRule} flash={flash} toggle={toggle} checkNow={checkNow} busy={busy === open.id}
+    remove={remove} saveEdit={(b) => { upd(b.id, () => b); flash && flash(tr("Saved — checking again")); setTimeout(() => { const fresh = A.loadAgents().agents.find((x) => x.id === b.id); if (fresh && b.kind === "watch") checkNow(fresh); }, 60); }} />);
+  return withOffer(
     <div className="calm pt-1 pb-10 space-y-3 max-w-2xl" data-testid="agents-page">
       <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
       {/* v8.7 (Ali picked P5-C): the same box as Home and every page — only the hint is the Agents' */}
@@ -1145,7 +1204,7 @@ function OfferSheet({ a, rows, at, setAt, pic, day, far, n, openBest, skipBest }
         {note ? <p className="m-0 mt-1.5 text-[12px] text-[rgba(255,255,255,.72)] tabular-nums">{note}</p> : null}
         <div className="grid grid-cols-[52px_1fr_52px] gap-2.5 mt-4">
           <button onClick={() => go(-1)} disabled={at === 0} className={side} aria-label={tr("Previous")} data-testid="agent-sheet-prev"><ChevronRight size={20} className="rotate-180 rtl:rotate-0" /></button>
-          <button onClick={() => openBest(a, r.o)} className="min-h-[52px] rounded-[16px] bg-[#F2F4F3] text-[#0B0D0E] text-[15px] font-bold" data-testid="agent-sheet-book">{tr("Book this offer")}</button>
+          <button onClick={() => openBest(a, r.o, { direct: true })} className="min-h-[52px] rounded-[16px] bg-[#F2F4F3] text-[#0B0D0E] text-[15px] font-bold" data-testid="agent-sheet-book">{tr("Book this offer")}</button>
           <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><ChevronRight size={20} className="rtl:rotate-180" /></button>
         </div>
         <button onClick={() => { skipBest(a, r.o); setAt(-1); }} className="block mx-auto mt-2 min-h-[36px] px-3 text-[12.5px] text-[rgba(255,255,255,.62)]" data-testid="agent-sheet-skip">{tr("Not this one")}</button>
@@ -1560,4 +1619,41 @@ function SettingSheetOK({ a, s, close, save }) {
       <button onClick={() => save(out())} className={U.btnP + " w-full"} data-testid="agent-set-save">{tr("Save — check again now")}</button>
       <button onClick={close} className="w-full h-10 c-sub text-[13px] font-bold">{tr("Cancel")}</button>
     </div></div>;
+}
+
+/** v10.2 L1 (Ali OK'd: https://claude.ai/artifact/CkbzEJEpupPdYdBKbjtxdn): one offer's own page inside Attune — what the agent read on
+ *  the store's listing (photo, exact name, price, store, seller, delivery, rating, when), for a stay the dates and guests — and
+ *  "Open this listing", which goes to the address Attune checked is THIS offer (never a search page). */
+export function OfferPage({ a, o0, back, open, check, notThis }) {
+  const same = (x) => x && (x === o0 || (x.key && x.key === o0.key) || (x.name === o0.name && x.price === o0.price && (x.site || "") === (o0.site || "")));
+  const o = [a.pending, ...(a.best3 || []), ...((a.byDay || []).flatMap((d) => (d && d.offers) || []))].find(same) || o0;
+  const pg = o.page || {}, photos = A.loadPhotos(a.id), photo = photos[o.key] || (/^https:\/\//.test(pg.photo || "") ? pg.photo : "");
+  const [busy, setBusy] = useState(false);
+  const site = A.siteOfOffer ? A.siteOfOffer(o) : o.site || "";
+  const stay = LS.isStay(a, o), nights = o.checkin && o.checkout ? Math.round((Date.parse(o.checkout) - Date.parse(o.checkin)) / 864e5) : 0;
+  const ago = (t) => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); return m < 60 ? T("{n} min ago", { n: m }) : m < 1440 ? T("{n} h ago", { n: Math.round(m / 60) }) : new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); };
+  const rows = [[tr("Store"), site], pg.seller ? [tr("Seller"), pg.seller] : null, pg.delivery ? [tr("Delivery"), pg.delivery] : null,
+    pg.rating ? [tr("Rating"), "★ " + pg.rating + (pg.reviews ? " · " + pg.reviews : "")] : o.rating ? [tr("Rating"), "★ " + o.rating] : null,
+    stay && o.checkin ? [tr("Dates"), o.checkin + " → " + (o.checkout || "") + (nights ? " · " + T("{n} nights", { n: nights }) : "")] : null,
+    o.verified ? [tr("Checked"), ago(o.verified.at)] : (a.checks || []).length ? [tr("Checked"), ago(a.checks[a.checks.length - 1].at)] : null].filter(Boolean);
+  const host = (u) => { try { const x = new URL(u); return x.hostname.replace(/^www\./, "") + x.pathname.slice(0, 28) + (x.pathname.length > 28 ? "…" : ""); } catch (e) { return ""; } };
+  const under = a.below && o.price && o.price <= a.below;
+  return <div className="calm space-y-3 pb-6 max-w-[560px] lg:max-w-none" data-testid="offer-page">
+    <button onClick={back} className="min-h-[44px] inline-flex items-center gap-1.5 text-[14px] font-bold c-acc" data-testid="offer-back"><ChevronRight size={16} className="rotate-180 rtl:rotate-0" />{tr(a.title || "Agents")}</button>
+    {photo ? <img src={photo} alt="" className="w-full max-h-[260px] object-contain rounded-[16px] bg-[var(--c-surf)] border border-[var(--c-ln)]" data-testid="offer-photo" /> : null}
+    <h2 className="m-0 text-[19px] font-black leading-snug" dir="auto" data-testid="offer-name">{pg.name || o.name || a.what || a.title}</h2>
+    <p className="m-0 flex items-baseline gap-2 flex-wrap"><b className="text-[26px] font-black tabular-nums tracking-tight" data-testid="offer-price">{money(o.price, o.currency || a.currency)}</b>
+      {under ? <span className="text-[13px] font-extrabold text-[var(--c-pos)]">{T("under your {p} ✓", { p: money(a.below, a.currency) })}</span> : null}</p>
+    <div className={U.card + " p-3"} data-testid="offer-details">{rows.map(([k, v], i) => <div key={i} className="flex justify-between gap-3 py-1.5 border-t border-[var(--c-ln)] first:border-t-0 text-[13.5px]"><span className={U.muted}>{k}</span><b className="text-end min-w-0" dir="auto">{v}</b></div>)}</div>
+    {o.verified ? <div className="rounded-[14px] px-3 py-2.5 border border-[var(--c-pos)] text-[13px]" data-testid="offer-verified"><b className="text-[var(--c-pos)]">✓ {tr("Exact listing saved")}</b>
+        <span className={"block text-[12px] mt-0.5 break-all " + U.muted} dir="ltr">{host(o.verified.url)}</span></div>
+      : <p className={"m-0 text-[12.5px] " + U.muted} data-testid="offer-unverified">{o.unverified ? tr("I couldn't confirm this offer's own page yet — Open checks it again, and never leaves you on a search page.") : tr("Open checks this offer's own page first, then takes you straight to it.")}</p>}
+    <button disabled={busy} onClick={async () => { setBusy(true); try { await open(o); } finally { setBusy(false); } }} className={U.btnP + " w-full inline-flex items-center justify-center gap-2"} data-testid="offer-open">
+      {busy ? tr("Checking this offer's own page…") : T("Open this listing in {site}", { site: site || tr("the store") })} <ExternalLink size={16} /></button>
+    <div className="flex gap-2 flex-wrap">
+      {o.verified ? <button onClick={() => { try { navigator.clipboard.writeText(o.verified.url); } catch (e) {} }} className={U.btnS} data-testid="offer-copy">{tr("Copy link")}</button> : null}
+      {!o.verified && check ? <button disabled={busy} onClick={async () => { setBusy(true); try { await check(o); } finally { setBusy(false); } }} className={U.btnS} data-testid="offer-check">{tr("Check it now")}</button> : null}
+      {notThis ? <button onClick={() => notThis(o)} className={U.btnS} data-testid="offer-not">{tr("Not this one")}</button> : null}
+    </div>
+  </div>;
 }
