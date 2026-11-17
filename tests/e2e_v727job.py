@@ -26,7 +26,7 @@ with sync_playwright() as p:
             page.locator("nav button").last.click(); page.wait_for_timeout(250)
             page.locator(".rounded-t-2xl button:has-text('CV / Resume')").first.click()
         else:
-            page.fill("[data-testid=side-search]", "cv"); page.wait_for_timeout(200); page.locator("[data-testid=side-tool-hits] button").first.click()
+            page.fill("[data-testid=side-search]", "cv"); page.wait_for_timeout(200); page.locator("[data-testid=side-feature][data-id=cv], [data-testid=side-tool-hits] button").first.click()   # v10.1 F1: feature hits
         page.wait_for_selector("[data-testid=cv-page]", timeout=6000)
         page.locator("[data-testid=cv-row] button").first.click(); page.wait_for_selector("[data-testid=cv-editor]")
         page.click("[data-testid=cv-tab-job]")

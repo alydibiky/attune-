@@ -150,6 +150,8 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=assistant-item]:has-text('Tender writer')").count() == 1, "a new assistant can be made and is saved")
 
     # ---- 7. Projects: instructions + knowledge reach the model ----
+    # (v10.1 W2: files and the ask box of a project are on the computer — this part runs as the computer app)
+    page.evaluate("window.AttuneNative.desktop = true")
     open_more(page, "Projects", "projects-page")
     page.locator("[data-testid=project-new]").click()
     page.locator("[data-testid=project-name]").fill("Port Said tender")
@@ -179,6 +181,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=project-chat]").first.click()
     page.wait_for_selector("text=18,000 EGP per day", timeout=5000)
     check(True, "…and opening it goes back to that chat")
+    page.evaluate("delete window.AttuneNative.desktop")
 
     # ---- 8. Themes ----
     page.locator("nav button").last.click(); page.wait_for_timeout(200)

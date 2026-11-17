@@ -31,6 +31,11 @@ with sync_playwright() as p:
         it = page.locator("[data-testid=project-item]").first.inner_text()
         check("Due" in it and "1 due" in it, tag + "the list shows the due date and the repeat that is due: " + it.replace("\n", " · "))
         page.click("[data-testid=project-item]")
+        if size[0] < 700:
+            # v10.1 W2 (Ali's pick): on the phone a project is light — no ask box / Files / Saved / Repeats; they are on the computer
+            page.wait_for_selector("[data-testid=project-on-computer]", timeout=5000)
+            check(page.locator("[data-testid=project-ask]").count() == 0 and page.locator("[data-testid=project-row-files]").count() == 0, tag + "W2: the phone shows a light project (files and asking on the computer)")
+            ctx.close(); continue
         page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
         rows = page.evaluate("[...document.querySelectorAll('[data-testid^=project-row-]')].map(e => e.dataset.testid.slice(12))")
         check(rows == ["tasks", "files", "saved", "repeats", "answers"], tag + "the work: ask box + Tasks (v9.2 board) · Files · Saved · Repeats · Answers as (no chats yet): %s" % rows)
@@ -94,8 +99,9 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=project-file]").count() == 2, tag + "Files: a note is added")
         # ---- Arabic: the rows read in Egyptian Arabic
         ctx.close()
+    # (v10.1 W2: the rows and the ask box are on the computer, so the Arabic check runs at a computer size)
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + "try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
-    page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1300)
+    page.set_viewport_size({"width": 1366, "height": 860}); page.goto(env.url); page.wait_for_timeout(1300)
     go(page, "projects"); page.click("[data-testid=project-item]"); page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
     t = page.locator("[data-testid=project-page]").inner_text()
     check("التكرارات" in t and "بيرد بصفته" in t and "اسأل عن الشغل ده" in page.locator("[data-testid=project-ask-input]").get_attribute("placeholder"), "[ar] the page reads in Egyptian Arabic")

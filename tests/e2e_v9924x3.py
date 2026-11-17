@@ -16,7 +16,9 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'booklib'}}))"); page.wait_for_selector("[data-testid=things]", timeout=8000)
+    # v10.1 T1 (Ali's pick): My things lives in Follow-ups → "Things I own"
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'timeline'}}))"); page.wait_for_selector("[data-testid=fu-things-toggle]", timeout=8000)
+    page.click("[data-testid=fu-things-toggle]"); page.wait_for_selector("[data-testid=things]", timeout=8000)
     IMG = doc_png(page, os.path.join(D, "r.png"))
     page.evaluate("t => window.__ocr.push(t)", "B.TECH Maadi\nTax invoice 004512\nDate: 02/10/2026\nSamsung TV 55\" UA55 18,500.00\nVAT 14% 2,271.93\nTOTAL 18,500.00\nWarranty 2 years")
     page.set_input_files("[data-testid=things-receipt-input]", IMG); page.wait_for_selector("[data-testid=thing-form]", timeout=8000)
