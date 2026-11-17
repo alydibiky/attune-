@@ -1,0 +1,192 @@
+<title>Attune Glass Combined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: the computer Home in dark glass (big), the same in light glass, then the phone in dark glass; "What I understood" beside each. */
+:root { --bg:#f5f4f2; --surf:#fff; --ink:#1e1c1b; --mut:#5e5a57; --ln:#e6e3e0; --acc:#7a1f3d; --soft:#f7e8ed; --ok:#1e7a43; --font:"Nunito","Segoe UI",system-ui,sans-serif }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 130px }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px }
+h1 { font-size: 28px; font-weight: 900; margin: 0 } .lede { color: var(--mut); margin: 6px 0 0; max-width: 80ch }
+.u { background: var(--surf); border: 1px solid var(--ln); border-radius: 20px; padding: 16px; display: grid; gap: 14px }
+.u h2 { margin: 0; font-size: 19px; font-weight: 900 }
+.und ol { margin: 4px 0 0; padding-inline-start: 20px; display: grid; gap: 4px; font-size: 14.5px }
+.pick { display: grid; gap: 8px } .pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; min-height: 40px; cursor: pointer }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px }
+.scroll { overflow-x: auto } .scroll > .win { min-width: 980px }
+/* ---------- the computer window ---------- */
+.win { border-radius: 16px; overflow: hidden; border: 1px solid #0002; font-size: 12px; line-height: 1.4; display: flex; flex-direction: column }
+.tb { height: 26px; display: flex; gap: 6px; align-items: center; padding: 0 12px; flex: none } .tb i { width: 9px; height: 9px; border-radius: 50%; display: block }
+.body { display: flex; min-height: 560px }
+nav.sb { width: 190px; padding: 14px 10px; display: grid; gap: 3px; align-content: start; font-weight: 700; font-size: 13px } nav.sb span { padding: 7px 10px; border-radius: 10px; display: block }
+nav.sb .logo { font-size: 17px; font-weight: 900; padding-bottom: 10px }
+main { flex: 1; padding: 18px 20px; display: grid; gap: 14px; align-content: start; min-width: 0 }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px } .hello { font-size: 22px; font-weight: 900 } .ask { border-radius: 12px; padding: 9px 14px; min-width: 330px }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 14px; align-items: start }
+.card { border-radius: 16px; padding: 14px 16px }
+.whead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px } .whead b { font-size: 15px } .whead .nav { display: flex; gap: 6px; font-weight: 800 }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; position: relative }
+.day { display: grid; gap: 6px; align-content: start; min-height: 230px; border-radius: 12px; padding: 8px 7px }
+.dname { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline }
+.dname b { font-size: 17px; letter-spacing: 0 }
+.it { border-radius: 9px; padding: 6px 7px; display: grid; gap: 1px } .it .t { font-size: 10.5px; font-weight: 700; opacity: .75 } .it .n { font-weight: 800; font-size: 12px; line-height: 1.25 } .it .a { font-weight: 900; font-variant-numeric: tabular-nums }
+.span { grid-column: 6 / 8; grid-row: 1; align-self: start; margin-top: 40px; margin-inline: 7px; border-radius: 9px; padding: 5px 9px; font-weight: 800; font-size: 11.5px; z-index: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.day.trip .dname { margin-bottom: 30px }
+.week > .day { grid-row: 1 } .week > .day:nth-child(1){grid-column:1} .week > .day:nth-child(2){grid-column:2} .week > .day:nth-child(3){grid-column:3} .week > .day:nth-child(4){grid-column:4} .week > .day:nth-child(5){grid-column:5} .week > .day:nth-child(6){grid-column:6} .week > .day:nth-child(7){grid-column:7}
+.kpi { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -.01em } .m { opacity: .68 } .row { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0 } .num { font-weight: 900; font-variant-numeric: tabular-nums }
+.legend { display: flex; gap: 12px; font-size: 11px; font-weight: 700; margin-top: 10px; opacity: .8 } .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-inline-end: 5px; vertical-align: -1px }
+/* dark glass */
+.dg { background: radial-gradient(120% 90% at 8% 0%, #4a1a2e 0%, #1a1119 48%, #0e0c12 100%); color: #f3ebee } .dg .tb i { background: #ffffff30 }
+.dg nav.sb span.on { background: #ffffff18 } .dg .ask, .dg .card { background: #ffffff0f; border: 1px solid #ffffff1f; backdrop-filter: blur(14px) } .dg .ask { color: #f3ebeeaa }
+.dg .day { background: #ffffff08 } .dg .day.today { background: #e58aa21f; box-shadow: inset 0 0 0 1px #e58aa266 } .dg .day.today .dname { color: #ffb8cb }
+.dg .money { background: #e58aa22b; color: #ffd6e1 } .dg .people { background: #4fc2b42b; color: #c8f2ec } .dg .home { background: #e8b04b2b; color: #ffe3ac } .dg .work { background: #7fa6ee2b; color: #d3e1ff } .dg .span { background: linear-gradient(90deg, #e58aa255, #e58aa222); color: #ffe0e8 }
+.dg .legend .money { background: #e58aa2 } .dg .legend .people { background: #4fc2b4 } .dg .legend .home { background: #e8b04b } .dg .legend .work { background: #7fa6ee }
+/* light glass — the phone's own colours */
+.lg { background: radial-gradient(120% 100% at 0% 0%, #f9e6ec 0%, #f5f4f2 45%, #efedea 100%); color: #1e1c1b } .lg .tb i { background: #00000022 }
+.lg nav.sb span.on { background: #ffffffcc; color: #7a1f3d; box-shadow: 0 1px 3px #7a1f3d14 } .lg .ask, .lg .card { background: #ffffffc4; border: 1px solid #fff; box-shadow: 0 6px 22px #7a1f3d12; backdrop-filter: blur(14px) } .lg .ask { color: #5e5a57 }
+.lg .day { background: #ffffff8c } .lg .day.today { background: #f7e8ed; box-shadow: inset 0 0 0 1px #7a1f3d55 } .lg .day.today .dname { color: #7a1f3d }
+.lg .money { background: #f7e8ed; color: #7a1f3d } .lg .people { background: #e3f4f1; color: #1f6e66 } .lg .home { background: #fbf0dc; color: #8a5a08 } .lg .work { background: #e6eefc; color: #2e5aa8 } .lg .span { background: linear-gradient(90deg, #f1d3dc, #f7e8ed); color: #7a1f3d }
+.lg .legend .money { background: #7a1f3d } .lg .legend .people { background: #2a9d8f } .lg .legend .home { background: #e0a13b } .lg .legend .work { background: #4c7dd9 }
+/* phone */
+.phone { width: 270px; max-width: 100%; border-radius: 28px; border: 7px solid #231f20; overflow: hidden; font-size: 12px; line-height: 1.4 }
+.phone .scr { padding: 12px 11px; display: grid; gap: 9px; min-height: 520px; align-content: start }
+.dgp { background: radial-gradient(130% 70% at 0% 0%, #4a1a2e 0%, #1a1119 60%, #0e0c12 100%); color: #f3ebee } .dgp .g { background: #ffffff12; border: 1px solid #ffffff1f; border-radius: 15px; padding: 10px 11px } .dgp .box { border: 1px solid #e58aa266; border-radius: 16px; padding: 11px; opacity: .85 }
+.strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 10.5px; font-weight: 800 } .strip span { border-radius: 9px; padding: 4px 0 } .strip .on { background: #e58aa233; color: #ffc6d5 } .strip i { display: block; width: 5px; height: 5px; border-radius: 50%; margin: 2px auto 0; background: #e58aa2 }
+.bar { height: 6px; border-radius: 3px; overflow: hidden; background: #ffffff16 } .bar i { display: block; height: 100%; background: #e58aa2 }
+.cols { display: flex; gap: 22px; flex-wrap: wrap; align-items: start } .cols .und { flex: 1; min-width: 260px }
+/* pick bar */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1240px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap } .bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px } .bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-offset: 2px }
+</style>
+
+<div class="wrap">
+  <header><h1>Your picks together: G1 · G2 · G3 · C1</h1>
+    <p class="lede">The week is redrawn: days side by side, each day's things as readable cards (time, what, amount), a trip as one bar across its days, today marked. Colours tell what kind of thing it is. Read "What I understood" under each and tick OK, or write what to change.</p></header>
+
+  <!-- G1 + C1 -->
+  <section class="u" data-code="OK-G1">
+    <h2>Computer · dark glass (G1) with the week in the middle of Home (C1)</h2>
+    <div class="scroll"><div class="win dg"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+      <nav class="sb"><span class="logo">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
+      <main>
+        <div class="top"><span class="hello">Good evening, Ali</span><span class="ask">Ask or tell Attune — “spent 150 on lunch”…   Ctrl K</span></div>
+        <div class="grid">
+          <div class="card">
+            <div class="whead"><b>This week · 16 – 22 November</b><span class="nav"><span>‹</span><span>Today</span><span>›</span></span></div>
+            <div class="week">
+              <div class="day"><div class="dname">Mon <b>16</b></div><div class="it money"><span class="t">17:06</span><span class="n">FACES</span><span class="a">−800</span></div><div class="it home"><span class="t">evening</span><span class="n">Talabat list · 13 items</span></div></div>
+              <div class="day today"><div class="dname">Tue <b>17</b></div><div class="it money"><span class="t">9:00</span><span class="n">Sheikh · 3 of 8</span><span class="a">+2,500</span></div><div class="it money"><span class="t">13:56</span><span class="n">CIB transfer</span><span class="a">−1,160</span></div><div class="it people"><span class="t">18:00</span><span class="n">Call back Mama</span></div></div>
+              <div class="day"><div class="dname">Wed <b>18</b></div><div class="it money"><span class="t">due</span><span class="n">CIB card bill</span><span class="a">4,320</span></div><div class="it work"><span class="t">10:00</span><span class="n">Flat · painter visit</span></div></div>
+              <div class="day"><div class="dname">Thu <b>19</b></div><div class="it work"><span class="t">all day</span><span class="n">Flat · order tiles</span></div><div class="it people"><span class="t">20:30</span><span class="n">Noudy's birthday dinner</span></div></div>
+              <div class="day"><div class="dname">Fri <b>20</b></div><div class="it home"><span class="t">arrives</span><span class="n">FreeClip 2 · Amazon</span><span class="a">7,400</span></div></div>
+              <div class="day trip"><div class="dname">Sat <b>21</b></div><div class="it home"><span class="t">10:00</span><span class="n">Maid</span><span class="a">−600</span></div></div>
+              <div class="day trip"><div class="dname">Sun <b>22</b></div><div class="it money"><span class="t">renews</span><span class="n">Google AI Pro · Baba pays</span></div></div>
+              <div class="span">✈ Umrah · Makkah · until Mon 23</div>
+            </div>
+            <div class="legend"><span><i class="money"></i>Money</span><span><i class="people"></i>People</span><span><i class="home"></i>Home &amp; orders</span><span><i class="work"></i>Projects</span></div>
+          </div>
+          <div style="display:grid;gap:14px">
+            <div class="card"><div class="m">Safe to spend until 25 Nov</div><div class="kpi">EGP 4,350</div><div class="m">14,320 spent this month</div></div>
+            <div class="card"><b>Agents</b><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div><div class="row"><span>Hotel near the Haram</span><span class="num">21,300</span></div></div>
+            <div class="card"><b>Latest</b><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>CIB transfer</span><span class="num">−100</span></div></div>
+          </div>
+        </div>
+      </main></div></div></div>
+    <div class="und"><b>What I understood</b>
+      <ol>
+        <li>On a computer, Attune can wear the <b>dark glass</b> look: a deep burgundy-to-black background with frosted cards (real blur on a computer).</li>
+        <li><b>Home's centre is this week</b>, Monday to Sunday: each day's things as cards — the time (or "due" / "renews" / "arrives"), what it is, the amount. Today is marked. ‹ Today › moves the week.</li>
+        <li>It is filled only from what Attune already has: reminders, payments and bills due, Follow-ups, people to call, project dates, papers, agents' deliveries, trips (a trip is one bar across its days) — and the phone's own calendar if you allow it there. No new page in the side menu.</li>
+        <li>A tap on a card opens it on the right (the list + details layout you picked), never a phone pop-up.</li>
+        <li>Beside the week: safe to spend, agents, latest payments.</li>
+        <li>Colours tell the kind: pink = money, green = people, amber = home &amp; orders, blue = projects.</li>
+      </ol></div>
+    <div class="pick"><label><input type="checkbox" id="pick-OK-G1"> OK, build this</label><textarea id="note-OK-G1" placeholder="Anything to change?"></textarea></div>
+  </section>
+
+  <!-- G2 -->
+  <section class="u" data-code="OK-G2">
+    <h2>Computer · light glass in your phone's colours (G2), same week</h2>
+    <div class="scroll"><div class="win lg"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+      <nav class="sb"><span class="logo">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
+      <main>
+        <div class="top"><span class="hello">Good morning, Ali</span><span class="ask">Ask or tell Attune — “spent 150 on lunch”…   Ctrl K</span></div>
+        <div class="grid">
+          <div class="card">
+            <div class="whead"><b>This week · 16 – 22 November</b><span class="nav" style="color:#7a1f3d"><span>‹</span><span>Today</span><span>›</span></span></div>
+            <div class="week">
+              <div class="day"><div class="dname">Mon <b>16</b></div><div class="it money"><span class="t">17:06</span><span class="n">FACES</span><span class="a">−800</span></div><div class="it home"><span class="t">evening</span><span class="n">Talabat list · 13 items</span></div></div>
+              <div class="day today"><div class="dname">Tue <b>17</b></div><div class="it money"><span class="t">9:00</span><span class="n">Sheikh · 3 of 8</span><span class="a">+2,500</span></div><div class="it money"><span class="t">13:56</span><span class="n">CIB transfer</span><span class="a">−1,160</span></div><div class="it people"><span class="t">18:00</span><span class="n">Call back Mama</span></div></div>
+              <div class="day"><div class="dname">Wed <b>18</b></div><div class="it money"><span class="t">due</span><span class="n">CIB card bill</span><span class="a">4,320</span></div><div class="it work"><span class="t">10:00</span><span class="n">Flat · painter visit</span></div></div>
+              <div class="day"><div class="dname">Thu <b>19</b></div><div class="it work"><span class="t">all day</span><span class="n">Flat · order tiles</span></div><div class="it people"><span class="t">20:30</span><span class="n">Noudy's birthday dinner</span></div></div>
+              <div class="day"><div class="dname">Fri <b>20</b></div><div class="it home"><span class="t">arrives</span><span class="n">FreeClip 2 · Amazon</span><span class="a">7,400</span></div></div>
+              <div class="day trip"><div class="dname">Sat <b>21</b></div><div class="it home"><span class="t">10:00</span><span class="n">Maid</span><span class="a">−600</span></div></div>
+              <div class="day trip"><div class="dname">Sun <b>22</b></div><div class="it money"><span class="t">renews</span><span class="n">Google AI Pro · Baba pays</span></div></div>
+              <div class="span">✈ Umrah · Makkah · until Mon 23</div>
+            </div>
+            <div class="legend"><span><i class="money"></i>Money</span><span><i class="people"></i>People</span><span><i class="home"></i>Home &amp; orders</span><span><i class="work"></i>Projects</span></div>
+          </div>
+          <div style="display:grid;gap:14px">
+            <div class="card"><div class="m">Safe to spend until 25 Nov</div><div class="kpi" style="color:#7a1f3d">EGP 4,350</div><div class="m">14,320 spent this month</div></div>
+            <div class="card"><b>Agents</b><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div><div class="row"><span>Hotel near the Haram</span><span class="num">21,300</span></div></div>
+            <div class="card"><b>Latest</b><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>CIB transfer</span><span class="num">−100</span></div></div>
+          </div>
+        </div>
+      </main></div></div></div>
+    <div class="und"><b>What I understood</b>
+      <ol>
+        <li>The <b>same layout and week</b> in a light glass look made of your phone's exact colours: the warm grey ground, burgundy, soft pink; white frosted cards over a faint pink glow.</li>
+        <li><b>Light or dark follows your computer's setting</b> (light in the day, dark at night), and Settings → Theme lets you fix one.</li>
+        <li>Every computer page gets this look (Money, Follow-ups, Agents, Projects…), not only Home.</li>
+      </ol></div>
+    <div class="pick"><label><input type="checkbox" id="pick-OK-G2"> OK, build this</label><textarea id="note-OK-G2" placeholder="Anything to change?"></textarea></div>
+  </section>
+
+  <!-- G3 -->
+  <section class="u" data-code="OK-G3">
+    <h2>Phone · dark glass as a choice in Theme (G3)</h2>
+    <div class="cols">
+      <div class="phone dgp"><div class="scr">
+        <div class="m">Tuesday, November 17</div><div style="font-size:19px;font-weight:900">Good evening</div>
+        <div class="box">Type / for a command, or just say it…</div>
+        <div class="strip"><span>M<i style="opacity:.0"></i></span><span class="on">T<i></i></span><span>W<i></i></span><span>T<i></i></span><span>F<i></i></span><span>S<i></i></span><span>S<i></i></span></div>
+        <div class="g"><div class="row"><b>Today</b><span class="m">3</span></div><div class="row"><span>9:00 · Sheikh · 3 of 8</span><span class="num">+2,500</span></div><div class="row"><span>13:56 · CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>18:00 · Call back Mama</span><span></span></div></div>
+        <div class="g"><div class="m">Safe to spend · until 25 Nov</div><div style="font-size:20px;font-weight:900">EGP 4,350</div><div class="bar" style="margin-top:6px"><i style="width:62%"></i></div></div>
+        <div class="g"><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div></div>
+      </div></div>
+      <div class="und"><b>What I understood</b>
+        <ol>
+          <li>The phone gets the <b>same dark glass</b> as one more choice in Settings → Theme (your current light look stays the default in the day).</li>
+          <li>On the phone the glass is <b>drawn without live blur</b> — it looks nearly the same and keeps the phone smooth and light on battery.</li>
+          <li>The phone keeps its own layout (Home, the week strip of Follow-ups); only the look changes. Every phone page gets it, not only Home.</li>
+          <li>Nothing else changes on the phone in this step.</li>
+        </ol></div>
+    </div>
+    <div class="pick"><label><input type="checkbox" id="pick-OK-G3"> OK, build this</label><textarea id="note-OK-G3" placeholder="Anything to change?"></textarea></div>
+  </section>
+</div>
+
+<div class="bar-pick"><div class="in"><div class="codes" id="codes">Nothing ticked yet</div><button type="button" id="copy">Copy my picks</button><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div></div>
+<script>
+(() => {
+  const KEY = "attune-mock-glass-combined";
+  const codes = [...document.querySelectorAll(".u")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { document.getElementById("codes").textContent = text() || "Nothing ticked yet"; };
+  for (const c of codes) { const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); }); }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => { const t = text() || "No picks"; const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); } });
+})();
+</script>
