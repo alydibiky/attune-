@@ -16,7 +16,7 @@ h1 { font-size: 28px; font-weight: 900; margin: 0 } .lede { color: var(--mut); m
 .pick { display: grid; gap: 8px } .pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; min-height: 40px; cursor: pointer }
 .pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
 .pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px }
-.scroll { overflow-x: auto } .scroll > .win { min-width: 980px }
+.scroll { overflow-x: auto } .scroll > .win { min-width: 1180px }
 /* ---------- the computer window ---------- */
 .win { border-radius: 16px; overflow: hidden; border: 1px solid #0002; font-size: 12px; line-height: 1.4; display: flex; flex-direction: column }
 .tb { height: 26px; display: flex; gap: 6px; align-items: center; padding: 0 12px; flex: none } .tb i { width: 9px; height: 9px; border-radius: 50%; display: block }
@@ -62,11 +62,50 @@ main { flex: 1; padding: 18px 20px; display: grid; gap: 14px; align-content: sta
 .bar-pick .in { max-width: 1240px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap } .bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
 .bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px } .bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
 button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-offset: 2px }
+/* ===== shared calendar ===== */
+.cal { border-radius: 18px; padding: 18px 18px 16px; font-size: 12px; line-height: 1.35; position: relative; overflow: hidden }
+.chead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px } .chead .tt { font-size: 18px; font-weight: 900; letter-spacing: -.01em } .chead .tt span { font-weight: 700; opacity: .6; font-size: 14px; margin-inline-start: 8px }
+.seg { display: flex; gap: 4px; border-radius: 99px; padding: 3px; font-weight: 800; font-size: 11.5px } .seg b { padding: 4px 12px; border-radius: 99px; font-weight: 800 }
+.navb { display: flex; gap: 6px; align-items: center; font-weight: 800 } .navb i { font-style: normal; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center }
+.dayhead { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px } .dh { text-align: center; padding: 2px 0 } .dh small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .6 }
+.dh b { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 17px; font-weight: 900; margin-top: 3px } .dh.we small { opacity: .45 }
+.allday { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 4px 6px; margin-bottom: 8px; align-items: center } .allday .lab { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .55; text-align: end; padding-inline-end: 4px }
+.pill { border-radius: 8px; padding: 5px 8px; font-weight: 800; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 6px; align-items: center; justify-content: space-between }
+.pill .pn { min-width: 0; overflow: hidden; text-overflow: ellipsis } .ev .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } .pill em { flex: none; font-style: normal; font-variant-numeric: tabular-nums; font-weight: 900; opacity: .9 }
+.clegend { display: flex; gap: 14px; font-size: 11px; font-weight: 700; margin-top: 12px; opacity: .75 } .clegend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; vertical-align: 0 }
+
+/* ===== K1: all-day lane + time grid (Fantastical / Google) ===== */
+.hgrid { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 0 6px; position: relative }
+.hours { display: grid; grid-template-rows: repeat(7, 46px) } .hours span { font-size: 10px; font-weight: 700; opacity: .5; text-align: end; padding-inline-end: 8px; transform: translateY(-6px) }
+.col { position: relative; height: 322px; border-radius: 10px } .col .ln { position: absolute; inset-inline: 0; height: 1px }
+.ev { position: absolute; inset-inline: 3px; border-radius: 9px; padding: 5px 7px 5px 9px; overflow: hidden; display: grid; gap: 1px; align-content: start }
+.ev::before { content: ""; position: absolute; inset-block: 5px; inset-inline-start: 3px; width: 3px; border-radius: 3px; background: currentColor; opacity: .9 }
+.ev .t { font-size: 10px; font-weight: 800; display: flex; justify-content: space-between; gap: 4px } .ev .t { opacity: .85 } .ev .n { font-size: 11.5px; font-weight: 800; line-height: 1.2 } .ev .a { font-size: 10.5px; font-weight: 900; font-variant-numeric: tabular-nums }
+.now { position: absolute; inset-inline: -2px; height: 2px; border-radius: 2px; z-index: 2 } .now::before { content: ""; position: absolute; inset-inline-start: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50% }
+
+/* ===== dark glass ===== */
+.dg { background: radial-gradient(110% 120% at 0% 0%, #4c1b30 0%, #1c121b 45%, #100d13 100%); color: #f4ecef; box-shadow: inset 0 0 0 1px #ffffff14 }
+.dg .seg { background: #ffffff10 } .dg .seg b.on { background: #ffffff1f } .dg .navb i { background: #ffffff10 }
+.dg .dh.today b { background: #e58aa2; color: #1a0f15 } .dg .col { background: #ffffff06 } .dg .col.today { background: #e58aa214 } .dg .col .ln { background: #ffffff0d }
+.dg .money { background: #e58aa226; color: #ffc9d7 } .dg .people { background: #4fc2b426; color: #b9efe7 } .dg .home { background: #e8b04b26; color: #ffe0a3 } .dg .work { background: #7fa6ee26; color: #cfdcff } .dg .trip { background: linear-gradient(90deg, #e58aa266, #b77be059); color: #fff }
+.dg .now { background: #ff8fae } .dg .now::before { background: #ff8fae }
+.dg .clegend .lm { background: #e58aa2 } .dg .clegend .lp { background: #4fc2b4 } .dg .clegend .lh2 { background: #e8b04b } .dg .clegend .lw { background: #7fa6ee }
+/* ===== light glass, the phone's colours ===== */
+.lg { background: radial-gradient(110% 120% at 0% 0%, #f8e3ea 0%, #f7f3f1 48%, #f1eeeb 100%); color: #1e1c1b; box-shadow: inset 0 0 0 1px #ffffff, 0 10px 30px #7a1f3d14 }
+.lg .seg { background: #ffffffa8 } .lg .seg b.on { background: #fff; color: #7a1f3d; box-shadow: 0 1px 3px #7a1f3d1a } .lg .navb i { background: #ffffffb3 }
+.lg .dh.today b { background: #7a1f3d; color: #fff } .lg .col { background: #ffffff8c } .lg .col.today { background: #fdf2f5 } .lg .col .ln { background: #00000009 }
+.lg .money { background: #f7e1e8; color: #7a1f3d } .lg .people { background: #dff3ef; color: #1b6a62 } .lg .home { background: #fbefd8; color: #875705 } .lg .work { background: #e4ecfc; color: #2c58a6 } .lg .trip { background: linear-gradient(90deg, #7a1f3d, #a24a86); color: #fff }
+.lg .now { background: #c2185b } .lg .now::before { background: #c2185b }
+.lg .clegend .lm { background: #7a1f3d } .lg .clegend .lp { background: #2a9d8f } .lg .clegend .lh2 { background: #e0a13b } .lg .clegend .lw { background: #4c7dd9 }
+
+
+.win .cal { background: transparent; box-shadow: none; padding: 2px 0 0; overflow: visible } .win .cal .chead .tt { font-size: 16px }
+.home2 { display: grid; gap: 14px } .home2 .side { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px }
 </style>
 
 <div class="wrap">
-  <header><h1>Your picks together: G1 · G2 · G3 · C1</h1>
-    <p class="lede">The week is redrawn: days side by side, each day's things as readable cards (time, what, amount), a trip as one bar across its days, today marked. Colours tell what kind of thing it is. Read "What I understood" under each and tick OK, or write what to change.</p></header>
+  <header><h1>Your picks together: G1 · G2 · G3 · C1 · K1</h1>
+    <p class="lede">Now with the calendar you picked (K1): the hours of the day with a line for now, and an all-day lane on top for bills, deliveries, renewals and trips. Colours tell what kind of thing it is. Read "What I understood" under each and tick OK, or write what to change.</p></header>
 
   <!-- G1 + C1 -->
   <section class="u" data-code="OK-G1">
@@ -75,22 +114,9 @@ button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-of
       <nav class="sb"><span class="logo">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
       <main>
         <div class="top"><span class="hello">Good evening, Ali</span><span class="ask">Ask or tell Attune — “spent 150 on lunch”…   Ctrl K</span></div>
-        <div class="grid">
-          <div class="card">
-            <div class="whead"><b>This week · 16 – 22 November</b><span class="nav"><span>‹</span><span>Today</span><span>›</span></span></div>
-            <div class="week">
-              <div class="day"><div class="dname">Mon <b>16</b></div><div class="it money"><span class="t">17:06</span><span class="n">FACES</span><span class="a">−800</span></div><div class="it home"><span class="t">evening</span><span class="n">Talabat list · 13 items</span></div></div>
-              <div class="day today"><div class="dname">Tue <b>17</b></div><div class="it money"><span class="t">9:00</span><span class="n">Sheikh · 3 of 8</span><span class="a">+2,500</span></div><div class="it money"><span class="t">13:56</span><span class="n">CIB transfer</span><span class="a">−1,160</span></div><div class="it people"><span class="t">18:00</span><span class="n">Call back Mama</span></div></div>
-              <div class="day"><div class="dname">Wed <b>18</b></div><div class="it money"><span class="t">due</span><span class="n">CIB card bill</span><span class="a">4,320</span></div><div class="it work"><span class="t">10:00</span><span class="n">Flat · painter visit</span></div></div>
-              <div class="day"><div class="dname">Thu <b>19</b></div><div class="it work"><span class="t">all day</span><span class="n">Flat · order tiles</span></div><div class="it people"><span class="t">20:30</span><span class="n">Noudy's birthday dinner</span></div></div>
-              <div class="day"><div class="dname">Fri <b>20</b></div><div class="it home"><span class="t">arrives</span><span class="n">FreeClip 2 · Amazon</span><span class="a">7,400</span></div></div>
-              <div class="day trip"><div class="dname">Sat <b>21</b></div><div class="it home"><span class="t">10:00</span><span class="n">Maid</span><span class="a">−600</span></div></div>
-              <div class="day trip"><div class="dname">Sun <b>22</b></div><div class="it money"><span class="t">renews</span><span class="n">Google AI Pro · Baba pays</span></div></div>
-              <div class="span">✈ Umrah · Makkah · until Mon 23</div>
-            </div>
-            <div class="legend"><span><i class="money"></i>Money</span><span><i class="people"></i>People</span><span><i class="home"></i>Home &amp; orders</span><span><i class="work"></i>Projects</span></div>
-          </div>
-          <div style="display:grid;gap:14px">
+        <div class="home2">
+          <div class="card" data-cal="dg"></div>
+          <div class="side">
             <div class="card"><div class="m">Safe to spend until 25 Nov</div><div class="kpi">EGP 4,350</div><div class="m">14,320 spent this month</div></div>
             <div class="card"><b>Agents</b><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div><div class="row"><span>Hotel near the Haram</span><span class="num">21,300</span></div></div>
             <div class="card"><b>Latest</b><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>CIB transfer</span><span class="num">−100</span></div></div>
@@ -100,10 +126,10 @@ button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-of
     <div class="und"><b>What I understood</b>
       <ol>
         <li>On a computer, Attune can wear the <b>dark glass</b> look: a deep burgundy-to-black background with frosted cards (real blur on a computer).</li>
-        <li><b>Home's centre is this week</b>, Monday to Sunday: each day's things as cards — the time (or "due" / "renews" / "arrives"), what it is, the amount. Today is marked. ‹ Today › moves the week.</li>
+        <li><b>Home's centre is this week as a real calendar (K1)</b>: Monday to Sunday side by side, each thing at its hour (time and amount on the card's first line), a red line for now on today, and an <b>all-day lane</b> on top for bills due, deliveries, renewals and trips (a trip is one bar across its days). Day · Week · Month at the top, ‹ Today › moves it.</li>
         <li>It is filled only from what Attune already has: reminders, payments and bills due, Follow-ups, people to call, project dates, papers, agents' deliveries, trips (a trip is one bar across its days) — and the phone's own calendar if you allow it there. No new page in the side menu.</li>
         <li>A tap on a card opens it on the right (the list + details layout you picked), never a phone pop-up.</li>
-        <li>Beside the week: safe to spend, agents, latest payments.</li>
+        <li>Under the week: safe to spend, agents, latest payments.</li>
         <li>Colours tell the kind: pink = money, green = people, amber = home &amp; orders, blue = projects.</li>
       </ol></div>
     <div class="pick"><label><input type="checkbox" id="pick-OK-G1"> OK, build this</label><textarea id="note-OK-G1" placeholder="Anything to change?"></textarea></div>
@@ -116,22 +142,9 @@ button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-of
       <nav class="sb"><span class="logo">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
       <main>
         <div class="top"><span class="hello">Good morning, Ali</span><span class="ask">Ask or tell Attune — “spent 150 on lunch”…   Ctrl K</span></div>
-        <div class="grid">
-          <div class="card">
-            <div class="whead"><b>This week · 16 – 22 November</b><span class="nav" style="color:#7a1f3d"><span>‹</span><span>Today</span><span>›</span></span></div>
-            <div class="week">
-              <div class="day"><div class="dname">Mon <b>16</b></div><div class="it money"><span class="t">17:06</span><span class="n">FACES</span><span class="a">−800</span></div><div class="it home"><span class="t">evening</span><span class="n">Talabat list · 13 items</span></div></div>
-              <div class="day today"><div class="dname">Tue <b>17</b></div><div class="it money"><span class="t">9:00</span><span class="n">Sheikh · 3 of 8</span><span class="a">+2,500</span></div><div class="it money"><span class="t">13:56</span><span class="n">CIB transfer</span><span class="a">−1,160</span></div><div class="it people"><span class="t">18:00</span><span class="n">Call back Mama</span></div></div>
-              <div class="day"><div class="dname">Wed <b>18</b></div><div class="it money"><span class="t">due</span><span class="n">CIB card bill</span><span class="a">4,320</span></div><div class="it work"><span class="t">10:00</span><span class="n">Flat · painter visit</span></div></div>
-              <div class="day"><div class="dname">Thu <b>19</b></div><div class="it work"><span class="t">all day</span><span class="n">Flat · order tiles</span></div><div class="it people"><span class="t">20:30</span><span class="n">Noudy's birthday dinner</span></div></div>
-              <div class="day"><div class="dname">Fri <b>20</b></div><div class="it home"><span class="t">arrives</span><span class="n">FreeClip 2 · Amazon</span><span class="a">7,400</span></div></div>
-              <div class="day trip"><div class="dname">Sat <b>21</b></div><div class="it home"><span class="t">10:00</span><span class="n">Maid</span><span class="a">−600</span></div></div>
-              <div class="day trip"><div class="dname">Sun <b>22</b></div><div class="it money"><span class="t">renews</span><span class="n">Google AI Pro · Baba pays</span></div></div>
-              <div class="span">✈ Umrah · Makkah · until Mon 23</div>
-            </div>
-            <div class="legend"><span><i class="money"></i>Money</span><span><i class="people"></i>People</span><span><i class="home"></i>Home &amp; orders</span><span><i class="work"></i>Projects</span></div>
-          </div>
-          <div style="display:grid;gap:14px">
+        <div class="home2">
+          <div class="card" data-cal="lg"></div>
+          <div class="side">
             <div class="card"><div class="m">Safe to spend until 25 Nov</div><div class="kpi" style="color:#7a1f3d">EGP 4,350</div><div class="m">14,320 spent this month</div></div>
             <div class="card"><b>Agents</b><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div><div class="row"><span>Hotel near the Haram</span><span class="num">21,300</span></div></div>
             <div class="card"><b>Latest</b><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>CIB transfer</span><span class="num">−100</span></div></div>
@@ -173,6 +186,24 @@ button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-of
 
 <div class="bar-pick"><div class="in"><div class="codes" id="codes">Nothing ticked yet</div><button type="button" id="copy">Copy my picks</button><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div></div>
 <script>
+const DAYS = [["Mon", 16], ["Tue", 17], ["Wed", 18], ["Thu", 19], ["Fri", 20], ["Sat", 21], ["Sun", 22]], TODAY = 1;
+const EV = [ // day, start hour (decimal), length h, kind, time label, name, amount
+  [0, 17.1, 0.9, "money", "17:06", "FACES", "−800"], [0, 19.5, 1, "home", "19:30", "Talabat list · 13 items", ""],
+  [1, 9, 0.9, "money", "9:00", "Sheikh · 3 of 8", "+2,500"], [1, 13.9, 0.9, "money", "13:56", "CIB transfer", "−1,160"], [1, 18, 1, "people", "18:00", "Call back Mama", ""],
+  [2, 10, 1.3, "work", "10:00", "Flat · painter visit", ""], [3, 20.5, 1.4, "people", "20:30", "Noudy's birthday", ""], [5, 10, 1.2, "home", "10:00", "Maid", "−600"]];
+const ALLDAY = [[2, 2, "money", "CIB card bill", "4,320"], [3, 3, "work", "Flat · order tiles", ""], [4, 4, "home", "FreeClip 2 arrives", "7,400"], [6, 6, "money", "Google AI Pro · Baba", ""], [5, 6, "trip", "✈ Umrah · Makkah — until Mon 23", ""]];
+const H0 = 8, H1 = 22, PX = 322 / (H1 - H0);
+const head = (title) => `<div class="chead"><div class="tt">This week<span>16 – 22 November</span></div><div class="seg"><b>Day</b><b class="on">Week</b><b>Month</b></div><div class="navb"><i>‹</i>Today<i>›</i></div></div>`;
+const legend = `<div class="clegend"><span><i class="lm"></i>Money</span><span><i class="lp"></i>People</span><span><i class="lh2"></i>Home &amp; orders</span><span><i class="lw"></i>Projects</span></div>`;
+const dayhead = () => `<div class="dayhead"><span></span>${DAYS.map(([d, n], i) => `<div class="dh ${i === TODAY ? "today" : ""} ${i > 4 ? "we" : ""}"><small>${d}</small><b>${n}</b></div>`).join("")}</div>`;
+function K1(theme) {
+  const rows = []; const placed = ALLDAY.map((x) => { let r = 0; while ((rows[r] || []).some((y) => !(x[1] < y[0] || x[0] > y[1]))) r++; (rows[r] = rows[r] || []).push(x); return [x, r]; });
+  const allday = `<div class="allday"><span class="lab" style="grid-row:1 / ${rows.length + 1}">All day</span>${placed.map(([a, r]) => `<div class="pill ${a[2]}" style="grid-column:${a[0] + 2} / ${a[1] + 3};grid-row:${r + 1}"><span class="pn">${a[3]}</span>${a[4] ? `<em>${a[4]}</em>` : ""}</div>`).join("")}</div>`;
+  const hours = `<div class="hours">${[8, 10, 12, 14, 16, 18, 20].map((h) => `<span>${h}:00</span>`).join("")}</div>`;
+  const cols = DAYS.map((_, i) => `<div class="col ${i === TODAY ? "today" : ""}">${[1, 2, 3, 4, 5, 6].map((k) => `<div class="ln" style="top:${k * 46}px"></div>`).join("")}${EV.filter((e) => e[0] === i).map((e) => `<div class="ev ${e[3]}" style="top:${(e[1] - H0) * PX}px;height:${Math.max(40, e[2] * PX)}px"><span class="t">${e[4]}${e[6] ? `<b class="a">${e[6]}</b>` : ""}</span><span class="n">${e[5]}</span></div>`).join("")}${i === TODAY ? `<div class="now" style="top:${(19.4 - H0) * PX}px"></div>` : ""}</div>`).join("");
+  return `<div class="cal ${theme}">${head()}${dayhead()}${allday}<div class="hgrid">${hours}${cols}</div>${legend}</div>`;
+}
+document.querySelectorAll('[data-cal]').forEach((el) => { el.innerHTML = K1(el.dataset.cal); });
 (() => {
   const KEY = "attune-mock-glass-combined";
   const codes = [...document.querySelectorAll(".u")].map((o) => o.dataset.code);
