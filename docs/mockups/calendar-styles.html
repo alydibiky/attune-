@@ -1,0 +1,150 @@
+<title>Attune Week Calendar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: three week-calendar styles, each shown big in dark glass and light glass, with pick + note. */
+:root { --bg:#f5f4f2; --surf:#fff; --ink:#1e1c1b; --mut:#5e5a57; --ln:#e6e3e0; --acc:#7a1f3d; --soft:#f7e8ed; --ok:#1e7a43; --font:"Nunito","Segoe UI",system-ui,sans-serif }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 130px }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px }
+h1 { font-size: 28px; font-weight: 900; margin: 0 } .lede { color: var(--mut); margin: 6px 0 0; max-width: 80ch }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 20px; padding: 16px; display: grid; gap: 14px } .opt.rec { border-color: var(--acc) }
+.opt h2 { margin: 0; font-size: 19px; font-weight: 900 } .code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px; vertical-align: 2px }
+.pm { display: grid; gap: 3px; font-size: 14px } .pick { display: grid; gap: 8px } .pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; min-height: 40px; cursor: pointer }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px }
+.scroll { overflow-x: auto; border-radius: 18px } .scroll > .cal { min-width: 900px }
+
+/* ===== shared calendar ===== */
+.cal { border-radius: 18px; padding: 18px 18px 16px; font-size: 12px; line-height: 1.35; position: relative; overflow: hidden }
+.chead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px } .chead .tt { font-size: 18px; font-weight: 900; letter-spacing: -.01em } .chead .tt span { font-weight: 700; opacity: .6; font-size: 14px; margin-inline-start: 8px }
+.seg { display: flex; gap: 4px; border-radius: 99px; padding: 3px; font-weight: 800; font-size: 11.5px } .seg b { padding: 4px 12px; border-radius: 99px; font-weight: 800 }
+.navb { display: flex; gap: 6px; align-items: center; font-weight: 800 } .navb i { font-style: normal; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center }
+.dayhead { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px } .dh { text-align: center; padding: 2px 0 } .dh small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .6 }
+.dh b { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 17px; font-weight: 900; margin-top: 3px } .dh.we small { opacity: .45 }
+.allday { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 4px 6px; margin-bottom: 8px; align-items: center } .allday .lab { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .55; text-align: end; padding-inline-end: 4px }
+.pill { border-radius: 8px; padding: 5px 8px; font-weight: 800; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 6px; align-items: center; justify-content: space-between }
+.pill em { font-style: normal; font-variant-numeric: tabular-nums; font-weight: 900; opacity: .9 }
+.legend { display: flex; gap: 14px; font-size: 11px; font-weight: 700; margin-top: 12px; opacity: .75 } .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; vertical-align: 0 }
+
+/* ===== K1: all-day lane + time grid (Fantastical / Google) ===== */
+.grid { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); gap: 0 6px; position: relative }
+.hours { display: grid; grid-template-rows: repeat(7, 46px) } .hours span { font-size: 10px; font-weight: 700; opacity: .5; text-align: end; padding-inline-end: 8px; transform: translateY(-6px) }
+.col { position: relative; height: 322px; border-radius: 10px } .col .ln { position: absolute; inset-inline: 0; height: 1px }
+.ev { position: absolute; inset-inline: 3px; border-radius: 9px; padding: 5px 7px 5px 9px; overflow: hidden; display: grid; gap: 1px; align-content: start }
+.ev::before { content: ""; position: absolute; inset-block: 5px; inset-inline-start: 3px; width: 3px; border-radius: 3px; background: currentColor; opacity: .9 }
+.ev .t { font-size: 10px; font-weight: 800; display: flex; justify-content: space-between; gap: 4px } .ev .t { opacity: .85 } .ev .n { font-size: 11.5px; font-weight: 800; line-height: 1.2 } .ev .a { font-size: 10.5px; font-weight: 900; font-variant-numeric: tabular-nums }
+.now { position: absolute; inset-inline: -2px; height: 2px; border-radius: 2px; z-index: 2 } .now::before { content: ""; position: absolute; inset-inline-start: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50% }
+
+/* ===== K2: big-day agenda columns ===== */
+.k2 .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px }
+.k2 .d { border-radius: 14px; padding: 10px 8px 12px; min-height: 300px; display: grid; gap: 7px; align-content: start }
+.k2 .dtop { display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px 4px } .k2 .dtop small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .6 } .k2 .dtop b { font-size: 24px; font-weight: 900; letter-spacing: -.02em }
+.k2 .c { border-radius: 11px; padding: 7px 8px; display: grid; gap: 2px } .k2 .c .t { font-size: 10px; font-weight: 800; opacity: .7; display: flex; gap: 5px; align-items: center } .k2 .c .n { font-weight: 800; font-size: 12px; line-height: 1.25 } .k2 .c .a { font-weight: 900; font-variant-numeric: tabular-nums; font-size: 12px }
+.k2 .sum { margin-top: auto; font-size: 10.5px; font-weight: 800; opacity: .6; padding: 0 2px }
+.k2 .tripbar { grid-column: 6 / 8; border-radius: 10px; padding: 6px 10px; font-weight: 800; font-size: 11.5px; display: flex; justify-content: space-between; margin-bottom: 8px }
+
+/* ===== K3: the week as one timeline (horizontal lanes by kind) ===== */
+.k3 .lanes { display: grid; grid-template-columns: 96px repeat(7, minmax(0, 1fr)); gap: 6px 6px; align-items: stretch }
+.k3 .lh { font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 7px; padding-inline-end: 6px } .k3 .lh i { width: 9px; height: 9px; border-radius: 3px; display: inline-block }
+.k3 .cell { border-radius: 10px; min-height: 58px; padding: 5px; display: grid; gap: 4px; align-content: start }
+.k3 .chip { border-radius: 8px; padding: 4px 6px; font-size: 11px; font-weight: 800; line-height: 1.2 } .k3 .chip small { display: block; font-size: 9.5px; font-weight: 800; opacity: .7 }
+.k3 .chip em { font-style: normal; font-weight: 900; font-variant-numeric: tabular-nums }
+
+/* ===== dark glass ===== */
+.dg { background: radial-gradient(110% 120% at 0% 0%, #4c1b30 0%, #1c121b 45%, #100d13 100%); color: #f4ecef; box-shadow: inset 0 0 0 1px #ffffff14 }
+.dg .seg { background: #ffffff10 } .dg .seg b.on { background: #ffffff1f } .dg .navb i { background: #ffffff10 }
+.dg .dh.today b { background: #e58aa2; color: #1a0f15 } .dg .col { background: #ffffff06 } .dg .col.today { background: #e58aa214 } .dg .col .ln { background: #ffffff0d }
+.dg .money { background: #e58aa226; color: #ffc9d7 } .dg .people { background: #4fc2b426; color: #b9efe7 } .dg .home { background: #e8b04b26; color: #ffe0a3 } .dg .work { background: #7fa6ee26; color: #cfdcff } .dg .trip { background: linear-gradient(90deg, #e58aa266, #b77be059); color: #fff }
+.dg .now { background: #ff8fae } .dg .now::before { background: #ff8fae }
+.dg .k2 .d, .dg.k2 .d { background: #ffffff07; box-shadow: inset 0 0 0 1px #ffffff0d } .dg.k2 .d.today { background: linear-gradient(180deg, #e58aa22a, #e58aa20d); box-shadow: inset 0 0 0 1px #e58aa266 } .dg.k2 .d.today .dtop b { color: #ffb5c9 }
+.dg.k3 .cell { background: #ffffff07 } .dg.k3 .cell.today { background: #e58aa214; box-shadow: inset 0 0 0 1px #e58aa244 }
+.dg .legend .lm { background: #e58aa2 } .dg .legend .lp { background: #4fc2b4 } .dg .legend .lh2 { background: #e8b04b } .dg .legend .lw { background: #7fa6ee }
+.dg.k3 .lh .lm { background: #e58aa2 } .dg.k3 .lh .lp { background: #4fc2b4 } .dg.k3 .lh .lh2 { background: #e8b04b } .dg.k3 .lh .lw { background: #7fa6ee }
+/* ===== light glass, the phone's colours ===== */
+.lg { background: radial-gradient(110% 120% at 0% 0%, #f8e3ea 0%, #f7f3f1 48%, #f1eeeb 100%); color: #1e1c1b; box-shadow: inset 0 0 0 1px #ffffff, 0 10px 30px #7a1f3d14 }
+.lg .seg { background: #ffffffa8 } .lg .seg b.on { background: #fff; color: #7a1f3d; box-shadow: 0 1px 3px #7a1f3d1a } .lg .navb i { background: #ffffffb3 }
+.lg .dh.today b { background: #7a1f3d; color: #fff } .lg .col { background: #ffffff8c } .lg .col.today { background: #fdf2f5 } .lg .col .ln { background: #00000009 }
+.lg .money { background: #f7e1e8; color: #7a1f3d } .lg .people { background: #dff3ef; color: #1b6a62 } .lg .home { background: #fbefd8; color: #875705 } .lg .work { background: #e4ecfc; color: #2c58a6 } .lg .trip { background: linear-gradient(90deg, #7a1f3d, #a24a86); color: #fff }
+.lg .now { background: #c2185b } .lg .now::before { background: #c2185b }
+.lg.k2 .d { background: #ffffffa6; box-shadow: inset 0 0 0 1px #fff, 0 2px 8px #7a1f3d0a } .lg.k2 .d.today { background: linear-gradient(180deg, #fbe6ed, #fff7f9); box-shadow: inset 0 0 0 1.5px #7a1f3d66 } .lg.k2 .d.today .dtop b { color: #7a1f3d }
+.lg.k3 .cell { background: #ffffff9e } .lg.k3 .cell.today { background: #fdeef3; box-shadow: inset 0 0 0 1px #7a1f3d44 }
+.lg .legend .lm { background: #7a1f3d } .lg .legend .lp { background: #2a9d8f } .lg .legend .lh2 { background: #e0a13b } .lg .legend .lw { background: #4c7dd9 }
+.lg.k3 .lh .lm { background: #7a1f3d } .lg.k3 .lh .lp { background: #2a9d8f } .lg.k3 .lh .lh2 { background: #e0a13b } .lg.k3 .lh .lw { background: #4c7dd9 }
+
+/* pick bar */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1180px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap } .bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px } .bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-offset: 2px }
+</style>
+
+<div class="wrap">
+  <header><h1>The week, three ways</h1>
+    <p class="lede">The calendar in the middle of the computer's Home, drawn properly, each in dark glass and in light glass (your phone's colours). Same week, same things: Sheikh's instalment, the CIB transfer, calling Mama, the CIB card bill, the Flat, Noudy's birthday, the FreeClip 2, the maid, Google AI Pro, the Umrah trip. Pick the one that looks best to you, and say what to change.</p></header>
+  <div id="slots"></div>
+</div>
+
+<div class="bar-pick"><div class="in"><div class="codes" id="codes">Nothing ticked yet</div><button type="button" id="copy">Copy my picks</button><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div></div>
+
+<script>
+// the week — one list, drawn three ways
+const DAYS = [["Mon", 16], ["Tue", 17], ["Wed", 18], ["Thu", 19], ["Fri", 20], ["Sat", 21], ["Sun", 22]], TODAY = 1;
+const EV = [ // day, start hour (decimal), length h, kind, time label, name, amount
+  [0, 17.1, 0.9, "money", "17:06", "FACES", "−800"], [0, 19.5, 1, "home", "19:30", "Talabat list · 13 items", ""],
+  [1, 9, 0.9, "money", "9:00", "Sheikh · 3 of 8", "+2,500"], [1, 13.9, 0.9, "money", "13:56", "CIB transfer", "−1,160"], [1, 18, 1, "people", "18:00", "Call back Mama", ""],
+  [2, 10, 1.3, "work", "10:00", "Flat · painter visit", ""], [3, 20.5, 1.4, "people", "20:30", "Noudy's birthday", ""], [5, 10, 1.2, "home", "10:00", "Maid", "−600"]];
+const ALLDAY = [[2, 2, "money", "CIB card bill", "4,320"], [3, 3, "work", "Flat · order tiles", ""], [4, 4, "home", "FreeClip 2 arrives", "7,400"], [6, 6, "money", "Google AI Pro · Baba", ""], [5, 6, "trip", "✈ Umrah · Makkah — until Mon 23", ""]];
+const H0 = 8, H1 = 22, PX = 322 / (H1 - H0);
+const head = (title) => `<div class="chead"><div class="tt">This week<span>16 – 22 November</span></div><div class="seg"><b>Day</b><b class="on">Week</b><b>Month</b></div><div class="navb"><i>‹</i>Today<i>›</i></div></div>`;
+const legend = `<div class="legend"><span><i class="lm"></i>Money</span><span><i class="lp"></i>People</span><span><i class="lh2"></i>Home &amp; orders</span><span><i class="lw"></i>Projects</span></div>`;
+const dayhead = () => `<div class="dayhead"><span></span>${DAYS.map(([d, n], i) => `<div class="dh ${i === TODAY ? "today" : ""} ${i > 4 ? "we" : ""}"><small>${d}</small><b>${n}</b></div>`).join("")}</div>`;
+function K1(theme) {
+  const rows = []; const placed = ALLDAY.map((x) => { let r = 0; while ((rows[r] || []).some((y) => !(x[1] < y[0] || x[0] > y[1]))) r++; (rows[r] = rows[r] || []).push(x); return [x, r]; });
+  const allday = `<div class="allday"><span class="lab" style="grid-row:1 / ${rows.length + 1}">All day</span>${placed.map(([a, r]) => `<div class="pill ${a[2]}" style="grid-column:${a[0] + 2} / ${a[1] + 3};grid-row:${r + 1}">${a[3]}${a[4] ? `<em>${a[4]}</em>` : ""}</div>`).join("")}</div>`;
+  const hours = `<div class="hours">${[8, 10, 12, 14, 16, 18, 20].map((h) => `<span>${h}:00</span>`).join("")}</div>`;
+  const cols = DAYS.map((_, i) => `<div class="col ${i === TODAY ? "today" : ""}">${[1, 2, 3, 4, 5, 6].map((k) => `<div class="ln" style="top:${k * 46}px"></div>`).join("")}${EV.filter((e) => e[0] === i).map((e) => `<div class="ev ${e[3]}" style="top:${(e[1] - H0) * PX}px;height:${Math.max(40, e[2] * PX)}px"><span class="t">${e[4]}${e[6] ? `<b class="a">${e[6]}</b>` : ""}</span><span class="n">${e[5]}</span></div>`).join("")}${i === TODAY ? `<div class="now" style="top:${(19.4 - H0) * PX}px"></div>` : ""}</div>`).join("");
+  return `<div class="cal ${theme}">${head()}${dayhead()}${allday}<div class="grid">${hours}${cols}</div>${legend}</div>`;
+}
+function K2(theme) {
+  const trip = `<div class="tripbar trip"><span>✈ Umrah · Makkah</span><span>Sat → Mon 23</span></div>`;
+  const days = DAYS.map(([d, n], i) => { const ad = ALLDAY.filter((a) => a[0] === i && a[2] !== "trip"), ev = EV.filter((e) => e[0] === i);
+    const sum = [...ad, ...ev].length; const ico = { money: "💳", people: "📞", home: "🛍️", work: "🏠" };
+    return `<div class="d ${i === TODAY ? "today" : ""}"><div class="dtop"><small>${d}</small><b>${n}</b></div>${ad.map((a) => `<div class="c ${a[2]}"><span class="t">${ico[a[2]]} ${a[2] === "money" ? "due" : "all day"}</span><span class="n">${a[3]}</span>${a[4] ? `<span class="a">${a[4]}</span>` : ""}</div>`).join("")}${ev.map((e) => `<div class="c ${e[3]}"><span class="t">${ico[e[3]]} ${e[4]}</span><span class="n">${e[5]}</span>${e[6] ? `<span class="a">${e[6]}</span>` : ""}</div>`).join("")}<span class="sum">${sum ? sum + (sum === 1 ? " thing" : " things") : "Free"}</span></div>`; }).join("");
+  return `<div class="cal k2 ${theme}">${head()}<div class="days" style="grid-template-rows:auto auto"><span style="grid-column:1/6"></span>${trip}${days}</div>${legend}</div>`;
+}
+function K3(theme) {
+  const KINDS = [["money", "Money", "lm"], ["people", "People", "lp"], ["home", "Home & orders", "lh2"], ["work", "Projects", "lw"]];
+  const all = [...EV.map((e) => ({ d: e[0], k: e[3], t: e[4], n: e[5], a: e[6] })), ...ALLDAY.filter((a) => a[2] !== "trip").map((a) => ({ d: a[0], k: a[2], t: a[2] === "money" ? "due" : "all day", n: a[3], a: a[4] }))];
+  const rows = KINDS.map(([k, label, c]) => `<div class="lh"><i class="${c}"></i>${label}</div>${DAYS.map((_, i) => `<div class="cell ${i === TODAY ? "today" : ""}">${all.filter((x) => x.k === k && x.d === i).map((x) => `<div class="chip ${k}"><small>${x.t}</small>${x.n}${x.a ? ` · <em>${x.a}</em>` : ""}</div>`).join("")}</div>`).join("")}`).join("");
+  const trip = `<div class="lh"><i style="background:linear-gradient(90deg,#e58aa2,#b77be0)"></i>Trips</div>${DAYS.map((_, i) => i === 5 ? `<div class="pill trip" style="grid-column:7 / 9">✈ Umrah · Makkah — until Mon 23</div>` : i === 6 ? "" : `<div class="cell ${i === TODAY ? "today" : ""}" style="min-height:34px"></div>`).join("")}`;
+  return `<div class="cal k3 ${theme}">${head()}<div class="lanes"><span></span>${DAYS.map(([d, n], i) => `<div class="dh ${i === TODAY ? "today" : ""}"><small>${d}</small><b>${n}</b></div>`).join("")}${rows}${trip}</div></div>`;
+}
+const OPTS = [["K1", "All-day lane + the hours of the day", true, K1, "Like Fantastical or Google Calendar: things with a time sit at their hour (a red line shows now), bills / deliveries / renewals / the trip on an all-day lane on top.", "The most \"real calendar\"; you see when the day is busy.", "Days with few things look empty; small cards for short things."],
+  ["K2", "Each day as a column of cards", false, K2, "Big day numbers, each day's things stacked in time order with an icon, \"Free\" on an empty day, the trip on top across its days.", "Every card is easy to read; nothing is cramped.", "You don't see the hours — 9:00 and 18:00 look the same distance apart."],
+  ["K3", "The week by kind (rows: Money · People · Home · Projects · Trips)", false, K3, "One row per kind of thing, the days across — you read \"what money is coming this week\" in one line.", "Great for planning money and errands at a glance.", "Less like a normal calendar; a busy day's things are split across rows."]];
+const slots = document.getElementById("slots");
+slots.innerHTML = OPTS.map(([c, name, rec, f, what, plus, minus]) => `<section class="opt ${rec ? "rec" : ""}" data-code="${c}"><h2><span class="code">${c}</span>${name}${rec ? '<span class="tag">Recommended</span>' : ""}</h2><p style="margin:0">${what}</p>
+  <div class="scroll">${f("dg")}</div><div class="scroll">${f("lg")}</div>
+  <div class="pm"><span><b>+</b> ${plus}</span><span><b>−</b> ${minus}</span></div>
+  <div class="pick"><label><input type="checkbox" id="pick-${c}"> Pick ${c}</label><textarea id="note-${c}" placeholder="Your note on ${c}"></textarea></div></section>`).join("");
+(() => {
+  const KEY = "attune-mock-calendar-styles";
+  const codes = OPTS.map((o) => o[0]);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { document.getElementById("codes").textContent = text() || "Nothing ticked yet"; };
+  for (const c of codes) { const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); }); }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => { const t = text() || "No picks"; const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); } });
+})();
+</script>
