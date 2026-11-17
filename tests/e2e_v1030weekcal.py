@@ -45,7 +45,7 @@ with sync_playwright() as p:
     det = page.inner_text("[data-testid=wk-detail]")
     check("Call back Mama" in det and "23:50" in det, "a tap opens it on the right: " + det.replace("\n", " ")[:120])
     check(page.locator("[data-testid=wk-open]").count() == 1, "with Open (its own page)")
-    if SHOTS: page.screenshot(path=os.path.join(SHOTS, "wk-dark-glass.png"))
+    if SHOTS: page.locator("[data-testid=wk]").screenshot(path=os.path.join(SHOTS, "wk-dark-glass.png"))
     page.click("[data-testid=wk-detail-close]"); page.click("[data-testid=wk-next]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=wk-now]").count() == 0 and page.locator("[data-testid=wk-allday-item][data-kind=trip]").count() == 1, "› next week: no now line; the trip carries on")
     page.click("[data-testid=wk-today]"); page.click("[data-testid=wk-view-month]"); page.wait_for_timeout(500)
@@ -62,7 +62,7 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=wk]", timeout=15000); page.wait_for_timeout(600)
     acc = page.evaluate("getComputedStyle(document.querySelector('[data-testid=desk-home]')).getPropertyValue('--c-acc').trim()")
     check(page.evaluate("document.documentElement.classList.contains('att-light')") and acc.upper() == "#7A1F3D", "light glass: the phone's burgundy (%s)" % acc)
-    if SHOTS: page.screenshot(path=os.path.join(SHOTS, "wk-light-glass.png"))
+    if SHOTS: page.locator("[data-testid=wk]").screenshot(path=os.path.join(SHOTS, "wk-light-glass.png"))
     ctx.close()
     # ---- the phone: plain by default; Glass is a choice in Theme, without live blur ----
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=init())

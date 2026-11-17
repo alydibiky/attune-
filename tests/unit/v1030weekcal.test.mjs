@@ -36,6 +36,11 @@ const busy = W.weekOf({ timeline: [0, 1, 2].map((i) => ({ id: "b" + i, date: "20
 ok(busy.timed.every((x) => x.cols === 3) && new Set(busy.timed.map((x) => x.col)).size === 3, "three things at 9:00 sit side by side, not on top of each other");
 // very early → the hours grow to show it
 ok(W.weekOf({ timeline: [{ id: "e", date: "2026-11-17", time: at("2026-11-17", 5, 30), kind: "reminder", what: "Fajr" }], now, startDay: 1 }).h0 === 5, "a 5:30 reminder widens the day to 5:00");
+// (Ali's screens: a 00:05 payment made the grid a whole day tall; a 23:50 reminder hung under it)
+{ const w2 = W.weekOf({ timeline: [{ id: "late", date: "2026-11-17", time: at("2026-11-17", 23, 50), kind: "reminder", what: "Call back Mama" }], txns: [{ id: "e", date: "2026-11-17", type: "expense", amount: 5, note: "x", ts: at("2026-11-17", 0, 5) }], now, startDay: 1 });
+  const L = w2.timed.find((x) => x.id === "late");
+  ok(Math.abs((w2.h1 - w2.h0) * w2.pxh - 360) < 1e-6, "the grid keeps one height (360 px) even for a whole day");
+  ok(L.y1 <= w2.h1 + 1e-9 && (L.y1 - L.y0) * w2.pxh >= 40 - 1e-6, "the 23:50 box ends inside the day and is big enough to read"); }
 // a full lane → "+N more", nothing lost
 const many = W.weekOf({ timeline: [0, 1, 2, 3, 4].map((i) => ({ id: "m" + i, date: "2026-11-18", kind: "bill", what: "bill " + i, amount: 10 + i })), now, startDay: 1, maxRows: 3 });
 ok(many.allday.length === 3 && many.more[2] === 2, "five bills on Wednesday: three shown, «+2 more»");

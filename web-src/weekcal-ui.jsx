@@ -62,8 +62,8 @@ function Chip({ x, onPick, sel, style, testid }) {
 }
 
 function WeekGrid({ wk, sel, onPick, now, oneDay = -1 }) {
-  const PX = 46, hours = []; for (let h = wk.h0; h < wk.h1; h += 2) hours.push(h);
-  const H = (wk.h1 - wk.h0) * PX / 2, at = (h) => (h - wk.h0) * PX / 2;
+  const step = wk.h1 - wk.h0 > 16 ? 3 : 2, hours = []; for (let h = wk.h0; h < wk.h1; h += step) hours.push(h);
+  const H = (wk.h1 - wk.h0) * wk.pxh, at = (h) => (h - wk.h0) * wk.pxh;   // (one height whatever hours show — weekcal.js gridPx)
   const cols = oneDay >= 0 ? [oneDay] : [0, 1, 2, 3, 4, 5, 6], n = cols.length;
   const nl = nowLine(wk, now), tmpl = { gridTemplateColumns: `54px repeat(${n}, minmax(0, 1fr))` };
   const allday = wk.allday.filter((x) => oneDay < 0 || (x.d0 <= oneDay && x.d1 >= oneDay));
@@ -87,7 +87,7 @@ function WeekGrid({ wk, sel, onPick, now, oneDay = -1 }) {
           {wk.timed.filter((x) => x.day === d).map((x) => (
             <button key={x.id} onClick={() => onPick({ ...x, date: wk.days[d] })} data-testid="wk-ev" data-kind={x.kind} title={x.what}
               className={"wk-ev wk-" + x.kind + (sel && sel.id === x.id ? " wk-sel" : "")}
-              style={{ top: at(x.h), height: Math.max(40, (x.end - x.h) * PX / 2 - 3), insetInlineStart: `calc(${(100 / x.cols) * x.col}% + 3px)`, width: `calc(${100 / x.cols}% - 6px)` }}>
+              style={{ top: at(x.y0), height: (x.y1 - x.y0) * wk.pxh - 3, insetInlineStart: `calc(${(100 / x.cols) * x.col}% + 3px)`, width: `calc(${100 / x.cols}% - 6px)` }}>
               <span className="wk-t">{hhmm(x.h)}{x.amount ? <b>{x.sign}{fmt(x.amount)}</b> : null}</span>
               <span className="wk-n" dir="auto">{x.what}</span>
             </button>))}

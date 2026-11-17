@@ -33,7 +33,8 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 1366, "height": 860})
     page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
     for q, tid in [("Agents", "agents"), ("Travel", "travel")]:   # v9.1: Scout folded into Agents
-        page.locator("[data-testid=side] input").first.fill(q); page.wait_for_timeout(200); page.locator("[data-testid=side-feature][data-id=%s], [data-testid=side-go-%s]" % (tid, tid)).first.click()   # v10.1 F1: feature hits; page.wait_for_timeout(400)
+        page.locator("[data-testid=side] input").first.fill(q); page.wait_for_timeout(200); page.locator("[data-testid=side-feature][data-id=%s], [data-testid=side-go-%s]" % (tid, tid)).first.click(); page.wait_for_timeout(400)   # v10.1 F1: feature hits
+    page.wait_for_selector("[data-testid=travel-page]", timeout=8000)   # (v10.2: Travel is its own file — it loads on first open)
     check(on(page, "travel-page"), "computer: Home → Agents → Travel")
     page.click("[data-testid=side-back]"); page.wait_for_timeout(350)
     check(on(page, "agents-page"), "computer: ← → Agents")

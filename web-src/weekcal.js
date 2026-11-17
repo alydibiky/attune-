@@ -44,7 +44,7 @@ export function signOf(x) {
  * txns: Money's payments ({ date, type, amount, note, created|ts }) — the ones already made this week, at the hour they happened.
  * projects: [{ id, name, date, text }]; trip: { depart, ret, to|name|country }.
  */
-export function weekOf({ timeline = [], txns = [], projects = [], trip = null, now = Date.now(), start = null, startDay = 6, maxRows = 3, cur = "" } = {}) {
+export function weekOf({ timeline = [], txns = [], projects = [], trip = null, now = Date.now(), start = null, startDay = 6, maxRows = 3, cur = "", gridPx = 360, minPx = 40 } = {}) {
   const s = isIso(start) ? start : weekStartOf(now, startDay), days = [0, 1, 2, 3, 4, 5, 6].map((k) => addDays(s, k)), end = days[6];
   const todayIso = iso(now), today = days.indexOf(todayIso), dayIx = (d) => days.indexOf(d);
   const timed = [], all = [], seen = new Set();
@@ -94,19 +94,23 @@ export function weekOf({ timeline = [], txns = [], projects = [], trip = null, n
   let h0 = 8, h1 = 22;
   for (const x of timed) { h0 = Math.min(h0, Math.floor(x.h)); h1 = Math.max(h1, Math.ceil(x.end)); }
   h0 = Math.max(0, h0); h1 = Math.min(24, Math.max(h1, h0 + 6));
-  // things at the same time on the same day sit side by side, never on top of each other
-  timed.sort((a, b) => a.day - b.day || a.h - b.h || b.amount - a.amount || a.what.localeCompare(b.what));
+  // (Ali's screens, 17 Nov: a payment at 00:05 made the grid a whole day tall, and a 23:50 reminder hung under it) — the grid keeps one
+  // height (gridPx) whatever hours it shows; each box is at least minPx tall and moved up so it ends inside the day (y0 → y1, hours)
+  const pxh = gridPx / (h1 - h0), box = Math.max(1, minPx / pxh);
+  for (const x of timed) { x.y0 = Math.max(h0, Math.min(x.h, h1 - box)); x.y1 = x.y0 + box; }
+  // things that would touch on the screen sit side by side, never on top of each other
+  timed.sort((a, b) => a.day - b.day || a.y0 - b.y0 || b.amount - a.amount || a.what.localeCompare(b.what));
   for (let d = 0; d < 7; d++) {
     const list = timed.filter((x) => x.day === d); let group = [], colsEnd = [], gEnd = -1;
     const close = () => { const n = colsEnd.length; for (const y of group) y.cols = n; group = []; colsEnd = []; };
     for (const x of list) {
-      if (x.h >= gEnd) close();
-      let c = colsEnd.findIndex((e) => e <= x.h); if (c < 0) { c = colsEnd.length; colsEnd.push(0); }
-      colsEnd[c] = x.end; x.col = c; group.push(x); gEnd = Math.max(gEnd, x.end);
+      if (x.y0 >= gEnd) close();
+      let c = colsEnd.findIndex((e) => e <= x.y0); if (c < 0) { c = colsEnd.length; colsEnd.push(0); }
+      colsEnd[c] = x.y1; x.col = c; group.push(x); gEnd = Math.max(gEnd, x.y1);
     }
     close();
   }
-  return { start: s, days, today, timed, allday, rows: Math.min(maxRows, rowsUsed.length), more, h0, h1, count: timed.length + all.length };
+  return { start: s, days, today, timed, allday, rows: Math.min(maxRows, rowsUsed.length), more, h0, h1, pxh, count: timed.length + all.length };
 }
 
 /** The hour a "now" line sits at on today's column (null when today isn't in this week or it's outside the shown hours). */

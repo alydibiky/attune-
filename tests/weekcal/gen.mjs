@@ -111,10 +111,12 @@ for (; made < N; made++) {
   for (const a of wk.allday) { if (a.row >= maxRows) why("rows: a row past the limit"); for (const b of wk.allday) if (a !== b && a.row === b.row && !(a.d1 < b.d0 || a.d0 > b.d1)) { why(`overlap: «${a.what}» and «${b.what}» on the same row`); break; } }
   // the hours: every timed thing inside them; same-time things side by side, never on top of each other
   for (const x of wk.timed) {
-    if (x.h < wk.h0 || x.end > wk.h1) why(`hours: ${x.h} outside ${wk.h0}–${wk.h1}`);
+    if (x.h < wk.h0 || x.h > wk.h1 || x.y0 < wk.h0 || x.y1 > wk.h1 + 1e-9) why(`hours: ${x.h} (box ${x.y0}–${x.y1}) outside ${wk.h0}–${wk.h1}`);
+    if ((x.y1 - x.y0) * wk.pxh < 40 - 1e-6) why(`small: a box ${((x.y1 - x.y0) * wk.pxh).toFixed(0)} px tall — too small to read`);
     if (!(x.cols >= 1) || !(x.col >= 0 && x.col < x.cols)) why(`cols: bad column ${x.col}/${x.cols}`);
   }
-  for (const a of wk.timed) for (const b of wk.timed) if (a !== b && a.day === b.day && a.h < b.end && b.h < a.end) {
+  // (on the SCREEN: the boxes as drawn — y0 to y1 — never cover each other)
+  for (const a of wk.timed) for (const b of wk.timed) if (a !== b && a.day === b.day && a.y0 < b.y1 - 1e-9 && b.y0 < a.y1 - 1e-9) {
     const ra = [a.col / a.cols, (a.col + 1) / a.cols], rb = [b.col / b.cols, (b.col + 1) / b.cols];
     if (ra[0] < rb[1] - 1e-9 && rb[0] < ra[1] - 1e-9) { why(`stack: «${a.what}» and «${b.what}» drawn on top of each other`); break; }
   }
