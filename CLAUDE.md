@@ -33,6 +33,11 @@
 - Playwright in cloud sessions: `PYTHONPATH=tests/pwshim:tests` (run_all.sh sets it).
 
 ## Ali's standing rules
+- **Every improvement on BOTH devices, phone AND computer, in the same change (Ali, 17 Nov 2026: "from now on while we improve something
+  make sure it's improved on both devices")** — measure / test it at a phone size and a computer size before saying it is done.
+- **The app is NARROWED (Ali, 17 Nov 2026: "we removed a lot of features … we narrowed the app and made it more focused on the existing
+  things")**: removed features are in `archive/` and `web-src/removed.js` (REMOVED + FOLDED); the Tools page lists what is left (23 on
+  17 Nov). Never describe the app by its old feature count; the focus now is finishing and smoothness, not new features.
 - **Every addition in ALL 20 languages, in the same change (Ali, 2 Nov 2026: "for each addition in the app do it for all languages
   so we don't have to translate later")**: each new user-visible English line gets its line in every `web-src/i18n-<id>.js`
   (ar = Egyptian, arb = Fusha, es fr de pt it ru tr id hi ur fa bn sw th vi zh ja ko) before committing — through `tr()` /
