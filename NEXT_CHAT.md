@@ -21,7 +21,22 @@
 > own page inside Attune, from what the agent read), T1–T3 where tips appear (Recommended T1 a line in the page).
 > Tests: tests/unit/v1020fixes.test.mjs, tests/e2e_v1020fixes.py, desktop/test/unit.js (orderAttempts, phaseOf).
 > **Ali picked D1, L1 ("but it should still redirect me to the right listing"), T1 T2 T3** → combined page with "What I understood":
-> https://claude.ai/artifact/CkbzEJEpupPdYdBKbjtxdn (docs/mockups/desktop-agents-tips-combined.html) — **waiting for his OK** before building.
+> https://claude.ai/artifact/CkbzEJEpupPdYdBKbjtxdn (docs/mockups/desktop-agents-tips-combined.html) → **Ali: "OK-D1 OK-L1 OK-T"** (asked if D1 is
+> what professional computer apps look like — yes: Mail, Outlook, Notion, Slack, Linear, Todoist, Things; Apple split view / Microsoft list-details).
+> **Built:** **L1** web-src/listing.js verifyListing() (is the landed page THIS offer: a listing, every model word on both sides, not an accessory,
+> price within 5 % — hotels: the name, dates + guests kept in the address); agent-kit.js product() reads a store's page (ld+json / og / h1,
+> price, canonical, rating, seller, delivery, `many` = still a results page); AgentBrowser.kt check mode (`resolve`: goTo → read → close in
+> ≤ 22 s, never the search fallback); agents-ui.jsx: a tap on ANY offer opens OfferPage (on top, so the conversation underneath keeps its
+> place), after each round the best 3 are checked one by one (verifyOffers), "Open this listing" opens the checked address in the phone's
+> browser; can't confirm → Attune's browser taps through itself (never a search page); can't READ the page but the link is a listing by its
+> shape → opened as before. tests/listing/verify.mjs 10,000 + verify-heldout.mjs (100 %, 0 wrong pages accepted; the held-out first showed
+> 97.4 % — model codes with a region suffix "HD9650/91" — fixed in norm()), tests/unit/v1020listing.test.mjs, tests/e2e_v1020listing.py.
+> **T1+T2+T3** setup-ui.jsx CoachHost inline (phone: a line in the page under the title; Home: under Good morning via PhoneHome tipSlot) /
+> corner card (computer); TipBulb 💡 (in the title bar on the phone; Money: at the end of its tab row — HubTabs `end`; Home + computer:
+> top-right of the page) shows the page's tips again. **D1** web-src/split-ui.jsx SplitView (first item open, ↑ ↓, search) — built for
+> **Travel** (countries | the country's page), **Family health → Medicines** (medicines | the picked one; adding opens in the right pane),
+> **Projects** (projects | the open project). tests/e2e_v1020split.py. **D1 still to do (same SplitView, next session):** Lab results, Family,
+> People, Agents (agents | the agent's conversation + offers), Follow-ups, Money's payments, Documents, My things.
 >
 > ## START HERE (16 Nov 2026, night — v10.1: Ali's picks P1 P2 P3 P4 W2 T1 + F1 F3 built — combined page OK'd)
 > Page: docs/mockups/projects-combined.html (https://claude.ai/artifact/LSwKU9ZuNeFL2d1b1L4Ziw). Built:
