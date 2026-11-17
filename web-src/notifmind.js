@@ -13,7 +13,7 @@
    Code first (fast, offline, the same answer every time), the model for what code can't place — never the other way round.
    Pure; tests: tests/notifmind/gen.mjs (10,000 notifications, 34 kinds × 11 intents × 9 languages) + heldout.mjs + unit. */
 import { understandNote as meaningOf } from "./notifmeaning.js";
-import { notAPayment, isScam, CODE_W, isSignInMessage } from "./notifwords.js";
+import { notAPayment, isScam, CODE_W, isSignInMessage, cleanNote } from "./notifwords.js";
 
 export const CATS = ["chat", "call", "bank", "wallet", "receipt", "bill", "subscription", "delivery", "food", "ride", "travel", "appointment",
   "health", "work", "school", "government", "security", "code", "promo", "news", "social", "media", "game", "system", "smart_home",
@@ -201,6 +201,7 @@ const CAT_ACTION = { bill: "pay", appointment: "attend", calendar: "attend", sec
 /** Code's reading of one notification (see the top of the file). opts.now — the moment it arrived (for "tomorrow"). */
 export function comprehend(n, { now } = {}) {
   if (!n) return null;
+  n = cleanNote(n);   // v10.2: spaces, direction marks, Arabic-Indic digits — cleaned once
   const at = now || n.ts || Date.now();
   const title = String(n.title || ""), text = String(n.text || ""), all = (title + " \n " + text).trim(), t = fold(all);
   const src = sourceKind(n), mean = (() => { try { return meaningOf(n) || {}; } catch (e) { return {}; } })(), why = notAPayment(all, n);

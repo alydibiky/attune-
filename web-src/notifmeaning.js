@@ -6,7 +6,7 @@
    «Shipped · Amazon Shopping — Arriving Thursday» and "who called me?" finds «Missed call · Ahmed».
    Pure and offline; tests/unit/v980fixes.test.mjs.                                                                                */
 
-import { OFFER_W, CODE_W } from "./notifwords.js";   // v9.9.17 one list for all four readers
+import { OFFER_W, CODE_W, cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
 const low = (s) => String(s || "").toLowerCase();
 
 // [kind, app package / app name pattern, text pattern, the words it means (EN · Egyptian Arabic · Franco)]
@@ -50,6 +50,8 @@ const STATE = [
 
 /** One notification {app, pkg, title, text} → { kind, who, amount, state, words } (words = what it means, for search and chats). */
 export function understandNote(n) {
+  // v10.2: cleaned once (spaces, direction marks, Arabic-Indic digits) — the same for every reader
+  n = cleanNote(n); if (!n) return null;
   const pkg = low(n && n.pkg), app = low(n && n.app), src = pkg + " " + app + (/messag|\bsms\b|mms|gmail|\.gm\b|outlook|yahoo|proton|mail/.test(pkg + " " + app) ? " " + low(n && n.title) : ""),   /* v9.9.30: an email's sender counts like an SMS sender ("Vezeeta" in Gmail) */ title = String((n && n.title) || ""), text = String((n && n.text) || "");
   const all = title + " " + text, la = low(all);
   let kind = "";

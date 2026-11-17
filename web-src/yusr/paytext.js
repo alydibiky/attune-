@@ -44,7 +44,7 @@ function payNormalize(s) {
 // (the person's own currency) decides when it is one of that family.
 const CURRENCIES = [
   ["EGP", /\b(EGP|E\.?G\.?P)\b|جنيه|ج\.?م\.?|جنيهاً|جنيها/i],
-  ["EGP", /(?<=\d\s?)L\.?E\b|\bL\.?E\.?(?=\s?\d)/],
+  ["EGP", /(?<=\d\s?)L\.?E\b|\bL\.?E\.?(?=\s?\d)(?!\s?\d{1,2}[\/.-]\d{1,2}[\/.-]\d)/],   // (v10.2: not French «LE 10/11/2026»)
   ["SAR", /\bSAR\b|ريال سعودي|ر\.\s?س(?![ء-ي])|(?<![ء-ي])رس(?![ء-ي])/i],
   ["AED", /\bAED\b|درهم إماراتي|د\.?إ\b/i],
   ["KWD", /\bKWD\b|دينار كويتي|د\.ك/i],
@@ -127,6 +127,10 @@ const DIRECTION = [
   // banks of all 30 countries that the lists below read wrongly or not at all. In first: an INCOMING transfer / salary / "paid you".
   ["in",  /حوال[ةه]\s+وارد|وارد[ةه]\s+(?:محلي|دولي|سريع)|إيداع\s+راتب|ايداع\s+راتب|تم\s+(?:إيداع|ايداع|استلام)/],
   ["out", /حوال[ةه]\s+صادر|تم\s+الدفع|شراء\s+(?:عبر|إنترنت|انترنت|دولي)/],
+  // v10.2 (the HARD composed run): «وصلك تحويل … على بطاقتك» is money IN; «تم تحويل … لصالح …» / «… من حسابك / بطاقتك» is money OUT —
+  // unless it says the money went TO your account / card / wallet
+  ["in",  /وصلك|وصل لك|وصلتك|استلمت مبلغ|تم\s+استلام/],
+  ["out", /لصالح|تم\s+تحويل(?![^.;\n]{0,80}(?:(?:الى|إلى)\s*|ل)(?:حسابك|حسابكم|بطاقتك|محفظتك))(?!\s+(?:راتب|مرتب))|(?:من|بـ?)\s*(?:حسابك|حسابكم|بطاقتك)(?:\s|$|[.,،;])/],
   ["in",  /\b(?:paid you|sent you|you(?:'ve| have)? received|has been credited|was credited|credited (?:to|with|by)|credit amt|direct deposit|automatically deposited|salary of)\b/i],
   ["in",  /\bCR\b(?=\s|$|[:.,])/],
   ["out", /\b(?:debited by|has been debited|was debited|debit amt|you paid|you have paid|purchase of|a purchase|pos purchase|spent on)\b/i],
@@ -176,7 +180,7 @@ const DIRECTION = [
 const AMOUNT_RE = /(?:^|[^\d.,])((?:\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:[ '’]\d{3})+|\d+)(?:[.,]\d{1,3})?)(?=[^\d]|$)/g;
 const NEAR_AMOUNT = /(\b[A-Z]{3}\b|[$€£¥₹₺₽₩₦₱฿₫৳₪₴₵]|R\$|zł|Kč|جنيه|ج\.?م|ريال|درهم|دولار|دينار|يورو|مبلغ|amount|bedrag|montant|importe|monto|valor|betrag|tutar|jumlah|nominal|importo|сумма|kwota|金额|금액|金額|بمبلغ|قيمة)/i;
 const NEAR_BALANCE = /(balance|available|avl\.? ?bal|\bbal\b|solde|saldo|disponible|disponível|disponibile|kontostand|verfügbar|bakiye|kullanılabilir|остаток|доступно|余额|잔액|残高|رصيد|الرصيد|المتاح|المتبقي)/i;
-const NEAR_REF = /(ref|reference|transaction|txn|réf|referencia|referência|referenz|riferimento|işlem no|no\.? ?ref|рнн|номер|رقم|مرجع|العملية|المرجعية)/i;
+const NEAR_REF = /(ref|reference|transaction\s*(?:no|id|#|ref|number)|txn|réf|referencia|referência|referenz|riferimento|işlem no|no\.? ?ref|рнн|номер|رقم|مرجع|العملية|المرجعية|order(?:\s*(?:no|number|#|id))?\.?\s*[A-Z]{0,3}|invoice\s*(?:no|#)\.?\s*[A-Z]{0,3}|طلب رقم|call|hotline|اتصل(?:\s*بـ?)?|للاستفسار|برجاء الاتصال)/i;   // v10.2: "call 19666" is not the amount;: "Order no. N6731580" was read as the amount
 
 /** "1.500,00" → 1500 · "12,50" → 12.5 · "1,23,456" → 123456 · "150.000" → 150000 — but "12.500" KWD → 12.5 (3 decimals). */
 function payNumber(raw, cur) {
@@ -223,12 +227,14 @@ function payAmount(text, home) {
     if (raw.replace(/[^\d]/g, "").length >= 9 && !/[,. '’]\d{3}/.test(raw)) score -= 9;   // phone / reference length (not 1,250,000.00)
     if (/^(19|20)\d{2}$/.test(raw) && /[\/.-]\s*$|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*$/i.test(before)) score -= 8;   // a year
     if (/^0/.test(raw)) score -= 4;                     // leading zero: phone number
+    if (/\d:\s?$/.test(before) || /^\s?:\d/.test(after)) score -= 8;   // v10.2: a time (18:36) is not the amount
+    if (/^[-\/.]\d{1,2}[-\/.]\d{1,2}/.test(after) && /^(?:19|20)\d{2}$/.test(raw)) score -= 12;   // v10.2: the year of 2026-07-26 is not the amount
     // v9.9.16 (the world corpus): "A/c **3545", "card ending 4521", "kart 1234", «بطاقة *4321», "Acct XX789" — a tail is not money
     if (/(?:a\/c|acc(?:oun)?t|acct?|card(?:\s+no\.?)?|ending|ends? (?:in|with)|biten|nolu|kart\w*|rek(?:ening)?|conto|carta|tarjeta|terminaci[oó]n|cuenta|compte|carte|konto|cheq|بطاقة|بطاقتك|حساب\w*|المنتهية\s+ب.?)[\s.:#-]*[xX*•.]*\s*$/iu.test(before) || /[*•xX]{1,6}\s?$/.test(before.slice(-7))) score -= 12;
     if (/(?:avl\.?|avail(?:able)?|limit|lmt|kullan[ıi]labilir|bakiye|saldo|solde|kontostand|رصيد|الرصيد|المتاح|المتوفر|\bbal\b)[^\d]{0,22}$/iu.test(before)) score -= 10;
     if (/^\s*(?:today|so far|this (?:week|month))\b/i.test(after) && /spent\s[^\d]{0,6}$/i.test(before)) score -= 6;   // "You've spent £48.20 today"
     // the number that TOUCHES a currency is the amount ("Rs 2500.00", "245,90 TL", «45.00 ر.س») — a date or a count beside it is not
-    if (/(?:(?<![A-Za-z])(?:[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م)/.test(after)) score += 4;
+    if (/(?:(?<![A-Za-z])(?:[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م)/.test(after)) score += 4;
     if (/^[.\/-]\d{1,4}(?!\d)/.test(after) && val <= 31 || /\d[.\/-]$/.test(before) && val <= 2100 && !/[.,]\d{2}$/.test(raw)) score -= 8;   // a piece of a date: 10-11-26, 10.11.2026
     if (!cands.length) score += 0.5;                    // …and of two equal candidates, the first written is the payment
     // v9.9.15: a day of the month ("on 20 December", «يوم 20 ديسمبر») or a count of minutes / nights / people is not an amount
@@ -248,9 +254,12 @@ function payCurrency(text, home) {
   return null;
 }
 
+// v10.2 (the HARD run: «تم أيداع» was missed): أ / إ / آ / ا are written for each other — every word is also checked with one alef,
+// so a rule that knows «ايداع» or «إيداع» knows «أيداع» too (the same for every word, not one at a time)
+const alef = (s) => s.replace(/[أإآ]/g, "ا");
 function payDirection(text) {
-  const t = payNormalize(text);
-  for (const [dir, re] of DIRECTION) if (re.test(t)) return dir;
+  const t = payNormalize(text), ta = alef(t);
+  for (const [dir, re] of DIRECTION) if (re.test(t) || re.test(ta)) return dir;
   // v6.10 — a plain note: "+250 EGP from my cousin", "-80 EGP to the shop". Strict on purpose: a phone number
   // ("+20 100 123 4567"), a sum ("… + 14% VAT"), "Convert 500 USD to EGP" or "at 9 to call Ahmed" are NOT payments.
   if (/^\s*\+(?:\d{1,3}(?:,\d{3})+|\d{1,9})(?:\.\d+)?(?![\d%])(?!(?:\s+\d+){2,})(?!\s*%)/.test(t)) return "in";

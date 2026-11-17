@@ -11,6 +11,8 @@
 // and, where it is clear, what it IS (the kind Recall files it under). Seeded: every run gives the same notifications.
 //     bash tests/notifs/run.sh            (summary + tests/notifs/report.md)        node tests/notifs/gen.mjs 2000   (smaller)
 import fs from "fs";
+import { harden, shapeReport } from "../lib/hard.mjs";
+const HARD = !!process.env.HARD;
 import { act, setCountry } from "./brain.mjs";
 import { WORLD } from "../corpus/world-bank-messages.mjs";
 const NOW = Date.parse("2026-11-10T15:00:00");   // a Tuesday
@@ -41,6 +43,45 @@ const G = []; const add = (name, n, maker) => G.push([name, n, maker]);
 const W = { money: (m, dir, cur) => ({ t: "money", a: m.v, dir, ...(cur ? { cur } : {}) }), sub: (svc, m) => ({ t: "sub", svc, a: m.v }), paid: (m) => ({ t: "paid", a: m.v }), bill: (m) => ({ t: "bill", a: m.v }),
   is: (t) => ({ t }), quiet: { t: "quiet" }, nomoney: { t: "nomoney" }, ask: { t: "ask" } };
 
+// ---- v10.2 (Ali: "harder and all unique, not same pattern"): bank messages COMPOSED from parts — the money line, the card, the shop or
+// person, the date, the balance, the reference, a greeting, a closing — each phrased many ways, in a random order, joined many ways,
+// in Arabic or English; and the same parts made into messages that are NOT money that moved (a code, declined, balance only, a limit,
+// an offer, due later). 1,600 taken from the template areas above (the run stays 10,000).
+const CUR_AR = (v) => pick([`${v} جنيه`, `${v} جم`, `${v} ج.م`, `جنيه ${v}`, `EGP ${v}`, `${v} EGP`]), CUR_EN = (v) => pick([`EGP ${v}`, `${v} EGP`, `LE ${v}`, `L.E ${v}`, `EGP${v}`]);
+// (the written amount and the truth are the SAME number: a rounded "42,939" means 42939, not 42939.25)
+const fmtV = (x) => { const k = Math.floor(rnd() * 4); return k === 0 ? [x.toFixed(2), x] : k === 1 ? [String(Math.round(x)), Math.round(x)] : k === 2 ? [x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), x] : [Math.round(x).toLocaleString("en-US"), Math.round(x)]; };
+const fmt = (x) => fmtV(x)[0];
+const dt = () => { const d = int(1, 28), mo = int(1, 12), h = int(0, 23), mi = int(10, 59); return pick([`${d}/${mo}/26`, `2026-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")} ${h}:${mi}`, `${d}-${mo}-2026`, `${String(d).padStart(2, "0")}/${String(mo).padStart(2, "0")}/2026 ${h}:${mi}`, `${d} Nov`]); };
+const PARTS = {
+  ar: { out: (a) => pick([`تم خصم مبلغ ${a}`, `تم سحب ${a}`, `عملية شراء بقيمة ${a}`, `تم تنفيذ تحويل لحظي بمبلغ ${a}`, `تم دفع ${a}`, `تمت عملية شراء بمبلغ ${a}`, `خصم ${a}`, `تم تحويل ${a}`]),
+    in: (a) => pick([`تم إيداع مبلغ ${a}`, `تم ايداع ${a}`, `تم استلام تحويل بمبلغ ${a}`, `وصلك تحويل ${a}`, `تم اضافة ${a}`, `حوالة واردة بمبلغ ${a}`]),
+    card: () => pick([`من بطاقتك المنتهية بـ ${t4()}`, `ببطاقة رقم **${t4()}`, `من حسابك رقم ****${t4()}`, `بطاقة الخصم المباشر ${t4()}*`, `من حسابك المنتهي بـ ********${t4()}`]),
+    cardIn: () => pick([`في حسابك رقم ****${t4()}`, `لحسابك المنتهي بـ ${t4()}`, `على بطاقتك ${t4()}`]),
+    shop: () => pick([`عند ${pick(SHOPS)}`, `لدى ${pick(SHOPS_AR)}`, `في ${pick(SHOPS)}`, `لصالح ${pick(SHOPS_AR)}`]), from: () => pick([`من ${pick(PEOPLE_AR)}`, `من ${pick(PEOPLE)}`]),
+    date: () => pick([`بتاريخ ${dt()}`, `في ${dt()}`, `يوم ${dt()}`]), bal: (b) => pick([`الرصيد المتاح ${b}`, `رصيدك الحالي ${b}`, `الرصيد ${b}`]), ref: () => pick([`رقم مرجعي ${ref()}`, `رقم العملية ${ref()}`]),
+    hi: () => pick(["عميلنا العزيز،", "عزيزي العميل", "يرجى العلم انه", ""]), bye: () => pick(["للاستفسار 19666", "لو لم تقم بهذه العملية اتصل بـ 19666", "شكرا لاستخدامك خدماتنا", ""]) },
+  en: { out: (a) => pick([`${a} was debited`, `Purchase of ${a}`, `You spent ${a}`, `${a} has been charged`, `Transfer of ${a} sent`, `POS transaction of ${a}`, `${a} withdrawn`, `Payment of ${a} done`]),
+    in: (a) => pick([`${a} was credited`, `You received ${a}`, `Incoming transfer of ${a}`, `${a} deposited`, `Salary of ${a} credited`]),
+    card: () => pick([`on card ending ${t4()}`, `from a/c ****${t4()}`, `with your card x${t4()}`, `from account ending ${t4()}`]), cardIn: () => pick([`to a/c ****${t4()}`, `to your account ending ${t4()}`]),
+    shop: () => pick([`at ${pick(SHOPS)}`, `to ${pick(SHOPS)}`]), from: () => `from ${pick(PEOPLE)}`,
+    date: () => pick([`on ${dt()}`, `${dt()}`]), bal: (b) => pick([`Avl bal ${b}`, `Available balance ${b}`, `Bal: ${b}`]), ref: () => pick([`Ref ${ref()}`, `Txn ID ${ref()}`]),
+    hi: () => pick(["Dear customer,", "Dear Client", ""]), bye: () => pick(["Not you? Call 19666", "Thank you for banking with us", ""]) } };
+const SEP = () => pick([" ", " ", ", ", "، ", " - ", "; ", "\n", ". "]);
+add("bank_composed", 1600, () => {
+  const L = rnd() < 0.55 ? "ar" : "en", P0 = PARTS[L], C = L === "ar" ? CUR_AR : CUR_EN, b = pick(BANKS);
+  const v0 = int(5, 90000) + (rnd() < 0.4 ? pick([0.5, 0.25, 0.75, 0.99]) : 0), [vs, v] = fmtV(v0), a = C(vs), bal = C(fmt(v0 * (2 + rnd() * 40) + int(100, 9999)));
+  const kind = pick(["out", "out", "out", "in", "in", "code", "declined", "balance", "limit", "offer", "due"]);
+  const mid = []; let want;
+  if (kind === "out" || kind === "in") {
+    mid.push(kind === "out" ? P0.card() : P0.cardIn()); if (rnd() < 0.8) mid.push(kind === "out" ? P0.shop() : P0.from()); if (rnd() < 0.7) mid.push(P0.date()); if (rnd() < 0.5) mid.push(P0.ref());
+    const body = [P0[kind](a), ...mid.sort(() => rnd() - 0.5)]; if (rnd() < 0.5) body.push(P0.bal(bal)); want = W.money({ v }, kind === "out" ? "out" : "in");
+    return [N(SMS, b, [P0.hi(), ...body, P0.bye()].filter(Boolean).join(SEP())), want, "bank"]; }
+  const t = L === "ar" ? { code: `رمز التحقق ${code()} لعملية شراء بمبلغ ${a} ${P0.shop()}. لا تشاركه مع أحد`, declined: `تم رفض عملية شراء بمبلغ ${a} ${P0.shop()} ${P0.card()}`, balance: `${P0.bal(bal)} ${P0.date()}`,
+      limit: `تم زيادة الحد الائتماني لبطاقتك الى ${bal}`, offer: `استمتع بخصم ${int(5, 40)}% عند الدفع ببطاقتك ${P0.shop()} بحد أقصى ${a}`, due: `قسط بمبلغ ${a} مستحق ${P0.date()} ${P0.card()}` }
+    : { code: `${code()} is your OTP for a purchase of ${a} ${P0.shop()}. Do not share it`, declined: `Your transaction of ${a} ${P0.shop()} was declined ${P0.card()}`, balance: `${P0.bal(bal)} ${P0.date()}`,
+      limit: `Your credit limit has been increased to ${bal}`, offer: `Get ${int(5, 40)}% cashback ${P0.shop()} up to ${a} when you pay with your card`, due: `Your instalment of ${a} is due ${P0.date()} ${P0.card()}` };
+  return [N(SMS, b, [P0.hi(), t[kind], P0.bye()].filter(Boolean).join(SEP())), W.nomoney, ""]; });
+
 // ---- 1–2 Egypt: banks, InstaPay, wallets ------------------------------------------------------------------------------------------
 // v10.2 Ali's own CIB messages (17 Nov 2026, his phone): their exact shapes — instant transfer, debit card with the balance after it,
 // and CIB's own offer with a cib.eg link (not a payment, not a scam). 200 taken from bank_eg_out so the run stays 10,000.
@@ -50,7 +91,7 @@ add("bank_cib_real", 200, () => { const m = money(), v = m.v.toFixed(2), d = new
   if (k < 0.45) return [N(SMS, "CIB", `يرجى العلم انه تم تنفيذ تحويل لحظي بمبلغ ${v} جم من حسابك المنتهي بـ ********${t4()} برقم مرجعي ${hex} بتاريخ ${iso} للمزيد، برجاء الاتصال بـ 19666`), W.money(m, "out"), "bank"];
   if (k < 0.85) return [N(SMS, "CIB", `تم خصم مبلغ EGP ${v}  من بطاقة الخصم المباشر المنتهية بـ **${t4()} عند ${pick(SHOPS).toUpperCase()} في ${dmy} ، الرصيد المتاح EGP ${(int(1000, 2000000) + 0.4).toFixed(2)}`), W.money(m, "out"), "bank"];
   return [N(SMS, "CIB", `استمتع ببطاقة CIB ${pick(["Platinum", "Gold", "World Elite"])} الائتمانية والتي تتيح لك ${pick(["٦", "٥", "١٠"])}٪ من قيمة مشترياتك في صورة نقاط SHARE لدى وجهات ماجد الفطيم، بحد أقصى ${pick(["٣،٠٠٠", "٢،٠٠٠", "٥،٠٠٠"])} جم شهريًا. لمعرفة المزيد، اضغط هنا: https://cib.eg/${hex.slice(0, 4)} أو تواصل مع مدير علاقات CIB Wealth الخاص بك. لا تشارك بياناتك البنكية مع أي شخص. تُطبق الشروط والأحكام. ${int(1, 99999)}`), W.nomoney, ""]; });
-add("bank_eg_out", 400, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), sa = pick(SHOPS_AR), ar = rnd() < 0.5 ? m.s : m.ar;
+add("bank_eg_out", 250, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), sa = pick(SHOPS_AR), ar = rnd() < 0.5 ? m.s : m.ar;
   const [src, title, text] = pick([[SMS, b, `Your debit card ending ${t4()} was charged EGP ${m.s} at ${s} on ${date()}. Available balance EGP ${bal()}`], [SMS, b, `Your account was debited with EGP ${m.s} at ${s} on ${date()}`],
     [{ app: b, pkg: "com." + b.toLowerCase().replace(/\W/g, "") + ".mobile" }, b, `Purchase of EGP ${m.s} approved on card ${t4()} at ${s}`], [SMS, b, `EGP ${m.s} was withdrawn from ATM using card ending ${t4()} on ${date()}. Avl bal EGP ${bal()}`],
     [SMS, b, `Dear customer, a POS transaction of EGP ${m.s} at ${s} was made with your card **${t4()}`], [{ app: "InstaPay", pkg: "com.egyptianbanks.instapay" }, "InstaPay", `You transferred EGP ${m.s} to ${pick(PEOPLE)} via InstaPay. Ref ${ref()}`],
@@ -60,7 +101,7 @@ add("bank_eg_out", 400, () => { const m = money(), b = pick(BANKS), s = pick(SHO
     [{ app: "InstaPay", pkg: "com.egyptianbanks.instapay" }, "InstaPay", `تم تحويل مبلغ ${ar} جنيه الى ${pick(PEOPLE_AR)} بنجاح عن طريق انستاباي`], [SMS, "VF-Cash", `تم دفع ${ar} جنيه ل${sa} من محفظتك. رصيدك الحالي ${bal()} جنيه`], [SMS, b, `تم خصم مبلغ ${ar} ج.م من حسابك مقابل ${sa}`],
     [SMS, b, `Your card ending ${t4()} was used for EGP ${m.s} at ${s} on ${date()}`], [SMS, "Orange Cash", `تم دفع فاتورة بمبلغ ${ar} جنيه من محفظة اورنچ كاش. رقم العملية ${ref()}`]]);
   return [N(src, title, text), W.money(m, "out"), /فاتورة/.test(text) ? "" : "bank"]; });   // a paid bill may be filed as a bill
-add("bank_eg_in", 400, () => { const m = money(100, 60000), b = pick(BANKS), s = pick(SHOPS), ar = rnd() < 0.5 ? m.s : m.ar;
+add("bank_eg_in", 250, () => { const m = money(100, 60000), b = pick(BANKS), s = pick(SHOPS), ar = rnd() < 0.5 ? m.s : m.ar;
   const [src, title, text] = pick([[{ app: "InstaPay", pkg: "com.egyptianbanks.instapay" }, "InstaPay", `You received EGP ${m.s} from ${pick(PEOPLE)} via InstaPay`], [SMS, b, `Your account ****${t4()} was credited with EGP ${m.s} on ${date()}. Available balance EGP ${bal()}`],
     [SMS, b, `Salary of EGP ${m.s} has been credited to your account`], [SMS, b, `EGP ${m.s} has been deposited into your account ${t4()}`], [SMS, b, `Refund of EGP ${m.s} from ${s} has been credited to your card ${t4()}`], [SMS, b, `تم إيداع مبلغ ${ar} جنيه في حسابكم رقم ****${t4()}`],
     [SMS, "VF-Cash", `تم استلام مبلغ ${ar} جنيه من رقم ${phone()} رصيدك الحالي ${bal()} جنيه`], [{ app: "InstaPay", pkg: "com.egyptianbanks.instapay" }, "InstaPay", `استلمت ${ar} جنيه من ${pick(PEOPLE_AR)} على انستاباي`], [SMS, b, `تم تحويل راتبك بمبلغ ${ar} جنيه الى حسابك`],
@@ -68,7 +109,7 @@ add("bank_eg_in", 400, () => { const m = money(100, 60000), b = pick(BANKS), s =
     [SMS, b, `Incoming transfer: EGP ${m.s} from ${pick(PEOPLE)}. Ref ${ref()}`], [SMS, b, `A cash deposit of EGP ${m.s} was made to your account ending ${t4()}`]]);
   return [N(src, title, text), W.money(m, "in"), "bank"]; });
 // ---- 3 the Gulf -----------------------------------------------------------------------------------------------------------------------
-add("bank_gulf", 400, () => { const m = money(5, 4000), [cc, cur, curAr, banks] = pick([["sa", "SAR", "ر.س", ["AlRajhiBank", "SNB-AlAhli", "RiyadBank", "SABB", "Alinma"]], ["ae", "AED", "درهم", ["EmiratesNBD", "ADCB", "FAB", "Mashreq", "DIB"]], ["qa", "QAR", "ر.ق", ["QNB", "CBQ", "Doha Bank"]], ["sa", "SAR", "ريال", ["AlRajhiBank", "BankAlbilad"]]]);
+add("bank_gulf", 250, () => { const m = money(5, 4000), [cc, cur, curAr, banks] = pick([["sa", "SAR", "ر.س", ["AlRajhiBank", "SNB-AlAhli", "RiyadBank", "SABB", "Alinma"]], ["ae", "AED", "درهم", ["EmiratesNBD", "ADCB", "FAB", "Mashreq", "DIB"]], ["qa", "QAR", "ر.ق", ["QNB", "CBQ", "Doha Bank"]], ["sa", "SAR", "ريال", ["AlRajhiBank", "BankAlbilad"]]]);
   const b = pick(banks), s = pick(["PANDA", "NOON.COM", "JARIR", "STARBUCKS RIYADH", "CARREFOUR MOE", "TALABAT", "ENOC", "LULU HYPERMARKET", "AMAZON.SA", "DANUBE", "ALDREES", "EXTRA"]);
   const [text, dir] = pick([[`شراء عبر نقاط البيع\nبطاقة: ${t4()}*; مدى\nمبلغ: ${cur} ${m.s}\nلدى: ${s}\nفي: 2026-11-10 13:05`, "out"], [`شراء إنترنت\nبطاقة *${t4()} فيزا\nمبلغ ${m.s} ${curAr}\nلدى ${s}\nفي 10/11/26 21:40\nرصيد ${bal()} ${curAr}`, "out"],
     [`حوالة واردة محلية\nمبلغ: ${cur} ${m.s}\nإلى: ${t4()}*\nمن: ${pick(PEOPLE_AR)}\nفي: 2026-11-01 09:00`, "in"], [`POS Purchase\nCard: *${t4()}\nAmount: ${cur} ${m.s}\nAt: ${s}\nOn: 2026-11-10 08:15`, "out"], [`Purchase of ${cur} ${m.s} with Debit Card ending ${t4()} at ${s}. Avl Bal is ${cur} ${bal()}`, "out"],
@@ -86,10 +127,10 @@ function reAmount(text, amt) {   // find the amount as written, write another on
     const useTh = th || (frac && sep === "," ? " " : frac ? "," : ""), wholeS = whole >= 1000 && (th || rnd() < 0.5) && useTh ? String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, useTh) : String(whole);
     return { text: text.slice(0, m.index) + wholeS + (frac ? sep + fr : "") + text.slice(m.index + m[0].length).replace(/^/, m[0].endsWith(" ") ? " " : ""), v: whole + (fr ? +("0." + fr) : 0) }; }
   return null; }
-add("bank_world", 700, () => { const [cc, app, title, text, dir, amt, cur] = pick(WORLD), r = reAmount(text, amt); if (!r) return null;
+add("bank_world", 400, () => { const [cc, app, title, text, dir, amt, cur] = pick(WORLD), r = reAmount(text, amt); if (!r) return null;
   return [N({ app, pkg: app }, title, r.text), { t: "money", a: r.v, dir, cur }, "", cc]; });
 // ---- 5 from a bank, but NOT a payment ---------------------------------------------------------------------------------------------
-add("bank_not_money", 600, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), big = money(20000, 300000);
+add("bank_not_money", 300, () => { const m = money(), b = pick(BANKS), s = pick(SHOPS), big = money(20000, 300000);
   const [text, kind] = pick([[`Your OTP is ${code()}. Do not share it with anyone`, ""], [`${code()} is your verification code for ${b} online purchase of EGP ${m.s} at ${s}`, ""], [`رمز التحقق ${code()} لعملية شراء بمبلغ ${m.s} جنيه من ${s}. لا تشاركه مع احد`, ""],
     [`Use code ${code()} to confirm your transfer of EGP ${m.s} to ${pick(PEOPLE)}`, ""], [`Your available balance is EGP ${bal()} as of ${date()}`, ""], [`رصيدك الحالي ${bal()} جنيه`, ""], [`Your transaction of EGP ${m.s} at ${s} was declined due to insufficient funds`, ""],
     [`Transaction declined: EGP ${m.s} at ${s}. Card ${t4()}`, ""], [`تم رفض عملية شراء بمبلغ ${m.s} جنيه من ${s} لعدم كفاية الرصيد`, ""], [`Your transfer of EGP ${m.s} to ${pick(PEOPLE)} failed. No amount was deducted`, ""], [`فشلت عملية تحويل ${m.s} جنيه. لم يتم خصم أي مبلغ`, ""],
@@ -127,7 +168,7 @@ add("sub_future", 300, () => { const m = money(30, 1500), [from, plan] = pick(SU
 const AD_APPS = [["Uber", "com.ubercab"], ["talabat", "com.talabat"], ["noon", "com.noon.buyerapp"], ["Amazon", "com.amazon.mShop.android.shopping"], ["Jumia", "com.jumia.android"], ["Careem", "com.careem.acma"], ["Breadfast", "com.breadfast"], ["Vodafone", "com.emeint.android.myservices"], ["Orange", "com.orange.mobinilandme"],
   ["e&", "com.etisalat.flous"], ["InstaShop", "com.instashop"], ["SHEIN", "com.zzkko"], ["Temu", "com.einnovation.temu"], ["Booking.com", "com.booking"], ["Swvl", "mobi.swvl.android"], ["elmenus", "com.elmenus.app"], ["Mrsool", "com.mrsool"], ["valU", "com.valu.app"], ["AliExpress", "com.alibaba.aliexpresshd"], ["IKEA", "com.ingka.ikea.app"],
   ["Carrefour", "com.aswat.carrefouruae"], ["B.TECH", "com.btech.app"], ["Namshi", "com.namshi.android"], ["Trendyol", "trendyol.com"], ["Lazada", "com.lazada.android"], ["Zomato", "com.application.zomato"], ["Glovo", "com.glovo"]];
-add("ads", 700, () => { const m = money(10, 9000), m2 = money(10, 9000), [app, pkg] = pick(AD_APPS), p = pick([10, 15, 20, 25, 30, 40, 50, 60, 70]), thing = pick(["burgers", "phones", "sneakers", "groceries", "your next ride", "air fryers", "perfumes", "laptops", "pizza", "school supplies"]);
+add("ads", 400, () => { const m = money(10, 9000), m2 = money(10, 9000), [app, pkg] = pick(AD_APPS), p = pick([10, 15, 20, 25, 30, 40, 50, 60, 70]), thing = pick(["burgers", "phones", "sneakers", "groceries", "your next ride", "air fryers", "perfumes", "laptops", "pizza", "school supplies"]);
   const viaSms = rnd() < 0.2, viaMail = !viaSms && rnd() < 0.15, src = viaSms ? SMS : viaMail ? GMAIL : { app, pkg };
   const text = pick([`${p}% off on ${thing} today only — up to EGP ${m.s}`, `Flash sale: ${thing} from EGP ${m.s} only!`, `Get EGP ${m.s} off your next order with code ${pick(["SAVE", "HELLO", "WKND", "NEW"])}${int(10, 99)}`, `Free delivery on orders above EGP ${m.s} — order now`, `Invite a friend and get EGP ${m.s} off when they order. Terms apply.`,
     `For EGP ${m.s} only instead of EGP ${m2.s}: ${thing} — treat yourself`, `Yellow Friday is here: up to ${p}% off on ${thing}. Prices from EGP ${m.s}`, `Your cart misses you! Extra ${p}% off — items from $${m.s}`, `Shop now, pay later: 0% interest for 6 months on orders above EGP ${m.s}`, `Buy 1 get 1 free on ${thing} — EGP ${m.s}`,
@@ -137,7 +178,7 @@ add("ads", 700, () => { const m = money(10, 9000), m2 = money(10, 9000), [app, p
     `Price drop: ${thing} on your wishlist now EGP ${m.s} (was EGP ${m2.s})`, `New: installments starting EGP ${m.s}/month on ${thing}. Visit our app`, `🔥 ${thing} — ${p}% OFF + extra EGP ${m.s} with your card`, `Weekend treat: ${p}% off your next 3 orders, max EGP ${m.s} each`]);
   return [N(src, app, text), W.quiet, src === GMAIL ? "" : "promo"]; });
 // ---- 10 videos / posts / news / games that talk about money ------------------------------------------------------------------------
-add("media", 500, () => { const m = money(100, 900000), who = pick(["MrBeast", "Mo Vlogs", "Elzero Web School", "Ahmed Abouzaid", "Marques Brownlee", "Droos Online", "The Money Guy", "CNBC Arabia", "Supercar Blondie", "Khaled Elgendy"]);
+add("media", 350, () => { const m = money(100, 900000), who = pick(["MrBeast", "Mo Vlogs", "Elzero Web School", "Ahmed Abouzaid", "Marques Brownlee", "Droos Online", "The Money Guy", "CNBC Arabia", "Supercar Blondie", "Khaled Elgendy"]);
   const [src, title, text, want] = pick([[{ app: "YouTube", pkg: "com.google.android.youtube" }, who, `I spent $${m.s} on this and regret it`], [{ app: "YouTube", pkg: "com.google.android.youtube" }, who, `How I made EGP ${m.s} in one month`], [{ app: "TikTok", pkg: "com.zhiliaoapp.musically" }, "TikTok", `@${who.toLowerCase().replace(/\W/g, "")} posted: I paid EGP ${m.s} for this phone 😱`],
     [{ app: "Facebook", pkg: "com.facebook.katana" }, "Facebook", `${pick(FIRST)} shared a post: The new Corolla price is EGP ${m.s}`], [{ app: "X", pkg: "com.twitter.android" }, who, `Tesla stock up $${m.s} today`], [{ app: "Youm7", pkg: "com.youm7.android" }, "اليوم السابع", `سعر الدولار اليوم ${money(45, 55).s} جنيه في البنك الأهلي`],
     [{ app: "Google News", pkg: "com.google.android.apps.magazines" }, "Reuters", `Egypt raises fuel prices: 92-octane now EGP ${money(15, 25).s} a litre`], [{ app: "Reddit", pkg: "com.reddit.frontpage" }, "r/Egypt", `Is EGP ${m.s} a good salary in Cairo?`], [{ app: "PUBG MOBILE", pkg: "com.tencent.ig" }, "PUBG MOBILE", `Royale Pass is here — get it for $${money(1, 30).s}`],
@@ -148,7 +189,7 @@ add("media", 500, () => { const m = money(100, 900000), who = pick(["MrBeast", "
     [{ app: "Facebook", pkg: "com.facebook.katana" }, "Marketplace", `New listing near you: iPhone 13 — EGP ${m.s}`], [{ app: "Kooora", pkg: "com.kooora.app" }, "كووورة", `صفقة القرن: ${m.s} مليون يورو للاعب الجديد`], [{ app: "Telegram", pkg: "org.telegram.messenger" }, "أسعار الذهب والدولار (قناة)", `الدولار ${money(45, 55).s} · عيار 21 ${money(3000, 5000).s} جنيه`, W.nomoney]]);
   return [N(src, title, text), want || W.quiet, ""]; });
 // ---- 11 deliveries ----------------------------------------------------------------------------------------------------------------
-add("delivery", 600, () => { const m = money(50, 5000), item = pick(["Anker charger", "Philips air fryer", "running shoes", "book", "phone case", "LEGO set", "desk lamp", "blender"]), d = pick(DAY3), r = pick(["Zooba", "KFC", "Pizza Hut", "Bazooka", "Buffalo Burger"]);
+add("delivery", 500, () => { const m = money(50, 5000), item = pick(["Anker charger", "Philips air fryer", "running shoes", "book", "phone case", "LEGO set", "desk lamp", "blender"]), d = pick(DAY3), r = pick(["Zooba", "KFC", "Pizza Hut", "Bazooka", "Buffalo Burger"]);
   const AMZ = { app: "Amazon Shopping", pkg: "com.amazon.mShop.android.shopping" }, NOON = { app: "noon", pkg: "com.noon.buyerapp" }, TAL = { app: "talabat", pkg: "com.talabat" }, JUM = { app: "Jumia", pkg: "com.jumia.android" };
   const [src, title, text, want] = pick([[AMZ, "Shipped", `Your package with ${item} is arriving ${d}`, W.is("followup")], [AMZ, "Amazon", `Arriving ${d}: ${item}. Track your package`, W.is("followup")], [NOON, "noon", `Your order has been shipped and will arrive ${d}`, W.is("followup")],
     [JUM, "Jumia", `Good news! Your order ${ref()} was shipped. Expected delivery: ${d}`, W.is("followup")], [AMZ, "Delivered", `Your package with ${item} was delivered. It was handed to reception`, W.is("delivered")], [NOON, "noon", `Delivered! Your order ${ref()} has been delivered. Rate your experience`, W.is("delivered")],
@@ -264,21 +305,25 @@ function judge(want, g, guessWant) {
     case "nomoney": return moneyish ? "became money" : "";
     default: return g.card === want.t ? "" : moneyish ? "became money" : "no “" + want.t + "” (" + (g.card || "nothing") + ")";
   } }
-const seen = new Set(), rows = [];
+const seen = new Set(), rows = [], texts = [];
 for (const [name, n0, maker] of G) { const n = Math.round(n0 * TOTAL / 10000); let made = 0, tries = 0;
   while (made < n) { if (tries++ > n * 400) throw new Error(name + ": only " + made + " different notifications of " + n);
-    const m = maker(); if (!m) continue; const [note, want, kind, cc, recent, guessWant] = m, key = note.app + "|" + note.title + "|" + note.text; if (seen.has(key)) continue; seen.add(key); made++;
+    const m = maker(); if (!m) continue; const [note, want, kind, cc, recent, guessWant] = m;
+    // v10.2 (Ali: "harder and all unique"): HARD=1 → each notification gets 1–4 real-world changes that keep its meaning (tests/lib/hard.mjs)
+    if (HARD) { const a = want && want.a ? String(Math.floor(want.a)).replace(/\B(?=(\d{3})+$)/g, "[,.]?") : ""; note.text = harden(note.text, rnd, { keep: a ? new RegExp(a) : null, human: /^chat|calls/.test(name) && !/^(?:Phone|Missed)/.test(note.title) && !/مكالمة|missed/i.test(note.text), sms: note.app === "Messages" }); }
+    const key = note.app + "|" + note.title + "|" + note.text; if (seen.has(key)) continue; seen.add(key); made++; texts.push(note.title + ": " + note.text);
     setCountry(cc || "eg"); let g, why; try { g = act(note, recent ? { recent } : {}); why = judge(want, g, guessWant); } catch (e) { g = { kind: "" }; why = "THROW " + e.message; }
     const falseMoney = why && ["quiet", "nomoney", "ask", "bill", "followup", "delivered", "todo", "callback"].includes(want.t) && /became money|chat talk became/.test(why);
     rows.push({ interrupt: !!(g.ask || (g.card && g.card !== "delivered" && !g.cardAuto && !(g.money && g.money.auto))), g: name, n: note, want: want.t, ok: !why, why: why.replace(/\d[\d.,]*/g, "N").replace(/“[^”]*”/g, (x) => (/card|talk|…/.test(x) ? x : "“…”")), falseMoney, auto: !!(falseMoney && g.money && g.money.auto), kindWant: kind, kindOk: !kind || g.kind === kind, kindGot: g.kind }); } }
 const by = {}; for (const r of rows) { const b = (by[r.g] = by[r.g] || { n: 0, bad: 0, ex: {}, kn: 0, kbad: 0, kex: {} }); b.n++; if (!r.ok) { b.bad++; (b.ex[r.why] = b.ex[r.why] || []).push(r.n); } if (r.kindWant) { b.kn++; if (!r.kindOk) { b.kbad++; (b.kex[r.kindGot] = b.kex[r.kindGot] || []).push(r.n); } } }
 const total = rows.length, bad = rows.filter((r) => !r.ok).length, fm = rows.filter((r) => r.falseMoney).length, fa = rows.filter((r) => r.auto).length, kn = rows.filter((r) => r.kindWant).length, kb = rows.filter((r) => r.kindWant && !r.kindOk).length;
 const show = (x) => "«" + x.app + " · " + x.title + ": " + x.text.replace(/\n/g, " ⏎ ").slice(0, 110) + "»";
-let md = `# Notification run — ${total} notifications, ${total - bad} handled right (${(100 * (total - bad) / total).toFixed(1)}%)\n\n- Became money when it is NOT a payment: **${fm}** (added by itself, without a tap: **${fa}**)\n- Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **${rows.filter((r) => r.interrupt).length}**\n- What it is (the kind Recall files it under): ${kn - kb} of ${kn} right (${(100 * (kn - kb) / kn).toFixed(1)}%)\n\n| area | notifications | wrong | right % | kind wrong |\n|---|---|---|---|---|\n`;
+const SR = shapeReport(texts);
+let md = `# Notification run${HARD ? " (HARD)" : ""} — ${total} notifications, ${total - bad} handled right (${(100 * (total - bad) / total).toFixed(1)}%) — ${SR.shapes} different shapes [${(100 * SR.share).toFixed(0)} of 100]\n\n- Became money when it is NOT a payment: **${fm}** (added by itself, without a tap: **${fa}**)\n- Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **${rows.filter((r) => r.interrupt).length}**\n- What it is (the kind Recall files it under): ${kn - kb} of ${kn} right (${(100 * (kn - kb) / kn).toFixed(1)}%)\n\n| area | notifications | wrong | right % | kind wrong |\n|---|---|---|---|---|\n`;
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(1)} | ${b.kn ? b.kbad + " of " + b.kn : "–"} |\n`;
 md += "\n## What went wrong (examples of each)\n";
 for (const [g, b] of Object.entries(by)) if (b.bad || b.kbad) { md += `\n### ${g}\n`; for (const [why, ex] of Object.entries(b.ex).sort((a, b) => b[1].length - a[1].length)) md += `- **${why}** × ${ex.length}: ${ex.slice(0, 4).map(show).join(" · ")}\n`;
   for (const [k, ex] of Object.entries(b.kex).sort((a, b) => b[1].length - a[1].length)) md += `- kind read as **${k}** × ${ex.length}: ${ex.slice(0, 3).map(show).join(" · ")}\n`; }
-if (TOTAL === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-notifs-s" + process.env.SEED_SHIFT + ".md" : "./report.md", import.meta.url), md);
+if (TOTAL === 10000) fs.writeFileSync(new URL(+process.env.SEED_SHIFT ? "../onemillion/B-notifs-s" + process.env.SEED_SHIFT + ".md" : HARD ? "./report-hard.md" : "./report.md", import.meta.url), md);
 if (process.env.NOTIF_JSON) fs.writeFileSync(process.env.NOTIF_JSON, JSON.stringify(rows));
 console.log(md.split("\n## What")[0]); console.log(TOTAL === 10000 ? "report: tests/notifs/report.md" : "(a smaller run — the report file is written only by the full 10,000)");

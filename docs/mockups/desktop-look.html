@@ -1,0 +1,209 @@
+<title>Attune Computer Look</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap">
+<style>
+/* Layout: one row per look — a wide computer mock-up (Home + a list page) and beside it what it is + pick + note. */
+:root { --bg:#f5f2f3; --surf:#fff; --ink:#221b1d; --mut:#6e6367; --ln:#e5dde0; --acc:#7a2a45; --soft:#f5e7ec; --ok:#1e7a43;
+  --font:"Nunito","Segoe UI",system-ui,sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161213; --surf:#211b1d; --ink:#f2ebed; --mut:#b2a5aa; --ln:#3a3134; --acc:#e39ab3; --soft:#3a2229; --ok:#6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#161213; --surf:#211b1d; --ink:#f2ebed; --mut:#b2a5aa; --ln:#3a3134; --acc:#e39ab3; --soft:#3a2229; --ok:#6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 130px }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 26px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; text-wrap: balance } .lede { color: var(--mut); margin: 6px 0 0; max-width: 75ch }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 20px; padding: 16px; display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); gap: 18px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 900px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 } .info p { margin: 6px 0 0 } .pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px }
+.pick { margin-top: 12px; display: grid; gap: 8px } .pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; min-height: 40px; cursor: pointer }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px }
+.shots { display: grid; gap: 10px; min-width: 0 } .lab { margin: 0; font-size: 12px; font-weight: 800; color: var(--mut) }
+/* ---------- mock-up window (each look sets its own palette on .win) ---------- */
+.win { border-radius: 14px; overflow: hidden; border: 1px solid #0002; font-size: 10.5px; line-height: 1.35; min-width: 0; aspect-ratio: 16 / 9.4; display: flex; flex-direction: column; max-width: 100% }
+.tb { height: 20px; display: flex; align-items: center; gap: 4px; padding: 0 8px; flex: none } .tb i { width: 6px; height: 6px; border-radius: 50%; background: #0003; display: block }
+.body { flex: 1; display: flex; min-height: 0 }
+.b { font-weight: 800 } .m { opacity: .62 } .num { font-variant-numeric: tabular-nums; font-weight: 900 }
+.row { display: flex; justify-content: space-between; gap: 6px; padding: 3px 0 } .chip { display: inline-block; border-radius: 99px; padding: 1px 7px; font-weight: 700; font-size: 9.5px }
+.bar { height: 5px; border-radius: 3px; overflow: hidden } .bar i { display: block; height: 100% }
+/* L1 calm workspace */
+.l1 { background: #fbfafa; color: #1f1a1c } .l1 .tb { background: #f3f0f1 }
+.l1 nav { width: 118px; background: #f3f0f1; padding: 8px 6px; display: grid; gap: 2px; align-content: start; font-weight: 700; font-size: 10px }
+.l1 nav span { padding: 4px 7px; border-radius: 6px } .l1 nav .on { background: #fff; box-shadow: 0 1px 2px #0001; color: #7a2a45 }
+.l1 main { flex: 1; padding: 12px 16px; display: grid; gap: 9px; align-content: start; min-width: 0 }
+.l1 .k { background: #fff; border: 1px solid #ece6e8; border-radius: 9px; padding: 8px 10px } .l1 .cmd { border: 1px solid #e4dde0; border-radius: 8px; padding: 5px 9px; background: #fff; color: #8c8186 }
+/* L2 bento */
+.l2 { background: #ece7e9; color: #1d1719 } .l2 .tb { background: #e2dcdf }
+.l2 nav { width: 44px; background: #1d1719; display: grid; gap: 9px; align-content: start; justify-items: center; padding-top: 10px } .l2 nav b { width: 22px; height: 22px; border-radius: 7px; background: #ffffff1a; display: block } .l2 nav b.on { background: #c06a86 }
+.l2 main { flex: 1; padding: 10px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(0, auto); gap: 7px; align-content: start; min-width: 0 }
+.l2 .t { border-radius: 13px; padding: 9px; background: #fff } .l2 .t.dark { background: #2a2023; color: #fff } .l2 .t.acc { background: #7a2a45; color: #fff } .l2 .t.mint { background: #dff0e6 }
+/* L3 three panes pro */
+.l3 { background: #fff; color: #1e1a1b } .l3 .tb { background: #f6f4f5 }
+.l3 nav { width: 34px; border-inline-end: 1px solid #eee; display: grid; gap: 10px; justify-items: center; padding-top: 10px; align-content: start } .l3 nav b { width: 16px; height: 16px; border-radius: 4px; background: #ddd5d8; display: block } .l3 nav b.on { background: #7a2a45 }
+.l3 .list { width: 190px; border-inline-end: 1px solid #eee; padding: 8px; display: grid; gap: 2px; align-content: start } .l3 .it { padding: 5px 7px; border-radius: 6px } .l3 .it.on { background: #f6e9ee }
+.l3 .det { flex: 1; padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0 } .l3 .side { width: 150px; background: #faf8f9; border-inline-start: 1px solid #eee; padding: 10px; display: grid; gap: 6px; align-content: start }
+/* L4 dark glass */
+.l4 { background: radial-gradient(120% 90% at 10% 0%, #3b1726 0%, #15101a 55%, #0e0c12 100%); color: #f1e9ec } .l4 .tb { background: #0000 }
+.l4 nav { width: 120px; padding: 8px 6px; display: grid; gap: 2px; align-content: start; font-weight: 700; font-size: 10px } .l4 nav span { padding: 4px 7px; border-radius: 7px; opacity: .75 } .l4 nav .on { background: #ffffff14; opacity: 1 }
+.l4 main { flex: 1; padding: 10px 14px; display: grid; gap: 8px; align-content: start; min-width: 0 } .l4 .g { background: #ffffff0f; border: 1px solid #ffffff1c; border-radius: 12px; padding: 9px 11px; backdrop-filter: blur(8px) }
+/* L5 editorial */
+.l5 { background: #f8f4ee; color: #261f1c } .l5 .tb { background: #efe9e1 }
+.l5 nav { width: 120px; padding: 12px 10px; display: grid; gap: 4px; align-content: start; font-size: 10px; border-inline-end: 1px solid #e6ddd2 } .l5 nav .on { color: #7a2a45; font-weight: 900 }
+.l5 main { flex: 1; padding: 14px 18px; display: grid; gap: 10px; align-content: start; min-width: 0 } .l5 .h { font-family: "Fraunces", Georgia, serif; font-weight: 800; letter-spacing: -.01em }
+.l5 .rule { border-top: 1px solid #261f1c22; padding-top: 6px }
+/* pick bar */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1180px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap } .bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-offset: 2px }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>How Attune should look on a computer</h1>
+    <p class="lede">You asked for a computer interface that looks good on a computer and is more appealing. Each look below shows Home and Money with your own data: CIB transfer 1,160, Sheikh's instalments, the maid on Saturday, the FreeClip 2 agent, the Talabat list. The phone keeps its look; these are for windows wider than a tablet. Tick one (or two to mix) and add notes.</p>
+  </header>
+
+  <!-- L1 -->
+  <div class="opt rec" data-code="L1">
+    <div class="shots">
+      <p class="lab">Home</p>
+      <div class="win l1"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+        <nav><span class="b" style="font-size:12px;padding-bottom:6px">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span><span class="m" style="margin-top:8px">Ctrl K · find</span></nav>
+        <main>
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="m">Tuesday 17 November</div><div class="b" style="font-size:17px">Good evening, Ali</div></div><span class="cmd">Ask or tell Attune…   Ctrl K</span></div>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px">
+            <div class="k"><div class="b">Today</div><div class="row"><span>Maid · Saturday</span><span class="num">600</span></div><div class="row"><span>Sheikh · instalment 3 of 8</span><span class="num">2,500</span></div><div class="row"><span>Call back Mama</span><span class="m">6 pm</span></div><div class="row"><span>Talabat list · 13 items</span><span style="color:#7a2a45" class="b">Open</span></div></div>
+            <div class="k"><div class="b">Money this month</div><div class="num" style="font-size:16px">EGP 14,320</div><div class="m">spent · safe to spend 4,350</div><div class="bar" style="background:#f1e6ea;margin-top:5px"><i style="width:62%;background:#7a2a45"></i></div><div class="row" style="margin-top:4px"><span class="m">CIB transfer</span><span class="num">−1,160</span></div></div>
+          </div>
+          <div class="k" style="display:flex;justify-content:space-between"><span><span class="b">FreeClip 2</span> <span class="m">· Amazon</span></span><span><span class="num">7,400</span> <span style="color:#1e7a43" class="b">under 8,000 ✓</span></span></div>
+        </main></div></div>
+      <p class="lab">Money</p>
+      <div class="win l1" style="aspect-ratio:16/7"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+        <nav><span class="b" style="font-size:12px;padding-bottom:6px">Attune</span><span>Home</span><span>To-dos &amp; lists</span><span class="on">Money</span><span>Follow-ups</span></nav>
+        <main style="grid-template-columns:200px 1fr"><div class="k" style="display:grid;gap:2px"><div class="b">Payments</div><div class="row" style="background:#f6e9ee;border-radius:5px;padding:3px 5px"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>CIB transfer</span><span class="num">−100</span></div><div class="row"><span>CIB transfer</span><span class="num">−80</span></div></div>
+          <div class="k"><div class="b" style="font-size:13px">CIB instant transfer</div><div class="num" style="font-size:18px">−EGP 1,160</div><div class="m">17 Nov · 13:56 · account ··9279 · ref ebe405c0</div><div style="margin-top:6px"><span class="chip" style="background:#f3eef0">Category: Transfers</span> <span class="chip" style="background:#f3eef0">Who? add a name</span></div></div></main></div></div>
+    </div>
+    <div class="info"><h3><span class="code">L1</span>Calm workspace <span class="tag">Recommended</span></h3>
+      <p>Like Linear, Notion or Things: a soft side menu, lots of white space, thin borders, one accent colour, a search-and-ask bar (Ctrl K) on top. Lists and details side by side.</p>
+      <div class="pm"><span><b>+</b> Clean and professional; easy to read for hours; fits the list + details you picked.</span><span><b>−</b> Quiet: less "wow" at first glance.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-L1"> Pick L1</label><textarea id="note-L1" placeholder="Your note on L1"></textarea></div></div>
+  </div>
+
+  <!-- L2 -->
+  <div class="opt" data-code="L2">
+    <div class="shots">
+      <p class="lab">Home</p>
+      <div class="win l2"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+        <nav><b class="on"></b><b></b><b></b><b></b><b></b><b></b></nav>
+        <main>
+          <div class="t acc" style="grid-column:span 2"><div class="m" style="opacity:.8">Good evening, Ali</div><div class="b" style="font-size:15px">3 things today</div><div style="opacity:.85">Maid 600 · Sheikh 2,500 · call Mama</div></div>
+          <div class="t"><div class="m">Spent in November</div><div class="num" style="font-size:16px">14,320</div><div class="bar" style="background:#eee;margin-top:5px"><i style="width:62%;background:#7a2a45"></i></div></div>
+          <div class="t mint"><div class="m">Safe to spend</div><div class="num" style="font-size:16px">4,350</div><div class="m">until 25 Nov</div></div>
+          <div class="t dark" style="grid-column:span 2"><div class="b">Agents</div><div class="row"><span>FreeClip 2 · Amazon</span><span class="num">7,400 ✓</span></div><div class="row"><span>Hotel near the Haram</span><span class="num">21,300</span></div></div>
+          <div class="t"><div class="b">Talabat</div><div class="m">13 items · Toilet paper, Kitchen tissues…</div></div>
+          <div class="t"><div class="b">Latest</div><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div></div>
+        </main></div></div>
+      <p class="lab">Money</p>
+      <div class="win l2" style="aspect-ratio:16/7"><div class="tb"><i></i><i></i><i></i></div><div class="body"><nav><b></b><b class="on"></b><b></b><b></b></nav>
+        <main><div class="t" style="grid-column:span 2"><div class="b">November</div><div class="num" style="font-size:18px">−14,320</div><div style="display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:4px"><i style="width:14%;height:40%;background:#c06a86;display:block;border-radius:3px"></i><i style="width:14%;height:70%;background:#c06a86;display:block;border-radius:3px"></i><i style="width:14%;height:55%;background:#c06a86;display:block;border-radius:3px"></i><i style="width:14%;height:90%;background:#7a2a45;display:block;border-radius:3px"></i></div></div>
+          <div class="t"><div class="m">Transfers</div><div class="num">−1,340</div></div><div class="t mint"><div class="m">Income</div><div class="num">+38,000</div></div>
+          <div class="t" style="grid-column:span 4"><div class="row"><span>CIB instant transfer · 17 Nov</span><span class="num">−1,160</span></div><div class="row"><span>FACES · card ··8251</span><span class="num">−800</span></div></div></main></div></div>
+    </div>
+    <div class="info"><h3><span class="code">L2</span>Bento dashboard</h3>
+      <p>Like the iPhone widgets or Arc: Home is a grid of coloured tiles of different sizes, a slim dark icon bar on the side. Money becomes tiles with a chart on top and the list underneath.</p>
+      <div class="pm"><span><b>+</b> The most eye-catching; everything important visible at once.</span><span><b>−</b> Busy with a lot of data; a different feel from the phone.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-L2"> Pick L2</label><textarea id="note-L2" placeholder="Your note on L2"></textarea></div></div>
+  </div>
+
+  <!-- L3 -->
+  <div class="opt" data-code="L3">
+    <div class="shots">
+      <p class="lab">Home</p>
+      <div class="win l3"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+        <nav><b class="on"></b><b></b><b></b><b></b><b></b></nav>
+        <div class="list"><div class="b" style="padding:2px 7px 6px">Today</div><div class="it on"><span class="b">Sheikh · instalment</span><div class="m">2,500 · due today</div></div><div class="it"><span class="b">Maid</span><div class="m">600 · Saturday</div></div><div class="it"><span class="b">Call back Mama</span><div class="m">6 pm</div></div><div class="it"><span class="b">Talabat list</span><div class="m">13 items</div></div></div>
+        <div class="det"><div class="b" style="font-size:14px">Sheikh · instalment 3 of 8</div><div class="num" style="font-size:18px">EGP 2,500</div><div class="m">19,500 in 8 instalments · 2 paid · next 17 Dec</div><div class="bar" style="background:#f2eaee"><i style="width:25%;background:#7a2a45"></i></div><div><span class="chip" style="background:#7a2a45;color:#fff">Mark paid</span> <span class="chip" style="background:#f2eaee">Remind tomorrow</span></div></div>
+        <div class="side"><div class="b">This week</div><div class="m">Mon · Tue · <b>Wed</b> · Thu</div><div class="b" style="margin-top:6px">Money</div><div class="num">4,350</div><div class="m">safe to spend</div><div class="b" style="margin-top:6px">Agents</div><div>FreeClip 2 · <span class="num">7,400</span></div></div>
+      </div></div>
+      <p class="lab">Money</p>
+      <div class="win l3" style="aspect-ratio:16/7"><div class="tb"><i></i><i></i><i></i></div><div class="body"><nav><b></b><b class="on"></b><b></b></nav>
+        <div class="list"><div class="b" style="padding:2px 7px 6px">November</div><div class="it on"><span class="b">CIB transfer</span><div class="m">−1,160 · 17 Nov</div></div><div class="it"><span class="b">FACES</span><div class="m">−800 · 16 Nov</div></div><div class="it"><span class="b">CIB transfer</span><div class="m">−100</div></div></div>
+        <div class="det"><div class="b" style="font-size:14px">CIB instant transfer</div><div class="num" style="font-size:18px">−EGP 1,160</div><div class="m">account ··9279 · ref ebe405c0 · 13:56</div></div>
+        <div class="side"><div class="b">Totals</div><div class="row"><span>Spent</span><span class="num">14,320</span></div><div class="row"><span>Income</span><span class="num">38,000</span></div></div></div></div>
+    </div>
+    <div class="info"><h3><span class="code">L3</span>Three panes, like Outlook</h3>
+      <p>An icon rail, then the list, then the details, and a narrow "This week" column on the right that always shows money, days and agents.</p>
+      <div class="pm"><span><b>+</b> Most efficient on big screens; nothing is ever a click away.</span><span><b>−</b> Tight on small laptops; feels like a work tool.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-L3"> Pick L3</label><textarea id="note-L3" placeholder="Your note on L3"></textarea></div></div>
+  </div>
+
+  <!-- L4 -->
+  <div class="opt" data-code="L4">
+    <div class="shots">
+      <p class="lab">Home</p>
+      <div class="win l4"><div class="tb"><i style="background:#fff3"></i><i style="background:#fff3"></i><i style="background:#fff3"></i></div><div class="body">
+        <nav><span class="b" style="font-size:12px;opacity:1">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Agents</span><span>Projects</span></nav>
+        <main>
+          <div class="b" style="font-size:18px">Good evening, Ali</div>
+          <div class="g" style="opacity:.8">Ask or tell Attune — "spent 150 on lunch"</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="g"><div class="m">Safe to spend</div><div class="num" style="font-size:16px">4,350</div></div>
+            <div class="g"><div class="m">Today</div><div>Maid 600 · Sheikh 2,500</div></div>
+            <div class="g"><div class="m">FreeClip 2</div><div class="num">7,400 <span style="color:#7ee0a4">✓</span></div></div>
+          </div>
+          <div class="g"><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div></div>
+        </main></div></div>
+    </div>
+    <div class="info"><h3><span class="code">L4</span>Dark glass</h3>
+      <p>A deep burgundy-to-black background with frosted-glass cards, like the Windows 11 and macOS widget look. Dark by default, with a light version.</p>
+      <div class="pm"><span><b>+</b> Modern and premium; very appealing in the evening.</span><span><b>−</b> Glass effects cost smoothness on weaker computers; harder to read in daylight.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-L4"> Pick L4</label><textarea id="note-L4" placeholder="Your note on L4"></textarea></div></div>
+  </div>
+
+  <!-- L5 -->
+  <div class="opt" data-code="L5">
+    <div class="shots">
+      <p class="lab">Home</p>
+      <div class="win l5"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+        <nav><span class="h" style="font-size:13px">Attune</span><span class="on">Home</span><span>Lists</span><span>Money</span><span>Follow-ups</span><span>Agents</span><span>Projects</span></nav>
+        <main>
+          <div><div class="m">Tuesday, 17 November</div><div class="h" style="font-size:22px">Good evening, Ali.</div><div class="m">Three things today, and you're 4,350 from the end of the month.</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="rule"><div class="b">Today</div><div class="row"><span>Maid</span><span class="num">600</span></div><div class="row"><span>Sheikh · 3 of 8</span><span class="num">2,500</span></div><div class="row"><span>Call back Mama</span><span>6 pm</span></div></div>
+            <div class="rule"><div class="b">Money</div><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div><div class="row"><span>Safe to spend</span><span class="num">4,350</span></div></div>
+          </div>
+          <div class="rule"><span class="b">Agents</span> · FreeClip 2 on Amazon, <span class="num">7,400</span> — under your 8,000.</div>
+        </main></div></div>
+    </div>
+    <div class="info"><h3><span class="code">L5</span>Editorial, like a morning paper</h3>
+      <p>Warm paper colour, a serif headline that speaks to you in a sentence, thin rules instead of cards. A calm "daily brief" feel.</p>
+      <div class="pm"><span><b>+</b> Personal and distinctive; nothing else looks like it.</span><span><b>−</b> Less like a "productivity tool"; dense pages (Money tables) need a plainer style.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-L5"> Pick L5</label><textarea id="note-L5" placeholder="Your note on L5"></textarea></div></div>
+  </div>
+  <p class="lede">After your pick I draw one combined screen for every computer page with "What I understood", then build it and measure it on the computer and the phone.</p>
+</div>
+
+<div class="bar-pick"><div class="in"><div class="codes" id="codes">Nothing ticked yet</div><button type="button" id="copy">Copy my picks</button><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div></div>
+<script>
+(() => {
+  const KEY = "attune-mock-desktop-look";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { document.getElementById("codes").textContent = text() || "Nothing ticked yet"; };
+  for (const c of codes) { const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); }); }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => { const t = text() || "No picks"; const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); } });
+})();
+</script>

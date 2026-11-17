@@ -6,7 +6,7 @@
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
 import { catFor, loadCatRules } from "./catlearn.js";
 import { labelOf, notMoney, countsAsMoney, understandNote as readMeaning } from "./notelabels.js";   // v9.9.11 what the person taught
-import { notAPayment } from "./notifwords.js";   // v9.9.17 one list for all four readers
+import { notAPayment , cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
 import { loadTeach } from "./noteteach.js";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts } from "./locale.js";
@@ -37,7 +37,7 @@ export function categorise(text, direction) {
 
 // v6.27: one-time codes, balance-only messages and adverts in the world's common languages
 const OTP = /\b(otp|one[- ]time|verification code|security code|passcode|pin|2fa)\b|رمز التحقق|كود التفعيل|كلمة المرور لمرة|رمز التفعيل|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|tan\b|doğrulama kodu|şifre|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)/iu;
-const BALANCE_ONLY = /^(?=.*(?<![\p{L}])(balance|available|solde|saldo|kontostand|bakiye|остаток|余额|잔액|رصيدك|الرصيد)(?![\p{L}]))(?!.*(?<![\p{L}])(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|spent|débité|crédité|paiement|cargo|abono|compra|pago|pagamento|zahlung|gutschrift|harcama|ödeme|pembayaran|списан|зачислен|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|تم دفع|total|virement|re[cç]u|achat|havale|eft|gelmi[sş]tir|al[ıi][sş]veri[sş]|didebet|debet|menerima|pembelian|kartenzahlung|erhalten|überweisung|accredito|addebito|bonifico|pagou|recebeu|pix|recibiste|recibido|transferencia|debit|credit|dr|cr|amt|betaald|ontvangen|حوالة|حواله|withdrawal|withdrawn|deposited|purchased|transferred|refunded|pos)(?![\p{L}]))/iu;   // v9.0: «استلمت 300 ج.م … رصيدك» is money received, not a balance
+const BALANCE_ONLY = /^(?=.*(?<![\p{L}])(balance|available|solde|saldo|kontostand|bakiye|остаток|余额|잔액|رصيدك|الرصيد)(?![\p{L}]))(?!.*(?<![\p{L}])(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|spent|débité|crédité|paiement|cargo|abono|compra|pago|pagamento|zahlung|gutschrift|harcama|ödeme|pembayaran|списан|зачислен|payment|salary|refund|خصم|إيداع|ايداع|أيداع|اضافة|إضافة|أضافة|اضيف|أضيف|تحويل|سحب|شراء|استلام|سداد|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|تم دفع|total|virement|re[cç]u|achat|havale|eft|gelmi[sş]tir|al[ıi][sş]veri[sş]|didebet|debet|menerima|pembelian|kartenzahlung|erhalten|überweisung|accredito|addebito|bonifico|pagou|recebeu|pix|recibiste|recibido|transferencia|debit|credit|dr|cr|amt|betaald|ontvangen|حوالة|حواله|withdrawal|withdrawn|deposited|purchased|transferred|refunded|pos)(?![\p{L}]))/iu;   // v9.0: «استلمت 300 ج.م … رصيدك» is money received, not a balance
 const PROMO = /\b(offer|discount|win|cashback offer|promo|sale|% off|deal of the day|coupon)\b|عرض|خصم \d+%|اربح|كاش باك|(?<![\p{L}])(offre|promotion|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|promo|sconto|offerta|aanbieding|korting|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
 
 // v6.27: a charge that has NOT happened yet (a trial ending, a renewal, an upcoming bill) is the Deadline Radar's, not a payment
@@ -53,6 +53,7 @@ export const fromChats = (ledger, kept = []) => (((ledger && ledger.txns) || [])
 
 /** One stored notification {id, pkg, app, title, text, ts} → an entry, or null when it isn't a payment. */
 export function readNotification(n, opts) {
+  n = cleanNote(n); if (!n) return null;   // v10.2: spaces, direction marks, Arabic-Indic digits — cleaned once
   // v9.9.11 what the person taught about this source: "work talk" / "not money" / "ads" / "ignore" → never money; "my money" /
   // "my bank" → it counts as a money source (a chat too — the person said so)
   let lab = null; try { lab = labelOf(n, opts && opts.teach !== undefined ? opts.teach : loadTeach()); } catch (e) {}
@@ -146,7 +147,7 @@ export const moneySourceNote = (n) => !!n && fromMoneySource({ app: n.app || n.p
 /* v9.9.30 (Ali: "really smart, not keep asking"): "medium" (no payee name — «تم خصم مبلغ ٥٬٦٨٠ ج.م من حسابك مقابل أمازون», "Salary of
    EGP 27,181 has been credited to your account", an ATM withdrawal) is sure too when it says the money moved AND names the person's own
    account / card — the bank's own words about YOUR account. Chats, people's numbers and unknown senders still never count. */
-const OWN_ACC = /\b(your (?:account|a\/?c|card|wallet)|account (?:ending|no\.?|number|\*|x)|a\/?c\s*(?:no\.?|x|\*|\d)|card(?: ending| no\.?|:)?\s*[*x#]?\s*\d{3,4}|ending (?:in )?\d{3,4}|xxx\d{3,4}|\*{2,}\d{3,4})\b|حسابك|حساب رقم|بطاقتك|بطاقة:?\s*\d|كارت رقم|محفظتك/iu;
+const OWN_ACC = /(?<![\p{L}])(?:your (?:account|a\/?c|card|wallet)|account (?:ending|no\.?|number|\*|x)|a\/?c\s*(?:no\.?|x|\*|\d)|card(?: ending| no\.?|:)?\s*[*x#]?\s*\d{3,4}|ending (?:in )?\d{3,4}|xxx\d{3,4}|\*{2,}\d{3,4})|حسابك|حساب رقم|بطاقتك|بطاقة:?\s*\d|كارت رقم|محفظتك|ببطاقة|بطاقة (?:رقم|الخصم|الائتمان|الدفع)|المنتهي[ةه]? بـ?|من حساب/iu;   // v10.2 (the HARD composed run): «بطاقة الخصم المباشر 4052*», «ببطاقة رقم **4850», "a/c ****5795" are YOUR card / account
 export const codeSure = (e) => !!e && (e.confidence === "high" || (e.confidence === "medium" && OWN_ACC.test(String(e.full || e.text || "")))) && e.amount > 0 && (e.direction === "in" || e.direction === "out") && fromMoneySource(e) && MOVED.test(String(e.full || e.text || ""));
 /** v6.27 "by itself" — v9.9.10: only what the code is sure of (codeSure); the model's check comes on top (judged). */
 export const autoPick = (entries) => (entries || []).filter(codeSure);

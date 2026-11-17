@@ -12,7 +12,7 @@
 import { tr } from "./i18n.js";
 import { payAmount, payCurrency, payNormalize } from "./yusr/paytext.js";
 import { MONTH_NAMES } from "./life.js";
-import { isSignInMessage } from "./notifwords.js";
+import { isSignInMessage, cleanNote } from "./notifwords.js";
 
 const DAY = 86400000;
 const pad = (n) => String(n).padStart(2, "0");
@@ -268,6 +268,8 @@ export function chatDeadlineIntent(text, opts = {}) {
 // ---- notifications → suggestions ----------------------------------------------------------------------------------------------
 /** Stored notifications [{id, title, text, ts, app}] → deadlines not yet seen: [{ ...deadline, nid, source: "notification" }]. */
 export function fromNotifications(queue, seen = [], opts = {}) {
+  // v10.2: cleaned once (spaces, direction marks, Arabic-Indic digits) — the same for every reader
+  queue = (queue || []).map(cleanNote);
   const skip = new Set(seen), out = [];
   for (const n of queue || []) {
     if (!n || skip.has(n.id)) continue;

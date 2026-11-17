@@ -10,7 +10,7 @@
 import { isChatApp, readNotification, codeSure } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
-import { notAPayment, fromPhoneNumber } from "./notifwords.js";   // v9.9.17 one list for all four readers
+import { notAPayment, fromPhoneNumber, cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
 import { understandNote as readMeaning } from "./notelabels.js";
 
 export const AP_KEY = "attune:autopilot:v1";
@@ -93,6 +93,8 @@ export function paidDayOf(t, now = Date.now()) {
 const tdKey = (who, text) => String(who || "").replace(/\s*\(.*\)\s*$/, "").trim().toLowerCase() + ":" + String(text || "").replace(/\s+/g, " ").trim().slice(0, 60).toLowerCase();
 /** One notification → one suggestion (or null). s = the Autopilot state; recent = the other notifications (for missed calls). */
 export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState() } = {}) {
+  // v10.2: cleaned once (spaces, direction marks, Arabic-Indic digits) — the same for every reader
+  n = cleanNote(n); if (!n) return null;
   if (!n) return null;
   const u = understandNote(n), app = String(n.app || n.pkg || ""), text = String(n.text || ""), title = String(n.title || "");
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;

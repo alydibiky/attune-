@@ -13,7 +13,7 @@ export const FAILED_W = /\b(couldn'?t (?:charge|process|complete|renew)|could no
 // it has not happened YET: due, will be charged, to be paid on delivery, a quote, a request, a limit, something maturing
 export const NOTYET_W = /\b(changing (?:its|the|your) price|price (?:change|increase)s?\b|(?:salary|pay) ?slip|payslip|(?:renewal )?quote(?=\s*:)|quotation|will be (?:egp|usd|sar|aed|le|eur)|starting (?:january|february|march|april|may|june|july|august|september|october|november|december|next month)|will be (?:charged|billed|debited|deducted|renewed|collected|delivered|credited|refunded)|you'?ll be (?:charged|billed)|you will be (?:charged|billed)|will renew|renews on|auto-?renew|upcoming (?:payment|charge|bill)|payment (?:is )?due|is (?:now )?(?:due|overdue|payable)|are (?:now )?(?:due|overdue|payable)|(?:due|payable) (?:on|by|in|before|date|within)|due \d|overdue|total due|minimum due|amount due|pay (?:it |now |online )?before|to be paid|cod amount|cash on delivery|free trial|trial (?:ends|period)|matures on|estimated at|offered|requested|would (?:be|cost)|will arrive|in \d+\s*[–-]\s*\d+ (?:business |working )?days|credit limit|limit (?:has been |was )?(?:increased|raised|changed)|scheduled (?:for|on)|is being (?:reviewed|processed|verified)|being processed|is pending|pending approval|once it is processed|refund request|your request (?:to|for))\b|سيتم (?:خصم|تجديد|التجديد|سحب)|مستحق|(?:آخر|اخر) (?:ميعاد|موعد|يوم)|موعد (?:الدفع|السداد)|صدرت بقيمة|قيد (?:المراجعة|التنفيذ)|سدد قبل|السداد قبل|المبلغ المطلوب|الفترة التجريبية|تاريخ الاستحقاق|سعر الكشف|يطلب منك|طلب منك|الحد الائتماني|حد البطاقة|(?<![\p{L}])(sera (?:débité|prélevé|facturé)|se renouvelle|essai gratuit|será (?:cobrado|cargado|debitado|renovad[oa])|se renovará|prueba gratuita|teste grátis|vence em|vence el|wird (?:abgebucht|belastet|verlängert)|fällig|probemonat|verrà addebitat[oa]|si rinnova|scade il|tahsil edilecek|yenilenecek|son ödeme|akan (?:ditagih|didebit)|jatuh tempo)(?![\p{L}])/iu;
 // an offer / advert, in the app's languages (added to each reader's own list)
-export const OFFER_W = /\b(price drop|on your wishlist|pay later|0% interest|interest[- ]free|installments? (?:starting|from)|orders? (?:above|over)|up to \d+ ?%|\d+ ?% ?(?:off|cashback|discount)|flash sale|last chance|buy (?:1|one) get|free delivery|free shipping|invite (?:a |your )?friends?|deal of the day|weekend treat|pre-?approved|apply now|loan (?:offer|up to))\b|عروض|خصومات|تخفيضات|تبدأ من|حتى \d+ ?[٪%]|توصيل مجاني|ضعف الدقايق|اطلب قرض|بدون ضامن|قرض شخصي|(?<![\p{L}])(offre|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|sconto|offerta|aanbieding|korting|à partir de|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
+export const OFFER_W = /\b(price drop|on your wishlist|pay later|0% interest|interest[- ]free|installments? (?:starting|from)|orders? (?:above|over)|up to \d+ ?%|\d+ ?% ?(?:off|cashback|discount)|flash sale|last chance|buy (?:1|one) get|free delivery|free shipping|invite (?:a |your )?friends?|deal of the day|weekend treat|pre-?approved|apply now|loan (?:offer|up to))\b|عروض|خصومات|تخفيضات|تبدأ من|استمتع ب|تتيح لك|في صورة نقاط|نقاط (?:مكافآت|مكافات|share)|كاش ?باك|٪ من قيمة|% من قيمة|بحد أقصى|لمعرفة المزيد|حتى \d+ ?[٪%]|توصيل مجاني|ضعف الدقايق|اطلب قرض|بدون ضامن|قرض شخصي|(?<![\p{L}])(offre|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|sconto|offerta|aanbieding|korting|à partir de|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
 // a price / a stock / a rate moving — news, not the person's money
 export const PRICE_W = /\b(?:is |are )?(?:up|down)\b[^.\n]{0,14}\d|\b(?:fell|rose|gained|dropped|climbs?|climbed|crossed|closed at|trading at)\b|\b(?:now|today at)\s+(?:egp|\$|usd|€|£)|\bper (?:gram|ounce|barrel|litre|liter|share)\b|\b(?:usd|eur|gbp|egp|sar|aed|btc|eth)\/(?:usd|eur|gbp|egp|sar|aed|usdt)\b|عيار|سعر (?:الدولار|الذهب|الدهب|اليورو|البنزين)|يسجل/iu;
 // a post, a video, a listing somebody shared
@@ -34,7 +34,7 @@ const HAPPENED = /\b(debited|credited|charged|you paid|you sent|you received|was
 
 /** Why this notification is not money that moved ("" when it could be). n = { app, pkg, title } for the sender checks. */
 export function notAPayment(text, n = null) {
-  const t = String(text || "");
+  const t = String(text || "");   // (paytext.js and notifmind read أ / إ / ا alike)
   if (CODE_W.test(t)) return "code";
   if (isScam(t, n && n.title)) return "scam";
   if (n && fromPhoneNumber(n)) return "person";
@@ -96,3 +96,13 @@ export function isSignInMessage(text) {
   // a renewal / trial / paper that only adds "sign in to manage" is not a sign-in message
   return (SIGNIN_W.test(t) || signinTitle) && !REAL_W.test(t);
 }
+
+/* ---- v10.2 (Ali: "harder tests, all unique" — the hard run found it): a notification is cleaned ONCE before any reader looks at it, the
+   way phones and banks really send them: invisible direction marks out, Arabic-Indic / Persian digits → 0-9 (and ٫ ٬ → . ,), every run
+   of spaces / line breaks → one space. Before this, "will  renew" (two spaces) was not "will renew", and «١٬١٦٠» was no amount. */
+export function normText(s) {
+  return String(s || "").replace(/[‎‏‪-‮⁦-⁩؜﻿]/g, "")
+    .replace(/[٠-٩]/g, (c) => "٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/[۰-۹]/g, (c) => "۰۱۲۳۴۵۶۷۸۹".indexOf(c)).replace(/٫/g, ".").replace(/٬/g, ",")
+    .replace(/\s+/g, " ").trim();
+}
+export const cleanNote = (n) => (n ? { ...n, title: normText(n.title), text: normText(n.text) } : n);

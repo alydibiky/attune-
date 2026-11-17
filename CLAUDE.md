@@ -56,6 +56,13 @@
   want no mistakes"):** every feature built from now on gets its own generator of exactly 10,000 different cases with what Attune
   must do and the details checked (like tests/scenarios/hard.mjs), a held-out set written after the fixes, and a unit test that
   keeps a 2,500 sample above its mark.
+- **HARD and unique tests (Ali, 17 Nov 2026: "I want the 10000 test to be harder and all unique, not same pattern … it's too easy and
+  they always get all right")**: a 10,000-case generator must (1) COMPOSE cases from parts in random order with many phrasings (like
+  tests/notifs/gen.mjs `bank_composed`), not fill a few templates; (2) run a HARD mode through `tests/lib/hard.mjs` harden() — real-world
+  changes that keep the meaning (spaces, line breaks, direction marks, Arabic-Indic digits, alef forms, currency spellings, case, cut-off
+  notifications; human-only changes only for text people type); (3) report its distinct shapes with shapeReport() — aim ≥ 60 % different
+  shapes (the old notification run had 13 %); (4) never "fix the test": a failure is either a real bug (fix it in the app, generally) or
+  an unrealistic change (fix the hardener and say so). Report both numbers honestly; 100 % on an easy test is not a result.
 - **Mock-ups before building (Ali, 5 Nov 2026): read `MOCKUPS.md`.** Any visible change → 4–6 phone mock-ups on a published
   page with his real examples → his pick → one combined mock-up with "what I understood" → his OK → build. Log it there.
 - Subjective choices (look and feel, layout, colours, names, wording, which of several good designs): don't decide alone.

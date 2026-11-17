@@ -53,6 +53,11 @@ ok(CR.readDescModel('{"role":"orders","care":[],"whenMe":false}').role === "orde
   const am = M.comprehend(sms(ad));
   ok(PL.readNotification(sms(ad), { home: "EGP" }) === null && am.cat !== "code" && am.intent !== "alert", "CIB's own Platinum offer: no payment, not a login code, not a scam (" + am.cat + "/" + am.intent + ")");
   ok(W.isScam("حسابك هيتوقف اضغط هنا https://cib-eg.help/x", "CIB"), "…but a fake link that only looks like CIB's is still a scam"); }
+// HARD and unique (Ali, 17 Nov: "harder and all unique"): the notification run with real-world changes and composed bank messages
+{ const out = execFileSync("node", [new URL("../notifs/gen.mjs", import.meta.url).pathname, "2500"], { env: { ...process.env, HARD: "1" }, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  const p = +((/handled right \(([\d.]+)%\)/.exec(out) || [])[1] || 0), fm = +((/NOT a payment: \*\*(\d+)\*\*/.exec(out) || [])[1] ?? 99), sh = +((/\[(\d+) of 100\]/.exec(out) || [])[1] || 0);
+  ok(p >= 99 && fm === 0, "HARD notifications, 2,500 sample: " + p + "% right, " + fm + " became money that were not payments");
+  ok(sh >= 35, "…and they are different from each other: " + sh + " different shapes in 100 (the old run: 13)"); }
 // tools: the count on Home = what the page lists
 const groups = [["A", ["lists", "money", "crane"]], ["B", ["lists", "fit"]]];
 const shown = shownToolGroups(groups, ["lists", "money", "crane", "fit"], (id) => id === "crane");

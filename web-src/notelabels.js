@@ -12,7 +12,7 @@
    bill / delivery / family / important → how it is described. Nothing is saved before "I understood … — Save".
    Pure; tests: tests/unit/v999notelabels.test.mjs. */
 import { readTeach, ROLES } from "./noteteach.js";
-import { notAPayment, isScam, OFFER_W } from "./notifwords.js";   // v9.9.17
+import { notAPayment, isScam, OFFER_W, cleanNote } from "./notifwords.js";   // v9.9.17
 import { understandNote as kindOf } from "./notifmeaning.js";   // v9.9.30
 const ROLE_AR = Object.fromEntries(ROLES.map((r) => [r[0], r[2]]));
 
@@ -146,7 +146,7 @@ export function learned(teach, dir = { items: [] }) {
 //   a receipt that says you were charged → "paid" (asked as "You paid … — add it to Money?", never "what is this?")
 //   a chat whose name or sender says work / wages → "work" as a GUESS (the card opens on "I think: …" — Save / Change)
 // Nothing is saved without the person's tap; the sure ones are only left out of the questions.
-const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get (?:[^.\n]|\.\d){0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|sponsored|new collection|\bfrom (?:egp|\$|usd|€|£|ج\.م\.?)\s?[\d٠-٩]|buy (?:1|one) get|get (?:1|one) free|special offer|new arrivals|(?:plans?|prices?|items?|starting|installments? starting) (?:from|at)\b|starting (?:from |at )?(?:egp|\$|usd|€)|watch now|visit [a-z0-9-]+\.(?:com|eg|net)|bonus|اشترك (?:في|ف)|واحصل|احصل على|بـ? ?[\d٠-٩][\d٠-٩,.٬٫]* ?جنيه بس|بس بـ|بدل(?:ا|اً)? من|بدل ما|خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
+const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get (?:[^.\n]|\.\d){0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|sponsored|new collection|\bfrom (?:egp|\$|usd|€|£|ج\.م\.?)\s?[\d٠-٩]|buy (?:1|one) get|get (?:1|one) free|special offer|new arrivals|(?:plans?|prices?|items?|starting|installments? starting) (?:from|at)\b|starting (?:from |at )?(?:egp|\$|usd|€)|watch now|visit [a-z0-9-]+\.(?:com|eg|net)|bonus|اشترك (?:في|ف)|واحصل|احصل على|بـ? ?[\d٠-٩][\d٠-٩,.٬٫]* ?جنيه بس|بس بـ|بدل(?:ا|اً)? من|بدل ما|خصم(?=\s*(?:يصل|لحد|حتى|على|[\d٠-٩]+\s*[%٪]))|نسبة خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
 const MOVED = /(تم دفع|total charged|paid online|charged (?:egp|usd|sar|aed|\$|€|£)\s?[\d٠-٩]|you'?ve been charged|amount charged|received your payment|has been renewed|you were charged|has been charged|was charged|we charged|charged to your|billed to|debited|credited|total paid|(?:\$|egp|usd|€)\s?[\d.,]+ paid|\bpaid (?:successfully|with|by|on)\b|payment of (?:[^.\n]|\.\d){0,40} (?:was|is) successful|تم تجديد|تم الدفع|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d){0,40} received|paid successfully|you paid|you sent|you received|refund(?:ed)?|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|استلمت|وصلك مبلغ)/iu;
 const RECEIPT = /(receipt|بنجاح|total charged|paid online|you paid|received your payment|amount charged|has been renewed|تم سداد|billed to|total paid|invoice|payment of (?:[^.\n]|\.\d){0,40} (?:was|is) successful|رقم العملية|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d){0,40} received|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
 const FUTURE = /(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|payment (?:is )?due|due on|free trial|trial ends|سيتم خصم|سيتم التجديد|الفترة التجريبية)/iu;
@@ -155,6 +155,8 @@ const NEWS_FROM = /substack|medium|digest|newsletter|quora|linkedin|coursera|ude
 const WORKY = /(work|office|company|staff|wages|salar(?:y|ies)|payroll|accountant|accounts|hr\b|site|workers|employees|team|شغل|الشغل|شركه|شركة|الشركة|المكتب|مرتبات|المرتبات|رواتب|الرواتب|محاسب|المحاسب|حسابات|الموظفين|العمال|عمال|الموقع|الورشه|الورشة|الادارة|الإدارة)/iu;
 /** What one notification is, read by code → { meaning, sure, why } or null (not clear — ask). Pure. */
 export function understandNote(n) {
+  // v10.2: cleaned once (spaces, direction marks, Arabic-Indic digits) — the same for every reader
+  n = cleanNote(n); if (!n) return null;
   if (!n) return null;
   const s = sourceOf(n), text = String(n.title || "") + " \n " + String(n.text || ""), app = appName(n) + " " + String(n.pkg || "");
   // v9.9.17 (the 10,000-notification run): a prize / "verify here" text is left out like an advert; "you will be billed", "payment
@@ -184,6 +186,8 @@ const MONEYISH = /[\d٠-٩][\d٠-٩,.٬٫]*\s*(?:جنيه|جنيها|ج\.م|جم
    is never asked about (chat talk is never added to Money anyway); a receipt is added by Autopilot itself (with Undo). */
 const NOT_ASKED_KINDS = new Set(["delivery", "ride", "calendar", "appointment", "travel", "flight", "call", "security", "media", "promo", "news", "system", "code"]);
 export function asksFrom(notes = [], teach = { rules: [], asked: [], skip: [] }, { max = 3, bankish = () => false, payOf = () => null, now = Date.now(), handled = () => false, teach: teaching = false } = {}) {
+  // v10.2: cleaned once (spaces, direction marks, Arabic-Indic digits) — the same for every reader
+  notes = (notes || []).map(cleanNote);
   const done = new Set([...(teach.asked || []), ...(teach.skip || [])]), seen = new Set(), out = [];
   for (const n of [...notes].sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
     if ((n.ts || 0) < now - 14 * 864e5) continue;

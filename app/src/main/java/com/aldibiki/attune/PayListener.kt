@@ -21,6 +21,20 @@ import org.json.JSONObject
  * confirm. Tests: tests/unit/v727paylog.test.mjs (the page side).
  */
 class PayListener : NotificationListenerService() {
+    // v10.2 (the hard notification run): every notification is cleaned once, here, before anything keeps it — invisible direction marks
+    // out, Arabic-Indic / Persian digits → 0-9 (٫ ٬ → . ,), every run of spaces and line breaks → one space (the page does the same)
+    private fun clean(s: String): String {
+        val b = StringBuilder(s.length)
+        for (c in s) when {
+            c == '\u200e' || c == '\u200f' || c == '\u061c' || c == '\ufeff' || (c in '\u202a'..'\u202e') || (c in '\u2066'..'\u2069') -> {}
+            c in '\u0660'..'\u0669' -> b.append('0' + (c - '\u0660'))
+            c in '\u06f0'..'\u06f9' -> b.append('0' + (c - '\u06f0'))
+            c == '\u066b' -> b.append('.')
+            c == '\u066c' -> b.append(',')
+            else -> b.append(c)
+        }
+        return b.toString().replace(Regex("\\s+"), " ").trim()
+    }
     // v9.4 G1: a chat's notification went away (opened / answered / swiped) — the Reply helper stops counting it as waiting
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         try { if (sbn != null && sbn.packageName != packageName) ChatInbox.gone(applicationContext, sbn) } catch (e: Exception) { }
@@ -89,7 +103,7 @@ class PayListener : NotificationListenerService() {
             PayLog.add(applicationContext, JSONObject()
                 .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
                 .put("pkg", sbn.packageName).put("app", label)
-                .put("title", title.take(200)).put("text", text.take(2000)).put("ts", sbn.postTime))
+                .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime))
         } catch (e: Exception) { }
     }
 }
