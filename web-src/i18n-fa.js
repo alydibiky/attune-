@@ -12944,4 +12944,15 @@ export const FA = {
   "{c} = as you said: “{d}”": "{c} = همان‌طور که گفتید: «{d}»",
   "Messages are kept with it — ask about them any time; no cards": "پیام‌ها کنارش نگه داشته می‌شوند — هر وقت خواستید بپرسید؛ بدون کارت",
   "Not important": "مهم نیست",
+  // v10.3 K1 calendar + glass look
+  "All day": "تمام روز",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "هنوز چیزی در این هفته نیست — قبض‌ها، پرداخت‌ها، یادآورها، پروژه‌ها و سفرهایی که هر جای Attune اضافه کنید اینجا نشان داده می‌شوند.",
+  "Safe to spend until {d}": "تا {d} می‌توانید خرج کنید",
+  "{a} spent this month": "{a} خرج این ماه",
+  "No agents yet — ask one to watch a price or a hotel for you.": "هنوز عاملی نیست — از یکی بخواهید قیمت یا هتلی را برایتان زیر نظر بگیرد.",
+  "No payments yet": "هنوز پرداختی نیست",
+  "Plain": "ساده",
+  "Glass": "شیشه‌ای",
+  "Home & orders": "خانه و سفارش‌ها",
+  "Trips": "سفرها",
 };

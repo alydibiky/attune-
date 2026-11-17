@@ -12944,4 +12944,15 @@ export const VI = {
   "{c} = as you said: “{d}”": "{c} = như bạn nói: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "Tin nhắn được giữ lại — hỏi bất cứ lúc nào; không có thẻ",
   "Not important": "Không quan trọng",
+  // v10.3 K1 calendar + glass look
+  "All day": "Cả ngày",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Tuần này chưa có gì — hóa đơn, khoản thanh toán, lời nhắc, dự án và chuyến đi bạn thêm ở bất kỳ đâu trong Attune sẽ hiện ở đây.",
+  "Safe to spend until {d}": "Có thể chi đến {d}",
+  "{a} spent this month": "Đã chi {a} tháng này",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Chưa có tác nhân — nhờ một tác nhân theo dõi giá hoặc khách sạn cho bạn.",
+  "No payments yet": "Chưa có khoản thanh toán",
+  "Plain": "Đơn giản",
+  "Glass": "Kính",
+  "Home & orders": "Nhà & đơn hàng",
+  "Trips": "Chuyến đi",
 };

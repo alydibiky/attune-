@@ -12945,4 +12945,15 @@ export const SW = {
   "{c} = as you said: “{d}”": "{c} = kama ulivyosema: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "Ujumbe unahifadhiwa nacho — uliza wakati wowote; hakuna kadi",
   "Not important": "Si muhimu",
+  // v10.3 K1 calendar + glass look
+  "All day": "Siku nzima",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Hakuna kitu wiki hii bado — bili, malipo, vikumbusho, miradi na safari unazoongeza popote katika Attune huonekana hapa.",
+  "Safe to spend until {d}": "Salama kutumia hadi {d}",
+  "{a} spent this month": "{a} zimetumika mwezi huu",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Bado hakuna mawakala — mwombe mmoja afuatilie bei au hoteli kwa ajili yako.",
+  "No payments yet": "Bado hakuna malipo",
+  "Plain": "Kawaida",
+  "Glass": "Kioo",
+  "Home & orders": "Nyumbani na oda",
+  "Trips": "Safari",
 };

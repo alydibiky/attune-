@@ -8189,7 +8189,7 @@ export default function App() {
     const mq = matchMedia("(prefers-color-scheme: dark)"), on = () => applyTheme(theme);
     try { mq.addEventListener("change", on); } catch (e) { try { mq.addListener(on); } catch (e2) {} }
     return () => { try { mq.removeEventListener("change", on); } catch (e) { try { mq.removeListener(on); } catch (e2) {} } };
-  }, [theme && theme.bg, theme && theme.accent]);
+  }, [theme && theme.bg, theme && theme.accent, theme && theme.look]);
   useEffect(() => {
     const on = (e) => { if (e && e.detail) setArtifact(e.detail); };
     window.addEventListener("attune-artifact", on);

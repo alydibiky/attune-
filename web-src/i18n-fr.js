@@ -12945,4 +12945,15 @@ export const FR = {
   "{c} = as you said: “{d}”": "{c} = comme vous l'avez dit : « {d} »",
   "Messages are kept with it — ask about them any time; no cards": "Les messages sont gardés avec — demandez quand vous voulez ; pas de cartes",
   "Not important": "Pas important",
+  // v10.3 K1 calendar + glass look
+  "All day": "Toute la journée",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Rien cette semaine pour l'instant — les factures, paiements, rappels, projets et voyages ajoutés n'importe où dans Attune s'affichent ici.",
+  "Safe to spend until {d}": "Dépensable jusqu'au {d}",
+  "{a} spent this month": "{a} dépensés ce mois-ci",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Pas encore d'agents — demandez-en un pour surveiller un prix ou un hôtel.",
+  "No payments yet": "Pas encore de paiements",
+  "Plain": "Simple",
+  "Glass": "Verre",
+  "Home & orders": "Maison et commandes",
+  "Trips": "Voyages",
 };

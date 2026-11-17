@@ -659,6 +659,16 @@ export function ThemePicker({ theme, setTheme }) {
           ))}
         </div>
       </div>
+      {/* v10.3 G1 G2 G3 (Ali's OK, 17 Nov): Plain or Glass — glass follows light / dark like the rest */}
+      <div className="mb-3" data-testid="theme-look">
+        <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Look")}</span>
+        <div className="flex flex-wrap gap-1.5">
+          {[["plain", "Plain"], ["glass", "Glass"]].map(([id, label]) => (
+            <button key={id} onClick={() => pick({ look: id })} data-testid={"look-" + id} aria-pressed={(theme.look || "plain") === id}
+              className={chip((theme.look || "plain") === id) + " shrink-0"}>{tr(label)}</button>
+          ))}
+        </div>
+      </div>
       <div>
         <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Background colour")}</span>
         <div className="flex flex-wrap gap-1.5">

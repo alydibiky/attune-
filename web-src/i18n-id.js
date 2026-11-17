@@ -12945,4 +12945,15 @@ export const IDN = {
   "{c} = as you said: “{d}”": "{c} = seperti katamu: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "Pesan disimpan bersamanya — tanyakan kapan saja; tanpa kartu",
   "Not important": "Tidak penting",
+  // v10.3 K1 calendar + glass look
+  "All day": "Sepanjang hari",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Belum ada apa pun minggu ini — tagihan, pembayaran, pengingat, proyek, dan perjalanan yang kamu tambahkan di mana pun di Attune muncul di sini.",
+  "Safe to spend until {d}": "Aman dibelanjakan hingga {d}",
+  "{a} spent this month": "{a} dibelanjakan bulan ini",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Belum ada agen — minta satu untuk memantau harga atau hotel untukmu.",
+  "No payments yet": "Belum ada pembayaran",
+  "Plain": "Polos",
+  "Glass": "Kaca",
+  "Home & orders": "Rumah & pesanan",
+  "Trips": "Perjalanan",
 };

@@ -86,3 +86,64 @@ html:not(.att-wide) .att-h1 { display: none; }
 /* v9.9.39 UI-1 (Ali picked it): Home's one "Attune noticed" spot — the first card that has something today; the others wait their turn */
 .home-one > * ~ * { display: none !important; }
 .home-one:empty { display: none; }
+
+/* ---- v10.3 G1 G2 G3 the glass look (Ali's OK, 17 Nov 2026 — spaces.js glassCss sets the tokens). The ground is drawn once, fixed, under
+   everything; cards are frosted (real blur on a computer only — att-glass-blur); bars that stick on top stay readable over what scrolls. */
+html.att-glass body { background: var(--g-page) fixed; background-color: transparent }
+html.att-glass #root, html.att-glass #root > div { background: transparent }
+html.att-glass .calm .c-card, html.att-glass .calm .c-list { border-color: var(--g-edge); box-shadow: var(--g-shadow) }
+html.att-glass.att-glass-blur .calm .c-card, html.att-glass.att-glass-blur .wk { -webkit-backdrop-filter: blur(14px) saturate(1.15); backdrop-filter: blur(14px) saturate(1.15) }
+html.att-glass .sticky { background: var(--g-bar) !important }
+html.att-glass.att-glass-blur .sticky { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px) }
+html.att-glass aside.calm, html.att-glass nav.calm { background: transparent }
+
+/* ---- v10.3 K1 the week calendar (weekcal-ui.jsx; Ali picked K1). Kind colours: money pink, people green, home & orders amber,
+   projects blue, trips a gradient — in dark and in light. */
+.calm { --wk-money:#E58AA2; --wk-money-bg:rgba(229,138,162,.17); --wk-money-ink:#FFD6E1; --wk-people:#4FC2B4; --wk-people-bg:rgba(79,194,180,.17); --wk-people-ink:#C8F2EC;
+  --wk-home:#E8B04B; --wk-home-bg:rgba(232,176,75,.17); --wk-home-ink:#FFE3AC; --wk-work:#7FA6EE; --wk-work-bg:rgba(127,166,238,.17); --wk-work-ink:#D3E1FF;
+  --wk-trip:linear-gradient(90deg,rgba(229,138,162,.45),rgba(183,123,224,.38)); --wk-trip-ink:#fff; --wk-col:rgba(255,255,255,.035); --wk-today:rgba(229,138,162,.09); --wk-line:rgba(255,255,255,.06); --wk-now:#FF8FAE }
+html.att-light .calm { --wk-money:#7A1F3D; --wk-money-bg:#F7E1E8; --wk-money-ink:#7A1F3D; --wk-people:#2A9D8F; --wk-people-bg:#DFF3EF; --wk-people-ink:#1B6A62;
+  --wk-home:#C98A1E; --wk-home-bg:#FBEFD8; --wk-home-ink:#875705; --wk-work:#4C7DD9; --wk-work-bg:#E4ECFC; --wk-work-ink:#2C58A6;
+  --wk-trip:linear-gradient(90deg,#7A1F3D,#A24A86); --wk-trip-ink:#fff; --wk-col:rgba(255,255,255,.6); --wk-today:#FDF2F5; --wk-line:rgba(0,0,0,.05); --wk-now:#C2185B }
+html.att-light:not(.att-glass) .calm { --wk-col:#F7F6F4 }
+.wk { padding: 18px 18px 14px !important; font-size: 12px; line-height: 1.35 }
+.wk-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px }
+.wk-title b { font-size: 18px; font-weight: 900; letter-spacing: -.01em } .wk-title span { font-size: 14px; font-weight: 700; color: var(--c-mut); margin-inline-start: 8px }
+.wk-seg { display: flex; gap: 3px; padding: 3px; border-radius: 99px; background: var(--c-surf-2) } .wk-seg button { min-height: 32px; padding: 0 14px; border-radius: 99px; font-weight: 800; font-size: 12.5px; color: var(--c-mut) }
+.wk-seg button.on { background: var(--c-surf); color: var(--c-acc); box-shadow: 0 1px 3px rgba(0,0,0,.12) }
+html:not(.att-light) .wk-seg button.on { background: rgba(255,255,255,.14); color: var(--c-ink) }
+.wk-nav { display: flex; align-items: center; gap: 6px } .wk-nav button { min-width: 36px; height: 36px; border-radius: 99px; display: grid; place-items: center; background: var(--c-surf-2); font-weight: 800; color: var(--c-ink) }
+.wk-nav .wk-todaybtn { padding: 0 14px; font-size: 13px }
+.wk-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px } .wk-body.wk-open { grid-template-columns: minmax(0, 1fr) 280px }
+.wk-dayhead, .wk-allday, .wk-grid { display: grid; gap: 0 6px }
+.wk-dayhead { margin-bottom: 8px } .wk-dh { text-align: center } .wk-dh small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--c-mut) }
+.wk-dh b { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 17px; font-weight: 900; margin-top: 3px }
+.wk-dh.wk-today b { background: var(--c-acc); color: var(--c-on-acc, #fff) }
+html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A0F15 }
+.wk-allday { row-gap: 4px; margin-bottom: 8px; align-items: center } .wk-lab { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--c-mut); text-align: end; padding-inline-end: 6px; align-self: center }
+.wk-pill { border-radius: 8px; padding: 5px 8px; font-weight: 800; font-size: 11.5px; display: flex; gap: 6px; align-items: center; justify-content: space-between; min-width: 0; min-height: 26px; text-align: start; white-space: nowrap }
+.wk-pill .wk-pn { min-width: 0; overflow: hidden; text-overflow: ellipsis } .wk-pill em { flex: none; font-style: normal; font-weight: 900; font-variant-numeric: tabular-nums }
+.wk-more { font-size: 11px; font-weight: 800; color: var(--c-mut); padding-inline-start: 8px }
+.wk-grid { position: relative } .wk-hours { position: relative } .wk-hours span { position: absolute; inset-inline-end: 8px; transform: translateY(-6px); font-size: 10px; font-weight: 700; color: var(--c-mut) }
+.wk-col { position: relative; border-radius: 10px; background: var(--wk-col) } .wk-col.wk-today { background: var(--wk-today) }
+.wk-ln { position: absolute; inset-inline: 0; height: 1px; background: var(--wk-line) }
+.wk-ev { position: absolute; border-radius: 9px; padding: 5px 7px; padding-inline-start: 10px; overflow: hidden; display: grid; gap: 1px; align-content: start; text-align: start; cursor: pointer }
+.wk-ev::before { content: ""; position: absolute; inset-block: 5px; inset-inline-start: 3px; width: 3px; border-radius: 3px; background: currentColor; opacity: .9 }
+.wk-ev .wk-t { font-size: 10px; font-weight: 800; display: flex; justify-content: space-between; gap: 4px; opacity: .88 } .wk-ev .wk-t b { font-weight: 900; font-variant-numeric: tabular-nums; font-size: 10.5px }
+.wk-ev .wk-n { font-size: 11.5px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.wk-ev:hover, .wk-pill:hover { filter: brightness(1.08) } .wk-sel { outline: 2px solid var(--c-acc); outline-offset: 1px }
+.wk-now { position: absolute; inset-inline: -2px; height: 2px; border-radius: 2px; background: var(--wk-now); z-index: 2; pointer-events: none }
+.wk-now::before { content: ""; position: absolute; inset-inline-start: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--wk-now) }
+.wk-money { background: var(--wk-money-bg); color: var(--wk-money-ink) } .wk-people { background: var(--wk-people-bg); color: var(--wk-people-ink) }
+.wk-home { background: var(--wk-home-bg); color: var(--wk-home-ink) } .wk-work { background: var(--wk-work-bg); color: var(--wk-work-ink) } .wk-trip { background: var(--wk-trip); color: var(--wk-trip-ink) }
+.wk-legend { display: flex; gap: 14px; font-size: 11px; font-weight: 700; color: var(--c-mut); margin-top: 12px } .wk-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px }
+.wk-legend i.wk-money { background: var(--wk-money) } .wk-legend i.wk-people { background: var(--wk-people) } .wk-legend i.wk-home { background: var(--wk-home) } .wk-legend i.wk-work { background: var(--wk-work) }
+.wk-empty { margin: 10px 0 0; font-size: 13px; color: var(--c-mut); text-align: center }
+.wk-detail { border-radius: 14px; background: var(--c-surf-2); padding: 14px; align-self: start; position: sticky; top: 8px }
+.wk-chip { display: inline-block; border-radius: 99px; padding: 2px 10px; font-size: 11px; font-weight: 800 }
+.wk-month { display: grid; gap: 6px } .wk-mhead, .wk-mrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px }
+.wk-mhead small { text-align: center; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--c-mut) }
+.wk-mday { min-height: 96px; border-radius: 10px; background: var(--wk-col); padding: 4px; display: grid; gap: 3px; align-content: start; min-width: 0 }
+.wk-mday.wk-out { opacity: .45 } .wk-mday.wk-today { background: var(--wk-today); box-shadow: inset 0 0 0 1px var(--c-acc) }
+.wk-mnum { justify-self: start; min-width: 26px; height: 26px; border-radius: 99px; font-weight: 900; font-size: 12.5px } .wk-mday .wk-pill { min-height: 22px; padding: 3px 6px; font-size: 10.5px }
+.wk-under { display: block; padding: 14px 16px !important; min-height: 110px }

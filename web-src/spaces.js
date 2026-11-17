@@ -335,9 +335,36 @@ export function loadTheme() {
   // v9.5 (Ali, 5 Nov: "I don't like the green in the interface of the whole app — make it burgundy"): the green default becomes
   // burgundy, once; a colour chosen in Settings → Theme after this is kept
   if (!t.v95 && (t.accent || "emerald") === "emerald") { t = { ...t, accent: "burgundy", v95: 1 }; write(THEME_KEY, t); }
-  return { accent: t.accent || "burgundy", bg: t.bg || "auto" };
+  return { accent: t.accent || "burgundy", bg: t.bg || "auto", look: LOOKS.includes(t.look) ? t.look : defaultLook() };
 }
-export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "burgundy", bg: t.bg || "auto", a43: 1, v87: 1, v95: 1 }); }
+export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "burgundy", bg: t.bg || "auto", ...(LOOKS.includes(t.look) ? { look: t.look } : {}), a43: 1, v87: 1, v95: 1 }); }
+/* v10.3 G1 G2 G3 (Ali, 17 Nov 2026: OK-G1 OK-G2 OK-G3 — MOCKUPS.md, https://claude.ai/artifact/3CUkeHy43iX4zzt9xBdwLQ): the GLASS look.
+   Dark glass = a deep burgundy-to-black ground with frosted cards; light glass = the phone's own colours (warm grey, burgundy, soft
+   pink) with white frosted cards over a faint pink glow. Light or dark follows the device (Background colour → Follow my phone), or
+   the ground chosen. The computer wears glass by default (with real blur); on a phone it is a choice in Settings → Theme, drawn
+   WITHOUT live blur (nearly the same look, smooth and light on battery). Tests: tests/unit/v1030glass.test.mjs. */
+export const LOOKS = ["plain", "glass"];
+export const isBigScreen = () => { try { return !!((typeof window !== "undefined" && window.AttuneNative && window.AttuneNative.desktop) || (typeof matchMedia === "function" && matchMedia("(min-width: 1024px)").matches)); } catch (e) { return false; } };
+export const defaultLook = () => (isBigScreen() ? "glass" : "plain");
+const GLOW = { burgundy: ["#4A1A2E", "#F9E6EC"] };
+/** The glass tokens (on top of the theme's own accent): → { vars, page } — page = the ground drawn under everything. */
+export function glassVars(theme) {
+  const t = theme || {}, acc = CALM_ACCENT[t.accent] ? t.accent : "burgundy", light = resolveBg(t.bg || "auto") === "light";
+  const [a, soft] = CALM_ACCENT[acc][light ? "l" : "d"], glow = (GLOW[acc] || [CALM_ACCENT[acc].d[1], CALM_ACCENT[acc].l[1]])[light ? 1 : 0];
+  const vars = light
+    ? { "--c-bg": "transparent", "--c-surf": "rgba(255,255,255,.76)", "--c-surf-2": "rgba(255,255,255,.55)", "--c-ink": "#1E1C1B", "--c-mut": "#5E5A57", "--c-ln": "rgba(30,28,27,.09)",
+        "--c-acc": a, "--c-soft": soft, "--g-bar": "rgba(247,243,241,.86)", "--g-solid": "#FBF9F8", "--g-solid-2": "#F3EFED", "--g-shadow": "0 6px 22px rgba(122,31,61,.07)", "--g-edge": "rgba(255,255,255,.9)" }
+    : { "--c-bg": "transparent", "--c-surf": "rgba(255,255,255,.065)", "--c-surf-2": "rgba(255,255,255,.11)", "--c-ink": "#F3EBEE", "--c-mut": "#BEAFB5", "--c-ln": "rgba(255,255,255,.12)",
+        "--c-acc": a, "--c-soft": soft, "--g-bar": "rgba(22,15,21,.84)", "--g-solid": "#1D1419", "--g-solid-2": "#271B22", "--g-shadow": "none", "--g-edge": "rgba(255,255,255,.12)" };
+  const page = light ? `radial-gradient(120% 100% at 0% 0%, ${glow} 0%, #F5F4F2 45%, #EFEDEA 100%)` : `radial-gradient(120% 90% at 8% 0%, ${glow} 0%, #1A1119 48%, #0E0C12 100%)`;
+  return { vars, page, light };
+}
+export function glassCss(theme) {
+  const { vars, page, light } = glassVars(theme), v = Object.entries(vars).map(([k, x]) => k + ":" + x).join(";");
+  // (a sheet or a window over a dim backdrop keeps solid colours — frosted on frosted would be hard to read)
+  return `html.att-glass{--g-page:${page};background:${light ? "#F5F4F2" : "#0E0C12"}}html.att-glass.att-glass.att-glass .calm{${v}}`
+    + `html.att-glass.att-glass.att-glass [class*="bg-black/"] .calm,html.att-glass.att-glass.att-glass [role="dialog"].calm,html.att-glass.att-glass.att-glass [role="dialog"] .calm{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`;
+}
 
 /* v9.5 (Ali, 5 Nov: "not all background colours work"): the redesigned screens (.calm) had their own fixed colours, so Settings →
    Theme reached only the older screens. Now every choice sets the .calm tokens too: the accent (light / dark tone, its soft tint,
@@ -410,7 +437,7 @@ export function calmVars(theme) {
 }
 export function calmCss(theme) {
   const v = calmVars(theme);
-  return "html.att-themed.att-themed .calm{" + Object.entries(v).map(([k, x]) => k + ":" + x).join(";") + "}" + areaCss(theme);
+  return "html.att-themed.att-themed .calm{" + Object.entries(v).map(([k, x]) => k + ":" + x).join(";") + "}" + areaCss(theme) + (theme && theme.look === "glass" ? glassCss(theme) : "");
 }
 /** "auto" → "light" or "slate" (dark), from the phone's own setting right now. */
 export const phoneDark = () => { try { return !!(typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches); } catch (e) { return false; } };
@@ -462,8 +489,11 @@ export function applyTheme(theme, doc) {
   // v9.5: the chosen colour and background on every screen (the .calm tokens)
   try { let st = d.getElementById("att-calm-theme"); if (!st) { st = d.createElement("style"); st.id = "att-calm-theme"; (d.head || root).appendChild(st); } st.textContent = calmCss(theme); root.classList.add("att-themed"); } catch (e) {}
   root.style.colorScheme = light ? "light" : "dark";
+  const glass = !!(theme && theme.look === "glass");
+  root.classList.toggle("att-glass", glass);
+  root.classList.toggle("att-glass-blur", glass && isBigScreen());   // (real blur on a computer only — G3)
   try {
-    const bgc = light ? "#F4F5F3" : bgNow === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
+    const bgc = glass ? (light ? "#F5F4F2" : "#140E13") : light ? "#F4F5F3" : bgNow === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
     let m = d.querySelector('meta[name="theme-color"]');
     if (!m) { m = d.createElement("meta"); m.name = "theme-color"; d.head.appendChild(m); }
     m.content = bgc.trim();

@@ -1,5 +1,21 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (17 Nov 2026, later — v10.3: Ali picked K1 + OK-G1 OK-G2 OK-G3 — the glass look and the week calendar)
+> Mock-ups: calendar styles https://claude.ai/artifact/Pfx2JXzwa7sD5KThoBHkmB (he picked **K1**), combined
+> https://claude.ai/artifact/3CUkeHy43iX4zzt9xBdwLQ (v2 with K1; **OK-G1 OK-G2 OK-G3**). Built:
+> **Glass look** (spaces.js LOOKS / glassVars / glassCss, ThemePicker "Look: Plain · Glass", tw.css html.att-glass): dark glass
+> (burgundy-to-black ground, frosted cards) and light glass (the phone's colours) — light/dark follows the device or the chosen ground.
+> The computer wears glass by default (defaultLook: desktop app or ≥ 1024 px) with real blur (att-glass-blur); the phone keeps Plain
+> and can pick Glass — no live blur there. Sheets over a dim backdrop keep solid colours; sticky bars get a readable glass bar.
+> **K1 week calendar** in the middle of the computer's Home (weekcal.js logic + weekcal-ui.jsx WeekCalendar / UnderWeek; desk-ui.jsx):
+> things at their hour with a now line, an all-day lane (bills, deliveries, renewals, projects, money with no time, the trip as one bar),
+> "+N more" when the lane is full, same-time things side by side, Day · Week · Month, ‹ Today ›, a tap → details on the right + Open.
+> Filled only from the Follow-ups timeline + Money's payments made + project dates + the trip. Under it: safe to spend, agents, latest.
+> The old "Today" card on the computer's Home is gone (its reminders are on the calendar). Tests: tests/unit/v1030weekcal.test.mjs,
+> tests/weekcal/gen.mjs (10,000 composed HARD weeks — first run 99.62%: a double space broke «عيد  ميلاد» → kindOf folds spaces/alef;
+> now 100%, 94% different shapes; held-out 100%), tests/e2e_v1030weekcal.py (computer dark + light glass, phone Plain → Glass).
+> Next: Ali's look at both devices; D1 remaining pages.
+
 > ## START HERE (17 Nov 2026 — v10.2: Ali's computer + phone list of 17 Nov: "I want everything fixed for good, a last time")
 > Fixed (objective, with tests): **(1) "36 tools" → 3**: Home's card counted every tool, the Tools page showed only the 3 families.
 > Now hubs.js shownToolGroups()/toolCount() = the tools this build really lists (not archived / hidden / not in this build, each once);

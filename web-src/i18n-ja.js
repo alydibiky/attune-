@@ -12944,4 +12944,15 @@ export const JA = {
   "{c} = as you said: “{d}”": "{c} = あなたの言葉どおり：「{d}」",
   "Messages are kept with it — ask about them any time; no cards": "メッセージは保存されます — いつでも聞けます。カードは出ません",
   "Not important": "重要じゃない",
+  // v10.3 K1 calendar + glass look
+  "All day": "終日",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "今週はまだ何もありません — Attune のどこで追加した請求、支払い、リマインダー、プロジェクト、旅行もここに表示されます。",
+  "Safe to spend until {d}": "{d} まで使える額",
+  "{a} spent this month": "今月の支出 {a}",
+  "No agents yet — ask one to watch a price or a hotel for you.": "エージェントはまだいません — 価格やホテルの見張りを頼みましょう。",
+  "No payments yet": "支払いはまだありません",
+  "Plain": "シンプル",
+  "Glass": "ガラス",
+  "Home & orders": "家と注文",
+  "Trips": "旅行",
 };

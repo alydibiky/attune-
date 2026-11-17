@@ -13,6 +13,7 @@ import { usePins, recentTools } from "./side-ui.jsx";
 import { BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
 import { LifeAnswer } from "./lifeask-ui.jsx";
 import * as LA from "./lifeask.js";
+import { WeekCalendar, UnderWeek } from "./weekcal-ui.jsx";   // v10.3 K1 + C1 (Ali's picks)
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
 const todayKey = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -77,11 +78,11 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
   return (
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[28px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr(greeting())}{name ? ", " + name : ""}</h1>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
+      <div className="grid grid-cols-1 gap-4">
+        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
           <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>
           <div className="flex items-end gap-2 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 focus-within:border-[var(--c-acc)] transition-colors duration-150">
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); send(); } }}
               placeholder={BOX_HINT[boxMode] ? tr(BOX_HINT[boxMode]) : tr("Ask, or tell Attune what happened — «spent 150 on lunch», «remind me tomorrow at 9»…")} className="flex-1 resize-none bg-transparent text-[15.5px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] placeholder:font-normal focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
@@ -102,16 +103,11 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
               className="min-h-[40px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] text-[13px] font-bold px-4 hover:border-[var(--c-acc)] transition-colors duration-150">{tr(t)}</button>)}
           </div>
         </div>
-        <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5 space-y-2" data-testid="home-today">
-          <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] m-0">{tr("Today")}</p>
-          {facts.kcal != null && !isRemoved("fit") ? <button onClick={() => navTo("fit")} className="min-h-[44px] flex items-center gap-2 text-start"><Apple size={16} className="text-[var(--c-pos)]" />
-            <span className="text-[24px] font-black text-[var(--c-ink)] tabular-nums tracking-tight">{facts.kcal}</span><span className="text-[12.5px] text-[var(--c-mut)]">{tr("kcal eaten")}</span></button> : null}
-          <button onClick={() => navTo("reminders")} className="min-h-[44px] flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)]"><Bell size={15} className="text-[var(--c-warn)]" />
-            {facts.reminders ? tr("{n} reminders left today", { n: facts.reminders }) : tr("No more reminders today")}</button>
-          <p className="flex items-center gap-2 text-[13.5px] font-semibold text-[var(--c-ink)] m-0 tabular-nums"><MessageCircle size={15} className="text-[var(--c-acc)]" />{tr("{n} chats saved", { n: facts.chats })}</p>
-          <p className={"text-[12.5px] font-bold m-0 pt-1 " + (engineReady ? "text-[var(--c-acc)]" : "text-[var(--c-mut)]")}>{engineReady ? tr("The model is ready") : tr("The model wakes when you ask")}</p>
-        </div>
       </div>
+      {/* v10.3 C1 + K1 (Ali's OK, 17 Nov 2026): the centre of Home is this week as a real calendar; under it safe to spend, agents and
+          the latest payments (the old "Today" card: its reminders are on the calendar now) */}
+      <WeekCalendar navTo={navTo} />
+      <UnderWeek navTo={navTo} />
       {/* v9.2 (Ali picked 1A): what is due or not finished, and the lists needed today — the same card as the phone's Home */}
       <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} />
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">

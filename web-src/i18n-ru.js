@@ -12944,4 +12944,15 @@ export const RU = {
   "{c} = as you said: “{d}”": "{c} = как вы сказали: «{d}»",
   "Messages are kept with it — ask about them any time; no cards": "Сообщения хранятся — спрашивайте о них когда угодно; без карточек",
   "Not important": "Не важно",
+  // v10.3 K1 calendar + glass look
+  "All day": "Весь день",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "На этой неделе пока ничего — здесь появляются счета, платежи, напоминания, проекты и поездки, которые вы добавляете в Attune.",
+  "Safe to spend until {d}": "Можно тратить до {d}",
+  "{a} spent this month": "{a} потрачено в этом месяце",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Агентов пока нет — попросите одного следить за ценой или отелем.",
+  "No payments yet": "Платежей пока нет",
+  "Plain": "Обычный",
+  "Glass": "Стекло",
+  "Home & orders": "Дом и заказы",
+  "Trips": "Поездки",
 };

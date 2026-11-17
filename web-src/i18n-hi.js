@@ -12945,4 +12945,15 @@ export const HI = {
   "{c} = as you said: “{d}”": "{c} = जैसा आपने कहा: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "मैसेज इसके साथ रखे जाते हैं — कभी भी पूछें; कोई कार्ड नहीं",
   "Not important": "ज़रूरी नहीं",
+  // v10.3 K1 calendar + glass look
+  "All day": "पूरा दिन",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "इस हफ़्ते अभी कुछ नहीं — Attune में कहीं भी जोड़े गए बिल, भुगतान, रिमाइंडर, प्रोजेक्ट और यात्राएँ यहाँ दिखते हैं।",
+  "Safe to spend until {d}": "{d} तक खर्च कर सकते हैं",
+  "{a} spent this month": "इस महीने {a} खर्च",
+  "No agents yet — ask one to watch a price or a hotel for you.": "अभी कोई एजेंट नहीं — किसी को कीमत या होटल पर नज़र रखने को कहें।",
+  "No payments yet": "अभी कोई भुगतान नहीं",
+  "Plain": "सादा",
+  "Glass": "ग्लास",
+  "Home & orders": "घर और ऑर्डर",
+  "Trips": "यात्राएँ",
 };

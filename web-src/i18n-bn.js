@@ -12944,4 +12944,15 @@ export const BN = {
   "{c} = as you said: “{d}”": "{c} = যেমন আপনি বললেন: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "মেসেজগুলো এর সাথে রাখা হয় — যেকোনো সময় জিজ্ঞেস করুন; কোনো কার্ড নয়",
   "Not important": "জরুরি না",
+  // v10.3 K1 calendar + glass look
+  "All day": "সারাদিন",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "এই সপ্তাহে এখনও কিছু নেই — Attune-এ যেকোনো জায়গায় যোগ করা বিল, পেমেন্ট, রিমাইন্ডার, প্রজেক্ট ও ভ্রমণ এখানে দেখাবে।",
+  "Safe to spend until {d}": "{d} পর্যন্ত খরচ করা যায়",
+  "{a} spent this month": "এই মাসে {a} খরচ",
+  "No agents yet — ask one to watch a price or a hotel for you.": "এখনও কোনো এজেন্ট নেই — কাউকে একটি দাম বা হোটেলের ওপর নজর রাখতে বলুন।",
+  "No payments yet": "এখনও কোনো পেমেন্ট নেই",
+  "Plain": "সাধারণ",
+  "Glass": "কাচ",
+  "Home & orders": "ঘর ও অর্ডার",
+  "Trips": "ভ্রমণ",
 };

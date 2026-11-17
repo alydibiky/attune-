@@ -12944,4 +12944,15 @@ export const TH = {
   "{c} = as you said: “{d}”": "{c} = ตามที่คุณบอก: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "เก็บข้อความไว้กับแชตนี้ — ถามได้ทุกเมื่อ ไม่มีการ์ด",
   "Not important": "ไม่สำคัญ",
+  // v10.3 K1 calendar + glass look
+  "All day": "ทั้งวัน",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "สัปดาห์นี้ยังไม่มีอะไร — บิล การชำระเงิน การเตือน โปรเจกต์ และทริปที่คุณเพิ่มใน Attune จะแสดงที่นี่",
+  "Safe to spend until {d}": "ใช้จ่ายได้ถึง {d}",
+  "{a} spent this month": "ใช้ไป {a} เดือนนี้",
+  "No agents yet — ask one to watch a price or a hotel for you.": "ยังไม่มีเอเจนต์ — ให้เอเจนต์ช่วยติดตามราคาหรือโรงแรมให้คุณ",
+  "No payments yet": "ยังไม่มีการชำระเงิน",
+  "Plain": "เรียบ",
+  "Glass": "กระจก",
+  "Home & orders": "บ้านและคำสั่งซื้อ",
+  "Trips": "ทริป",
 };

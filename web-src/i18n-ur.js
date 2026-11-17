@@ -12945,4 +12945,15 @@ export const UR = {
   "{c} = as you said: “{d}”": "{c} = جیسا آپ نے کہا: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "پیغامات اس کے ساتھ رکھے جاتے ہیں — کبھی بھی پوچھیں؛ کوئی کارڈ نہیں",
   "Not important": "اہم نہیں",
+  // v10.3 K1 calendar + glass look
+  "All day": "سارا دن",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "اس ہفتے ابھی کچھ نہیں — Attune میں کہیں بھی شامل کیے گئے بل، ادائیگیاں، یاد دہانیاں، منصوبے اور سفر یہاں دکھتے ہیں۔",
+  "Safe to spend until {d}": "{d} تک خرچ کر سکتے ہیں",
+  "{a} spent this month": "اس مہینے {a} خرچ ہوئے",
+  "No agents yet — ask one to watch a price or a hotel for you.": "ابھی کوئی ایجنٹ نہیں — کسی سے قیمت یا ہوٹل پر نظر رکھنے کو کہیں۔",
+  "No payments yet": "ابھی کوئی ادائیگی نہیں",
+  "Plain": "سادہ",
+  "Glass": "شیشہ",
+  "Home & orders": "گھر اور آرڈر",
+  "Trips": "سفر",
 };

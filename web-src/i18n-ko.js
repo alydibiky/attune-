@@ -12944,4 +12944,15 @@ export const KO = {
   "{c} = as you said: “{d}”": "{c} = 말씀하신 대로: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "메시지는 함께 보관돼요 — 언제든 물어보세요. 카드는 없어요",
   "Not important": "중요하지 않음",
+  // v10.3 K1 calendar + glass look
+  "All day": "종일",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "이번 주에는 아직 없어요 — Attune 어디에서든 추가한 청구서, 결제, 알림, 프로젝트, 여행이 여기에 표시돼요.",
+  "Safe to spend until {d}": "{d}까지 안심하고 쓸 수 있는 돈",
+  "{a} spent this month": "이번 달 지출 {a}",
+  "No agents yet — ask one to watch a price or a hotel for you.": "아직 에이전트가 없어요 — 가격이나 호텔을 지켜봐 달라고 맡겨 보세요.",
+  "No payments yet": "아직 결제가 없어요",
+  "Plain": "기본",
+  "Glass": "글래스",
+  "Home & orders": "집 & 주문",
+  "Trips": "여행",
 };

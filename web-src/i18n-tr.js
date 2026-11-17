@@ -12945,4 +12945,15 @@ export const TRK = {
   "{c} = as you said: “{d}”": "{c} = dediğin gibi: “{d}”",
   "Messages are kept with it — ask about them any time; no cards": "Mesajlar onunla saklanır — istediğin zaman sor; kart yok",
   "Not important": "Önemli değil",
+  // v10.3 K1 calendar + glass look
+  "All day": "Tüm gün",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Bu hafta henüz bir şey yok — Attune'un herhangi bir yerine eklediğin faturalar, ödemeler, hatırlatıcılar, projeler ve seyahatler burada görünür.",
+  "Safe to spend until {d}": "{d} tarihine kadar harcanabilir",
+  "{a} spent this month": "Bu ay {a} harcandı",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Henüz ajan yok — birinden bir fiyatı ya da oteli takip etmesini iste.",
+  "No payments yet": "Henüz ödeme yok",
+  "Plain": "Sade",
+  "Glass": "Cam",
+  "Home & orders": "Ev ve siparişler",
+  "Trips": "Seyahatler",
 };

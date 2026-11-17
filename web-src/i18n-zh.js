@@ -12944,4 +12944,15 @@ export const ZH = {
   "{c} = as you said: “{d}”": "{c} = 照你说的：“{d}”",
   "Messages are kept with it — ask about them any time; no cards": "消息会和它一起保存——随时可以问；不会弹卡片",
   "Not important": "不重要",
+  // v10.3 K1 calendar + glass look
+  "All day": "全天",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "本周还没有内容——你在 Attune 任何地方添加的账单、付款、提醒、项目和行程都会显示在这里。",
+  "Safe to spend until {d}": "可放心花到 {d}",
+  "{a} spent this month": "本月已花 {a}",
+  "No agents yet — ask one to watch a price or a hotel for you.": "还没有代理——让一个代理帮你盯着价格或酒店。",
+  "No payments yet": "还没有付款",
+  "Plain": "简洁",
+  "Glass": "玻璃",
+  "Home & orders": "家务与订单",
+  "Trips": "行程",
 };

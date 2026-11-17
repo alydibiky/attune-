@@ -10049,4 +10049,15 @@ export const AR = {
   "{c} = as you said: “{d}”": "{c} = زي ما قلت: «{d}»",
   "Messages are kept with it — ask about them any time; no cards": "الرسايل بتتحفظ معاه — اسأل عنها في أي وقت، من غير كروت",
   "Not important": "مش مهم",
+  // v10.3 K1 calendar + glass look
+  "All day": "طول اليوم",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "مفيش حاجة الأسبوع ده لسه — الفواتير والمدفوعات والتذكيرات والمشاريع والسفريات اللي بتضيفها في أي مكان في Attune بتظهر هنا.",
+  "Safe to spend until {d}": "تقدر تصرف لحد {d}",
+  "{a} spent this month": "صرفت {a} الشهر ده",
+  "No agents yet — ask one to watch a price or a hotel for you.": "مفيش وكلاء لسه — خلّي واحد يراقبلك سعر أو فندق.",
+  "No payments yet": "مفيش مدفوعات لسه",
+  "Plain": "عادي",
+  "Glass": "زجاجي",
+  "Home & orders": "البيت والطلبات",
+  "Trips": "السفريات",
 };

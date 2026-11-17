@@ -12936,4 +12936,15 @@ export const ARB = {
   "{c} = as you said: “{d}”": "{c} = كما قلت: «{d}»",
   "Messages are kept with it — ask about them any time; no cards": "تُحفظ الرسائل معها — اسأل عنها في أي وقت، دون بطاقات",
   "Not important": "غير مهم",
+  // v10.3 K1 calendar + glass look
+  "All day": "طوال اليوم",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "لا شيء في هذا الأسبوع بعد — تظهر هنا الفواتير والمدفوعات والتذكيرات والمشاريع والرحلات التي تضيفها في أي مكان في Attune.",
+  "Safe to spend until {d}": "يمكنك الإنفاق حتى {d}",
+  "{a} spent this month": "أنفقت {a} هذا الشهر",
+  "No agents yet — ask one to watch a price or a hotel for you.": "لا يوجد وكلاء بعد — اطلب من أحدهم مراقبة سعر أو فندق لك.",
+  "No payments yet": "لا توجد مدفوعات بعد",
+  "Plain": "عادي",
+  "Glass": "زجاجي",
+  "Home & orders": "المنزل والطلبات",
+  "Trips": "الرحلات",
 };

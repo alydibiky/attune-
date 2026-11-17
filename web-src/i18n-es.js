@@ -12945,4 +12945,15 @@ export const ES = {
   "{c} = as you said: “{d}”": "{c} = como dijiste: «{d}»",
   "Messages are kept with it — ask about them any time; no cards": "Los mensajes se guardan con él — pregunta cuando quieras; sin tarjetas",
   "Not important": "No importa",
+  // v10.3 K1 calendar + glass look
+  "All day": "Todo el día",
+  "Nothing on this week yet — bills, payments, reminders, projects and trips you add anywhere in Attune show here.": "Aún no hay nada esta semana: aquí aparecen las facturas, pagos, recordatorios, proyectos y viajes que añadas en cualquier parte de Attune.",
+  "Safe to spend until {d}": "Puedes gastar hasta el {d}",
+  "{a} spent this month": "{a} gastado este mes",
+  "No agents yet — ask one to watch a price or a hotel for you.": "Aún no hay agentes: pide a uno que vigile un precio o un hotel por ti.",
+  "No payments yet": "Aún no hay pagos",
+  "Plain": "Simple",
+  "Glass": "Cristal",
+  "Home & orders": "Casa y pedidos",
+  "Trips": "Viajes",
 };
