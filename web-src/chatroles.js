@@ -13,7 +13,7 @@ import { itemsOf } from "./shoplist.js";
 import { noiseOf } from "./chats.js";
 
 export const ROLES_KEY = "attune:chatroles:v1";
-export const ROLES = ["orders", "shopping", "building", "work", "family", "friends", "person", "courier", "news", "quiet"];
+export const ROLES = ["orders", "shopping", "building", "work", "family", "friends", "person", "courier", "news", "quiet", "other"];
 const fold = (s) => String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$|[،,.!?؟])/g, "ه").replace(/[ًٌٍَُِّْـ]/g, "");
 
 // the role words — in the order they are tried (the first that fits wins; "shopping list with my wife" is shopping, not family)
@@ -39,9 +39,27 @@ const SPLIT = /\s*(?:,|،|\bor\b|\band\b|\s+أو\s+|\s+او\s+|\s+و(?=[ء-ي])|
 const TOPIC_JUNK = /^(?:something|anything|stuff|things|it|that|them|حاجة|حاجه|حاجات|اي حاجة|أي حاجة|حد|ده|دي)$/i;
 const PEOPLE = /\b(?:me and|with|between me and)\s+(?:my\s+)?([\p{L}][\p{L}' ]{1,30}?)(?=\s*(?:,|\.|;|$|\bwe\b|\bwhere\b|\bto\b|\bfor\b|\bwho\b))|(?:أنا و|انا و|بيني وبين|مع)\s*([ء-ي]{2,}(?:\s+[ء-ي]{2,})?)/iu;
 
-export function readDescription(text0) {
+// ---- v10.2 (Ali: "I don't want a 1 time fix, I want a fix for good"): what the person taught stays taught ------------------------
+// When the words were not understood and the person picked what the chat is, their sentence is kept with that kind — the same words
+// (or the same words with small changes: case, spaces, punctuation, «ال», a plural s) are understood by themselves from then on.
+export const LEARN_KEY = "attune:chatroles:learned:v1";
+const keyOf = (t) => { const f = fold(t).replace(/[’'`]/g, "");
+  const k = f.replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\b(?:a|an|the|its|this|is|my|our)\b|(?:^|\s)ال(?=\S)/g, " ").replace(/(?<=\p{L}{3})s\b/gu, "").replace(/\s+/g, " ").trim();
+  if (k) return k; const k2 = f.replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\b(?:a|an|the|its|this|is|my|our)\b/g, " ").replace(/\s+/g, ""); return k2 || f.replace(/\b(?:a|an|the|its|this|is|my|our)\b/g, " ").replace(/[\s.!?,،؟;:]+/g, ""); };   // (only small words or only emoji: the words themselves)
+export function loadLearned(s = typeof localStorage !== "undefined" ? localStorage : null) { try { const v = JSON.parse((s && s.getItem(LEARN_KEY)) || "{}"); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } }
+export function learnDescription(text, rule, s = typeof localStorage !== "undefined" ? localStorage : null) {
+  const k = keyOf(text); if (!k || !rule || !rule.role) return false;
+  const all = loadLearned(s); all[k] = { role: rule.role, at: Date.now() }; const keys = Object.keys(all);
+  if (keys.length > 300) for (const x of keys.sort((a, b) => all[a].at - all[b].at).slice(0, keys.length - 300)) delete all[x];
+  try { s && s.setItem(LEARN_KEY, JSON.stringify(all)); } catch (e) {} return true;
+}
+/** What happens after "Change" (pure, so it is tested): "code" — the words are understood; "model" — ask the phone's AI; "pick" —
+ *  show the kinds to tap. Never "nothing". */
+export const nextStep = (codeRule, modelReady) => (codeRule && codeRule.role ? "code" : modelReady ? "model" : "pick");
+export function readDescription(text0, learned = null) {
   const text = String(text0 || "").replace(/\s+/g, " ").trim(), t = fold(text);
   if (!text) return null;
+  { const L = learned || loadLearned(), k = keyOf(text); if (k && L[k] && ROLES.includes(L[k].role)) return { role: L[k].role, care: [], whenMe: false, people: [], unsure: false, by: "learned" }; }
   // the role is what the chat IS — the words before "only if …" / "or if someone mentions me"; the topics after it never set it
   // ("family group, only if someone mentions my crane" is family, not work)
   const cm = CARE_LEAD.exec(text), mm = ME_W.exec(text);
@@ -89,12 +107,12 @@ export function guessRole(chat = {}, messages = []) {
   return { role: "", sure: false, because: { t: "not sure yet", v: {} } };
 }
 
-const ROLE_LINE = { orders: "{c} = a record of the orders you buy", shopping: "{c} = a shared shopping list", building: "{c} = your building's group", work: "{c} = a work group", family: "{c} = your family", friends: "{c} = your friends", person: "{c} = a chat with one person", courier: "{c} = deliveries and orders", news: "{c} = news and offers", quiet: "{c} = never important" };
-const DOES = { orders: "Every message is kept — ask “when did I order …?” — nothing goes on a list", shopping: "Each message → an item on your Shopping list", building: "Usually: messages are only kept, no cards", work: "Usually: messages are only kept, no cards", family: "Memes and news are kept quietly; real requests to you are shown", friends: "Messages are kept quietly", person: "Real requests to you become to-dos (with the message and Undo)", courier: "Delivery dates → Follow-ups; payment requests are checked for scams", news: "Messages are kept quietly", quiet: "Messages are only kept — never a card" };
+const ROLE_LINE = { other: "{c} = as you said: “{d}”", orders: "{c} = a record of the orders you buy", shopping: "{c} = a shared shopping list", building: "{c} = your building's group", work: "{c} = a work group", family: "{c} = your family", friends: "{c} = your friends", person: "{c} = a chat with one person", courier: "{c} = deliveries and orders", news: "{c} = news and offers", quiet: "{c} = never important" };
+const DOES = { other: "Messages are kept with it — ask about them any time; no cards", orders: "Every message is kept — ask “when did I order …?” — nothing goes on a list", shopping: "Each message → an item on your Shopping list", building: "Usually: messages are only kept, no cards", work: "Usually: messages are only kept, no cards", family: "Memes and news are kept quietly; real requests to you are shown", friends: "Messages are kept quietly", person: "Real requests to you become to-dos (with the message and Undo)", courier: "Delivery dates → Follow-ups; payment requests are checked for scams", news: "Messages are kept quietly", quiet: "Messages are only kept — never a card" };
 /** The "What I understood" lines for this chat: [{ t, v }] (tr() each). */
 export function understood(rule, chatName) {
   if (!rule || !rule.role) return [{ t: "Not sure what {c} is yet — tell me in your words", v: { c: chatName } }];
-  const out = [{ t: ROLE_LINE[rule.role], v: { c: chatName } }];
+  const out = [{ t: ROLE_LINE[rule.role], v: { c: chatName, d: String(rule.desc || "").slice(0, 80) } }];
   if (rule.people && rule.people.length) out.push({ t: "People: you and {p}", v: { p: rule.people.join(", ") } });
   out.push({ t: DOES[rule.role], v: {} });
   if (rule.care && rule.care.length) out.push({ t: "Tell you when: {x}", v: { x: rule.care.join(" · ") } });

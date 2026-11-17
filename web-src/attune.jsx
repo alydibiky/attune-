@@ -8751,6 +8751,8 @@ export default function App() {
     // v9.9.11: the same small check for "what did the person mean?" when the words alone don't say it (notelabels.js aiPrompt)
     window.__attuneQuickAi = modelState === "ready" ? (q) => callClaude(q, { prefix: "teach", background: true, maxTokens: 40, temperature: 0, think: false }) : null; } catch (e) {} }, [modelState]);
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
+  // v10.2 (Ali: "a fix for good"): the Autopilot card's "Change" asks the phone's model when the words alone don't say what a chat is
+  useEffect(() => { try { window.__attuneDescAi = modelUsable ? (messages) => callChat(messages, null, { maxTokens: 120, temperature: 0, think: false }) : null; } catch (e) {} }, [modelUsable]);
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   // v6.34 (Ali): the next lesson is written ahead while a model is loaded and idle — ready when Learn is opened.
   // Only when the engine is already up (never wakes a model for it), 20 s after the last check, never during a request.

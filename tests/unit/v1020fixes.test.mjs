@@ -32,6 +32,14 @@ ok(CR.readDescription("our shopping list").role === "shopping" && CR.readDescrip
 const dn = AP.decide({ id: "o1", app: "WhatsApp", pkg: "com.whatsapp", title: "Orders", text: "Toilet paper, kitchen tissues, rice", group: true, convo: "Orders", who: "Ali", ts: Date.now() },
   { roles: { "whatsapp|g:orders": { ...od, ok: true } } });
 ok(dn && dn.kind === "keep", "a message in his Orders group is kept — never added to a list: " + JSON.stringify(dn && dn.kind));
+// …and for good: after Change there is always an answer (code → the phone's AI → the kinds to tap), and what he teaches is kept
+ok(CR.nextStep(null, false) === "pick" && CR.nextStep({ role: "" }, true) === "model" && CR.nextStep(od, true) === "code", "Change always goes somewhere — never nothing");
+ok(CR.readDescModel('{"role":"orders","care":[],"whenMe":false}').role === "orders" && CR.readDescModel('{"role":"banana"}') === null, "the AI's answer is checked: only a real kind is kept");
+{ const st = { m: {}, getItem(k) { return this.m[k] || null; }, setItem(k, v) { this.m[k] = v; } };
+  CR.learnDescription("the bag of everything I get from Amazon", { role: "orders" }, st);
+  ok(CR.readDescription("The bag of everything I get from Amazon!", CR.loadLearned(st)).role === "orders", "taught once → understood next time, written a little differently"); }
+{ const out = execFileSync("node", [new URL("../chatroles/never.mjs", import.meta.url).pathname, "2500"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  const p = +((/\(([\d.]+)%\)/.exec(out) || [])[1] || 0); ok(p === 100, "10,000 descriptions never stuck, 2,500 sample: " + p + "%"); }
 // tools: the count on Home = what the page lists
 const groups = [["A", ["lists", "money", "crane"]], ["B", ["lists", "fit"]]];
 const shown = shownToolGroups(groups, ["lists", "money", "crane", "fit"], (id) => id === "crane");

@@ -30,8 +30,11 @@ function Understood({ rule, chat }) {
   return <ul className="m-0 p-0 list-none space-y-0.5" data-testid="cp-understood">{CR.understood(rule, chat).map((x, i) =>
     <li key={i} className="flex gap-1.5 text-[12.5px]" dir="auto"><Check size={13} className="c-pos shrink-0 mt-0.5" /><span>{tr(x.t, x.v)}</span></li>)}</ul>;
 }
+// v10.2: the kinds to tap when neither the words nor the AI say what a chat is
+const PICKS = [["orders", "Orders I bought"], ["shopping", "Shopping list"], ["work", "Work"], ["family", "Family"], ["friends", "Friends"], ["building", "Building"],
+  ["person", "One person"], ["courier", "Deliveries"], ["news", "News & offers"], ["quiet", "Not important"], ["other", "Something else — keep my words"]];
 function AskCard({ a, done }) {
-  const [say, setSay] = useState(""), [mine, setMine] = useState(null);
+  const [say, setSay] = useState(""), [mine, setMine] = useState(null), [step, setStep] = useState("");   // step: "" | "model" | "pick"
   // Attune's guess from EVERYTHING this chat has sent so far (not from one message)
   const guess = useMemo(() => { try { const mb = CP.messagesByChat(readNotes()), msgs = (mb.byKey[a.key] || []).map((m) => ({ who: m.who, text: m.text })); const g = CR.guessRole({ chat: a.chat, group: a.group }, msgs); return g && g.role ? g : a.guess; } catch (e) { return a.guess; } }, [a.key]);
   a = { ...a, guess };
@@ -48,13 +51,25 @@ function AskCard({ a, done }) {
       <button disabled={!rule || !rule.role} onClick={() => save(rule)} className="min-h-[40px] px-3.5 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12.5px] font-extrabold disabled:opacity-40" data-testid="cp-right">✓ {tr("Right")}</button>
       <button onClick={() => { CR.saveRole(a.key, { role: "", ok: false }); done(); }} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-ln)] text-[12.5px] font-bold" data-testid="cp-later">{tr("Not now")}</button>
     </div>
-    {/* v10.2 (Ali: "I wrote it and pressed Change and nothing happened"): words Attune can't place are said so — never silence */}
-    {mine && !mine.role ? <p className="m-0 text-[12px] text-[var(--c-warn)]" dir="auto" data-testid="cp-say-unsure">{tr("I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.")}</p> : null}
-    {mine && mine.role ? <p className="m-0 text-[12px] c-pos font-bold" data-testid="cp-say-ok">{tr("Got it — check the lines above, then tap Right.")}</p> : null}
-    <form onSubmit={(e) => { e.preventDefault(); const r = CR.readDescription(say); setMine(r || { role: "", care: [], whenMe: false, people: [], unsure: true }); }} className="flex gap-2" data-testid="cp-say">
-      <input value={say} onChange={(e) => { setSay(e.target.value); setMine(null); }} dir="auto" placeholder={tr("Or say what it is, in your words")} aria-label={tr("Or say what it is, in your words")}
+    {/* v10.2 (Ali: "I don't want a 1 time fix, I want a fix for good"): after Change there is ALWAYS an answer — 1 the words are read
+        by code; 2 if not, the phone's AI reads them; 3 if not (or no model), the kinds to tap + "Something else" (his own words kept).
+        What he picks for words Attune didn't get is LEARNED: the same words are understood by themselves next time. */}
+    {step === "model" ? <p className="m-0 text-[12px] c-sub" data-testid="cp-say-reading">{tr("Reading your words…")}</p> : null}
+    {step === "pick" ? <div className="space-y-1.5" data-testid="cp-say-pick">
+      <p className="m-0 text-[12px] font-bold" dir="auto">{tr("I didn't get that one — what is {c}?", { c: a.chat })}</p>
+      <div className="flex flex-wrap gap-1.5">{PICKS.map(([r, l]) => <button key={r} type="button" onClick={() => { const rule = { role: r, care: [], whenMe: false, people: [], desc: say, by: "you" }; CR.learnDescription(say, rule); setMine(rule); setStep(""); }}
+        className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[12.5px] font-bold" data-testid={"cp-pick-" + r}>{tr(l)}</button>)}</div></div> : null}
+    {mine && mine.role && step === "" ? <p className="m-0 text-[12px] c-pos font-bold" data-testid="cp-say-ok">{tr("Got it — check the lines above, then tap Right.")}</p> : null}
+    <form onSubmit={async (e) => { e.preventDefault(); const w = say.trim(); if (!w) return;
+        const r = CR.readDescription(w), st = CR.nextStep(r, typeof window !== "undefined" && !!window.__attuneDescAi);
+        if (st === "code") { setMine({ ...r, desc: w }); setStep(""); return; }
+        setMine(null);
+        if (st === "model") { setStep("model"); let m = null; try { m = CR.readDescModel(String(await window.__attuneDescAi(CR.descPrompt(w, a.chat)) || "").match(/\{[\s\S]*\}/)?.[0] || ""); } catch (x) { m = null; }
+          if (m && m.role) { CR.learnDescription(w, m); setMine({ ...m, desc: w }); setStep(""); return; } }
+        setStep("pick"); }} className="flex gap-2" data-testid="cp-say">
+      <input value={say} onChange={(e) => { setSay(e.target.value); setMine(null); setStep(""); }} dir="auto" placeholder={tr("Or say what it is, in your words")} aria-label={tr("Or say what it is, in your words")}
         className="flex-1 min-w-0 min-h-[40px] rounded-[10px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[13px]" data-testid="cp-say-input" />
-      <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-acc)] c-acc text-[12.5px] font-extrabold disabled:opacity-40" data-testid="cp-say-go">✎ {tr("Change")}</button>
+      <button type="submit" disabled={!say.trim() || step === "model"} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-acc)] c-acc text-[12.5px] font-extrabold disabled:opacity-40" data-testid="cp-say-go">✎ {tr("Change")}</button>
     </form>
   </div>;
 }

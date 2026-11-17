@@ -50,8 +50,16 @@ with sync_playwright() as p:
     ask = page.locator("[data-testid=cp-ask]")
     check(ask.count() == 1 and "Gym buddies" in ask.inner_text(), "the next new group: Gym buddies")
     # v10.2 (Ali: "I wrote it and pressed Change and nothing happened"): words Attune can't place get an answer, never silence
-    page.fill("[data-testid=cp-say-input]", "blue bananas flying"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=cp-say-unsure]").count() == 1, "words Attune can't place → it says so, with examples")
+    # v10.2 ("a fix for good"): words neither code nor the AI can place → the kinds to tap; the pick is LEARNED for the same words
+    page.fill("[data-testid=cp-say-input]", "blue bananas flying"); page.click("[data-testid=cp-say-go]")
+    page.wait_for_selector("[data-testid=cp-say-pick]", timeout=60000)
+    check(page.locator("[data-testid=cp-say-pick] button").count() >= 10, "words Attune can't place → the kinds of chat to tap, never nothing")
+    page.click("[data-testid=cp-pick-orders]"); page.wait_for_timeout(200)
+    check("record of the orders" in page.locator("[data-testid=cp-understood]").inner_text() and page.locator("[data-testid=cp-right]").is_enabled(), "a tap → What I understood, Right ready")
+    learned = page.evaluate("JSON.parse(localStorage.getItem('attune:chatroles:learned:v1') || '{}')")
+    check(any(v.get("role") == "orders" for v in learned.values()), "…and his words are kept with what he picked: %s" % learned)
+    page.fill("[data-testid=cp-say-input]", "Blue bananas, flying!"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=cp-say-ok]").count() == 1 and page.locator("[data-testid=cp-say-pick]").count() == 0, "the same words again (other case / punctuation) are understood by themselves")
     page.fill("[data-testid=cp-say-input]", "It's a group I put on all orders I buy"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(200)
     check("record of the orders" in page.locator("[data-testid=cp-understood]").inner_text() and page.locator("[data-testid=cp-say-ok]").count() == 1 and page.locator("[data-testid=cp-right]").is_enabled(),
           "Ali's own words: “a group I put on all orders I buy” → a record of the orders you buy, Right ready")

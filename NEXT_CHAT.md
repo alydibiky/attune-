@@ -20,6 +20,13 @@
 > shows the listing it found ("fix the opening and filling the details … even if displaying it another way"; Recommended L1 the offer's
 > own page inside Attune, from what the agent read), T1–T3 where tips appear (Recommended T1 a line in the page).
 > Tests: tests/unit/v1020fixes.test.mjs, tests/e2e_v1020fixes.py, desktop/test/unit.js (orderAttempts, phaseOf).
+> **Autopilot "Change" (Ali, 17 Nov 15:21: "It's a group I put on all orders I buy … pressed change and nothing happened" → "I don't want
+> a 1 time fix, I want a fix for good"):** chatroles.js: a new kind "orders" (a record of what you bought: kept to ask about, NEVER put on
+> a list — before, the Arabic «الطلبات اللي بشتريها» was read as a shopping list) and "other" (his own words kept); the lasting part:
+> nextStep() — after Change ALWAYS code → the phone's AI (descPrompt / readDescModel, written in v9.9.40 but never wired; now
+> window.__attuneDescAi from attune.jsx) → the kinds to tap (chatpilot-ui.jsx PICKS); whatever he picks or the AI reads for words code
+> didn't know is LEARNED (learnDescription / attune:chatroles:learned:v1) — the same words, written a little differently, are understood
+> by code next time. tests/chatroles/never.mjs (10,000: never stuck + taught words understood again — 100 %), gen.mjs 100 %, held-out 99.93 %.
 > **Smooth (Ali: "I want it really smooth and reliable")**, measured at mid-phone speed (CPU ×4, scratch scripts: perf = open + page switches +
 > typing, CDP profile): opening the app 3.7 s → 2.5 s (the 1.4 s block left is the phone compiling the 5.9 MB script — NEXT: load rare
 > pages only when opened: convert, slides, cv, pdfchat, guide + guide-demo, fit-cuisines/foods, shelf, knowledge, money-sheets ≈ 18 %),
