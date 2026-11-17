@@ -202,7 +202,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   // v10.2 D1 (Ali OK'd "OK-D1"): on a computer the projects are a list on the left and the open project on the right
   const wideD1 = useWide();
   const split = (view) => <SplitView testid="projects-split" listLabel={tr("Projects")} find findHint="Find a project"
-    items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due ? tr("Due") + " " + (() => { try { return new Date(p.due + "T12:00:00").toLocaleDateString(dateLocale() || undefined, { day: "numeric", month: "short" }); } catch (e) { return p.due; } })() : "", tp && tp.of ? tr("{a} of {b} done", { a: tp.done, b: tp.of }) : ""].filter(Boolean).join(" · ") }; })}
+    items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due ? tr("Due") + " " + (() => { try { return new Date(p.due + "T12:00:00").toLocaleDateString(dateLocale() || undefined, { day: "numeric", month: "short" }); } catch (e) { return p.due; } })() : "", tp && tp.of ? tr("{a} of {b} done", { a: tp.done, b: tp.of }) : "", dueRepeats(p).length ? tr("{n} due", { n: dueRepeats(p).length }) : ""].filter(Boolean).join(" · ") }; })}
     sel={openId} onSel={(k) => { setOpenId(k); setSub(null); }}
     head={<button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className="w-full min-h-[40px] rounded-[12px] border border-dashed border-[var(--c-ln)] text-[13px] font-extrabold text-[var(--c-acc)] hover:border-[var(--c-acc)]" data-testid="projects-split-new">+ {tr("New project")}</button>}
     detail={view} />;

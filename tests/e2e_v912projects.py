@@ -28,9 +28,10 @@ with sync_playwright() as p:
         page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
         page.set_viewport_size({"width": size[0], "height": size[1]}); page.wait_for_timeout(400)
         go(page, "projects")
-        it = page.locator("[data-testid=project-item]").first.inner_text()
+        row = "[data-testid=projects-split-row]" if size[0] >= 1024 else "[data-testid=project-item]"   # v10.2 D1: a computer lists them on the left
+        it = page.locator(row).first.inner_text()
         check("Due" in it and "1 due" in it, tag + "the list shows the due date and the repeat that is due: " + it.replace("\n", " · "))
-        page.click("[data-testid=project-item]")
+        page.click(row)
         if size[0] < 700:
             # v10.1 W2 (Ali's pick): on the phone a project is light — no ask box / Files / Saved / Repeats; they are on the computer
             page.wait_for_selector("[data-testid=project-on-computer]", timeout=5000)
@@ -102,7 +103,9 @@ with sync_playwright() as p:
     # (v10.1 W2: the rows and the ask box are on the computer, so the Arabic check runs at a computer size)
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT + "try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
     page.set_viewport_size({"width": 1366, "height": 860}); page.goto(env.url); page.wait_for_timeout(1300)
-    go(page, "projects"); page.click("[data-testid=project-item]"); page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
+    go(page, "projects"); page.wait_for_timeout(600)
+    if page.locator("[data-testid=project-item]").count(): page.click("[data-testid=project-item]")   # (a computer opens the first project by itself — v10.2 D1)
+    page.wait_for_selector("[data-testid=project-ask]", timeout=5000)
     t = page.locator("[data-testid=project-page]").inner_text()
     check("التكرارات" in t and "بيرد بصفته" in t and "اسأل عن الشغل ده" in page.locator("[data-testid=project-ask-input]").get_attribute("placeholder"), "[ar] the page reads in Egyptian Arabic")
     ctx.close()

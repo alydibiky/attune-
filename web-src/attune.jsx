@@ -6171,6 +6171,8 @@ const TIER_LIMITS = { free: { templates: 3, history: 5 }, pro: { templates: 20, 
 // handed to the iframe as a blob, which keeps its own origin and so its own
 // ledger.v3 — the storage key is never renamed, on either platform.
 let YUSR_BYTES = null, YUSR_DOC = null;
+// (and decoded in the background after the first screen, so even the first Money open is quick)
+if (typeof window !== "undefined") setTimeout(() => { try { (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => { try { yusrDocumentHtml(); } catch (e) {} }, { timeout: 6000 }); } catch (e) {} }, 3500);
 function yusrDocumentHtml() {
   if (typeof document === "undefined") return null;
   const el = document.getElementById("yusr-src");
@@ -7874,7 +7876,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
