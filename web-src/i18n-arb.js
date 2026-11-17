@@ -12918,4 +12918,7 @@ export const ARB = {
   "Copy link": "نسخ الرابط",
   "Check it now": "تحقّق الآن",
   "Tips for this page": "نصائح لهذه الصفحة",
+  "Find a project": "ابحث عن مشروع",
+  "Find a medicine": "ابحث عن دواء",
+  "On this device": "على هذا الجهاز",
 };

@@ -12927,4 +12927,7 @@ export const HI = {
   "Copy link": "लिंक कॉपी करें",
   "Check it now": "अभी जाँचें",
   "Tips for this page": "इस पेज के टिप्स",
+  "Find a project": "प्रोजेक्ट खोजें",
+  "Find a medicine": "दवा खोजें",
+  "On this device": "इस डिवाइस पर",
 };

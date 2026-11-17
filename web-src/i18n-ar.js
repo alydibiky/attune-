@@ -10031,4 +10031,7 @@ export const AR = {
   "Copy link": "انسخ اللينك",
   "Check it now": "اتأكد دلوقتي",
   "Tips for this page": "نصايح للصفحة دي",
+  "Find a project": "دوّر على مشروع",
+  "Find a medicine": "دوّر على دوا",
+  "On this device": "على الجهاز ده",
 };

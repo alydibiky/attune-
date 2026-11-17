@@ -12926,4 +12926,7 @@ export const KO = {
   "Copy link": "링크 복사",
   "Check it now": "지금 확인",
   "Tips for this page": "이 페이지 팁",
+  "Find a project": "프로젝트 찾기",
+  "Find a medicine": "약 찾기",
+  "On this device": "이 기기에 있음",
 };

@@ -12927,4 +12927,7 @@ export const SW = {
   "Copy link": "Nakili kiungo",
   "Check it now": "Kagua sasa",
   "Tips for this page": "Vidokezo vya ukurasa huu",
+  "Find a project": "Tafuta mradi",
+  "Find a medicine": "Tafuta dawa",
+  "On this device": "Kwenye kifaa hiki",
 };

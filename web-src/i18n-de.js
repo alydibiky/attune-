@@ -12926,4 +12926,7 @@ export const DE = {
   "Copy link": "Link kopieren",
   "Check it now": "Jetzt prüfen",
   "Tips for this page": "Tipps für diese Seite",
+  "Find a project": "Projekt finden",
+  "Find a medicine": "Medikament finden",
+  "On this device": "Auf diesem Gerät",
 };

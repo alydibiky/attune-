@@ -12927,4 +12927,7 @@ export const UR = {
   "Copy link": "لنک کاپی کریں",
   "Check it now": "ابھی چیک کریں",
   "Tips for this page": "اس صفحے کے مشورے",
+  "Find a project": "پروجیکٹ تلاش کریں",
+  "Find a medicine": "دوا تلاش کریں",
+  "On this device": "اس ڈیوائس پر",
 };

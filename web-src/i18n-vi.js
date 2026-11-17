@@ -12926,4 +12926,7 @@ export const VI = {
   "Copy link": "Sao chép liên kết",
   "Check it now": "Kiểm tra ngay",
   "Tips for this page": "Mẹo cho trang này",
+  "Find a project": "Tìm dự án",
+  "Find a medicine": "Tìm thuốc",
+  "On this device": "Trên thiết bị này",
 };

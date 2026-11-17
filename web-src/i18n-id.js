@@ -12927,4 +12927,7 @@ export const IDN = {
   "Copy link": "Salin tautan",
   "Check it now": "Periksa sekarang",
   "Tips for this page": "Tips untuk halaman ini",
+  "Find a project": "Cari proyek",
+  "Find a medicine": "Cari obat",
+  "On this device": "Di perangkat ini",
 };

@@ -12926,4 +12926,7 @@ export const ZH = {
   "Copy link": "复制链接",
   "Check it now": "立即核对",
   "Tips for this page": "本页小贴士",
+  "Find a project": "查找项目",
+  "Find a medicine": "查找药品",
+  "On this device": "在此设备上",
 };

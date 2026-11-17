@@ -12927,4 +12927,7 @@ export const TRK = {
   "Copy link": "Bağlantıyı kopyala",
   "Check it now": "Şimdi kontrol et",
   "Tips for this page": "Bu sayfa için ipuçları",
+  "Find a project": "Proje bul",
+  "Find a medicine": "İlaç bul",
+  "On this device": "Bu cihazda",
 };

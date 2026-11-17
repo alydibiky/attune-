@@ -12926,4 +12926,7 @@ export const TH = {
   "Copy link": "คัดลอกลิงก์",
   "Check it now": "ตรวจตอนนี้",
   "Tips for this page": "เคล็ดลับสำหรับหน้านี้",
+  "Find a project": "ค้นหาโปรเจกต์",
+  "Find a medicine": "ค้นหายา",
+  "On this device": "บนอุปกรณ์นี้",
 };

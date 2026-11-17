@@ -12926,4 +12926,7 @@ export const BN = {
   "Copy link": "লিংক কপি করুন",
   "Check it now": "এখনই যাচাই করুন",
   "Tips for this page": "এই পেজের টিপস",
+  "Find a project": "প্রজেক্ট খুঁজুন",
+  "Find a medicine": "ওষুধ খুঁজুন",
+  "On this device": "এই ডিভাইসে",
 };

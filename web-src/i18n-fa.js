@@ -12926,4 +12926,7 @@ export const FA = {
   "Copy link": "کپی پیوند",
   "Check it now": "همین حالا بررسی کن",
   "Tips for this page": "نکته‌های این صفحه",
+  "Find a project": "یافتن پروژه",
+  "Find a medicine": "یافتن دارو",
+  "On this device": "روی این دستگاه",
 };

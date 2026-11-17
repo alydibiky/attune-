@@ -12927,4 +12927,7 @@ export const IT = {
   "Copy link": "Copia link",
   "Check it now": "Controlla ora",
   "Tips for this page": "Suggerimenti per questa pagina",
+  "Find a project": "Trova un progetto",
+  "Find a medicine": "Trova un farmaco",
+  "On this device": "Su questo dispositivo",
 };

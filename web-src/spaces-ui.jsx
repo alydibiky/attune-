@@ -23,6 +23,7 @@ import {
 } from "./spaces.js";
 import { load as loadUserSkills } from "./userskills.js";
 import { PANES, GRID3 } from "./desk.jsx";
+import { SplitView, useWide } from "./split-ui.jsx";
 import { card as kCard, inp, area, btnP, btnS, label as kLabel, chip } from "./ui-kit.jsx";
 import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload, Pin, Eraser, ChevronRight } from "lucide-react";
 
@@ -198,6 +199,13 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   const fileRef = useRef(null);
   const reload = () => setList(loadProjects());
   const cur = list.find((p) => p.id === openId) || null;
+  // v10.2 D1 (Ali OK'd "OK-D1"): on a computer the projects are a list on the left and the open project on the right
+  const wideD1 = useWide();
+  const split = (view) => <SplitView testid="projects-split" listLabel={tr("Projects")} find findHint="Find a project"
+    items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due ? tr("Due") + " " + (() => { try { return new Date(p.due + "T12:00:00").toLocaleDateString(dateLocale() || undefined, { day: "numeric", month: "short" }); } catch (e) { return p.due; } })() : "", tp && tp.of ? tr("{a} of {b} done", { a: tp.done, b: tp.of }) : ""].filter(Boolean).join(" · ") }; })}
+    sel={openId} onSel={(k) => { setOpenId(k); setSub(null); }}
+    head={<button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className="w-full min-h-[40px] rounded-[12px] border border-dashed border-[var(--c-ln)] text-[13px] font-extrabold text-[var(--c-acc)] hover:border-[var(--c-acc)]" data-testid="projects-split-new">+ {tr("New project")}</button>}
+    detail={view} />;
   const [chatsSaved, setChatsSaved] = useState(0);   // v9.2 round 3: Chat saves just after this page opened → read the chats again
   useEffect(() => { const f = () => setChatsSaved((n) => n + 1); window.addEventListener("attune-chats-saved", f); return () => window.removeEventListener("attune-chats-saved", f); }, []);
   const allChats = useMemo(() => loadChats(), [list, openId, chatsSaved]);
@@ -419,9 +427,9 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
         {brain.decisions.length ? <><p className={sec + " text-[var(--c-pos)]!"}>{tr("Decided")}</p>{brain.decisions.slice(0, 3).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">• {x.text}</p>)}</> : null}
         {brain.open.length ? <><p className={sec + " text-[var(--c-warn)]! pt-1"}>{tr("Still open")}</p>{brain.open.slice(0, 3).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">• {x.text}</p>)}</> : null}</div> : null}
     </>;
-    return (
+    const view = (
       <div className="calm att-in space-y-4 lg:max-w-3xl" data-testid="project-page">
-        <button onClick={() => setOpenId(null)} className="hidden lg:inline-flex min-h-[44px] items-center text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
+        <button onClick={() => setOpenId(null)} className="hidden min-h-[44px] items-center text-[13px] font-bold text-[var(--c-acc)]">← {tr("All projects")}</button>
         <div className="flex items-center gap-3">
           <span className="text-3xl">{cur.emoji}</span>
           <div className="flex-1 min-w-0"><p className="text-[20px] text-[var(--c-ink)] font-extrabold truncate m-0" dir="auto">{cur.name}</p>
@@ -448,7 +456,10 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
         {phone ? <p className="m-0 text-[12.5px] text-[var(--c-mut)] px-1" data-testid="project-on-computer">{tr("Files and questions about them: on your computer.")}</p> : null}
       </div>
     );
+    return wideD1 ? split(view) : view;
   }
+
+  if (wideD1 && list.length) return split(null);   // v10.2 D1: the first project opens on the right
 
   // v9.2 (Ali picked 6 = A + B): the list is never empty — your works with their progress, starters that make one in one tap, and
   // your assistants and skills one tap away (they work inside a project: "Answers as" and "Repeats")

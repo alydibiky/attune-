@@ -12926,4 +12926,7 @@ export const RU = {
   "Copy link": "Копировать ссылку",
   "Check it now": "Проверить сейчас",
   "Tips for this page": "Советы для этой страницы",
+  "Find a project": "Найти проект",
+  "Find a medicine": "Найти лекарство",
+  "On this device": "На этом устройстве",
 };
