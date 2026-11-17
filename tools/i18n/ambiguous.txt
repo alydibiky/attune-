@@ -569,10 +569,10 @@ chat.jsx: {done ? <CheckCircle2 size={12} className="text-[var(--c-pos)]" /> : <
 ## Got it
 attune.jsx: case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place,
 chat.jsx: else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title
-setup-ui.jsx: <div className="flex gap-4 font-extrabold text-[13px]" style={{ color: "#f2b6c8" }}><button onClick={() => done(false)} className="min-h-[36
+setup-ui.jsx: <div className="flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)]"><button onClick={() => done(false)} className="min-h-[36px]" data
 
 ## Ready
-attune.jsx: const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading
+attune.jsx: const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? tr("Loadi
 guide-ui.jsx: {card(14, 176, 112, 40)}{bar(22, 192, 50, 0.6)}<rect x="86" y="188" width="32" height="14" rx="7" fill={A} opacity="0.25" /><text x="102" y=
 
 ## Chats
@@ -1237,7 +1237,7 @@ spaces-ui.jsx: <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || t
 ## Tip
 guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
 guide-ui.jsx: <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:
-setup-ui.jsx: <b className="block text-[12px] uppercase tracking-[0.08em] opacity-80">{tr("Tip")}</b>
+setup-ui.jsx: <b className="block text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>
 
 ## Cranes out
 home-now.js: try { if (fleet && live(fleet.cranes || []).length) { const k = fleetKpis(fleet); out.push({ k: "cranes", label: tr("Cranes out"), value: `$
