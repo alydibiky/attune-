@@ -335,7 +335,8 @@ export function loadTheme() {
   // v9.5 (Ali, 5 Nov: "I don't like the green in the interface of the whole app — make it burgundy"): the green default becomes
   // burgundy, once; a colour chosen in Settings → Theme after this is kept
   if (!t.v95 && (t.accent || "emerald") === "emerald") { t = { ...t, accent: "burgundy", v95: 1 }; write(THEME_KEY, t); }
-  return { accent: t.accent || "burgundy", bg: t.bg || "auto", look: LOOKS.includes(t.look) ? t.look : defaultLook() };
+  const look = LOOKS.includes(t.look) ? t.look : defaultLook();   // (plain = the old shape, no field — what older code and backups expect)
+  return { accent: t.accent || "burgundy", bg: t.bg || "auto", ...(look === "glass" || LOOKS.includes(t.look) ? { look } : {}) };
 }
 export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "burgundy", bg: t.bg || "auto", ...(LOOKS.includes(t.look) ? { look: t.look } : {}), a43: 1, v87: 1, v95: 1 }); }
 /* v10.3 G1 G2 G3 (Ali, 17 Nov 2026: OK-G1 OK-G2 OK-G3 — MOCKUPS.md, https://claude.ai/artifact/3CUkeHy43iX4zzt9xBdwLQ): the GLASS look.
