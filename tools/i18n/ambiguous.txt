@@ -222,6 +222,7 @@ scout-ui.jsx: <div><h2 className={K.h1 + " flex items-center gap-2"}><Binoculars
 ## Agents
 agents-ui.jsx: <U.Head title={tr("Agents")} sub={tr("Tell an agent what to watch or do — it works on this phone, and never pays for you")} />
 home-ui.jsx: cards.push({ k: "agents", label: tr("Agents"), col: "var(--c-area-agents, #3B5BA9)", open: "agents",
+weekcal-ui.jsx: <b className="block text-[14px] font-extrabold mb-1">{tr("Agents")}</b>
 yourday-ui.jsx: <span className="text-[12px] font-extrabold tracking-wide c-acc uppercase flex items-center gap-1.5"><Radar size={14} />{tr("Agents")}</span
 
 ## Send
@@ -253,6 +254,7 @@ voice-ui.jsx: <button className="min-h-[44px] px-4 rounded-[12px] bg-[var(--c-bt
 ## Look
 agents-ui.jsx: : <button onClick={() => openChat({ id: a.id })} className="text-[12px] font-extrabold c-acc min-h-[32px]" data-testid="agents-change-ok">{t
 cv-ui.jsx: <Lbl t={tr("Look")}><Seg k="layout" opts={[["ats", tr("ATS-safe (one column)")], ["modern", tr("Modern (sidebar)")]]} /></Lbl>
+spaces-ui.jsx: <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Look")}</span>
 
 ## More
 agents-ui.jsx: {menu.length ? <span className="relative shrink-0"><button onClick={() => setOpen(!open)} aria-label={tr("More")} aria-expanded={open} class
@@ -505,6 +507,7 @@ privacy-ui.jsx: {[0, 1].map((k) => <button key={k} onClick={() => setAgo(k)} cla
 report-ui.jsx: <b className="text-[14px]">{tr("This week")}</b>
 report-ui.jsx: <svg viewBox={`0 0 ${W} ${H + 8}`} className="w-full h-auto" role="img" aria-label={tr("This week")}>
 tools-hub-ui.jsx: sub={r.change != null ? T("{p}% vs last week", { p: (r.change >= 0 ? "+" : "") + r.change }) : tr("This week")} />
+weekcal-ui.jsx: : (ws === weekStartOf(now, startDay) ? tr("This week") : tr("Week")) ;
 
 ## Menu
 attune.jsx: {onMenu && !wide ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn h-11! min-w-[44px]! ro
@@ -526,6 +529,7 @@ attune.jsx: <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="
 money-calm-ui.jsx: <h2 className="text-[18px] font-black tracking-tight m-0">{tr("Money")}</h2>
 money-sheets-ui.jsx: {!a ? <Field label={tr("Kind")}><Pills value={kind} onChange={setKind} testid="acc-kind" items={[["cash", tr("Money")], ["gold", tr("Gold")]
 spaces-ui.jsx: <div className={card + " p-3 space-y-1.5"} data-testid="project-money"><div className="flex items-center gap-2"><p className={sec + " flex-1
+weekcal-ui.jsx: : <><span className="c-sub">{tr("Money")}</span><b className="block text-[15px] font-extrabold mt-1">{tr("Write what you spend — Attune keep
 yourday-ui.jsx: <T2 icon="💰" label={tr("Money")} onClick={() => navTo("money")} testid="simple-money" />
 
 ## Read it
@@ -787,6 +791,7 @@ chat.jsx: onClick={async () => { const c = chats.find((x) => x.id === activeId);
 attune.jsx: <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
 attune.jsx: <details className="mb-4" data-testid="engine-device-details"><summary className="cursor-pointer select-none text-[13px] font-bold text-slat
 radar-ui.jsx: <span className={U.label + " block pt-1.5"}>{tr("Details")}</span><DocDetails x={{ ...live, doc: f.doc || live.doc }} onPatch={onPatch} unlo
+weekcal-ui.jsx: <aside className="wk-detail" data-testid="wk-detail" aria-label={tr("Details")}>
 
 ## Downloading…
 attune.jsx: <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</spa
@@ -1249,6 +1254,7 @@ home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toU
 life.js: const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
 salary-ui.jsx: .map((c) => ({ id: "l" + c.id, name: c.kind === "rent" ? tr("Rent") : c.title || c.person || tr("Payment"), amount: c.amount }));
 spaces-ui.jsx: <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || tr("Payment")}<span className="text-[var(--c-mut)]"> · {shortDate(Date.parse
+weekcal-ui.jsx: {d.latest.length ? d.latest.map((t, i) => <span key={t.id || i} className="flex justify-between gap-2 py-0.5 text-[13px]"><span className="t
 
 ## Tip
 guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
@@ -1471,6 +1477,10 @@ people-ui.jsx: x.src === "followups" && x.left != null && x.left > 0 ? (x.sign >
 money-sheets-ui.jsx: <Field label={tr("Target")}><input value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" dir="ltr" className={U.inp
 planner-ui.jsx: : <div className="grid grid-cols-2 gap-2"><input className={U.inp} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.va
 
+## Week
+money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
+weekcal-ui.jsx: : (ws === weekStartOf(now, startDay) ? tr("This week") : tr("Week")) ;
+
 ## Month
 money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
 planner-ui.jsx: <div className="flex gap-1.5" role="tablist">{[["month", tr("Month")], ["calendar", tr("Calendar")], ["table", tr("Table")]].map(([k, l]) =>
@@ -1522,6 +1532,10 @@ yearplan.js: const head = [ar ? "البند" : tr("Item"), ...g.months.map((m) =
 planner-ui.jsx: {[["in", tr("Total income"), g.income, g.totals.income, "var(--c-pos)"], ["out", tr("Total out (incl. savings)"), g.out, g.totals.out, "var(
 yearplan.js: rows.push([ar ? "إجمالي الدخل" : tr("Total income"), ...g.income, g.totals.income]);
 
+## due
+planner-ui.jsx: {sel.items.length ? sel.items.map((x, i) => <div key={i} className="flex justify-between gap-2 text-[13.5px] font-semibold"><span dir="auto"
+weekcal-ui.jsx: const projects = []; try { const chats = j("attune:chats:v1", []); for (const p of loadProjects()) projectDates(p, chats, now).forEach((d, i
+
 ## Fixed
 planner-ui.jsx: const G = [["fixed", tr("Fixed")], ["everyday", tr("Everyday")], ["savings", tr("Savings")]];
 planner-ui.jsx: const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], [
@@ -1531,6 +1545,10 @@ yearplan.js: groups.push({ id: "fixed", label: ar ? "الثابت" : tr("Fixed")
 planner-ui.jsx: const G = [["fixed", tr("Fixed")], ["everyday", tr("Everyday")], ["savings", tr("Savings")]];
 planner-ui.jsx: const parts = [["fixed", tr("Fixed"), plan.fixedTotal], ["pots", tr("Savings"), plan.potsTotal], ["flex", tr("Everyday"), plan.flexTotal], [
 yearplan.js: groups.push({ id: "everyday", label: ar ? "المصاريف العادية" : tr("Everyday"), rows: every });
+
+## Calendar
+planner-ui.jsx: <div className="flex gap-1.5" role="tablist">{[["month", tr("Month")], ["calendar", tr("Calendar")], ["table", tr("Table")]].map(([k, l]) =>
+weekcal-ui.jsx: <section className="wk c-card" data-testid="wk" aria-label={tr("Calendar")}>
 
 ## By
 planner-ui.jsx: <input type="month" className={U.inp} value={by} onChange={(e) => setBy(e.target.value)} aria-label={tr("By")} data-testid="planner-new-by" 
@@ -1543,3 +1561,7 @@ vault-ui.jsx: const tryPin = () => { if (pinOk(cfg, pin)) onOpen(); else { setEr
 ## Earlier
 slides-ui.jsx: <button onClick={() => move(-1)} disabled={index === 0 || !!busy} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var
 weekplan-ui.jsx: <div className="flex items-center gap-2"><button className={btnS} disabled={off <= 0} onClick={() => setOff(off - 3)} aria-label={tr("Earlie
+
+## Latest
+tools-hub-ui.jsx: <Recent items={r.recent} navTo={navTo} title={tr("Latest")} />
+weekcal-ui.jsx: <b className="block text-[14px] font-extrabold mb-1">{tr("Latest")}</b>
