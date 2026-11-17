@@ -1,0 +1,179 @@
+<title>Attune Glass Look</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: sections (computer looks, phone looks, where the week calendar goes); each option = mock-up + what it is + pick/note. */
+:root { --bg:#f5f4f2; --surf:#fff; --ink:#1e1c1b; --mut:#5e5a57; --ln:#e6e3e0; --acc:#7a1f3d; --soft:#f7e8ed; --ok:#1e7a43; --font:"Nunito","Segoe UI",system-ui,sans-serif }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#141313; --surf:#1c1b1b; --ink:#edebea; --mut:#a9a4a2; --ln:#2f2c2c; --acc:#e58aa2; --soft:#3a1e27; --ok:#6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 130px }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px }
+h1 { font-size: 28px; font-weight: 900; margin: 0 } h2 { font-size: 20px; font-weight: 900; margin: 6px 0 0 } .lede { color: var(--mut); margin: 6px 0 0; max-width: 78ch }
+.truth { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 14px 16px } .truth ul { margin: 6px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 20px; padding: 16px; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; align-items: start }
+.opt.rec { border-color: var(--acc) } @media (max-width: 900px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 } .info p { margin: 6px 0 0 } .pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px }
+.pick { margin-top: 12px; display: grid; gap: 8px } .pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; min-height: 40px; cursor: pointer }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px }
+/* ---------- mock-ups ---------- */
+.win { border-radius: 14px; overflow: hidden; border: 1px solid #0002; font-size: 10.5px; line-height: 1.35; aspect-ratio: 16 / 9.6; display: flex; flex-direction: column; max-width: 100%; min-width: 0 }
+.tb { height: 18px; display: flex; gap: 4px; align-items: center; padding: 0 8px; flex: none } .tb i { width: 6px; height: 6px; border-radius: 50%; display: block; background: #fff3 }
+.body { flex: 1; display: flex; min-height: 0 } .b { font-weight: 800 } .m { opacity: .66 } .num { font-variant-numeric: tabular-nums; font-weight: 900 }
+.row { display: flex; justify-content: space-between; gap: 6px; padding: 2px 0 }
+nav.sb { width: 116px; padding: 8px 6px; display: grid; gap: 2px; align-content: start; font-weight: 700; font-size: 10px } nav.sb span { padding: 4px 7px; border-radius: 7px }
+main.mn { flex: 1; padding: 10px 12px; display: grid; gap: 7px; align-content: start; min-width: 0 }
+.wk { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: 2px; font-size: 9px } .wk .d { text-align: center; font-weight: 800; padding: 2px 0 } .wk .h { opacity: .55; text-align: end; padding-inline-end: 3px }
+.ev { border-radius: 5px; padding: 2px 4px; font-weight: 700; font-size: 8.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis }
+/* dark glass */
+.dg { background: radial-gradient(120% 90% at 10% 0%, #3b1726 0%, #15101a 55%, #0e0c12 100%); color: #f1e9ec }
+.dg nav.sb span.on { background: #ffffff16 } .dg .g { background: #ffffff10; border: 1px solid #ffffff1f; border-radius: 12px; padding: 8px 10px; backdrop-filter: blur(8px) }
+.dg .ev.a { background: #e58aa233; color: #ffd3df } .dg .ev.b { background: #4fc2b433; color: #c3f1ea } .dg .ev.c { background: #e8b04b33; color: #ffe2a8 }
+/* light glass in the phone's colours */
+.lg { background: radial-gradient(120% 100% at 0% 0%, #fbeef2 0%, #f5f4f2 45%, #efedea 100%); color: #1e1c1b }
+.lg .tb i { background: #0002 } .lg nav.sb span.on { background: #ffffffb3; color: #7a1f3d; box-shadow: 0 1px 2px #7a1f3d14 }
+.lg .g { background: #ffffffb8; border: 1px solid #ffffff; border-radius: 12px; padding: 8px 10px; box-shadow: 0 4px 16px #7a1f3d0f; backdrop-filter: blur(8px) }
+.lg .ev.a { background: #f7e8ed; color: #7a1f3d } .lg .ev.b { background: #e3f4f1; color: #1f6e66 } .lg .ev.c { background: #fbf0dc; color: #8a5a08 }
+/* phones */
+.phone { width: 220px; max-width: 100%; border-radius: 24px; border: 6px solid #231f20; overflow: hidden; font-size: 10.5px; line-height: 1.35 }
+.phone .scr { padding: 10px 9px; display: grid; gap: 7px; min-height: 400px; align-content: start }
+.pair { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center }
+.dgp { background: radial-gradient(130% 70% at 0% 0%, #3b1726 0%, #15101a 60%, #0e0c12 100%); color: #f1e9ec } .dgp .g { background: #ffffff12; border: 1px solid #ffffff1f; border-radius: 13px; padding: 8px 9px }
+.lgp { background: radial-gradient(130% 70% at 0% 0%, #fbeef2 0%, #f5f4f2 60%); color: #1e1c1b } .lgp .g { background: #ffffffc4; border: 1px solid #fff; border-radius: 13px; padding: 8px 9px; box-shadow: 0 4px 14px #7a1f3d10 }
+.box { border-radius: 14px; padding: 9px; opacity: .8 } .dgp .box { border: 1px solid #e58aa266 } .lgp .box { border: 1px solid #7a1f3d55; background: #fff }
+.bar { height: 5px; border-radius: 3px; overflow: hidden } .bar i { display: block; height: 100% }
+/* pick bar */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1180px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap } .bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px } .bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+button:focus-visible, textarea:focus { outline: 2px solid var(--acc); outline-offset: 2px }
+</style>
+
+<div class="wrap">
+  <header><h1>The glass look, round 2</h1>
+    <p class="lede">You liked L4 (dark glass) but no look yet. Here it is again, now with a light version in your phone's own colours (the burgundy, the soft pink, the warm grey ground), the same look on the phone, and three ways to put a week calendar on the computer. Tick what you like, write what to change.</p></header>
+
+  <div class="truth"><b>My honest view before you pick</b>
+    <ul>
+      <li><b>Calendar:</b> worth it on a computer — but only as a week view of what Attune already knows (reminders, Sheikh's instalments, the maid, Follow-ups, papers, trips, project dates, agent dates). Without your work meetings it can look empty: Attune does not read Google / Outlook today. On the phone it can read the phone's own calendar if you allow it.</li>
+      <li><b>Glass on the phone:</b> the real "frosted" blur costs smoothness and battery on mid-range phones. On the phone I would draw the glass look without live blur (it looks almost the same). On a computer the real blur is fine.</li>
+      <li><b>Dark by default?</b> Easier at night, harder in daylight. I would follow the phone / computer setting (dark at night, light in the day), with your choice kept.</li>
+    </ul></div>
+
+  <h2>Computer</h2>
+  <div class="opt rec" data-code="G1">
+    <div class="win dg"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+      <nav class="sb"><span class="b" style="font-size:12px">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
+      <main class="mn">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="b" style="font-size:15px">Good evening, Ali</span><span class="g" style="padding:4px 10px;opacity:.85">Ask or tell Attune…  Ctrl K</span></div>
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:7px">
+          <div class="g"><div class="row"><span class="b">This week</span><span class="m">17 – 23 Nov</span></div>
+            <div class="wk"><span></span><span class="d">Mon</span><span class="d">Tue</span><span class="d" style="color:#ffb3c7">Wed</span><span class="d">Thu</span><span class="d">Fri</span><span class="d">Sat</span><span class="d">Sun</span>
+              <span class="h">9</span><span></span><span class="ev a">Sheikh 2,500</span><span></span><span></span><span></span><span class="ev c">Maid 600</span><span></span>
+              <span class="h">13</span><span></span><span class="ev b">Call Mama</span><span class="ev a">CIB card due</span><span></span><span></span><span></span><span></span>
+              <span class="h">18</span><span class="ev c">Gym</span><span></span><span></span><span class="ev b">Tiles · Flat</span><span></span><span class="ev a">Trip Umrah</span><span class="ev a">Trip</span></div></div>
+          <div style="display:grid;gap:7px"><div class="g"><div class="m">Safe to spend</div><div class="num" style="font-size:15px">4,350</div><div class="m">until 25 Nov</div></div>
+            <div class="g"><div class="row"><span>FreeClip 2</span><span class="num">7,400 ✓</span></div><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div></div></div></div>
+      </main></div></div>
+    <div class="info"><h3><span class="code">G1</span>Dark glass, the week in the middle of Home <span class="tag">Recommended</span></h3>
+      <p>Your L4 with the calendar idea: Home's centre is this week — what's due, who to call, trips, the maid — with money and agents beside it. Real frosted glass on a computer.</p>
+      <div class="pm"><span><b>+</b> Premium and calm; the week is what a computer is best at.</span><span><b>−</b> Dark in daylight is harder to read (it follows your setting).</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-G1"> Pick G1</label><textarea id="note-G1" placeholder="Your note on G1"></textarea></div></div>
+  </div>
+
+  <div class="opt" data-code="G2">
+    <div class="win lg"><div class="tb"><i></i><i></i><i></i></div><div class="body">
+      <nav class="sb"><span class="b" style="font-size:12px">Attune</span><span class="on">Home</span><span>To-dos &amp; lists</span><span>Money</span><span>Follow-ups</span><span>Health</span><span>Agents</span><span>Projects</span></nav>
+      <main class="mn">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="b" style="font-size:15px">Good morning, Ali</span><span class="g" style="padding:4px 10px;color:#5e5a57">Ask or tell Attune…  Ctrl K</span></div>
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:7px">
+          <div class="g"><div class="row"><span class="b">This week</span><span class="m">17 – 23 Nov</span></div>
+            <div class="wk"><span></span><span class="d">Mon</span><span class="d">Tue</span><span class="d" style="color:#7a1f3d">Wed</span><span class="d">Thu</span><span class="d">Fri</span><span class="d">Sat</span><span class="d">Sun</span>
+              <span class="h">9</span><span></span><span class="ev a">Sheikh 2,500</span><span></span><span></span><span></span><span class="ev c">Maid 600</span><span></span>
+              <span class="h">13</span><span></span><span class="ev b">Call Mama</span><span class="ev a">CIB card due</span><span></span><span></span><span></span><span></span>
+              <span class="h">18</span><span class="ev c">Gym</span><span></span><span></span><span class="ev b">Tiles · Flat</span><span></span><span class="ev a">Trip Umrah</span><span class="ev a">Trip</span></div></div>
+          <div style="display:grid;gap:7px"><div class="g"><div class="m">Safe to spend</div><div class="num" style="font-size:15px;color:#7a1f3d">4,350</div><div class="m">until 25 Nov</div></div>
+            <div class="g"><div class="row"><span>FreeClip 2</span><span class="num">7,400 ✓</span></div><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div></div></div></div>
+      </main></div></div>
+    <div class="info"><h3><span class="code">G2</span>Light glass in your phone's colours</h3>
+      <p>The same layout in daylight: your phone's warm grey ground, burgundy accent and soft pink, with white frosted cards over a faint pink glow.</p>
+      <div class="pm"><span><b>+</b> Matches the phone exactly; easy to read all day.</span><span><b>−</b> Less dramatic than the dark one.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-G2"> Pick G2</label><textarea id="note-G2" placeholder="Your note on G2"></textarea></div></div>
+  </div>
+
+  <h2>Phone</h2>
+  <div class="opt" data-code="G3">
+    <div class="pair">
+      <div class="phone dgp"><div class="scr">
+        <div class="m">Tuesday, November 17</div><div class="b" style="font-size:16px">Good evening</div>
+        <div class="box">Type / for a command, or just say it…</div>
+        <div class="g"><div class="row"><span class="b">Today</span><span class="m">3</span></div><div class="row"><span>Sheikh · 3 of 8</span><span class="num">2,500</span></div><div class="row"><span>Maid · Sat</span><span class="num">600</span></div><div class="row"><span>Call back Mama</span><span>6 pm</span></div></div>
+        <div class="g"><div class="m">Safe to spend</div><div class="num" style="font-size:16px">4,350</div><div class="bar" style="background:#ffffff14;margin-top:4px"><i style="width:62%;background:#e58aa2"></i></div></div>
+        <div class="g"><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div></div>
+      </div></div>
+    </div>
+    <div class="info"><h3><span class="code">G3</span>Dark glass on the phone (a choice in Theme)</h3>
+      <p>The same dark glass as the computer, as one more choice in Settings → Theme. The glass is drawn without live blur on the phone, so it stays smooth and light on battery.</p>
+      <div class="pm"><span><b>+</b> One look on both devices; lovely at night.</span><span><b>−</b> A second phone look to keep perfect on every page.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-G3"> Pick G3</label><textarea id="note-G3" placeholder="Your note on G3"></textarea></div></div>
+  </div>
+
+  <div class="opt" data-code="G4">
+    <div class="pair">
+      <div class="phone lgp"><div class="scr">
+        <div class="m">Tuesday, November 17</div><div class="b" style="font-size:16px">Good morning</div>
+        <div class="box">Type / for a command, or just say it…</div>
+        <div class="g"><div class="row"><span class="b">Today</span><span class="m">3</span></div><div class="row"><span>Sheikh · 3 of 8</span><span class="num">2,500</span></div><div class="row"><span>Maid · Sat</span><span class="num">600</span></div><div class="row"><span>Call back Mama</span><span>6 pm</span></div></div>
+        <div class="g"><div class="m">Safe to spend</div><div class="num" style="font-size:16px;color:#7a1f3d">4,350</div><div class="bar" style="background:#f7e8ed;margin-top:4px"><i style="width:62%;background:#7a1f3d"></i></div></div>
+        <div class="g"><div class="row"><span>CIB transfer</span><span class="num">−1,160</span></div><div class="row"><span>FACES</span><span class="num">−800</span></div></div>
+      </div></div>
+    </div>
+    <div class="info"><h3><span class="code">G4</span>Light glass on the phone</h3>
+      <p>Today's phone colours with the glass touch: a faint pink glow behind white cards. Pairs with G2 on the computer.</p>
+      <div class="pm"><span><b>+</b> A gentle refresh of what you have; day-friendly.</span><span><b>−</b> A small change — some may not notice it.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-G4"> Pick G4</label><textarea id="note-G4" placeholder="Your note on G4"></textarea></div></div>
+  </div>
+
+  <h2>Where the week calendar lives on the computer</h2>
+  <div class="opt rec" data-code="C1">
+    <div class="info" style="grid-column:1/-1"><h3><span class="code">C1</span>The centre of Home <span class="tag">Recommended</span></h3>
+      <p>As drawn in G1 / G2: this week on Home, filled from Attune's own dates (and the phone's calendar if you allow it). A tap on any block opens it in the right pane. Nothing new in the side menu.</p>
+      <div class="pm"><span><b>+</b> No new feature to learn; you see the week every time you open the app.</span><span><b>−</b> Home gets busier.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-C1"> Pick C1</label><textarea id="note-C1" placeholder="Your note on C1"></textarea></div></div>
+  </div>
+  <div class="opt" data-code="C2">
+    <div class="info" style="grid-column:1/-1"><h3><span class="code">C2</span>A Calendar page in the side menu (Month · Week · Day)</h3>
+      <p>Its own page with the classic three views, drag a block to move it (a reminder, a payment date, a project task).</p>
+      <div class="pm"><span><b>+</b> A full calendar, familiar from Outlook / Google.</span><span><b>−</b> One more page; empty-looking without your work meetings.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-C2"> Pick C2</label><textarea id="note-C2" placeholder="Your note on C2"></textarea></div></div>
+  </div>
+  <div class="opt" data-code="C3">
+    <div class="info" style="grid-column:1/-1"><h3><span class="code">C3</span>A thin "This week" column on the right of every page</h3>
+      <p>Always visible beside Money, Projects, Agents… — the next seven days as a list.</p>
+      <div class="pm"><span><b>+</b> Never out of sight.</span><span><b>−</b> Takes width from every page.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-C3"> Pick C3</label><textarea id="note-C3" placeholder="Your note on C3"></textarea></div></div>
+  </div>
+</div>
+
+<div class="bar-pick"><div class="in"><div class="codes" id="codes">Nothing ticked yet</div><button type="button" id="copy">Copy my picks</button><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div></div>
+<script>
+(() => {
+  const KEY = "attune-mock-glass-look";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { document.getElementById("codes").textContent = text() || "Nothing ticked yet"; };
+  for (const c of codes) { const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); }); }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => { const t = text() || "No picks"; const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); } });
+})();
+</script>
