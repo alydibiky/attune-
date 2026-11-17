@@ -149,7 +149,7 @@ b5-ui.jsx: const sinceText = (x) => (x.since == null ? tr("not yet") : x.since =
 agents-ui.jsx: {onChange ? <button onClick={onChange} className="min-h-[40px] px-3 rounded-[12px] text-[12.5px] font-extrabold border border-[var(--c-ln)]"
 agents-ui.jsx: <CardActions primary={{ label: tr("Order now"), icon: Check, onClick: () => orderNow(a), testid: "agent-order-now" }} secondary={{ label: tr
 agents-ui.jsx: <span className="min-h-[32px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12px] font-extrabold grid place-items-center">{tr("Chang
-chatpilot-ui.jsx: <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-acc)] c-acc text-[12.5px] fo
+chatpilot-ui.jsx: <button type="submit" disabled={!say.trim() || step === "model"} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-acc)] c-
 code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
 donelog-ui.jsx: <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleStr
