@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const net = require("net");
 const crypto = require("crypto");
+const os = require("os");
 const { spawn } = require("child_process");
 
 const EXE = process.platform === "win32" ? "llama-server.exe" : "llama-server";
@@ -51,10 +52,33 @@ function freePort() {
 }
 
 const team = require("./team");
+function setPrio(p, level) {
+  if (process.platform !== "win32" || !p || !p.pid) return false;
+  try { os.setPriority(p.pid, level === "low" ? os.constants.priority.PRIORITY_BELOW_NORMAL : os.constants.priority.PRIORITY_NORMAL); return true; } catch (e) { return false; }
+}
+
+/** v10.2 (Ali: "it's taking a lot of time to load", 66 s on his laptop): what llama-server is doing now, read from the end of its
+ *  log — so the Engine sheet says the real step instead of "Reading the model file" for a whole minute. */
+function phaseOf(tail) {
+  const t = String(tail || "").split("=== ").pop();
+  if (/warming up|warmup/i.test(t)) return "Warming up";
+  if (/llama_context|kv[_ ]cache|graph_reserve|compute buffer/i.test(t)) return "Preparing the memory";
+  if (/load_tensors|offload(?:ing|ed) \d+|CPU_Mapped|Vulkan\d? model buffer|model buffer size/i.test(t)) return "Loading the model onto the chip";
+  if (/llama_model_loader|loaded meta data|gguf/i.test(t)) return "Reading the model file";
+  return "Starting the engine";
+}
+/** v10.2: the way that started THIS model last time (engine folder + graphics chip or not + helper) is tried first, so a way that
+ *  fails slowly (a graphics driver that crashes after loading, a helper that does not fit) is not paid again at every start. */
+function orderAttempts(attempts, good) {
+  if (!good) return attempts;
+  const i = attempts.findIndex((a) => a.v.name === good.variant && a.gpu === good.gpu && !!a.draft === !!good.draft);
+  return i > 0 ? [attempts[i], ...attempts.slice(0, i), ...attempts.slice(i + 1)] : attempts;
+}
 
 class Engine {
   constructor(opts) {
     this.engineRoots = opts.engineRoots; this.logFile = opts.logFile; this.onChange = opts.onChange || (() => {});
+    this.goodFile = opts.goodFile || path.join(path.dirname(this.logFile || "."), "engine-good.json");
     this.state = "idle"; this.error = null; this.modelId = null; this.proc = null; this.port = 0;
     this.apiKey = crypto.randomBytes(16).toString("hex"); this.started = 0; this.variant = null; this.gen = 0;
   }
@@ -63,9 +87,11 @@ class Engine {
   json() {
     return { state: this.state, error: this.error, modelId: this.modelId, port: this.port,
       loadingFor: this.started && this.state === "starting" ? Math.round((Date.now() - this.started) / 1000) : 0,
-      phase: this.state === "starting" ? "Reading the model file" : "", heavy: false, thermal: 0,
+      phase: this.state === "starting" ? phaseOf(this.logTail(3000)) : "", heavy: false, thermal: 0, lastLoadSecs: this.lastLoadSecs || 0,
       engine: "llama", backend: this.variant || "", team: this.team || "" };
   }
+  goods() { try { return JSON.parse(fs.readFileSync(this.goodFile, "utf8")) || {}; } catch (e) { return {}; } }
+  remember(modelId, a, secs) { const g = this.goods(); g[modelId] = { variant: a.v.name, gpu: a.gpu, draft: !!a.draft, secs }; try { fs.writeFileSync(this.goodFile, JSON.stringify(g)); } catch (e) {} }
   note(line) { try { fs.appendFileSync(this.logFile, line + "\n"); } catch (e) {} }
   logTail(n) { try { const t = fs.readFileSync(this.logFile, "utf8"); return t.slice(-(n || 8000)); } catch (e) { return ""; } }
 
@@ -102,7 +128,8 @@ class Engine {
     // v9.9.8 M4: with a helper, each way is tried as a team first, then the big model alone (a pair that won't start never blocks it)
     for (const v of vs) for (const gpu of (v.name !== "cpu" && !process.env.ATTUNE_CPU_ONLY ? [true, false] : [false])) {
       if (draft) attempts.push({ v, gpu, draft }); attempts.push({ v, gpu, draft: null }); }
-    for (const { v, gpu, draft: d } of attempts) {
+    for (const a of orderAttempts(attempts, this.goods()[model.id])) {
+      const { v, gpu, draft: d } = a;
       if (gen !== this.gen) return false;
       this.port = await freePort();
       const log = fs.openSync(this.logFile, "a");
@@ -113,8 +140,16 @@ class Engine {
       p.on("error", (e) => this.note("The engine could not be started: " + (e.code === "EACCES" || e.code === "EPERM" ? "Windows or an antivirus blocked it — allow Attune in the antivirus" : e.message)));
       p.on("exit", (code, sig) => { if (gen === this.gen && this.proc === p && this.state !== "ready") this.note(exitReason(code, sig)); });
       this.proc = p; this.variant = v.name + (gpu ? "" : " (CPU)"); this.team = d ? (d.label || d.id) : "";
+      // v10.2 (Ali: "the app is not smooth … glitchy" while the model loads): on Windows the engine reads the model at "below normal"
+      // priority, so the window stays smooth; it goes back to normal once ready (Windows allows raising it back; Linux/macOS do not,
+      // so there it is left alone)
+      setPrio(p, "low");
       const ok = await this.waitHealthy(p, gen);
-      if (ok) { this.state = "ready"; this.onChange(this.json()); return true; }
+      if (ok) {
+        const secs = Math.round((Date.now() - this.started) / 1000); this.lastLoadSecs = secs; this.remember(model.id, a, secs);
+        setPrio(p, "normal");
+        this.note("=== ready in " + secs + " s with " + this.variant + (d ? " + helper" : ""));
+        this.state = "ready"; this.onChange(this.json()); return true; }
       lastErr = (this.logTail(600).split("\n").filter(Boolean).pop() || "The model could not be loaded");
       try { p.kill("SIGKILL"); } catch (e) {}
     }
@@ -134,4 +169,4 @@ class Engine {
   }
 }
 
-module.exports = { Engine, variants, envFor, EXE, exitReason };
+module.exports = { Engine, variants, envFor, EXE, exitReason, phaseOf, orderAttempts };

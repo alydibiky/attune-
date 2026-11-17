@@ -47,5 +47,15 @@ assert.ok(i.ramGB >= 1 && i.cores >= 1);
   assert.ok(/missing \(DLL not found\)/.test(exitReason(-1073741515)), "0xC0000135 as a signed exit code");
   assert.ok(/missing/.test(exitReason(3221225781)) && /AVX2/.test(exitReason(3221225501)) && /out of memory/.test(exitReason(3221225495)));
   assert.ok(/too little memory/.test(exitReason(null, "SIGKILL")));
+  // v10.2 (Ali: 66 s to load): the way that worked last time first; the real loading step from the log
+  const { orderAttempts, phaseOf } = require("../lib/engine");
+  const A = [{ v: { name: "vulkan" }, gpu: true, draft: {} }, { v: { name: "vulkan" }, gpu: true, draft: null }, { v: { name: "vulkan" }, gpu: false, draft: null }];
+  assert.deepStrictEqual(orderAttempts(A, { variant: "vulkan", gpu: false, draft: false }).map((a) => a.gpu), [false, true, true]);
+  assert.strictEqual(orderAttempts(A, null), A);
+  assert.strictEqual(phaseOf("=== a\nllama_model_loader: loaded meta data"), "Reading the model file");
+  assert.strictEqual(phaseOf("=== a\nload_tensors: offloading 20 repeating layers"), "Loading the model onto the chip");
+  assert.strictEqual(phaseOf("=== a\nload_tensors: x\nllama_context: n_ctx = 8192"), "Preparing the memory");
+  assert.strictEqual(phaseOf("=== a\nllama_context: x\nwarming up the model"), "Warming up");
+  assert.strictEqual(phaseOf("=== old\nwarming up\n=== new start\n"), "Starting the engine");
   console.log("desktop unit: all passed");
 })().catch((e) => { console.error(e); process.exit(1); });

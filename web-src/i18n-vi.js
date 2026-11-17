@@ -12906,4 +12906,10 @@ export const VI = {
   "Did you mean one of these?": "Ý bạn là một trong những mục này?",
   "Features": "Tính năng",
   "Find a feature or a chat": "Tìm một tính năng hoặc cuộc trò chuyện",
+  "Every tool": "Mọi công cụ",
+  "Warming up": "Đang khởi động",
+  "Preparing the memory": "Đang chuẩn bị bộ nhớ",
+  "Loading the model onto the chip": "Đang nạp mô hình vào chip",
+  "Reading the model file": "Đang đọc tệp mô hình",
+  "Starting the engine": "Đang khởi động bộ máy",
 };

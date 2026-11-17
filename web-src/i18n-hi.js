@@ -12907,4 +12907,10 @@ export const HI = {
   "Did you mean one of these?": "क्या आपका मतलब इनमें से कोई था?",
   "Features": "सुविधाएँ",
   "Find a feature or a chat": "कोई सुविधा या चैट खोजें",
+  "Every tool": "सभी टूल",
+  "Warming up": "तैयार हो रहा है",
+  "Preparing the memory": "मेमोरी तैयार हो रही है",
+  "Loading the model onto the chip": "मॉडल चिप पर लोड हो रहा है",
+  "Reading the model file": "मॉडल फ़ाइल पढ़ी जा रही है",
+  "Starting the engine": "इंजन शुरू हो रहा है",
 };

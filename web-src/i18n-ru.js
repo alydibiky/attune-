@@ -12906,4 +12906,10 @@ export const RU = {
   "Did you mean one of these?": "Вы имели в виду одно из этого?",
   "Features": "Функции",
   "Find a feature or a chat": "Найти функцию или чат",
+  "Every tool": "Все инструменты",
+  "Warming up": "Прогрев",
+  "Preparing the memory": "Подготовка памяти",
+  "Loading the model onto the chip": "Загрузка модели в чип",
+  "Reading the model file": "Чтение файла модели",
+  "Starting the engine": "Запуск движка",
 };

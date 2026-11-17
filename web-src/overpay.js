@@ -18,6 +18,7 @@
    Tests: tests/unit/v732overpay.test.mjs.                                                                                      */
 import { merchantOf, SUBS } from "./guardian.js";
 import { readDeadlines, isoDay, datesIn } from "./deadlines.js";
+import { isSignInMessage } from "./notifwords.js";
 
 const DAY = 86400000;
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -82,7 +83,7 @@ const MONTHLY = W("month|monthly|/mo|per month|شهر|شهري|شهريا|شهر
  *  · hike {service, from, to, currency} · perk {service, what, value?, currency?, expires?}. Every event keeps `src`. */
 export function readSource(s, { now = Date.now() } = {}) {
   const text = [s.title, s.text].filter(Boolean).join(" — "), out = [];
-  if (!text.trim()) return out;
+  if (!text.trim() || isSignInMessage(text)) return out;   // v10.2: a sign-in link / login code is never a subscription
   const service = serviceOf(text) || serviceOf(s.from) || titleCase(merchantOf(String(s.from || "").replace(/<.*>|".*?"|@.*/g, "") || s.title || ""));
   const money = moneyIn(text), src = { id: s.id, kind: s.kind, at: s.at || now, title: s.title || "", link: s.link || "", app: s.app || "", text: text.slice(0, 400) };
   const cadence = YEARLY.test(text) ? "year" : QUARTER.test(text) ? "quarter" : MONTHLY.test(text) ? "month" : "";

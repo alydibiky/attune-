@@ -12907,4 +12907,10 @@ export const TRK = {
   "Did you mean one of these?": "Bunlardan birini mi demek istedin?",
   "Features": "Özellikler",
   "Find a feature or a chat": "Bir özellik ya da sohbet bul",
+  "Every tool": "Tüm araçlar",
+  "Warming up": "Isınıyor",
+  "Preparing the memory": "Bellek hazırlanıyor",
+  "Loading the model onto the chip": "Model çipe yükleniyor",
+  "Reading the model file": "Model dosyası okunuyor",
+  "Starting the engine": "Motor başlatılıyor",
 };

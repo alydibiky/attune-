@@ -12906,4 +12906,10 @@ export const KO = {
   "Did you mean one of these?": "이 중 하나를 말씀하신 건가요?",
   "Features": "기능",
   "Find a feature or a chat": "기능이나 채팅 찾기",
+  "Every tool": "모든 도구",
+  "Warming up": "예열 중",
+  "Preparing the memory": "메모리 준비 중",
+  "Loading the model onto the chip": "모델을 칩에 올리는 중",
+  "Reading the model file": "모델 파일 읽는 중",
+  "Starting the engine": "엔진 시작 중",
 };

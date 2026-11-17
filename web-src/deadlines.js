@@ -12,6 +12,7 @@
 import { tr } from "./i18n.js";
 import { payAmount, payCurrency, payNormalize } from "./yusr/paytext.js";
 import { MONTH_NAMES } from "./life.js";
+import { isSignInMessage } from "./notifwords.js";
 
 const DAY = 86400000;
 const pad = (n) => String(n).padStart(2, "0");
@@ -161,6 +162,9 @@ export function fixOcrDigits(s) {
 }
 export function readDeadlines(text, opts = {}) {
   const raw = fixOcrDigits(String(text || "").trim()); if (!raw || raw.length > 6000) return [];
+  // v10.2 (Ali: a Claude sign-in link email was saved in Dates like a subscription): the date in a sign-in link / login code /
+  // password reset is the link's, never a deadline
+  if (isSignInMessage(raw)) return [];
   const now = opts.now || Date.now(), base0 = opts.base || now;
   const t = fold(raw);
   const dates = datesIn(raw, { now, order: opts.order });
@@ -276,8 +280,10 @@ export function fromNotifications(queue, seen = [], opts = {}) {
 // ---- the store, and what to show ------------------------------------------------------------------------------------------------
 export const RADAR_KEY = "attune:radar:v1";
 export const FREE_LIMIT = 10;   // v9.9.34 FP-4: 10 papers with dates
+/** v10.2: a date saved earlier from a sign-in link / login email (before the reader knew) is taken out — never one you added yourself. */
+export const dropSignIns = (data) => ({ ...data, items: data.items.filter((x) => !(x && x.source !== "typed" && x.source !== "camera" && x.note && isSignInMessage(x.note))) });
 export const loadRadar = (store = typeof localStorage !== "undefined" ? localStorage : null) => {
-  try { const j = JSON.parse((store && store.getItem(RADAR_KEY)) || "null"); return j && Array.isArray(j.items) ? { seen: [], ...j } : { items: [], seen: [] }; } catch (e) { return { items: [], seen: [] }; }
+  try { const j = JSON.parse((store && store.getItem(RADAR_KEY)) || "null"); return j && Array.isArray(j.items) ? dropSignIns({ seen: [], ...j }) : { items: [], seen: [] }; } catch (e) { return { items: [], seen: [] }; }
 };
 export const saveRadar = (data, store = typeof localStorage !== "undefined" ? localStorage : null) => { try { store && store.setItem(RADAR_KEY, JSON.stringify(data)); } catch (e) {} return data; };
 const norm = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");

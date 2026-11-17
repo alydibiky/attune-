@@ -12906,4 +12906,10 @@ export const JA = {
   "Did you mean one of these?": "次のどれかのことですか？",
   "Features": "機能",
   "Find a feature or a chat": "機能やチャットを探す",
+  "Every tool": "すべてのツール",
+  "Warming up": "ウォームアップ中",
+  "Preparing the memory": "メモリを準備中",
+  "Loading the model onto the chip": "モデルをチップに読み込み中",
+  "Reading the model file": "モデルファイルを読み込み中",
+  "Starting the engine": "エンジンを起動中",
 };

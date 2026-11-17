@@ -12906,4 +12906,10 @@ export const TH = {
   "Did you mean one of these?": "คุณหมายถึงอันใดอันหนึ่งนี้หรือเปล่า",
   "Features": "ฟีเจอร์",
   "Find a feature or a chat": "ค้นหาฟีเจอร์หรือแชต",
+  "Every tool": "เครื่องมือทั้งหมด",
+  "Warming up": "กำลังวอร์มอัป",
+  "Preparing the memory": "กำลังเตรียมหน่วยความจำ",
+  "Loading the model onto the chip": "กำลังโหลดโมเดลลงชิป",
+  "Reading the model file": "กำลังอ่านไฟล์โมเดล",
+  "Starting the engine": "กำลังเริ่มเอนจิน",
 };

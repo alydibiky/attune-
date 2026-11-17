@@ -115,3 +115,12 @@ export const RETIRED = ["instant", "ask"];
 export function toolPages(available = null) {
   return TOOL_PAGES.map(([id, t, sub, m]) => [id, t, sub, available ? m.filter((x) => available.includes(x)) : m]).filter((p) => p[3].length);
 }
+
+/** v10.2 (Ali, 17 Nov: "it says 36 tools and to see more it only redirects to 3 tools"): the groups the Tools page lists —
+    only tools this build really has (not archived, not hidden from menus, not left out of this build), each tool once.
+    The Home card's "{n} tools" is the count of exactly these, so the number and the page always agree. */
+export function shownToolGroups(groups, toolIds, hidden = () => false) {
+  const have = new Set(toolIds || []), seen = new Set();
+  return (groups || []).map(([t, ids]) => [t, ids.filter((id) => { if (!have.has(id) || hidden(id) || seen.has(id)) return false; seen.add(id); return true; })]).filter(([, ids]) => ids.length);
+}
+export const toolCount = (shown) => (shown || []).reduce((n, [, ids]) => n + ids.length, 0);

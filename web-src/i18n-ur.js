@@ -12907,4 +12907,10 @@ export const UR = {
   "Did you mean one of these?": "کیا آپ کا مطلب ان میں سے کوئی تھا؟",
   "Features": "فیچرز",
   "Find a feature or a chat": "کوئی فیچر یا چیٹ تلاش کریں",
+  "Every tool": "تمام ٹولز",
+  "Warming up": "تیار ہو رہا ہے",
+  "Preparing the memory": "میموری تیار ہو رہی ہے",
+  "Loading the model onto the chip": "ماڈل چپ پر لوڈ ہو رہا ہے",
+  "Reading the model file": "ماڈل فائل پڑھی جا رہی ہے",
+  "Starting the engine": "انجن شروع ہو رہا ہے",
 };

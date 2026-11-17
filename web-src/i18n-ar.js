@@ -10011,4 +10011,10 @@ export const AR = {
   "Ya Attune (voice)": "يا أتيون (صوت)",
   "Emergency": "الطوارئ",
   "News": "الأخبار",
+  "Every tool": "كل الأدوات",
+  "Warming up": "بيسخّن",
+  "Preparing the memory": "بيجهّز الذاكرة",
+  "Loading the model onto the chip": "بيحمّل الموديل على الشريحة",
+  "Reading the model file": "بيقرا ملف الموديل",
+  "Starting the engine": "بيشغّل المحرك",
 };

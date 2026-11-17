@@ -40,3 +40,54 @@ export function notAPayment(text, n = null) {
   if (POST_W.test(t)) return "post";
   return "";
 }
+
+/* ---- v10.2 (Ali, 17 Nov 2026: "there was a sign-in link email from Claude, it was saved in Dates like it was a subscription").
+   A sign-in link, a login code, "verify your email", a password reset, "new sign-in to your account" — the date or "expires in 1 hour"
+   in it is the LINK's, never a trial, a renewal or a paper. Dates, the notification reader and the Overpaying check all skip it.
+   isSignInMessage(text) → true for those. A real renewal / trial / document that only adds "sign in to manage" is not one. */
+// the message is ABOUT signing in (any of the 20 languages)
+const SIGNIN_W = new RegExp([
+  String.raw`\b(?:sign|log)[- ]?in (?:link|code|request|attempt)s?\b`, String.raw`\blogin (?:link|code|request|attempt)s?\b`, String.raw`\b(?:magic|secure|one[- ]time|passwordless) (?:sign[- ]?in |log[- ]?in |login )?link\b`,
+  String.raw`\blink to (?:sign|log) ?in\b`, String.raw`\b(?:click|tap|use) (?:the |this )?(?:link|button) (?:below )?to (?:sign|log) ?in\b`, String.raw`\b(?:sign|log) ?in to (?:your )?[\w.\- ]{1,30}? (?:with|using) (?:this|the) (?:link|code)\b`,
+  String.raw`\bsecure link to (?:sign|log) ?in\b`, String.raw`\byour (?:sign[- ]?in|log[- ]?in|login) (?:link|code)\b`,
+  String.raw`\b(?:verify|confirm) your (?:email|e-mail|account|address|phone|identity)\b`, String.raw`\b(?:email|e-mail|account) (?:verification|confirmation)\b`,
+  String.raw`\b(?:reset|change) your password\b`, String.raw`\bpassword (?:reset|recovery)\b`, String.raw`\bforgot (?:your )?password\b`,
+  String.raw`\bnew (?:sign[- ]?in|log[- ]?in|login|device)\b`, String.raw`\b(?:sign|log)[- ]?in (?:from|on) a new\b`, String.raw`\bsomeone (?:signed|logged) in\b`, String.raw`\bwas this you\b`,
+  // ar (Egyptian + Fusha)
+  "رابط تسجيل الدخول", "رابط الدخول", "رابط آمن", "كود تسجيل الدخول", "رمز تسجيل الدخول", "سجل دخولك", "سجّل دخولك", "لتسجيل الدخول", "تأكيد البريد", "تاكيد البريد", "تأكيد بريدك", "تحقق من بريدك", "إعادة تعيين كلمة المرور", "اعادة تعيين كلمة المرور", "تسجيل دخول جديد",
+  // es pt it fr de
+  "enlace de inicio de sesión", "enlace para iniciar sesión", "código de inicio de sesión", "inicia sesión con este enlace", "verifica tu correo", "confirma tu correo", "restablecer (?:tu )?contraseña", "nuevo inicio de sesión",
+  "link de (?:acesso|login)", "link para entrar", "código de acesso", "verifique seu e-mail", "confirme seu e-mail", "redefinir (?:sua )?senha", "novo login",
+  "link di accesso", "codice di accesso", "accedi con questo link", "verifica (?:la tua )?email", "conferma (?:la tua )?email", "reimposta(?:re)? (?:la )?password", "nuovo accesso",
+  "lien de connexion", "lien pour vous connecter", "code de connexion", "vérifiez votre (?:adresse )?e-?mail", "confirmez votre (?:adresse )?e-?mail", "réinitialis(?:er|ez) (?:votre )?mot de passe", "nouvelle connexion",
+  "anmeldelink", "login-link", "anmeldecode", "bestätigen sie ihre e-?mail", "e-?mail-adresse bestätigen", "passwort zurücksetzen", "neue anmeldung",
+  // ru tr id
+  "ссылка для входа", "код для входа", "код входа", "подтвердите (?:вашу )?почту", "подтвердите (?:ваш )?e-?mail", "сброс пароля", "сбросить пароль", "новый вход",
+  "giriş bağlantısı", "giriş kodu", "e-?postanızı doğrulayın", "şifrenizi sıfırlayın", "şifre sıfırlama", "yeni giriş",
+  "tautan masuk", "kode masuk", "verifikasi email", "atur ulang kata sandi", "login baru",
+  // hi ur fa bn sw
+  "साइन इन लिंक", "लॉगिन लिंक", "लॉग इन लिंक", "लॉगिन कोड", "ईमेल सत्यापित", "पासवर्ड रीसेट", "نئے لاگ ان", "لاگ ان لنک", "لاگ ان کوڈ", "پاس ورڈ ری سیٹ",
+  "لینک ورود", "کد ورود", "تأیید ایمیل", "بازنشانی رمز عبور", "ورود جدید", "সাইন ইন লিংক", "লগইন লিংক", "লগইন কোড", "পাসওয়ার্ড রিসেট",
+  "kiungo cha kuingia", "msimbo wa kuingia", "thibitisha barua pepe", "weka upya nenosiri",
+  // th vi zh ja ko
+  "ลิงก์เข้าสู่ระบบ", "รหัสเข้าสู่ระบบ", "ยืนยันอีเมล", "รีเซ็ตรหัสผ่าน", "liên kết đăng nhập", "mã đăng nhập", "xác minh email", "đặt lại mật khẩu", "đăng nhập mới",
+  "登录链接", "登录验证码", "登入連結", "验证您的邮箱", "重置密码", "新的登录", "ログインリンク", "サインインリンク", "ログインコード", "メールアドレスの確認", "パスワードの再設定", "新しいログイン",
+  "로그인 링크", "로그인 코드", "이메일 인증", "비밀번호 재설정", "새 로그인",
+].join("|"), "iu");
+// "this link / code expires in 15 minutes" — the thing that expires is the link or the code
+const LINKEXP_W = new RegExp([
+  String.raw`\b(?:link|code|otp|token|url|button)s?\b[^.\n]{0,25}\b(?:expires?|expiring|will expire|is valid|valid for|valid until|only valid|can only be used once|works once)\b`,
+  "(?:رابط|الرابط|كود|الكود|رمز|الرمز)[^.\\n]{0,25}(?:صالح|صالحة|بينتهي|ينتهي|تنتهي|هينتهي|صلاحيته|لمرة واحدة)",
+  String.raw`(?:enlace|código|link|codice|lien|code|ссылка|код|bağlantı|kod|tautan|kode)[^.\n]{0,25}(?:caduca|vence|expira|válid|scade|valido|expire|läuft|gültig|истекает|действительн|geçerli|sona erer|kedaluwarsa|berlaku)`,
+  "(?:लिंक|कोड|لنک|کوڈ|لینک|کد|লিংক|কোড|kiungo|msimbo|ลิงก์|รหัส|liên kết|mã|链接|验证码|連結|リンク|コード|링크|코드)[^.\\n]{0,25}(?:समाप्त|मान्य|ختم|منقضی|معتبر|মেয়াদ|itaisha|halali|หมดอายุ|hết hạn|hiệu lực|过期|失效|有效|有効|期限|만료|유효)",
+].join("|"), "iu");
+const REAL_W = /\b(?:renews?|renewal|auto-?renew|free trial|trial (?:ends|period)|membership|subscription (?:renews|ends|will)|warranty|return (?:by|within)|passport|licen[cs]e|insurance|next (?:billing|payment|charge)|will be charged)\b|تجديد|يتجدد|بيتجدد|التجربة المجانية|الاشتراك هيتجدد|renouvel|renova|verlänger|rinnov|yenilen|perpanjang/i;
+export function isSignInMessage(text) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  if (LINKEXP_W.test(t) || CODE_W.test(t)) return true;
+  // "Sign in to Claude" + a link in the message
+  const signinTitle = /^(?:sign|log) ?in to \S+(?: \S+)?(?:\n|$)/i.test(String(text || "").trim()) && /\blink\b|https?:\/\//i.test(t);
+  // a renewal / trial / paper that only adds "sign in to manage" is not a sign-in message
+  return (SIGNIN_W.test(t) || signinTitle) && !REAL_W.test(t);
+}

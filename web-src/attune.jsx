@@ -89,7 +89,7 @@ import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
 import { VaultGate } from "./vault-ui.jsx";
 import { loadVault, vaulted, stillOpen } from "./vault.js";
-import { HUBS, hubOf, tabsFor, toolPages, partsOf, RETIRED } from "./hubs.js";
+import { HUBS, hubOf, tabsFor, toolPages, partsOf, RETIRED, shownToolGroups, toolCount } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
 import { MissionsPage } from "./missions-ui.jsx";
@@ -7876,6 +7876,15 @@ const PAGE_VERSION = "10.1";   // (kept equal to versionName in app/build.gradle
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
+/** v10.2: "· 66 s" while a model loads — ticks by itself, so the rest of the app is not re-drawn every second. */
+function LoadSecs({ e }) {
+  const start = useMemo(() => Date.now() - ((e && e.loadingFor) || 0) * 1000, [e && e.modelId, e && e.state]);   // eslint-disable-line
+  const [, bump] = useState(0);
+  useEffect(() => { const t = setInterval(() => bump((x) => x + 1), 1000); return () => clearInterval(t); }, []);
+  const sec = Math.max(0, Math.round((Date.now() - start) / 1000));
+  return sec ? <span className="tabular-nums" data-testid="load-secs">{" · " + sec + " s"}</span> : null;
+}
+
 const MORE_TOOLS = [
   ["lists", "To-dos & lists", "Your to-dos, and lists that come back to Home when you need them", ListChecks],   // v9.2 (Ali picked 1A)
   ["habits", "Habits", "Tick a habit each day — streaks and this week's dots on Home", ListChecks],   // v9.9.19 T2
@@ -8608,6 +8617,8 @@ export default function App() {
   const [allTools, setAllToolsRaw] = useState(() => deviceShowAll());
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools, STUDIO_OFF ? ["studio"] : []);
+  // v10.2: what the Tools page really lists (and the Home card counts)
+  const groupsShown = shownToolGroups(groupsHere, MORE_TOOLS.map((t) => t[0]), (id) => hiddenFromMenus(id) || isRemoved(id) || NOT_IN_PLAY.has(id));
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { agents: "Agents", timeline: "Follow-ups", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "Follow-ups", convert: "Convert",
     pdfchat: "Ask a PDF", booklib: "Documents", people: "People", write: "Writing", shelf: "Shelf" /* v9.2 Ali: "make notes called shelf like it was" */, remember: "Attune remembers", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
@@ -8804,7 +8815,7 @@ export default function App() {
     // Belt and braces: while a model loads, ask the phone every second as
     // well. If a "ready" message were ever missed, the screen would otherwise
     // say "Loading…" for ever.
-    let lastState = cur && cur.state;
+    let lastState = cur && cur.state, startKey = "";
     // Every second only while the model loads; otherwise every 10 s, and not at all while the screen is
     // hidden (each call is a bridge call + file read + two system calls: a small, constant drain).
     let pollTimer = 0;
@@ -8812,7 +8823,10 @@ export default function App() {
       if (!dead && !document.hidden) {
         const now = nativeJSON("engine");
         if (now) {
-          if (now.state === "starting") setEngineInfo(now);
+          // v10.2 (Ali: "the app is not smooth … glitchy"): this used to re-draw the WHOLE app every second while a model
+          // loads, only to move the "Loading 66 s" counter. Now the app re-draws only when something real changes (the model,
+          // the phase); the seconds tick inside the small LoadSecs counter.
+          if (now.state === "starting") { const k = now.modelId + "|" + (now.phase || "") + "|" + (now.backend || ""); if (k !== startKey) { startKey = k; setEngineInfo(now); } }
           if (now.state !== lastState) { lastState = now.state; onEngine({ detail: now }); }
         }
       }
@@ -10512,7 +10526,7 @@ export default function App() {
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
-  const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
+  const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? tr("Loading…") : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen || phoneSide;
   const rootMode = wide ? "home" : startMode.current;         // v6.25: the screen Back ends at (v6.28: the phone's start page — Home, or Chat for the old start)
   const canGoBack = _anyOverlay || mode !== rootMode || modeHist.current.length > 0;
@@ -10654,11 +10668,11 @@ export default function App() {
           <PhoneHome cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })(), bought: isPro(tier), pro: isPro(tier) || testingPro() || bonusUntil() > 0, open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
-          <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
+          <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"} toolsN={toolCount(groupsShown)}
             onAsk={(t, raw) => { setChatSeed(raw ? t : "\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
-          : <ToolsHub tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]}
+          : <ToolsHub tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={groupsShown}
             pages={toolPages([...groupsHere.flatMap((g) => g[1])]).filter((p) => !p[3].some((m) => ["improve", "video", "convert", "instant", "studio"].includes(m)))}
             navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
@@ -12453,7 +12467,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
     <div className="space-y-3 mb-5" data-testid="engine-min">
       <div className="relative flex items-center gap-2 px-1">
         <span className={"w-2.5 h-2.5 rounded-full shrink-0 " + (e.state === "ready" ? "bg-teal-400" : e.state === "starting" ? "bg-amber-400 animate-pulse" : e.state === "error" ? "bg-rose-400" : "bg-slate-600")} />
-        <p className="flex-1 min-w-0 text-[15px] text-slate-100 truncate" data-testid="engine-status">{e.modelId ? labelFor(e.modelId) + " · " : ""}{tr(stateText).toLowerCase()}{e.state === "starting" && e.loadingFor ? " · " + e.loadingFor + " s" : ""}</p>
+        <p className="flex-1 min-w-0 text-[15px] text-slate-100 truncate" data-testid="engine-status">{e.modelId ? labelFor(e.modelId) + " · " : ""}{tr(stateText).toLowerCase()}{e.state === "starting" ? <LoadSecs e={e} /> : null}</p>
         <button onClick={() => setMenu(menu === "engine" ? null : "engine")} aria-label={tr("More")} className="w-9 h-9 grid place-items-center rounded-full text-slate-400 hover:bg-slate-800" data-testid="engine-more"><MoreVertical size={18} /></button>
         {menu === "engine" ? <Pop>
           {e.modelId ? <MenuItem testid="engine-restart" onClick={async () => { try { await nativeCall("restart", ""); flash(tr("Engine restarted")); } catch (err) { flash(String(err.message || err)); } }}>{tr("Restart engine")}</MenuItem> : null}
@@ -12545,7 +12559,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         <p className={`text-sm ${e.state === "ready" ? "text-teal-300" : e.state === "error" ? "text-amber-300" : "text-slate-300"}`}>
           {tr(stateText)}{e.modelId ? " · " + labelFor(e.modelId) : ""}
         </p>
-        {e.state === "starting" ? <p className="text-[11px] text-slate-400 mt-1">{e.phase || tr("Starting")}{e.loadingFor ? " · " + e.loadingFor + " s" : ""} {tr("— a 3 GB model usually takes 10–40 s.")}</p> : null}
+        {e.state === "starting" ? <p className="text-[11px] text-slate-400 mt-1">{e.phase ? tr(e.phase) : tr("Starting")}<LoadSecs e={e} /> {tr("— a 3 GB model usually takes 10–40 s.")}</p> : null}
         {e.error ? <p className="text-[11px] text-amber-400/90 mt-1 leading-snug">{e.error}</p> : null}
         {e.heavy ? (
           <div className="mt-2 rounded-lg border border-amber-900/60 bg-amber-500/5 p-2">

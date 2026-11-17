@@ -148,10 +148,14 @@ export function CoachHost({ mode, hold = false }) {
     set(); let ro = null; try { ro = new ResizeObserver(set); ro.observe(el); } catch (e) {} return () => { try { ro && ro.disconnect(); document.body.style.paddingBottom = ""; } catch (e) {} }; }, [shown, tip && tip.id]);
   if (!tip || quiet()) return null;
   const done = (again) => { const n = C.markSeen(tip.id, st); try { localStorage.setItem(C.COACH_KEY, JSON.stringify(n)); } catch (e) {} setSt(n); setTip(again ? C.tipFor(mode, n, Date.now(), true) : null); setMore(again); };
-  return <div ref={box} className="fixed inset-x-3 z-[55] mx-auto max-w-[520px] rounded-[16px] p-3 space-y-1.5 shadow-lg" style={{ bottom: "calc(84px + env(safe-area-inset-bottom, 0px))", background: "#2a2526", color: "#f6eff1" }} data-testid="coach-tip" data-id={tip.id} role="status">
-    <b className="block text-[12px] uppercase tracking-[0.08em] opacity-80">{tr("Tip")}</b>
+  // v10.2 (Ali, 17 Nov: "tips don't appear good on the mobile and computer"): the theme's own colours (it was a fixed brown card
+  // with pink words in every theme); on a computer a small card in the page's bottom corner, never across the sidebar
+  const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
+  return <div ref={box} className={"fixed z-[55] rounded-[16px] p-3.5 space-y-1.5 border border-[var(--c-acc)] bg-[var(--c-surf)] text-[var(--c-ink)] shadow-[0_8px_28px_rgba(0,0,0,0.18)] " + (wide ? "end-6 w-[360px]" : "inset-x-3 mx-auto max-w-[520px]")}
+    style={{ bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom, 0px))" }} data-testid="coach-tip" data-id={tip.id} role="status">
+    <b className="block text-[12px] uppercase tracking-[0.08em] text-[var(--c-acc)]">{tr("Tip")}</b>
     <p className="m-0 text-[13.5px] leading-snug" dir="auto">{tr(tip.text)}</p>
-    <div className="flex gap-4 font-extrabold text-[13px]" style={{ color: "#f2b6c8" }}><button onClick={() => done(false)} className="min-h-[36px]" data-testid="coach-ok">{tr("Got it")}</button>
+    <div className="flex gap-4 font-extrabold text-[13px] text-[var(--c-acc)]"><button onClick={() => done(false)} className="min-h-[36px]" data-testid="coach-ok">{tr("Got it")}</button>
       <button onClick={() => done(true)} className="min-h-[36px]" data-testid="coach-more">{tr("Show me more tips")}</button></div>
   </div>;
 }

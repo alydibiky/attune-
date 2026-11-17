@@ -12907,4 +12907,10 @@ export const FR = {
   "Did you mean one of these?": "Vouliez-vous dire l'un de ceux-ci ?",
   "Features": "Fonctions",
   "Find a feature or a chat": "Trouver une fonction ou une discussion",
+  "Every tool": "Tous les outils",
+  "Warming up": "Préchauffage",
+  "Preparing the memory": "Préparation de la mémoire",
+  "Loading the model onto the chip": "Chargement du modèle sur la puce",
+  "Reading the model file": "Lecture du fichier du modèle",
+  "Starting the engine": "Démarrage du moteur",
 };

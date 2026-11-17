@@ -12906,4 +12906,10 @@ export const BN = {
   "Did you mean one of these?": "আপনি কি এগুলোর একটি বোঝাতে চেয়েছেন?",
   "Features": "ফিচার",
   "Find a feature or a chat": "একটি ফিচার বা চ্যাট খুঁজুন",
+  "Every tool": "সব টুল",
+  "Warming up": "প্রস্তুত হচ্ছে",
+  "Preparing the memory": "মেমরি প্রস্তুত হচ্ছে",
+  "Loading the model onto the chip": "মডেল চিপে লোড হচ্ছে",
+  "Reading the model file": "মডেল ফাইল পড়া হচ্ছে",
+  "Starting the engine": "ইঞ্জিন চালু হচ্ছে",
 };

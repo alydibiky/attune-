@@ -12898,4 +12898,10 @@ export const ARB = {
   "Did you mean one of these?": "هل تقصد إحدى هذه؟",
   "Features": "الميزات",
   "Find a feature or a chat": "ابحث عن ميزة أو محادثة",
+  "Every tool": "جميع الأدوات",
+  "Warming up": "جارٍ التهيئة",
+  "Preparing the memory": "جارٍ تجهيز الذاكرة",
+  "Loading the model onto the chip": "جارٍ تحميل النموذج على الشريحة",
+  "Reading the model file": "جارٍ قراءة ملف النموذج",
+  "Starting the engine": "جارٍ تشغيل المحرك",
 };

@@ -1,5 +1,26 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (17 Nov 2026 — v10.2: Ali's computer + phone list of 17 Nov: "I want everything fixed for good, a last time")
+> Fixed (objective, with tests): **(1) "36 tools" → 3**: Home's card counted every tool, the Tools page showed only the 3 families.
+> Now hubs.js shownToolGroups()/toolCount() = the tools this build really lists (not archived / hidden / not in this build, each once);
+> ToolsHub gets `groups={groupsShown}` and desk-ui.jsx ToolsPage shows "Every tool" by group under the families; Home says the same
+> number (23 here). **(2) Claude's sign-in link email saved in Dates "like a subscription"**: notifwords.js isSignInMessage() (sign-in
+> links, login codes, verify your email, password resets, "this link expires in 1 hour", 20 languages; a real renewal that adds "sign in
+> to manage" stays a deadline) → deadlines.js readDeadlines returns nothing, overpay.js readSource skips it, notifmind.js reads it as a
+> login code (no date, nothing to do); loadRadar → dropSignIns() removes such an entry already saved (his). tests/signin/ (10,000: 100%,
+> held-out 100%). **(3) glitchy while the model loads**: attune.jsx re-drew the WHOLE app every second only to move "Loading 66s" —
+> now it re-draws when model/phase change; the seconds tick inside LoadSecs; the side menu says "Loading…". **(4) 66 s load on the
+> computer**: desktop/lib/engine.js remembers the way that started each model (engine-good.json: variant, graphics chip or CPU, helper)
+> and tries it first; real phases from llama-server's log (phaseOf); "=== ready in N s" in engine.log; on Windows the engine loads at
+> below-normal priority, back to normal when ready. **If Ali still sees a long load, ask for his engine.log** (Engine → log): it now says
+> which way started and how many seconds. **(5) Tips**: the theme's colours (was a fixed brown card with pink words), on a computer a
+> 360 px card in the page's bottom corner (was across the whole window and the side menu).
+> **Waiting for Ali's picks** (MOCKUPS.md rule): https://claude.ai/artifact/JCGhHo77srRGUjp4Q2f9WL (docs/mockups/desktop-agents-tips.html)
+> — D1–D4 how the computer uses the screen ("like the mobile app put on a computer"; Recommended D1 list + details), L1–L4 how an agent
+> shows the listing it found ("fix the opening and filling the details … even if displaying it another way"; Recommended L1 the offer's
+> own page inside Attune, from what the agent read), T1–T3 where tips appear (Recommended T1 a line in the page).
+> Tests: tests/unit/v1020fixes.test.mjs, tests/e2e_v1020fixes.py, desktop/test/unit.js (orderAttempts, phaseOf).
+>
 > ## START HERE (16 Nov 2026, night — v10.1: Ali's picks P1 P2 P3 P4 W2 T1 + F1 F3 built — combined page OK'd)
 > Page: docs/mockups/projects-combined.html (https://claude.ai/artifact/LSwKU9ZuNeFL2d1b1L4Ziw). Built:
 > **T1** My things → Follow-ups "Things I own" (timeline-ui.jsx section; things-ui.jsx MyThings): each price linked to its payment in Money

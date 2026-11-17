@@ -12907,4 +12907,10 @@ export const SW = {
   "Did you mean one of these?": "Ulimaanisha mojawapo ya hivi?",
   "Features": "Vipengele",
   "Find a feature or a chat": "Tafuta kipengele au gumzo",
+  "Every tool": "Zana zote",
+  "Warming up": "Inapasha moto",
+  "Preparing the memory": "Inaandaa kumbukumbu",
+  "Loading the model onto the chip": "Inapakia modeli kwenye chipu",
+  "Reading the model file": "Inasoma faili ya modeli",
+  "Starting the engine": "Inawasha injini",
 };

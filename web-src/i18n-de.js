@@ -12906,4 +12906,10 @@ export const DE = {
   "Did you mean one of these?": "Meintest du eines davon?",
   "Features": "Funktionen",
   "Find a feature or a chat": "Funktion oder Chat finden",
+  "Every tool": "Alle Werkzeuge",
+  "Warming up": "Aufwärmen",
+  "Preparing the memory": "Speicher wird vorbereitet",
+  "Loading the model onto the chip": "Modell wird auf den Chip geladen",
+  "Reading the model file": "Modelldatei wird gelesen",
+  "Starting the engine": "Engine wird gestartet",
 };

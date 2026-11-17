@@ -12906,4 +12906,10 @@ export const ZH = {
   "Did you mean one of these?": "你是指其中之一吗？",
   "Features": "功能",
   "Find a feature or a chat": "查找功能或聊天",
+  "Every tool": "全部工具",
+  "Warming up": "正在预热",
+  "Preparing the memory": "正在准备内存",
+  "Loading the model onto the chip": "正在将模型载入芯片",
+  "Reading the model file": "正在读取模型文件",
+  "Starting the engine": "正在启动引擎",
 };

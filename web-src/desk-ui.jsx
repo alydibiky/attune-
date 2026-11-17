@@ -49,7 +49,7 @@ const Card = ({ id, label, sub, Icon, onClick, testid }) => (
     <span className="mt-0.5 text-[12.5px] text-[var(--c-mut)] leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
 
-export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, records = [], onTickTodo = null }) {
+export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, records = [], onTickTodo = null, toolsN = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);   // v6.28 "Do it from Home"
   const facts = useMemo(() => todayFacts(), []);
@@ -116,7 +116,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
       <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} />
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
         {cards.map(([id, label, sub, Icon]) => <Card key={id} id={id} label={label} sub={sub} Icon={Icon} onClick={() => navTo(id)} />)}
-        <Card id="tools" label="All tools" sub={tr("{n} tools", { n: tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />
+        <Card id="tools" label="All tools" sub={tr("{n} tools", { n: toolsN != null ? toolsN : tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />
       </div>
     </div>);
 }
@@ -156,7 +156,7 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
         </div>
       ) : pages ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
-          {(top ? tools : pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean)).filter(match).map(([id, label, sub, Icon]) => (
+          {(top ? (groups && groups.length ? groups.flatMap((g) => g[1]).map((id) => tools.find((t) => t[0] === id)).filter(Boolean) : tools) : pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean)).filter(match).map(([id, label, sub, Icon]) => (
             <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
               <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
               <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
@@ -164,7 +164,9 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
             </button>))}
         </div>
       ) : null}
-      {(pages ? [] : groups).map(([title, ids]) => {
+      {/* v10.2 (Ali: "36 tools … only 3"): under the families, every tool by group — the page lists what the Home card counts */}
+      {pages && !nq && groups && groups.length ? <h2 className="text-[13px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-ink)] mt-7 mb-3" data-testid="tools-every">{tr("Every tool")}</h2> : null}
+      {(pages ? (nq ? [] : groups || []) : groups).map(([title, ids]) => {
         const list = ids.map((id) => tools.find((t) => t[0] === id)).filter(Boolean).filter(match);
         if (!list.length) return null;
         return (

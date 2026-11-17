@@ -12907,4 +12907,10 @@ export const IDN = {
   "Did you mean one of these?": "Maksudmu salah satu dari ini?",
   "Features": "Fitur",
   "Find a feature or a chat": "Cari fitur atau obrolan",
+  "Every tool": "Semua alat",
+  "Warming up": "Memanaskan",
+  "Preparing the memory": "Menyiapkan memori",
+  "Loading the model onto the chip": "Memuat model ke chip",
+  "Reading the model file": "Membaca file model",
+  "Starting the engine": "Memulai mesin",
 };

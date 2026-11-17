@@ -1,0 +1,303 @@
+<title>Attune Computer, Agents and Tips</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = mock-up + what it is + pick/note. Mock-ups use Attune's own light look. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43; --warn: #a3620a;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif;
+  /* the mock-ups always show the app's light theme */
+  --m-bg: #f4f2f1; --m-surf: #ffffff; --m-ink: #231c1e; --m-mut: #7a6f73; --m-ln: #e8e1e3; --m-acc: #7a2a45; --m-soft: #f7e9ee;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #f0b45a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #f0b45a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 120px }
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 20px; font-weight: 900; margin: 0 0 4px; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; color: var(--ink); font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 760px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px }
+.pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+/* ---- mock-ups ---- */
+.mock { background: var(--m-bg); color: var(--m-ink); border-radius: 14px; border: 1px solid var(--m-ln); overflow: hidden; font-size: 11px; line-height: 1.35; min-width: 0 }
+.mock .bar { display: flex; gap: 6px; align-items: center; padding: 6px 10px; background: var(--m-surf); border-bottom: 1px solid var(--m-ln); font-weight: 800 }
+.mock .dots { display: flex; gap: 4px } .mock .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-ln); display: block }
+.desk { display: grid; grid-template-columns: 92px minmax(0, 1fr); min-height: 250px }
+.side { background: var(--m-surf); border-inline-end: 1px solid var(--m-ln); padding: 8px 6px; display: grid; gap: 3px; align-content: start; font-weight: 700; font-size: 10px }
+.side span { padding: 3px 6px; border-radius: 6px } .side .on { background: var(--m-soft); color: var(--m-acc) }
+.main { padding: 10px; min-width: 0; display: grid; gap: 8px; align-content: start }
+.c { background: var(--m-surf); border: 1px solid var(--m-ln); border-radius: 10px; padding: 8px; min-width: 0 }
+.c b { font-weight: 900 } .mut { color: var(--m-mut) } .acc { color: var(--m-acc); font-weight: 800 }
+.row { display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 4px 0; border-top: 1px solid var(--m-ln) } .row:first-of-type { border-top: 0 }
+.g2 { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 8px }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.g4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.chip { display: inline-block; border: 1px solid var(--m-ln); border-radius: 99px; padding: 1px 7px; background: var(--m-surf); font-weight: 700; font-size: 10px }
+.chip.on { background: var(--m-soft); color: var(--m-acc); border-color: var(--m-acc) }
+.btn { display: inline-block; border-radius: 99px; padding: 3px 9px; font-weight: 800; font-size: 10px; background: var(--m-acc); color: #fff }
+.btn.o { background: var(--m-surf); color: var(--m-acc); border: 1px solid var(--m-acc) }
+.sel { background: var(--m-soft); border-radius: 6px; padding: 4px 6px }
+.phone { width: 230px; max-width: 100%; margin: 0 auto; border-radius: 22px; border: 6px solid #2b2426; background: var(--m-bg); overflow: hidden }
+.phone .scr { padding: 8px; display: grid; gap: 7px; min-height: 380px; align-content: start }
+.ph { height: 64px; border-radius: 8px; background: linear-gradient(135deg, #e9e3e5, #d9cfd3); display: grid; place-items: center; color: var(--m-mut); font-weight: 800 }
+.ok { color: #1e7a43; font-weight: 800 } .warn { color: #a3620a; font-weight: 800 }
+.tipdark { background: #2a2526; color: #f6eff1; border-radius: 10px; padding: 7px 9px }
+.tipsoft { background: var(--m-soft); border: 1px solid #e9c9d5; border-radius: 10px; padding: 7px 9px }
+.tbl { width: 100%; border-collapse: collapse; font-size: 10px } .tbl td, .tbl th { text-align: start; padding: 3px 4px; border-top: 1px solid var(--m-ln) } .tbl th { color: var(--m-mut); font-weight: 800 }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1060px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+.note { font-size: 13px; color: var(--mut) }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Your computer list, 17 Nov</h1>
+    <p class="lede">Some of your points were plain bugs; I fixed them and added tests. Three need your eye first: how the computer app should look, how an agent shows the listing it found, and how tips appear. Tick what you want and add a note. The bar at the bottom copies your picks.</p>
+  </header>
+
+  <div class="fixed">
+    <h2>Already fixed (no choice needed)</h2>
+    <ul>
+      <li><b>"36 tools" opened 3:</b> the Tools page now lists every tool by group under the families, and the Home card counts exactly what the page shows.</li>
+      <li><b>Claude's sign-in email in Dates:</b> sign-in links, login codes, "verify your email" and password resets are never dates or subscriptions now. The wrong entry already in your Dates is removed. Tested on 10,000 messages in many languages, plus a held-out set: 100%.</li>
+      <li><b>Glitchy while the model loads:</b> the whole app was redrawn every second just to move the "Loading 66 s" counter. Now only the counter ticks.</li>
+      <li><b>Slow load on the computer:</b> the app remembers the way that started your model last time and tries it first, so a failed graphics-chip attempt is not repeated. The Engine sheet now names the real step ("Loading the model onto the chip", "Warming up") and the log records the load time.</li>
+    </ul>
+  </div>
+
+  <!-- ===================== D: the computer ===================== -->
+  <section>
+    <h2>D · How the computer app should use the screen</h2>
+    <p class="lede">Your words: <i>"I feel the app is like the mobile app but just put on a computer."</i> Today every page is a phone column in the middle of a wide window (Family health, Travel, Projects). Example data: Family health, Medicines.</p>
+
+    <div class="opt rec" data-code="D1">
+      <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune</div>
+        <div class="desk"><div class="side"><span>Home</span><span>Money</span><span>Follow-ups</span><span class="on">Health</span><span>Agents</span><span>Tools</span></div>
+          <div class="main">
+            <div><b style="font-size:13px">Family health</b> <span class="chip">Today</span> <span class="chip on">Medicines</span> <span class="chip">Lab results</span> <span class="chip">Family</span></div>
+            <div class="g2">
+              <div class="c"><b>Medicines · 3</b>
+                <div class="row sel"><span><b>Concor 5 mg</b><br><span class="mut">Baba · 8:00 every day</span></span><span class="acc">›</span></div>
+                <div class="row"><span><b>Vitamin D 50,000</b><br><span class="mut">You · Fridays</span></span>›</div>
+                <div class="row"><span><b>Glucophage 500</b><br><span class="mut">Mama · after meals</span></span>›</div>
+                <div style="margin-top:6px"><span class="btn">+ Add</span> <span class="btn o">Prescription photo</span></div></div>
+              <div class="c"><b style="font-size:12px">Concor 5 mg</b> <span class="mut">· Baba</span>
+                <div class="row"><span>Next dose</span><b>Tomorrow 8:00</b></div>
+                <div class="row"><span>Taken this week</span><b>6 of 7</b></div>
+                <div class="row"><span>Box runs out</span><b class="warn">in 5 days</b></div>
+                <div class="row"><span>Price last time</span><b>EGP 96</b></div>
+                <div style="margin-top:6px"><span class="btn o">Edit</span> <span class="btn o">Remind to buy</span></div></div>
+            </div></div></div></div>
+      <div class="info"><h3><span class="code">D1</span>List on the left, details on the right <span class="tag">Recommended</span></h3>
+        <p>Every page fills the window: its list on the left, the picked item open on the right, like Mail or Notion. Nothing opens as a phone pop-up.</p>
+        <div class="pm"><span><b>+</b> Uses the whole screen and you never lose your place in the list.</span><span><b>−</b> Each page needs its own detail view, so it is the biggest job of the four.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-D1"> Pick D1</label><textarea id="note-D1" placeholder="Your note on D1"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="D2">
+      <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune</div>
+        <div class="desk"><div class="side"><span>Home</span><span>Money</span><span>Follow-ups</span><span class="on">Health</span><span>Agents</span><span>Tools</span></div>
+          <div class="main"><b style="font-size:13px">Family health</b>
+            <div class="g3">
+              <div class="c"><b>Today</b><div class="row"><span>Concor · Baba</span><span class="ok">8:00 ✓</span></div><div class="row"><span>Glucophage · Mama</span><span>14:00</span></div></div>
+              <div class="c"><b>Medicines · 3</b><div class="row"><span>Concor 5 mg</span><span class="warn">5 days left</span></div><div class="row"><span>Vitamin D</span><span>Fri</span></div><div class="row"><span>Glucophage</span><span>meals</span></div></div>
+              <div class="c"><b>Lab results</b><div class="row"><span>HbA1c · Mama</span><b>6.4</b></div><div class="row"><span>Vitamin D · you</span><b>18</b></div></div>
+              <div class="c"><b>Family</b><div class="row"><span>Baba</span><span>2 medicines</span></div><div class="row"><span>Mama</span><span>1 medicine</span></div></div>
+              <div class="c"><b>Emergency</b><div class="row"><span>Ambulance</span><b>123</b></div><div class="row"><span>Baba's blood</span><b>A+</b></div></div>
+              <div class="c"><b>Add</b><div style="margin-top:4px"><span class="btn">+ Medicine</span></div><div style="margin-top:4px"><span class="btn o">Photo</span></div></div>
+            </div></div></div></div>
+      <div class="info"><h3><span class="code">D2</span>Everything at once, no tabs</h3>
+        <p>On a computer the tabs open up into a grid of cards, so all parts of a page show together. The phone keeps its tabs.</p>
+        <div class="pm"><span><b>+</b> One look shows the whole area; quick to build from today's pieces.</span><span><b>−</b> Busy pages (Money, Agents) get crowded; editing still opens a pop-up.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-D2"> Pick D2</label><textarea id="note-D2" placeholder="Your note on D2"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="D3">
+      <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune</div>
+        <div class="desk" style="grid-template-columns:92px minmax(0,1fr) 120px"><div class="side"><span>Home</span><span>Money</span><span>Follow-ups</span><span class="on">Health</span><span>Agents</span><span>Tools</span></div>
+          <div class="main"><b style="font-size:13px">Family health</b> <div><span class="chip on">Medicines</span> <span class="chip">Lab</span></div>
+            <div class="c"><div class="row"><span><b>Concor 5 mg</b> · Baba</span><span class="warn">5 days left</span></div><div class="row"><span><b>Vitamin D</b> · you</span><span>Fri</span></div><div class="row"><span><b>Glucophage</b> · Mama</span><span>meals</span></div></div></div>
+          <div class="side" style="border-inline-start:1px solid var(--m-ln);border-inline-end:0;font-weight:600"><b class="acc">Ask about this page</b>
+            <span class="c">When does Baba's Concor run out?</span><span class="c" style="background:var(--m-soft)">In 5 days (Sat 22 Nov). Remind you Thursday to buy it?</span><span class="btn" style="justify-self:start">Yes</span></div>
+        </div></div>
+      <div class="info"><h3><span class="code">D3</span>Chat always beside the page</h3>
+        <p>The page in the middle, a chat panel on the right that already knows what you are looking at. You can hide it.</p>
+        <div class="pm"><span><b>+</b> Uses the wide screen for the thing Attune does best: talking and doing.</span><span><b>−</b> The page itself still looks like today, only narrower.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-D3"> Pick D3</label><textarea id="note-D3" placeholder="Your note on D3"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="D4">
+      <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune <span class="mut" style="margin-inline-start:auto;font-weight:600">Ctrl+K · find anything</span></div>
+        <div class="desk"><div class="side"><span>Home</span><span>Money</span><span>Follow-ups</span><span class="on">Health</span><span>Agents</span><span>Tools</span></div>
+          <div class="main"><div><b style="font-size:13px">Medicines</b> <span class="btn" style="float:inline-end">+ Add</span></div>
+            <div class="c"><table class="tbl"><tr><th>Medicine</th><th>For</th><th>When</th><th>Left</th><th>Price</th></tr>
+              <tr><td><b>Concor 5 mg</b></td><td>Baba</td><td>8:00 daily</td><td class="warn">5 days</td><td>96</td></tr>
+              <tr><td><b>Vitamin D 50,000</b></td><td>You</td><td>Fridays</td><td>3 weeks</td><td>140</td></tr>
+              <tr><td><b>Glucophage 500</b></td><td>Mama</td><td>after meals</td><td>12 days</td><td>58</td></tr></table></div>
+            <span class="mut">Click a cell to change it · ↑↓ to move · Enter to open</span></div></div></div>
+      <div class="info"><h3><span class="code">D4</span>Dense tables and the keyboard</h3>
+        <p>Lists become tables you edit in place, with keyboard shortcuts and Ctrl+K to jump anywhere. Built for work on a desk.</p>
+        <div class="pm"><span><b>+</b> Fast for heavy use: many rows on screen, no pop-ups.</span><span><b>−</b> Feels like a work tool, less like the phone; less friendly at first.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-D4"> Pick D4</label><textarea id="note-D4" placeholder="Your note on D4"></textarea></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== L: agents ===================== -->
+  <section>
+    <h2>L · How an agent shows the listing it found</h2>
+    <p class="lede">Your words: <i>"fix the opening and the filling of the details of the specific listing, even if that means displaying it in another way."</i> Stores often drop the link's details or land on a search page. These options stop depending on the store's link. Examples: your <b>Huawei FreeClip 2 under 8,000</b> (Amazon 7,400) and a <b>hotel near the Haram, 12 to 15 Dec, 2 adults</b>.</p>
+
+    <div class="opt rec" data-code="L1">
+      <div class="phone"><div class="scr">
+        <div class="ph">photo from the listing</div>
+        <b style="font-size:13px">HUAWEI FreeClip 2 Open-Ear, Black</b>
+        <div><b style="font-size:16px">EGP 7,400</b> <span class="ok">· under your 8,000 ✓</span></div>
+        <div class="c"><div class="row"><span>Store</span><b>Amazon.eg</b></div><div class="row"><span>Seller</span><b>Amazon</b></div><div class="row"><span>Delivery</span><b>Thu 20 Nov</b></div><div class="row"><span>Rating</span><b>4.6 · 212</b></div><div class="row"><span>Checked</span><b>10 min ago</b></div></div>
+        <span class="btn" style="text-align:center;padding:7px">Open this in Amazon ↗</span>
+        <span class="mut" style="text-align:center">If the store opens a search page: <span class="acc">Find it again</span> · <span class="acc">Copy the name</span></span>
+      </div></div>
+      <div class="info"><h3><span class="code">L1</span>The offer's own page inside Attune <span class="tag">Recommended</span></h3>
+        <p>When the agent finds an offer, it reads the whole listing (photo, exact name, price, seller, delivery, rating, and for hotels the dates, guests and room) and keeps it. Tapping an offer opens this page in Attune first, so the details are always right even if the store's link fails. "Open in Amazon" then goes to the store.</p>
+        <div class="pm"><span><b>+</b> You always see the exact item and its details; no more landing on the wrong page first.</span><span><b>−</b> One extra tap before the store.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-L1"> Pick L1</label><textarea id="note-L1" placeholder="Your note on L1"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="L2">
+      <div class="phone"><div class="scr">
+        <div class="c" style="background:var(--m-soft)"><b>Attune's browser</b> · Booking.com<br><span class="ok">✓ This is the offer: Le Méridien Pyramids</span><br><span class="mut">12 → 15 Dec · 2 adults · 1 room · filled</span></div>
+        <div class="ph" style="height:150px">the real Booking.com page</div>
+        <div class="c"><span class="warn">If it lands somewhere else:</span><br>"This page is a search, not the hotel. <span class="acc">Take me to it</span>"</div>
+        <div><span class="btn">Book on the site</span> <span class="btn o">Open in Booking app</span></div>
+      </div></div>
+      <div class="info"><h3><span class="code">L2</span>The real page, inside Attune's browser, checked</h3>
+        <p>The store's page opens inside Attune. A strip at the top says whether it is the right listing and whether the dates and guests were filled. If not, Attune fills them in or clicks through to the listing itself.</p>
+        <div class="pm"><span><b>+</b> You book on the real page, with the details already in.</span><span><b>−</b> Some stores block other browsers or need you to log in again inside Attune.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-L2"> Pick L2</label><textarea id="note-L2" placeholder="Your note on L2"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="L3">
+      <div class="phone"><div class="scr">
+        <b>Best 3 · FreeClip 2</b>
+        <div class="c"><div class="ph" style="height:90px">picture of the listing, taken when found</div><div class="row"><span><b>Amazon · 7,400</b></span><span class="mut">10:42 today</span></div></div>
+        <div class="c"><div class="row"><span><b>noon · 7,650</b></span><span class="mut">10:42</span></div></div>
+        <div class="c"><div class="row"><span><b>B.TECH · 7,999</b></span><span class="mut">09:10</span></div></div>
+        <span class="mut">Tap the picture to see it full size · Open ↗ goes to the store</span>
+      </div></div>
+      <div class="info"><h3><span class="code">L3</span>A picture of the exact listing as proof</h3>
+        <p>When the agent finds an offer it saves a picture of the listing as it was. You see exactly what it saw, with price and time, before opening the store.</p>
+        <div class="pm"><span><b>+</b> No doubt about what was found or when.</span><span><b>−</b> The picture can be out of date, and pictures take space on the phone.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-L3"> Pick L3</label><textarea id="note-L3" placeholder="Your note on L3"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="L4">
+      <div class="phone"><div class="scr">
+        <b>Ready to book</b>
+        <div class="c"><b>Le Méridien Pyramids</b><br><span class="mut">Deluxe room, pyramid view</span>
+          <div class="row"><span>Check-in</span><b>Fri 12 Dec</b></div><div class="row"><span>Check-out</span><b>Mon 15 Dec · 3 nights</b></div><div class="row"><span>Guests</span><b>2 adults · 1 room</b></div><div class="row"><span>Total</span><b>EGP 21,300</b></div><div class="row"><span>Free cancel</span><b class="ok">until 10 Dec</b></div></div>
+        <span class="btn" style="text-align:center;padding:7px">Open Booking with these ↗</span>
+        <span class="mut">After it opens: "Did the dates stay 12 → 15 Dec?" <span class="acc">Yes</span> · <span class="acc">No, fix it</span></span>
+      </div></div>
+      <div class="info"><h3><span class="code">L4</span>A ready-to-book sheet with every detail</h3>
+        <p>Before opening the store, Attune shows the exact details it will fill in. After the store opens, it asks once whether they stayed; "No, fix it" opens Attune's browser and fills them in itself.</p>
+        <div class="pm"><span><b>+</b> Best for hotels and flights, where dates and guests matter most.</span><span><b>−</b> Products need less of this; it is mostly for bookings.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-L4"> Pick L4</label><textarea id="note-L4" placeholder="Your note on L4"></textarea></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== T: tips ===================== -->
+  <section>
+    <h2>T · How tips appear</h2>
+    <p class="lede">Your words: <i>"Tips don't appear good on the mobile and computer."</i> Today a dark card floats over the page, 84 px from the bottom, centred across the whole window (on the computer it even sits over the sidebar).</p>
+
+    <div class="opt rec" data-code="T1">
+      <div class="phone"><div class="scr">
+        <b style="font-size:13px">Money</b>
+        <div class="tipsoft"><b class="acc">Tip</b> · Add your salary as a repeating income, and "safe to spend" counts right up to payday.<br><span class="acc">Got it</span> · <span class="acc">More tips</span></div>
+        <div class="c"><b>Safe to spend</b><br><b style="font-size:16px">EGP 4,350</b> <span class="mut">until 25 Nov</span></div>
+        <div class="c"><div class="row"><span>Talabat · koshary</span><b>-120</b></div><div class="row"><span>Maid · Saturday</span><b>-600</b></div></div>
+      </div></div>
+      <div class="info"><h3><span class="code">T1</span>A soft line at the top of the page <span class="tag">Recommended</span></h3>
+        <p>The tip is part of the page, under its title, in the theme's own colours. It never covers anything and scrolls away with the page.</p>
+        <div class="pm"><span><b>+</b> Calm; never over a card or the chat box.</span><span><b>−</b> Easier to miss when you scroll straight down.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-T1"> Pick T1</label><textarea id="note-T1" placeholder="Your note on T1"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="T2">
+      <div class="mock"><div class="bar"><span class="dots"><i></i><i></i><i></i></span> Attune</div>
+        <div class="desk" style="position:relative"><div class="side"><span>Home</span><span class="on">Money</span><span>Agents</span></div>
+          <div class="main"><b style="font-size:13px">Money</b><div class="c"><b>Safe to spend</b> EGP 4,350</div><div class="c"><div class="row"><span>Talabat · koshary</span><b>-120</b></div></div></div>
+          <div class="tipsoft" style="position:absolute;inset-inline-end:10px;bottom:10px;width:170px;box-shadow:0 4px 14px rgba(0,0,0,.12)"><b class="acc">Tip</b> · Add your salary as a repeating income…<br><span class="acc">Got it</span></div></div></div>
+      <div class="info"><h3><span class="code">T2</span>A small card in the corner</h3>
+        <p>On the computer, a small card in the bottom corner of the page area; on the phone, above the bottom edge. Theme colours instead of the dark card.</p>
+        <div class="pm"><span><b>+</b> Noticed, but out of the way.</span><span><b>−</b> Still floats over the page.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-T2"> Pick T2</label><textarea id="note-T2" placeholder="Your note on T2"></textarea></div></div>
+    </div>
+
+    <div class="opt" data-code="T3">
+      <div class="phone"><div class="scr">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Money</b><span class="chip on">💡 1 tip</span></div>
+        <div class="c"><b>Safe to spend</b><br><b style="font-size:16px">EGP 4,350</b></div>
+        <div class="c" style="border-color:var(--m-acc)"><span class="mut">Opened from 💡:</span><br>Add your salary as a repeating income, and "safe to spend" counts right up to payday.</div>
+      </div></div>
+      <div class="info"><h3><span class="code">T3</span>Only when you ask: a 💡 next to the title</h3>
+        <p>No tip ever pops up. A small 💡 shows next to the page title when a tip exists; tap it to read.</p>
+        <div class="pm"><span><b>+</b> Nothing interrupts you, ever.</span><span><b>−</b> New users may never tap it.</span></div>
+        <div class="pick"><label><input type="checkbox" id="pick-T3"> Pick T3</label><textarea id="note-T3" placeholder="Your note on T3"></textarea></div></div>
+    </div>
+  </section>
+  <p class="note">After your picks I draw one combined screen with "What I understood", then build it in all 20 languages, light and dark, phone and computer, with tests.</p>
+</div>
+
+<div class="bar-pick"><div class="in">
+  <div class="codes" id="codes">Nothing ticked yet</div>
+  <button type="button" id="copy">Copy my picks</button>
+  <textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea>
+</div></div>
+
+<script>
+(() => {
+  const KEY = "attune-mock-desk-agents-tips";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: st[c] && st[c].on || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>

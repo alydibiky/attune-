@@ -12906,4 +12906,10 @@ export const FA = {
   "Did you mean one of these?": "منظورتان یکی از این‌ها بود؟",
   "Features": "ویژگی‌ها",
   "Find a feature or a chat": "یافتن یک ویژگی یا گفت‌وگو",
+  "Every tool": "همه ابزارها",
+  "Warming up": "در حال آماده‌سازی",
+  "Preparing the memory": "آماده‌سازی حافظه",
+  "Loading the model onto the chip": "بارگذاری مدل روی تراشه",
+  "Reading the model file": "خواندن فایل مدل",
+  "Starting the engine": "راه‌اندازی موتور",
 };

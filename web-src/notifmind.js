@@ -13,7 +13,7 @@
    Code first (fast, offline, the same answer every time), the model for what code can't place — never the other way round.
    Pure; tests: tests/notifmind/gen.mjs (10,000 notifications, 34 kinds × 11 intents × 9 languages) + heldout.mjs + unit. */
 import { understandNote as meaningOf } from "./notifmeaning.js";
-import { notAPayment, isScam, CODE_W } from "./notifwords.js";
+import { notAPayment, isScam, CODE_W, isSignInMessage } from "./notifwords.js";
 
 export const CATS = ["chat", "call", "bank", "wallet", "receipt", "bill", "subscription", "delivery", "food", "ride", "travel", "appointment",
   "health", "work", "school", "government", "security", "code", "promo", "news", "social", "media", "game", "system", "smart_home",
@@ -207,7 +207,9 @@ export function comprehend(n, { now } = {}) {
   let cat = src.cat, intent = "", action = "none", sure = true, urgency = "normal";
   // what it is: the code words first, then the app, then what the reader of meanings found
   if (src.cat === "chat" && /(?<![\p{L}])(?:news|channel|قناة|قناه|أخبار|اخبار|عاجل|breaking|actualités|noticias|nachrichten|notizie|haber|berita)(?![\p{L}])/iu.test(title)) cat = "news";
-  if (CODE_W.test(all)) cat = "code";
+  // v10.2: a sign-in link / login code / password reset you asked for = like a one-time code (no date, nothing to do);
+  // "new sign-in — was this you?" stays a security alert
+  if (CODE_W.test(all) || (isSignInMessage(all) && !/new (?:sign[- ]?in|log[- ]?in|login|device)|was this you|is this you|someone (?:signed|logged|tried)|(?:sign[- ]?in|login) attempt|from a new|تسجيل دخول جديد|هل هذا أنت/i.test(all))) cat = "code";
   else if (isScam(all)) { cat = src.cat === "chat" ? "chat" : "promo"; intent = "alert"; }
   else if (src.cat === "email" || src.cat === "" || (src.cat === "chat" && src.via === "sender")) { const k = KIND2CAT[mean.kind]; if (k) cat = k; else if (src.cat === "") cat = mean.kind === "message" ? "chat" : mean.kind === "email" ? "email" : "other"; }
   if (cat === "bank" && /receipt|you paid|thank you for your (?:order|purchase)|order (?:confirmed|placed)|payment (?:of [^.]{0,30})?(?:was )?successful|total charged|paid online|إيصال|تم الدفع بنجاح/i.test(all) && !SMS_APP.test(fold(n.pkg + " " + n.app)) && src.cat !== "bank" && src.cat !== "wallet") cat = "receipt";
@@ -268,7 +270,7 @@ export function comprehend(n, { now } = {}) {
   const amount = amt ? { ...amt, dir: why === "price" || why === "offer" || intent === "offer" || cat === "markets" || cat === "marketplace" ? "price"
     : action === "pay" || why === "notyet" || cat === "bill" ? "due" : /credited|deposit|received|refund|استلمت|تم إيداع|تم ايداع|إيداع|ايداع|وصلك|اتحولك/i.test(all) && !/received your payment|we received|payment received/i.test(all) ? "in"
     : /debited|charged|paid|purchase|spent|withdraw|خصم|سحب|شراء|دفعت|تم الدفع|you sent|transferred to/i.test(all) || cat === "receipt" ? "out" : "price" } : null;
-  const when = intent === "greeting" || cat === "news" ? null : whenIn(all, at);
+  const when = intent === "greeting" || cat === "news" || cat === "code" ? null : whenIn(all, at);
   const ref = (REF.exec(latin(all)) || [])[1] || "";
   if (URGENT.test(t) || cat === "security" && intent === "alert" || action === "update_payment" || (when && when.date === isoOf(new Date(at)) && action !== "none")) urgency = "high";
   else if (/^(?:promo|news|social|media|game|sports|markets|weather|system)$/.test(cat) || intent === "greeting" || intent === "offer") urgency = "low";
