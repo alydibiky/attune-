@@ -1,6 +1,7 @@
 // HELD-OUT for tests/chatroles/gen.mjs — wordings written after chatroles.js, never used to write it.
 export const H = {
   role: {
+    orders: { en: ["the group where I drop every order I buy online", "a record of all my purchases", "every order I placed goes here"], ar: ["هنا بحط كل الطلبات اللي طلبتها", "كل حاجة اشتريتها أونلاين"], fr: ["moshtarayaty kolaha"] },
     shopping: { en: ["stuff we run out of at home", "the grocery list with my wife", "things to buy from the supermarket"], ar: ["الحاجات اللي محتاجينها من السوبر ماركت", "المشتريات بتاعت البيت"], fr: ["talabat el beit ma3 merati"] },
     building: { en: ["tenants of our building", "the owners' association", "people in my compound"], ar: ["سكان العمارة", "ملاك البرج"], fr: ["el geran"] },
     work: { en: ["my team at the office", "the client's project group", "staff of the company"], ar: ["المكتب", "عملاء الشركة"], fr: ["el mashroo3"] },

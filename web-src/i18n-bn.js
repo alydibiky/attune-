@@ -12929,4 +12929,8 @@ export const BN = {
   "Find a project": "প্রজেক্ট খুঁজুন",
   "Find a medicine": "ওষুধ খুঁজুন",
   "On this device": "এই ডিভাইসে",
+  "{c} = a record of the orders you buy": "{c} = আপনার কেনা অর্ডারের রেকর্ড",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "প্রতিটি মেসেজ রাখা হয় — জিজ্ঞেস করুন “… কবে অর্ডার করেছি?” — কিছুই তালিকায় যায় না",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "এখনো বুঝিনি — এভাবে বলুন: “আমার কেনা অর্ডার”, “আমাদের বাজারের তালিকা”, “কাজের গ্রুপ”, “জরুরি না”।",
+  "Got it — check the lines above, then tap Right.": "বুঝেছি — উপরের লাইনগুলো দেখুন, তারপর ঠিক আছে ট্যাপ করুন।",
 };

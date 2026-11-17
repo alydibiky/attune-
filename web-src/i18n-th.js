@@ -12929,4 +12929,8 @@ export const TH = {
   "Find a project": "ค้นหาโปรเจกต์",
   "Find a medicine": "ค้นหายา",
   "On this device": "บนอุปกรณ์นี้",
+  "{c} = a record of the orders you buy": "{c} = บันทึกคำสั่งซื้อที่คุณซื้อ",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "เก็บทุกข้อความ — ถามว่า “สั่ง … เมื่อไร?” — ไม่มีอะไรเข้ารายการ",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "ยังไม่เข้าใจ — ลองพูดว่า “คำสั่งซื้อที่ฉันซื้อ”, “รายการซื้อของของเรา”, “กลุ่มงาน”, “ไม่สำคัญ”",
+  "Got it — check the lines above, then tap Right.": "เข้าใจแล้ว — ดูบรรทัดด้านบน แล้วแตะ ถูกต้อง",
 };

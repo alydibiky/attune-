@@ -12930,4 +12930,8 @@ export const TRK = {
   "Find a project": "Proje bul",
   "Find a medicine": "İlaç bul",
   "On this device": "Bu cihazda",
+  "{c} = a record of the orders you buy": "{c} = satın aldığın siparişlerin kaydı",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Her mesaj saklanır — “… ne zaman sipariş ettim?” diye sor — hiçbir şey listeye eklenmez",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Bunu henüz anlamadım — şöyle söyle: “aldığım siparişler”, “alışveriş listemiz”, “iş grubu”, “önemli değil”.",
+  "Got it — check the lines above, then tap Right.": "Anladım — yukarıdaki satırlara bak, sonra Doğru'ya dokun.",
 };

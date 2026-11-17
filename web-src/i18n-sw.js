@@ -12930,4 +12930,8 @@ export const SW = {
   "Find a project": "Tafuta mradi",
   "Find a medicine": "Tafuta dawa",
   "On this device": "Kwenye kifaa hiki",
+  "{c} = a record of the orders you buy": "{c} = kumbukumbu ya oda unazonunua",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Kila ujumbe unahifadhiwa — uliza “niliagiza … lini?” — hakuna kinachoingia kwenye orodha",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Bado sijaelewa — sema hivi: “oda nilizonunua”, “orodha yetu ya manunuzi”, “kikundi cha kazi”, “si muhimu”.",
+  "Got it — check the lines above, then tap Right.": "Nimeelewa — angalia mistari hapo juu, kisha gusa Sawa.",
 };

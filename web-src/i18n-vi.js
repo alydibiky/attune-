@@ -12929,4 +12929,8 @@ export const VI = {
   "Find a project": "Tìm dự án",
   "Find a medicine": "Tìm thuốc",
   "On this device": "Trên thiết bị này",
+  "{c} = a record of the orders you buy": "{c} = sổ ghi các đơn bạn mua",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Mọi tin nhắn đều được giữ — hỏi “tôi đặt … khi nào?” — không thêm gì vào danh sách",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Mình chưa hiểu — hãy nói như: “đơn tôi đã mua”, “danh sách đi chợ của nhà”, “nhóm công việc”, “không quan trọng”.",
+  "Got it — check the lines above, then tap Right.": "Đã hiểu — xem các dòng ở trên rồi chạm Đúng.",
 };

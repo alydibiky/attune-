@@ -12929,4 +12929,8 @@ export const ZH = {
   "Find a project": "查找项目",
   "Find a medicine": "查找药品",
   "On this device": "在此设备上",
+  "{c} = a record of the orders you buy": "{c} = 你买过的订单记录",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "每条消息都会保存——可以问“我什么时候订的……？”——不会加到任何清单",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "还没看懂——可以这样说：“我买的订单”“我们的购物清单”“工作群”“不重要”。",
+  "Got it — check the lines above, then tap Right.": "明白了——看看上面几行，然后点“对”。",
 };

@@ -12929,4 +12929,8 @@ export const DE = {
   "Find a project": "Projekt finden",
   "Find a medicine": "Medikament finden",
   "On this device": "Auf diesem Gerät",
+  "{c} = a record of the orders you buy": "{c} = eine Liste deiner Bestellungen",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Jede Nachricht wird behalten — frag „wann habe ich … bestellt?“ — nichts kommt auf eine Liste",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Das habe ich noch nicht verstanden — sag es so: „Bestellungen, die ich gekauft habe“, „unsere Einkaufsliste“, „Arbeitsgruppe“, „nicht wichtig“.",
+  "Got it — check the lines above, then tap Right.": "Verstanden — prüfe die Zeilen oben und tippe auf Richtig.",
 };

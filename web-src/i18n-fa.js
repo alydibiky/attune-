@@ -12929,4 +12929,8 @@ export const FA = {
   "Find a project": "یافتن پروژه",
   "Find a medicine": "یافتن دارو",
   "On this device": "روی این دستگاه",
+  "{c} = a record of the orders you buy": "{c} = فهرست سفارش‌هایی که می‌خرید",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "هر پیام نگه داشته می‌شود — بپرسید «… را کی سفارش دادم؟» — چیزی به فهرست اضافه نمی‌شود",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "هنوز متوجه نشدم — این‌طور بگویید: «سفارش‌هایی که خریدم»، «فهرست خرید ما»، «گروه کار»، «مهم نیست».",
+  "Got it — check the lines above, then tap Right.": "فهمیدم — خط‌های بالا را ببینید، بعد «درست» را بزنید.",
 };

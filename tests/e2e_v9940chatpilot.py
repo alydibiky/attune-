@@ -49,6 +49,12 @@ with sync_playwright() as p:
     # K1 for the next group, in the person's own words
     ask = page.locator("[data-testid=cp-ask]")
     check(ask.count() == 1 and "Gym buddies" in ask.inner_text(), "the next new group: Gym buddies")
+    # v10.2 (Ali: "I wrote it and pressed Change and nothing happened"): words Attune can't place get an answer, never silence
+    page.fill("[data-testid=cp-say-input]", "blue bananas flying"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=cp-say-unsure]").count() == 1, "words Attune can't place → it says so, with examples")
+    page.fill("[data-testid=cp-say-input]", "It's a group I put on all orders I buy"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(200)
+    check("record of the orders" in page.locator("[data-testid=cp-understood]").inner_text() and page.locator("[data-testid=cp-say-ok]").count() == 1 and page.locator("[data-testid=cp-right]").is_enabled(),
+          "Ali's own words: “a group I put on all orders I buy” → a record of the orders you buy, Right ready")
     page.fill("[data-testid=cp-say-input]", "my gym buddies, only if they talk about the schedule"); page.click("[data-testid=cp-say-go]"); page.wait_for_timeout(200)
     und = page.locator("[data-testid=cp-understood]").inner_text()
     check("your friends" in und and "schedule" in und, "your words → “What I understood”: friends · tell you when: schedule — " + und.replace("\n", " | "))

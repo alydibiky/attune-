@@ -12921,4 +12921,8 @@ export const ARB = {
   "Find a project": "ابحث عن مشروع",
   "Find a medicine": "ابحث عن دواء",
   "On this device": "على هذا الجهاز",
+  "{c} = a record of the orders you buy": "{c} = سجل الطلبات التي تشتريها",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "تُحفظ كل رسالة — اسأل «متى طلبت …؟» — ولا يُضاف شيء إلى قائمة",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "لم أفهم هذا بعد — قلها هكذا: «الطلبات التي اشتريتها»، «قائمة مشترياتنا»، «مجموعة العمل»، «غير مهم».",
+  "Got it — check the lines above, then tap Right.": "فهمت — راجع الأسطر أعلاه، ثم اضغط «صحيح».",
 };

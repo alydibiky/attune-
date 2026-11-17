@@ -12929,4 +12929,8 @@ export const KO = {
   "Find a project": "프로젝트 찾기",
   "Find a medicine": "약 찾기",
   "On this device": "이 기기에 있음",
+  "{c} = a record of the orders you buy": "{c} = 내가 산 주문 기록",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "모든 메시지를 보관해요 — “…를 언제 주문했지?”라고 물어보세요 — 목록에는 넣지 않아요",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "아직 이해하지 못했어요 — “내가 산 주문”, “우리 장보기 목록”, “업무 그룹”, “중요하지 않음”처럼 말해 주세요.",
+  "Got it — check the lines above, then tap Right.": "알겠어요 — 위의 줄을 확인하고 ‘맞아요’를 누르세요.",
 };

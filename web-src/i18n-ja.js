@@ -12929,4 +12929,8 @@ export const JA = {
   "Find a project": "プロジェクトを探す",
   "Find a medicine": "薬を探す",
   "On this device": "この端末に保存済み",
+  "{c} = a record of the orders you buy": "{c} = 購入した注文の記録",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "メッセージはすべて保存 — 「…はいつ注文した？」と聞けます — リストには入りません",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "まだ分かりません — 「買った注文」「うちの買い物リスト」「仕事のグループ」「重要じゃない」のように言ってください。",
+  "Got it — check the lines above, then tap Right.": "了解です — 上の行を確認して「正しい」をタップしてください。",
 };

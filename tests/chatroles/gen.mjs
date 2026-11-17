@@ -10,6 +10,7 @@ const N = +(process.argv[2] || 10000);
 let seed = 4343 + 7919 * +(process.env.SEED_SHIFT || 0) + (H ? 33 : 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], shuffle = (a) => a.map((x) => [rnd(), x]).sort((p, q) => p[0] - q[0]).map((x) => x[1]);
 const ROLE = H ? H.role : {
+  orders: { en: ["It's a group I put on all orders I buy", "where I save every order I make", "my orders", "a log of everything I bought", "my purchases and receipts"], ar: ["جروب بحط فيه كل الطلبات اللي بشتريها", "مشترياتي", "كل اللي بشتريه", "فواتيري"], fr: ["el talabat elly bashtereha"] },
   shopping: { en: ["our shopping list", "me and Noudy write what ran out at home", "groceries we need to buy", "the list of things to buy"], ar: ["ده جروب أنا ونودي، بنكتب فيه الحاجات اللي خلصت من البيت", "طلبات البيت", "الحاجات اللي ناقصة عشان نجيبها"], fr: ["talabat el beit", "el 7agat elly 5elset"] },
   building: { en: ["the residents' group", "building owners", "our compound group", "neighbours chat"], ar: ["جروب السكان", "اتحاد الملاك", "جروب الكمبوند", "الجيران"], fr: ["gروب el sokkan".replace("g", "g"), "el compound"] },
   work: { en: ["work group", "the cranes site team", "project chat with the client", "office group"], ar: ["جروب الشغل", "جروب الموقع", "المشروع", "الزملاء"], fr: ["el shoghl", "group el mawke3"] },

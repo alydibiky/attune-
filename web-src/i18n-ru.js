@@ -12929,4 +12929,8 @@ export const RU = {
   "Find a project": "Найти проект",
   "Find a medicine": "Найти лекарство",
   "On this device": "На этом устройстве",
+  "{c} = a record of the orders you buy": "{c} = список ваших заказов и покупок",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Каждое сообщение сохраняется — спросите «когда я заказал …?» — в списки ничего не добавляется",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Пока не понял — скажите так: «заказы, которые я купил», «наш список покупок», «рабочая группа», «не важно».",
+  "Got it — check the lines above, then tap Right.": "Понял — проверьте строки выше и нажмите «Верно».",
 };

@@ -10034,4 +10034,8 @@ export const AR = {
   "Find a project": "دوّر على مشروع",
   "Find a medicine": "دوّر على دوا",
   "On this device": "على الجهاز ده",
+  "{c} = a record of the orders you buy": "{c} = سجل الطلبات اللي بتشتريها",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "كل رسالة بتتحفظ — اسأل «طلبت … امتى؟» — ومفيش حاجة بتتحط في ليستة",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "لسه مفهمتش دي — قولها كده: «الطلبات اللي اشتريتها»، «ليستة الطلبات بتاعتنا»، «جروب الشغل»، «مش مهم».",
+  "Got it — check the lines above, then tap Right.": "تمام — بص على السطور اللي فوق، وبعدين دوس «صح».",
 };

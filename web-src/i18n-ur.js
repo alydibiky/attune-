@@ -12930,4 +12930,8 @@ export const UR = {
   "Find a project": "پروجیکٹ تلاش کریں",
   "Find a medicine": "دوا تلاش کریں",
   "On this device": "اس ڈیوائس پر",
+  "{c} = a record of the orders you buy": "{c} = آپ کے خریدے آرڈرز کا ریکارڈ",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "ہر پیغام محفوظ رہتا ہے — پوچھیں “… کب آرڈر کیا؟” — کچھ بھی فہرست میں نہیں جاتا",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "ابھی سمجھ نہیں آیا — یوں کہیں: “میرے خریدے آرڈرز”، “ہماری خریداری کی فہرست”، “کام کا گروپ”، “اہم نہیں”۔",
+  "Got it — check the lines above, then tap Right.": "سمجھ گیا — اوپر کی سطریں دیکھیں، پھر درست پر ٹیپ کریں۔",
 };

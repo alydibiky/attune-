@@ -12930,4 +12930,8 @@ export const PT = {
   "Find a project": "Encontrar um projeto",
   "Find a medicine": "Encontrar um remédio",
   "On this device": "Neste aparelho",
+  "{c} = a record of the orders you buy": "{c} = um registro dos pedidos que você compra",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Cada mensagem é guardada — pergunte “quando pedi …?” — nada vai para uma lista",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Ainda não entendi — diga assim: “pedidos que comprei”, “nossa lista de compras”, “grupo do trabalho”, “não importa”.",
+  "Got it — check the lines above, then tap Right.": "Entendi — confira as linhas acima e toque em Certo.",
 };

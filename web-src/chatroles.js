@@ -13,12 +13,15 @@ import { itemsOf } from "./shoplist.js";
 import { noiseOf } from "./chats.js";
 
 export const ROLES_KEY = "attune:chatroles:v1";
-export const ROLES = ["shopping", "building", "work", "family", "friends", "person", "courier", "news", "quiet"];
+export const ROLES = ["orders", "shopping", "building", "work", "family", "friends", "person", "courier", "news", "quiet"];
 const fold = (s) => String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$|[،,.!?؟])/g, "ه").replace(/[ًٌٍَُِّْـ]/g, "");
 
 // the role words — in the order they are tried (the first that fits wins; "shopping list with my wife" is shopping, not family)
 const ROLE_W = [
   ["quiet", /\b(?:spam|junk|ignore (?:it|this|them|everything)|mute|useless|not important|never (?:tell|show)|nothing important)\b|مش مهم(?! غير| الا| إلا| بس)|تجاهل(?:ه|ها)?(?!\s+(?:غير|الا|إلا))|سبام|ملوش لازمة|مالوش لازمة|ezh2|msh mohem(?! gher| ella)|mesh mohem(?! gher| ella)/i],
+  // v10.2 (Ali, 17 Nov: "It's a group I put on all orders I buy" — Change did nothing): a record of what YOU bought is not a list
+  // of things to buy — every message is kept (ask "when did I order …?"), nothing goes on a list
+  ["orders", /\b(?:(?:all |the |my )?(?:orders?|things|stuff|everything|what|items?)\s+(?:that\s+)?(?:i|we)\s+(?:buy|bought|order|ordered|purchase|purchased|get|got)|(?:i|we)\s+(?:put|post|save|keep|log|record|write)\s+(?:in |on )?(?:it |here )?(?:all |every |each )?(?:(?:the|my|our)\s+)?(?:orders?|purchases?|receipts?)|my (?:orders|purchases|receipts)|purchases?(?: log| record| history)?|order (?:log|history|record)|receipts?)\b|(?:الطلبات|طلبات|الحاجات|كل حاجه|كل حاجة|كل اللي)\s+(?:اللي\s+)?(?:بشتريها|بشتريه|بشتري|اشتريتها|اشتريته|اشتريت|بطلبها|بطلبه|بطلب|طلبتها|طلبته|طلبت|بجيبها|جبتها)|مشترياتي|مشتريات|فواتيري|طلباتي اللي|اللي بشتريه|اللي اشتريته|el talabat elly bashtereha|moshtarayaty/i],
   ["shopping", /\b(?:shopping|groceries|grocery|what(?:'s| is) missing|ran out|run out|things to buy|to buy|missing (?:things|stuff|items)|our list|the list|supermarket)\b|طلبات(?!\s+(?:الشغل|العملاء))|الحاجات اللي (?:خلصت|ناقصه|ناقصة|محتاجينها)|اللي خلص|اللي ناقص|نشتري|نجيب(?:ها)?|البقاله|البقالة|السوبر ?ماركت|المشتريات|lista|el 7agat elly 5elset|talabat el beit|nesh?tery|el ta?labat/i],
   ["building", /\b(?:residents?|owners?|building|compound|neighbou?rs?|tenants?|hoa|apartment block|landlord)\b|سكان|السكان|ملاك|الملاك|اتحاد|العماره|العمارة|الكمبوند|الكومباوند|كمبوند|الجيران|جيران|البرج|sokan|el sokkan|el omara|el compound|el geran/i],
   ["work", /\b(?:work|job|office|site|project|client|clients|team|colleagues|business|company|cranes?|staff)\b|شغل|الشغل|الموقع|المشروع|العملاء|عملاء|المكتب|الشركه|الشركة|الزملاء|زمايل|الونش|الاوناش|الصيانه بتاعت الاوناش|sho?3?'?ol|el shoghl|el mawke3|el mashroo3/i],
@@ -86,8 +89,8 @@ export function guessRole(chat = {}, messages = []) {
   return { role: "", sure: false, because: { t: "not sure yet", v: {} } };
 }
 
-const ROLE_LINE = { shopping: "{c} = a shared shopping list", building: "{c} = your building's group", work: "{c} = a work group", family: "{c} = your family", friends: "{c} = your friends", person: "{c} = a chat with one person", courier: "{c} = deliveries and orders", news: "{c} = news and offers", quiet: "{c} = never important" };
-const DOES = { shopping: "Each message → an item on your Shopping list", building: "Usually: messages are only kept, no cards", work: "Usually: messages are only kept, no cards", family: "Memes and news are kept quietly; real requests to you are shown", friends: "Messages are kept quietly", person: "Real requests to you become to-dos (with the message and Undo)", courier: "Delivery dates → Follow-ups; payment requests are checked for scams", news: "Messages are kept quietly", quiet: "Messages are only kept — never a card" };
+const ROLE_LINE = { orders: "{c} = a record of the orders you buy", shopping: "{c} = a shared shopping list", building: "{c} = your building's group", work: "{c} = a work group", family: "{c} = your family", friends: "{c} = your friends", person: "{c} = a chat with one person", courier: "{c} = deliveries and orders", news: "{c} = news and offers", quiet: "{c} = never important" };
+const DOES = { orders: "Every message is kept — ask “when did I order …?” — nothing goes on a list", shopping: "Each message → an item on your Shopping list", building: "Usually: messages are only kept, no cards", work: "Usually: messages are only kept, no cards", family: "Memes and news are kept quietly; real requests to you are shown", friends: "Messages are kept quietly", person: "Real requests to you become to-dos (with the message and Undo)", courier: "Delivery dates → Follow-ups; payment requests are checked for scams", news: "Messages are kept quietly", quiet: "Messages are only kept — never a card" };
 /** The "What I understood" lines for this chat: [{ t, v }] (tr() each). */
 export function understood(rule, chatName) {
   if (!rule || !rule.role) return [{ t: "Not sure what {c} is yet — tell me in your words", v: { c: chatName } }];

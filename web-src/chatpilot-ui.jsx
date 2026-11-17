@@ -48,7 +48,10 @@ function AskCard({ a, done }) {
       <button disabled={!rule || !rule.role} onClick={() => save(rule)} className="min-h-[40px] px-3.5 rounded-[10px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] text-[12.5px] font-extrabold disabled:opacity-40" data-testid="cp-right">✓ {tr("Right")}</button>
       <button onClick={() => { CR.saveRole(a.key, { role: "", ok: false }); done(); }} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-ln)] text-[12.5px] font-bold" data-testid="cp-later">{tr("Not now")}</button>
     </div>
-    <form onSubmit={(e) => { e.preventDefault(); const r = CR.readDescription(say); if (r) setMine(r); }} className="flex gap-2" data-testid="cp-say">
+    {/* v10.2 (Ali: "I wrote it and pressed Change and nothing happened"): words Attune can't place are said so — never silence */}
+    {mine && !mine.role ? <p className="m-0 text-[12px] text-[var(--c-warn)]" dir="auto" data-testid="cp-say-unsure">{tr("I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.")}</p> : null}
+    {mine && mine.role ? <p className="m-0 text-[12px] c-pos font-bold" data-testid="cp-say-ok">{tr("Got it — check the lines above, then tap Right.")}</p> : null}
+    <form onSubmit={(e) => { e.preventDefault(); const r = CR.readDescription(say); setMine(r || { role: "", care: [], whenMe: false, people: [], unsure: true }); }} className="flex gap-2" data-testid="cp-say">
       <input value={say} onChange={(e) => { setSay(e.target.value); setMine(null); }} dir="auto" placeholder={tr("Or say what it is, in your words")} aria-label={tr("Or say what it is, in your words")}
         className="flex-1 min-w-0 min-h-[40px] rounded-[10px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[13px]" data-testid="cp-say-input" />
       <button type="submit" disabled={!say.trim()} className="min-h-[40px] px-3 rounded-[10px] border border-[var(--c-acc)] c-acc text-[12.5px] font-extrabold disabled:opacity-40" data-testid="cp-say-go">✎ {tr("Change")}</button>

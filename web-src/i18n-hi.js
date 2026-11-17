@@ -12930,4 +12930,8 @@ export const HI = {
   "Find a project": "प्रोजेक्ट खोजें",
   "Find a medicine": "दवा खोजें",
   "On this device": "इस डिवाइस पर",
+  "{c} = a record of the orders you buy": "{c} = आपके खरीदे ऑर्डर का रिकॉर्ड",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "हर मैसेज रखा जाता है — पूछें “… कब ऑर्डर किया?” — कुछ भी सूची में नहीं जाता",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "अभी समझ नहीं आया — ऐसे कहें: “मेरे खरीदे ऑर्डर”, “हमारी शॉपिंग लिस्ट”, “काम का ग्रुप”, “ज़रूरी नहीं”।",
+  "Got it — check the lines above, then tap Right.": "समझ गया — ऊपर की लाइनें देखें, फिर सही पर टैप करें।",
 };

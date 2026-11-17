@@ -7,6 +7,8 @@ import * as M from "../../web-src/notifmind.js";
 import * as O from "../../web-src/overpay.js";
 import * as W from "../../web-src/notifwords.js";
 import { shownToolGroups, toolCount } from "../../web-src/hubs.js";
+import * as CR from "../../web-src/chatroles.js";
+import * as AP from "../../web-src/autopilot2.js";
 let fail = 0, n = 0; const ok = (c, m) => { n++; if (!c) { console.log("FAIL " + m); fail++; } };
 const now = Date.UTC(2026, 10, 17, 0, 45);
 const claude = "Secure link to log in to Claude.ai\nClick the link below to log in to Claude.ai. This link will expire in 1 hour and can only be used once.";
@@ -22,6 +24,14 @@ ok(D.readDeadlines("Your Claude Pro subscription renews on 5 Dec 2026. Sign in t
 ok(M.comprehend({ app: "Gmail", pkg: "com.google.android.gm", title: "Google", text: "New sign-in to your account on Windows. Was this you?" }, { now }).cat !== "code", "“new sign-in — was this you?” stays a security alert");
 ok(!W.isSignInMessage("Your passport expires on 3 Dec 2026") && W.isSignInMessage("رابط تسجيل الدخول — الرابط صالح لمدة 15 دقيقة"), "isSignInMessage");
 ok(D.dropSignIns({ items: [{ id: "a", source: "notification", note: claude }, { id: "b", source: "typed", note: claude }, { id: "c", source: "notification", note: "Netflix renews on 5 Dec 2026" }] }).items.map((x) => x.id).join() === "b,c", "his old wrong item is taken out of Dates");
+// Ali's Orders group: "It's a group I put on all orders I buy" — Change did nothing (17 Nov, 15:21)
+const od = CR.readDescription("It's a group I put on all orders I buy");
+ok(od && od.role === "orders" && CR.understood(od, "Orders")[0].t.includes("record of the orders"), "his words → a record of the orders he buys: " + JSON.stringify(od));
+ok(CR.readDescription("جروب بحط فيه كل الطلبات اللي بشتريها").role === "orders", "…the same in Egyptian Arabic is not a shopping list");
+ok(CR.readDescription("our shopping list").role === "shopping" && CR.readDescription("الحاجات اللي خلصت في البيت").role === "shopping", "a real shopping list stays a shopping list");
+const dn = AP.decide({ id: "o1", app: "WhatsApp", pkg: "com.whatsapp", title: "Orders", text: "Toilet paper, kitchen tissues, rice", group: true, convo: "Orders", who: "Ali", ts: Date.now() },
+  { roles: { "whatsapp|g:orders": { ...od, ok: true } } });
+ok(dn && dn.kind === "keep", "a message in his Orders group is kept — never added to a list: " + JSON.stringify(dn && dn.kind));
 // tools: the count on Home = what the page lists
 const groups = [["A", ["lists", "money", "crane"]], ["B", ["lists", "fit"]]];
 const shown = shownToolGroups(groups, ["lists", "money", "crane", "fit"], (id) => id === "crane");

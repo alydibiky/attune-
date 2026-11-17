@@ -12930,4 +12930,8 @@ export const IDN = {
   "Find a project": "Cari proyek",
   "Find a medicine": "Cari obat",
   "On this device": "Di perangkat ini",
+  "{c} = a record of the orders you buy": "{c} = catatan pesanan yang kamu beli",
+  "Every message is kept — ask “when did I order …?” — nothing goes on a list": "Setiap pesan disimpan — tanya “kapan saya pesan …?” — tidak ada yang masuk daftar",
+  "I didn't get that one yet — say it like: “orders I bought”, “our shopping list”, “work group”, “not important”.": "Belum paham — katakan seperti: “pesanan yang saya beli”, “daftar belanja kami”, “grup kerja”, “tidak penting”.",
+  "Got it — check the lines above, then tap Right.": "Paham — cek baris di atas, lalu ketuk Benar.",
 };
