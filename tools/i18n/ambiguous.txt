@@ -980,6 +980,7 @@ voice-ui.jsx: <button onClick={() => speakOut(newest.who + ": " + newest.text, s
 
 ## Listening…
 chat.jsx: placeholder={listening ? tr("Listening…") : tr("Message Attune")}
+quickbox-ui.jsx: {listening ? <p style={{ margin: 0, color: C.mut, fontWeight: 700 }} data-testid="quickbox-listening">🎤 {tr("Listening…")}</p> : null}
 shelf-ui.jsx: <button className={btn + (hearing ? " !text-[var(--c-acc)] !border-[var(--c-acc)]" : "")} onClick={dictate} data-testid="shelf-note-voice"><
 voice-ui.jsx: <p className="text-center text-[13px] c-sub mt-1.5 mb-0">{listening ? (speakLang === "ar" ? "بسمعك…" : tr("Listening…")) : ""}</p>
 
@@ -1352,6 +1353,10 @@ weekplan-ui.jsx: <label className="flex-1">{tr("From")}<input className={inp} ty
 ## a month
 lifeedit.js: const per = intent.every === "week" ? (ar ? " في الأسبوع" : " " + tr("a week")) : intent.every === "month" ? (ar ? " في الشهر" : " " + tr("a
 overpay-ui.jsx: {f.kind === "overlap" ? <div className={"text-[12.5px] " + U.muted}>{f.items.map((i) => <div key={i.name} className="flex justify-between py
+
+## Lists
+lists-ui.jsx: <button onClick={() => navTo("lists")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="home-todo-all">{tr("Lis
+widgets-ui.jsx: const WORDS = () => ({ left: tr("{n} left"), alldone: tr("All done ✓"), add: tr("+ Add"), clear: tr("Clear {n} ticked"), lists: tr("Lists"),
 
 ## Name
 lists-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("Name")}</span>
