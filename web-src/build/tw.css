@@ -40,7 +40,7 @@ html.att-light .home-tile{border-color:transparent;box-shadow:0 1px 3px rgba(16,
 .home-tile-ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center}
 .home-chip{height:40px;padding:0 16px;border-radius:20px;background:var(--c-surf);border:1px solid var(--c-ln);font-size:14px;font-weight:700;color:var(--c-ink)}
 html.att-light .home-chip{border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}
-.home-chip-all{background:var(--c-ink);color:var(--c-bg)}
+.home-chip-all{background:var(--c-ink);color:var(--g-solid,var(--c-bg))}
 .calm .c-card{background:var(--c-surf);border:1px solid var(--c-ln);border-radius:var(--c-r);padding:16px}
 .calm .c-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--c-mut);font-weight:600}
 .calm .c-sub{color:var(--c-mut);font-size:12.5px}
@@ -147,3 +147,13 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
 .wk-mday.wk-out { opacity: .45 } .wk-mday.wk-today { background: var(--wk-today); box-shadow: inset 0 0 0 1px var(--c-acc) }
 .wk-mnum { justify-self: start; min-width: 26px; height: 26px; border-radius: 99px; font-weight: 900; font-size: 12.5px } .wk-mday .wk-pill { min-height: 22px; padding: 3px 6px; font-size: 10.5px }
 .wk-under { display: block; padding: 14px 16px !important; min-height: 110px }
+
+/* v10.6 (the width audit: Travel's page squeezed into two columns inside the computer's list + details at 1024 px — "GOI / NG"): the
+   details side of a split view (split-ui.jsx .att-pane) measures ITSELF; a page's "two columns on a big screen" stack until the pane
+   itself has room for two (680 px) — the window being wide is not enough. */
+.att-pane { container-type: inline-size; container-name: pane; }
+@container pane (max-width: 680px) {
+  .att-pane .lg\:grid-cols-2, .att-pane .md\:grid-cols-2, .att-pane .xl\:grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  .att-pane .lg\:grid-cols-3, .att-pane .md\:grid-cols-3, .att-pane .xl\:grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .att-pane .lg\:space-y-0 > :not(:last-child) { margin-bottom: 0.5rem; }
+}

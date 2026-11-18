@@ -2804,7 +2804,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
             ) : null}
             {busy ? (
-              <button onClick={stop} className="w-11 h-11 rounded-full bg-[var(--c-ink)] text-[var(--c-bg)] flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
+              <button onClick={stop} className="w-11 h-11 rounded-full bg-[var(--c-ink)] text-[var(--g-solid,var(--c-bg))] flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
             ) : text.trim() || image || files.length ? (
               <button onClick={() => ask()} className="w-11 h-11 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] flex items-center justify-center" title={tr("Send")}><Send size={17} className="rtl:rotate-180" /></button>
             ) : (

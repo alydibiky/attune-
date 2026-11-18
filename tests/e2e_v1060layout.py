@@ -39,8 +39,11 @@ PROBE = r"""() => {
     while ((m = re.exec(s))) { const w = m[0]; if (/^[\d.,]+$/.test(w) && w.length < 4) continue;
       const rg = document.createRange(); rg.setStart(n, m.index); rg.setEnd(n, m.index + w.length);
       const rects = [...rg.getClientRects()].filter((x) => x.width > 0.5);
-      if (rects.length > 1 && Math.abs(rects[0].top - rects[rects.length - 1].top) > 4) { out.push('word broken: “' + w + '” in ' + label(el)); break; } }
+      if (rects.length > 1 && Math.abs(rects[0].top - rects[rects.length - 1].top) > 4 && !/[-‑–]/.test(w)) { out.push('word broken: “' + w + '” in ' + label(el)); break; } }
     if (out.length > 20) break; }
+  // text drawn in a see-through colour (v10.6: a toast's words were the glass page's transparent background colour)
+  for (const e of document.querySelectorAll('#root *')) { if (!e.childNodes.length || ![...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())) continue;
+    const cs = getComputedStyle(e); if (hiddenAway(e)) continue; const m = /rgba\([^)]*,\s*([\d.]+)\)/.exec(cs.color); if ((m && +m[1] < 0.05) || cs.color === 'transparent') { out.push('invisible text: ' + label(e)); break; } }
   if (document.scrollingElement.scrollWidth > W + 2) out.push('the page scrolls sideways: ' + document.scrollingElement.scrollWidth + ' > ' + W);
   return [...new Set(out)];
 }"""

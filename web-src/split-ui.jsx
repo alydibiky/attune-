@@ -47,7 +47,7 @@ export function SplitView({ items, sel, onSel, detail, find = false, findHint = 
     try { const el = listRef.current && listRef.current.querySelector('[data-key="' + CSS.escape(String(k)) + '"]'); if (el) { el.focus(); el.scrollIntoView({ block: "nearest" }); } } catch (x) {}
   };
   return (
-    <div className="calm grid grid-cols-[minmax(280px,360px)_minmax(0,1fr)] gap-5 items-start" data-testid={testid}>
+    <div className="calm grid grid-cols-[minmax(240px,300px)_minmax(0,1fr)] gap-4 xl:gap-5 items-start" data-testid={testid}>
       <div className="sticky top-3 rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] flex flex-col max-h-[calc(100vh-40px)] min-w-0" data-testid={testid + "-list"} onKeyDown={onKey}>
         {head ? <div className="p-2.5 pb-0">{head}</div> : null}
         {find ? <div className="p-2.5 pb-1.5"><div className="flex items-center gap-2 rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 focus-within:border-[var(--c-acc)]">
@@ -67,6 +67,6 @@ export function SplitView({ items, sel, onSel, detail, find = false, findHint = 
           {!shown.length ? <p className="m-0 px-3 py-4 text-[13px] text-[var(--c-mut)]">{q.trim() ? tr("Nothing matches") : tr("Nothing here yet")}</p> : null}
         </div>
       </div>
-      <div className="min-w-0" data-testid={testid + "-detail"}>{cur != null ? detail : empty}</div>
+      <div className="min-w-0 att-pane" data-testid={testid + "-detail"}>{cur != null ? detail : empty}</div>
     </div>);
 }

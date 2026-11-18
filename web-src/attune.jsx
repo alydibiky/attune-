@@ -11748,7 +11748,7 @@ export default function App() {
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
         {!wide && LEGACY_NAV && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
-      {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--c-bg)] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
+      {toast && <div className="calm fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-32px)] bg-[var(--c-ink)]! text-[var(--g-solid,var(--c-bg))] text-[14px] font-bold px-5 py-3 rounded-[20px] shadow-[0_8px_28px_rgba(0,0,0,0.3)]" dir="auto">{toast}</div>}
       <ConfirmHost />
       {NATIVE ? <NotifAsk native={NATIVE} flash={flash} /> : null}
       {webTask ? <WebTaskSheet t={webTask} close={() => setWebTask(null)} start={async () => {
