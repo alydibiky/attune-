@@ -17,6 +17,8 @@ def mock(queue, live=True):
     return ("(() => { const q = %s; function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5); N.payAvailable = () => true; N.payAccess = () => true; N.openPayAccess = () => {};"
             " N.payQueue = () => JSON.stringify(q); N.payForget = () => {}; N.smsDiag = () => JSON.stringify({ live: %s, smsSwitch: true, seen: Date.now() - 60000, conn: Date.now() - 86400000, sms: [] });"
             " N.payRescan = () => { window.__rescans = (window.__rescans || 0) + 1; return 3; }; N.listenerHeal = () => true; } w(); })();" % (json.dumps(queue), "true" if live else "false"))
+INIT_FREE = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));"
+        "localStorage.setItem('ledger.v3',%s);}catch(e){};" % json.dumps(json.dumps(LEDGER)))
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:testing-pro','on');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));"
         "localStorage.setItem('ledger.v3',%s);}catch(e){};" % json.dumps(json.dumps(LEDGER)))
 def open_setup(page):
@@ -24,8 +26,20 @@ def open_setup(page):
 with sync_playwright() as p:
     br = p.chromium.launch()
     for name, size in (("phone", None), ("computer", (1366, 860))):
-        # ---- (3) waiting bank SMS → Add them to Money → the step is done
+        # ---- (3) Pro: the bank SMS reaches Money BY ITSELF as a bank message (before: Home's Autopilot saved it as a shop receipt —
+        # no source, no message — so the bank step never ticked); the step is ticked
         ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=size, extra_init=INIT + mock([CIB]))
+        if not size: page.set_viewport_size({"width": 360, "height": 800})
+        page.goto(env.url); page.wait_for_timeout(3000)
+        led = json.loads(page.evaluate("localStorage.getItem('ledger.v3')"))
+        t350 = [t for t in led["txns"] if t.get("amount") == 350]
+        check(len(t350) == 1 and t350[0].get("source") == "notification" and "charged EGP 350.00" in (t350[0].get("evidence") or {}).get("text", ""),
+              name + ": Pro — the CIB SMS is in Money once, as a bank message with its complete text: " + json.dumps(t350)[:300])
+        open_setup(page)
+        check(page.locator("[data-testid=setup-step][data-id=bank]").get_attribute("data-done") == "1", name + ": Pro — Bank messages ✓ by itself")
+        ctx.close()
+        # ---- (3) Free: the bank SMS waits for a tap → the row says so → Add them to Money → the step is done
+        ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=size, extra_init=INIT_FREE + mock([CIB]))
         if not size: page.set_viewport_size({"width": 360, "height": 800})
         page.goto(env.url); page.wait_for_timeout(1500)
         open_setup(page)
@@ -40,7 +54,11 @@ with sync_playwright() as p:
         open_setup(page)
         page.click("[data-testid=setup-step][data-id=salary] [data-testid=setup-box]"); page.wait_for_timeout(1200)
         check("salary" in page.inner_text("body").lower(), name + ": a tap on the empty box of “Your salary day” asks the salary question")
-        # ---- (2) Your data kept safe → Turn on backup → the Backup panel, never the old prompt page
+        ctx.close()
+        # ---- (2) Your data kept safe → Turn on backup → the Backup panel, never the old prompt page (step 8: Pro)
+        ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=size, extra_init=INIT + mock([]))
+        if not size: page.set_viewport_size({"width": 360, "height": 800})
+        page.goto(env.url); page.wait_for_timeout(1500)
         open_setup(page)
         page.click("[data-testid=setup-step][data-id=backup] [data-testid=setup-do]"); page.wait_for_timeout(1200)
         page.locator("button", has_text="Turn on backup").last.click(); page.wait_for_timeout(900)

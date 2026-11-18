@@ -14,6 +14,12 @@
 > Phone side (PayListener.kt): onNotificationPosted → handle(sbn, fresh); on every (re)connect rescan() reads the notifications still
 > in the shade through the money path (a bank SMS that came while Android had us disconnected is no longer lost); `live` instance;
 > SmsDiag = the last 20 SMS-app notifications' trace (time, app, sender, words hidden?, money?, code? — never the words); bridge smsDiag().
+> **THE root cause of "the bank step never ticks" (found by e2e_v1040fixes):** Home's Autopilot (autopilot.js suggestFrom) read CIB's
+> "Your debit card … was charged EGP 350.00 at CARREFOUR" as a SHOP RECEIPT (notifmeaning gives state "" for "charged", notelabels says
+> paid/sure → the receipt branch) and added it by itself with source "receipt" → Money kept it with NO source and NO message → stepState
+> (a txn with source "notification") never counted it. Now a bank / wallet message (u.kind bank or moneySourceNote) never takes the
+> receipt branch; it goes the bank way (Money's own reader when the code is sure, else an Autopilot expense with source "notification",
+> sure as before, and its complete message as evidence). 10,000 notification run: 100 %, 0 interruptions; HARD 99.9 % (9,988 vs 9,987), 2.
 > The 10,000 HARD run (tests/bankcheck/gen.mjs, 84 % different shapes) found a real reader bug: a bank SMS in CAPITALS "RS.2500.00 DEBITED"
 > was not read (paytext.js normalises RS/RP) → 100 %; held-out (heldout.mjs) 100 %. e2e: tests/e2e_v1040fixes.py (phone + computer).
 > **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page

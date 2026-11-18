@@ -1,4 +1,4 @@
-# Notification run (HARD) — 10000 notifications, 9987 handled right (99.9%) — 4220 different shapes [42 of 100]
+# Notification run (HARD) — 10000 notifications, 9988 handled right (99.9%) — 4220 different shapes [42 of 100]
 
 - Became money when it is NOT a payment: **0** (added by itself, without a tap: **0**)
 - Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **2**
@@ -7,13 +7,13 @@
 | area | notifications | wrong | right % | kind wrong |
 |---|---|---|---|---|
 | calls | 300 | 11 | 96.3 | 0 of 300 |
-| bank_world | 400 | 1 | 99.8 | – |
 | delivery | 500 | 1 | 99.8 | 0 of 481 |
 | bank_composed | 1600 | 0 | 100.0 | 34 of 708 |
 | bank_cib_real | 200 | 0 | 100.0 | 0 of 168 |
 | bank_eg_out | 250 | 0 | 100.0 | 0 of 237 |
 | bank_eg_in | 250 | 0 | 100.0 | 4 of 250 |
 | bank_gulf | 250 | 0 | 100.0 | 0 of 250 |
+| bank_world | 400 | 0 | 100.0 | – |
 | bank_not_money | 300 | 0 | 100.0 | 0 of 12 |
 | receipts | 500 | 0 | 100.0 | – |
 | subscriptions | 400 | 0 | 100.0 | – |
@@ -44,9 +44,6 @@
 
 ### bank_eg_in
 - kind read as **other** × 4: «Vodafone Cash · Vodafone Cash: وصلك ٧٢٨٥٫٠٠ جم من 01025981822 على فودافون كاش» · «Vodafone Cash · Vodafone Cash: وصلك ٤٢,٤٠٦.٠٠ جم من ٠١٠٥٤٨٠٨٥٢٧ على فودافون كاش» · «Vodafone Cash · Vodafone Cash: وصلك 2513.00 جم من 01068627603 على فودافون كاش»
-
-### bank_world
-- **amount N ≠ N** × 1: «Messages · Meezan: ‏RS.2,048 DEBITED FROM A/C *5678 VIA RAAST TRANSFER TO USMAN KHAN ON ‎10-11-2026. BAL RS.18,400»
 
 ### delivery
 - **no “…” (nothing)** × 1: «noon · noon: تم شحن طلبك وهيوصل يوم الإحد»

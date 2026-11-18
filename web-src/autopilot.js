@@ -7,7 +7,7 @@
    from now on?"; then they are added alone and listed as "done for you", each with Undo. Never twice: the bank SMS and the bank app's
    notification for the same amount are one; an expense already typed is matched, not added again. "Not this" teaches it (that app's
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
-import { isChatApp, readNotification, codeSure } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
+import { isChatApp, readNotification, codeSure, moneySourceNote } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
 import { notAPayment, fromPhoneNumber, cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
@@ -117,17 +117,21 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   // v9.9.30 (Ali: "not keep asking — really smart"): a shop's / an app's receipt ("Your payment of EGP 3,942.00 was successful",
   // "total charged EGP 5458.00 to card 6907") is an expense Attune adds by itself — it was asked "You paid … add it?" before.
   // If the bank's SMS for it comes too, Money sees the same amount that day and keeps it once (paylog.alreadyIn).
-  if (!(u.kind === "bank" && (u.state === "money out" || u.state === "money in")) && u.amount > 0 && !isChatApp(n) && !no && !left && lab && lab.meaning === "paid" && lab.sure) {
+  // v10.4 (Ali, 18 Nov: "fix the SMS notification for good"): a BANK / wallet message is never a shop's receipt — CIB's "Your debit card
+  // … was charged EGP 350.00 at CARREFOUR" (state "": "charged" isn't "money out" to the meaning reader) was saved as a receipt, so Money
+  // lost that it came from the bank SMS (no source, no evidence) and Set up your life's bank step never ticked. It goes the bank way below.
+  const bankMsg = u.kind === "bank" || moneySourceNote(n), paidSure = !!(lab && lab.meaning === "paid" && lab.sure);
+  if (!bankMsg && u.amount > 0 && !isChatApp(n) && !no && !left && paidSure) {
     const shop = shopIn(title + " " + text) || (/messag|\bsms\b|gmail|mail|outlook/i.test(app) ? title : app);
     return { ...base, kind: "expense", amount: u.amount, cat: catOf(shop + " " + app + " " + text), note: shop, date: iso(n.ts || now), via: "receipt", sure: true,
       key: "x:" + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: "Expense" };
   }
-  if (u.kind === "bank" && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in")) {
+  if (bankMsg && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in" || paidSure)) {
     // v9.9.30: a bank / wallet message Money is sure of goes into Money by itself — no card on Home asking for a tap
     { let e = null; try { e = readNotification(n); } catch (x) {} if (e && codeSure(e)) return null; }   // v9.9.9: never from a chat
-    const shop = shopIn(title + " " + text), out = u.state === "money out";
-    const rc = out && !!(lab && lab.meaning === "paid" && lab.sure) && !/messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || ""));   // a shop's receipt (Steam, Booking.com), not a bank SMS: sure (v9.9.30)
-    return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : {}),
+    const shop = shopIn(title + " " + text), out = u.state === "money out" || (u.state !== "money in" && paidSure);
+    const rc = out && paidSure && !moneySourceNote(n) && !/messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || ""));   // a shop's receipt (Steam, Booking.com), not a bank SMS: sure (v9.9.30)
+    return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : out && paidSure ? { sure: true } : {}),
       key: (out ? "x:" : "i:") + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
   }
   if (u.kind === "delivery") {
@@ -217,7 +221,9 @@ export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filt
 
 /** A suggestion → the actions the Home box would run (doit.js apply). */
 export function actionsFor(x) {
-  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification" }] }];
+  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification",
+    // v10.4: the complete message it was read from, kept with the payment (Ali: "the evidence of the complete real message")
+    ...(x.via !== "receipt" && x.full && x.full.text ? { evidence: { text: String(x.full.text).slice(0, 2000), from: String(x.full.title || "").slice(0, 200), app: String(x.app || "").slice(0, 80), ts: +x.at || 0 } } : {}) }] }];
   if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
     ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];

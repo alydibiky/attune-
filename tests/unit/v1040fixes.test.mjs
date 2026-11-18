@@ -54,6 +54,18 @@ ok(Object.values(SAY).every((w) => w.t && w.a.every((a) => BTN[a])), "every stat
 // a bank SMS in CAPITALS (found by the 10,000 run)
 const caps = readNotification({ id: "c", app: "Messages", title: "AD-HDFCBK", text: "HDFC BANK: RS.2500.00 DEBITED FROM A/C **3545 ON 10-11-26 TO VPA SWIGGY@ICICI (UPI REF NO 631012345678). NOT YOU? CALL 18002586161", ts: now }, { ...O, teach: [] });
 ok(caps && caps.amount === 2500 && caps.direction === "out", "“RS.2500.00 DEBITED” in capitals is read: " + JSON.stringify(caps && [caps.amount, caps.currency]));
+// the REAL reason his bank step never ticked (found by the e2e run): Home's Autopilot read CIB's "was charged EGP 350.00 at CARREFOUR"
+// as a SHOP RECEIPT — Money got it with no source and no message, so "a payment read from a bank message" never counted
+import { suggestFrom, actionsFor } from "../../web-src/autopilot.js";
+const cibN = { id: "c1", pkg: "com.google.android.apps.messaging", app: "Messages", title: "CIB", text: "Your debit card ending 1234 was charged EGP 350.00 at CARREFOUR MAADI on 18/11. Available balance EGP 12,450.75", ts: now };
+const sg = suggestFrom(cibN, { now });
+ok(!sg || (sg.via !== "receipt" && actionsFor(sg)[0].items[0].source === "notification"), "a bank SMS is never a shop receipt: " + JSON.stringify(sg && [sg.via, sg.kind]));
+for (const t of ["Your card ending 4411 was charged USD 25.00 at STEAM", "Purchase of EGP 1,200.00 at IKEA with card **9921 was successful"]) {
+  const x = suggestFrom({ ...cibN, id: "c2", title: "QNB", text: t }, { now });
+  ok(!x || x.via !== "receipt", "…" + t.slice(0, 40) + ": " + JSON.stringify(x && x.via));
+}
+const ev = actionsFor({ kind: "expense", amount: 350, note: "CARREFOUR MAADI", date: "2026-11-18", app: "Messages", at: now, full: { title: "CIB", text: cibN.text } })[0].items[0];
+ok(ev.source === "notification" && ev.evidence && ev.evidence.text.includes("charged EGP 350.00"), "a bank expense goes to Money with its complete message");
 // the page: the box is a button, the bank row always has a button and its check
 const ui = fs.readFileSync(new URL("../../web-src/setup-ui.jsx", import.meta.url), "utf8");
 ok(/data-testid="setup-box"/.test(ui) && /data-testid="setup-bank-check"/.test(ui) && /<BankCheckBox/.test(ui), "Set up page: the tick box is a button; the bank row has Check + the check box");
