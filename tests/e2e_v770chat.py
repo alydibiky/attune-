@@ -65,7 +65,9 @@ with sync_playwright() as p:
         check(names, tag + "no assistant name is cut")
         shot(page, "assistants-desktop-" + theme)
         go(page, "projects")
-        it = page.locator("[data-testid=project-item]").first.inner_text()
+        # v10.2 D1 (Ali's "OK-D1"): on a computer the projects are a list + details; the list row carries the same line as the phone card
+        check(page.locator("[data-testid=projects-split]").count() == 1 and page.locator("[data-testid=project-page]").count() == 1, tag + "projects: the list on the left and the first project open on the right (D1)")
+        it = page.locator("[data-testid=projects-split-row]").first.inner_text()
         check("1 chats" in it or "1 chat" in it, tag + "a project shows its chats, files and last change: %s" % it.replace("\n", " · "))
         shot(page, "projects-desktop-" + theme)
         ctx.close()

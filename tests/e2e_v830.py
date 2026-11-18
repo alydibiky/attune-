@@ -14,7 +14,15 @@ def go(page, mode, sel):
     page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", mode); page.wait_for_selector(sel, timeout=8000); page.wait_for_timeout(300)
 AGENT = """(() => { const N = window.AttuneNative; N.agentWatchPlan = () => 'ok'; N.agentWatchTake = () => '{}'; N.appsList = () => '[]';
   let k = 0;
-  N.agentOpen = (id, arg) => { const a = JSON.parse(arg); window.__opens = (window.__opens || []).concat([a]); const i = k++;
+  window.__win = null; window.open = (u) => { window.__win = u; return null; };
+  N.agentOpen = (id, arg) => { const a = JSON.parse(arg);
+    // v10.2 L1: check mode (resolve) = Attune's browser reads ONE offer's own page and closes — like AgentBrowser.kt, it answers with
+    // what the page says (a hotel page here), never a list of offers; a results page it can't read → no product
+    if (a.resolve) { window.__checks = (window.__checks || []).concat([a]);
+      const m = /booking\\.com\\/hotel\\/sa\\/([a-z-]+)\\.html/.exec(a.url || ''), names = { 'pullman-zamzam-makkah': ['Pullman ZamZam Makkah', 47200], 'fairmont-makkah': ['Fairmont Makkah Clock Royal Tower', 52300], 'hilton-suites-makkah': ['Hilton Suites Makkah', 43900], 'al-safwah-royale-orchid': ['Al Safwah Royale Orchid', 44600] };
+      const hit = m && names[m[1]];
+      setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify(hit ? { reason: 'done', landed: a.url, product: { name: hit[0], price: hit[1], currency: 'EGP', canonical: a.url.split('?')[0] } } : { reason: 'done', landed: a.url })), 20); return; }
+    window.__opens = (window.__opens || []).concat([a]); const i = k++;
     const top = [{ price: 41800 + i * 900, currency: 'EGP', name: 'Swissotel Makkah', text: 'Swissotel Makkah 150 m from Masjid al-Haram 9.1', photo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' },
                  { price: 47200, currency: 'EGP', name: 'Pullman ZamZam Makkah', href: 'https://www.booking.com/hotel/sa/pullman-zamzam-makkah.html', text: 'Pullman ZamZam Makkah 200 m' },
                  { price: 52300, currency: 'EGP', name: 'Fairmont Makkah Clock Royal Tower', href: 'https://www.booking.com/hotel/sa/fairmont-makkah.html', text: 'Fairmont Makkah Clock Royal Tower 100 m 9.0' },
@@ -76,9 +84,15 @@ with sync_playwright() as p:
     check(card.count() == 1 and "4 nights between 2026-12-10 and 2027-01-29" in clean(card.inner_text()) and "only 4–5★, within 1 km" in clean(card.inner_text()), "the card says 4 nights between 10 Dec and 29 Jan, only 4–5★ within 1 km: " + card.inner_text()[:160].replace("\n", " · "))
     check("6 start days checked" in clean(page.locator("[data-testid=agent-plan]").inner_text()), "its plan, step by step")
     page.click("[data-testid=agent-check]"); page.wait_for_selector("[data-testid=agent-best3]", timeout=8000)
+    page.wait_for_function("(window.__checks || []).length >= 3", timeout=8000); page.wait_for_timeout(200)
     opens = page.evaluate("window.__opens")
     rounds = (opens[0].get("rounds") or []) if len(opens) == 1 else []
     check(len(opens) == 1 and len(rounds) == 6 and all("nflt=class%3D4%3Bclass%3D5" in r["url"] for r in rounds) and all(r.get("checkin") for r in rounds), "Check now reads each of the 6 start days with the stars filter, in one window (no flicker)")
+    # v10.2 L1 (Ali's "OK-L1"): after the round, the best 3 are checked one by one on their own page (check mode, each closes itself)
+    chk = page.evaluate("window.__checks") or []
+    check(len(chk) == 3 and all(c.get("resolve") and c.get("autoClose") for c in chk), "L1: after the round the best 3 offers are each checked on their own page (%d checks)" % len(chk))
+    vs = page.evaluate("JSON.parse(localStorage.getItem('attune:agents:v1')).agents[0].best3.map(o => [o.name, !!o.verified, !!o.unverified])")
+    check(all(v[1] or v[2] for v in vs[:3]) and [v[0] for v in vs if v[1]] == ["Hilton Suites Makkah", "Al Safwah Royale Orchid"] and not any(v[1] for v in vs if v[0] == "Swissotel Makkah"), "…a hotel page that IS the offer is kept as checked; Swissotel (no page of its own) is not: %s" % vs)
     best = page.locator("[data-testid=agent-best]")
     check(best.count() == 1 and "Swissotel" in best.nth(0).inner_text() and "41,800" in best.nth(0).inner_text() and page.locator("[data-testid=agent-more]").count() == 4, "v9.1 option 4: the cheapest big, the other 4 hotels as cards (one per hotel, with its days): " + best.nth(0).inner_text()[:100].replace("\n", " · "))
     check("offers compared" in page.locator("[data-testid=agent-plan]").inner_text(), "the plan says how many offers were compared")
@@ -104,18 +118,21 @@ with sync_playwright() as p:
     check("Pullman" in page.inner_text("[data-testid=agent-sheet-name]"), "…and on to the list's offers")
     page.click("[data-testid=agent-sheet-prev]"); page.wait_for_timeout(100)
     check("3 of 5" in clean(page.inner_text("[data-testid=agent-sheet]")), "Previous goes back")
+    n_chk = len(page.evaluate("window.__checks"))
+    page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(300)
+    w = page.evaluate("window.__win") or ""
+    check(len(page.evaluate("window.__opens")) == n_open and len(page.evaluate("window.__checks")) == n_chk and "/hotel/sa/al-safwah-royale-orchid.html" in w and "checkin=" in w,
+          "Book this offer opens only that one: its CHECKED page with the dates, straight away (no new search, no second check): " + w[:110])
+    # v9.5 (Ali: "if you can't do it in the app make it browser like the old"): the exact listing opens in the phone's own browser
+    page.evaluate("() => { window.AttuneNative.openInBrowser = (u) => { window.__browser = u; return true; }; }")
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
-    check(len(page.evaluate("window.__opens")) == n_open + 1, "Book this offer opens only that one")
-    # v9.1 (Ali: "can it open Booking itself, with the sorting ready?"): with the Booking app on the phone, Book opens the offer THERE
-    page.evaluate("() => { const N = window.AttuneNative; N.appsList = () => JSON.stringify([{ pkg: 'com.booking', label: 'Booking.com' }]); N.openAnyApp = (j) => { window.__app = JSON.parse(j); return JSON.stringify({ ok: true, how: 'app' }); }; }")
-    page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
-    ap = page.evaluate("window.__app")
-    check(ap and ap["pkg"] == "com.booking" and "booking.com" in ap["url"] and len(page.evaluate("window.__opens")) == n_open + 1, "with the Booking app installed, Book opens the offer in the Booking app (not Attune's browser): %s" % ap)
-    page.evaluate("() => { window.AttuneNative.appsList = () => '[]'; }")
+    bw = page.evaluate("window.__browser") or ""
+    check("/hotel/sa/al-safwah-royale-orchid.html" in bw and len(page.evaluate("window.__opens")) == n_open, "Book opens the checked listing in the phone's own browser (not Attune's browser): " + bw[:110])
+    page.evaluate("() => { window.AttuneNative.openInBrowser = () => false; }")
     # …on any site: Android itself says which installed app owns the link (openInApp) — no list of apps
     page.evaluate("() => { const N = window.AttuneNative; window.__inapp = null; N.openInApp = (u) => { window.__inapp = u; return JSON.stringify({ ok: true, how: 'app' }); }; }")
     page.click("[data-testid=agent-sheet-book]"); page.wait_for_timeout(200)
-    check(bool(page.evaluate("window.__inapp")) and len(page.evaluate("window.__opens")) == n_open + 1, "any site: Android opens the offer in the app that owns the link")
+    check(bool(page.evaluate("window.__inapp")) and len(page.evaluate("window.__opens")) == n_open, "any site: no browser answers → Android opens the offer in the app that owns the link (e.g. Booking)")
     check("/hotel/sa/al-safwah-royale-orchid.html" in (page.evaluate("window.__inapp") or ""), "v9.8: …and it is the hotel's OWN page, never the search")
     # v9.8 (Ali: "the agents still don't open the specific listing — fix it for good"): an offer with NO page of its own (Swissotel here)
     # never opens the search: Attune's browser opens the results and finds THAT hotel by name (goto)
@@ -128,8 +145,13 @@ with sync_playwright() as p:
     page.click("[data-testid=agent-sheet-close]"); page.wait_for_timeout(100)
     page.evaluate("() => { window.AttuneNative.openInApp = (u) => JSON.stringify({ ok: false, how: 'none' }); window.AttuneNative.openAnyApp = () => { window.__outside = 1; return JSON.stringify({ ok: true, how: 'link' }); }; }")
     n0 = len(page.evaluate("window.__opens"))
-    page.click("[data-testid=agent-open]"); page.wait_for_timeout(300)
-    check(len(page.evaluate("window.__opens")) == n0 + 1 and not page.evaluate("window.__outside"), "no app on the phone → 'Open Booking.com' opens Attune's own browser")
+    # v10.2 L1: "Open the best offer" opens that offer's page in Attune first; "Open this listing" goes on from there
+    page.click("[data-testid=agent-open]"); page.wait_for_selector("[data-testid=offer-page]", timeout=3000)
+    check("Swissotel" in page.inner_text("[data-testid=offer-name]") and page.locator("[data-testid=offer-unverified]").count() == 1, "L1: the best offer's own page in Attune, saying its page isn't confirmed yet")
+    page.click("[data-testid=offer-open]"); page.wait_for_timeout(400)
+    last = (page.evaluate("window.__opens") or [{}])[-1]
+    check(len(page.evaluate("window.__opens")) == n0 + 1 and not page.evaluate("window.__outside") and (last.get("goto") or {}).get("name") == "Swissotel Makkah", "no own page and no app → 'Open this listing' opens Attune's own browser, which finds Swissotel on the results (never a search page left to you)")
+    page.click("[data-testid=offer-back]"); page.wait_for_timeout(200)
     best.nth(0).locator("[data-testid=agent-podium-open]").click(); page.wait_for_selector("[data-testid=agent-sheet]", timeout=3000)
     page.evaluate("() => { delete window.AttuneNative.openInApp; }")
     shot(page, "v910-sheet")
