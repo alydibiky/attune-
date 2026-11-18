@@ -1,5 +1,32 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (18–19 Nov 2026 — v10.6: Ali's list "not optimized everywhere / where is my wife / edit to-dos / animations / foldables / Writing / smarter / smooth")
+> **Layout everywhere** (his Tools screenshot squeezed letter by letter, Money "1,127,735.2 EG / P"): the root cause was shell.html
+> `body{overflow-wrap:anywhere}` (lets every flex / grid item shrink to one letter) → `break-word`. Tools grids auto-fill ≥ 230 px,
+> Money's balance never wraps (smaller when long), Medicines' 3 buttons fit, the computer's list + details (split-ui.jsx) details pane is a
+> CSS container: "two columns on a big screen" stack until the PANE has 680 px (tw.css .att-pane) — Travel was squeezed at 1024 px.
+> Toast words were invisible in Glass (text = --c-bg = transparent) → --g-solid. **tests/e2e_v1060layout.py** checks 31 pages × 11 widths
+> (280, 320, 344 fold cover, 360, 412, 600, 673 fold open, 768, 884, 1024, 1366) for past-the-edge, words broken mid-word, sideways
+> scroll and invisible text: 0 problems.
+> **Money 💡** worked but its tip was drawn BEHIND Money's own header → the 💡 is in Money's header and the tip under it (MoneyTab
+> tipBulb / tipSlot); a 💡 tapped within 1.2 s of opening a page was undone by the page's own tip timer (CoachHost askedRef) — fixed.
+> **"where is my wife (right now)"** from Home's box → "I don't know where the wife is" (the where-things-are reader): cmdrun.js now asks
+> api.whereIs first (cmd.api.whereIs added), commands.js ctx.person → whereAsk only; noteteach.whereIs: role words, the asking sentence
+> only, "is X home / did X get home / has X left work / track X / «مكان X»", never "X's house / where did X put"; role not taught → the
+> location app's people + "tell me once". tests/whereperson (10,000 HARD 100 %, 65 % shapes; held-out 100 %), unit v1060where.
+> **Edit to-dos**: Home's To do card ✎ → change the words (Mind record / reminder re-synced to the phone) or delete (lists-ui RowEdit).
+> **Smarter**: a group's title is never "Who is this?" (noteteach.personOf: group → the writer; NOT_NAME words); a chat named "Orders" /
+> «الطلبات» / «طلباتي» = orders (chatroles.readDescription) — «الطلبات» was a shopping list; parcels one line per order, "Delivered ✓",
+> one clean sentence (daynotes.parcelLine). unit v1060smart.
+> **Smooth** (measured with a phone filled like his — 3,000 kept notifications, 900 payments, 250 reminders — at a mid-phone's speed,
+> scratch perf.py / prof.py with ATTUNE_NOMIN=1 builds for readable profiles): opening 17 s → ~3.5 s, Home again 4 s → 0.3–1 s,
+> Follow-ups 1.1 → 0.4 s. Causes: homeCurrency parsed the whole ledger per notification (cached by the raw string); 20 places fetched
+> the kept notifications each on its own (notecache.js recallRaw, 3 s); lifeask.loadStores read EVERY store per save (lazy getters);
+> Autopilot read every notification twice per Home render (autopilot.js suggestCached) and saved each auto item alone
+> (__attuneApplyActions batches: stores once, writes once, rids per action); "Attune noticed" recomputed on every Home (insightsCached).
+> **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/Cj1UCB4s6GnQYvqwCba9eY (docs/mockups/motion-writing-fold.html):
+> AN1–AN3 motion (live demos; rec. AN1), WR1–WR3 the Writing page with every old tool (rec. WR1), FO1–FO3 an unfolded foldable (rec. FO1).
+
 > ## START HERE (18 Nov 2026, later — v10.5: Ali OK'd the widgets — OK-A1 OK-W1 OK-W2 OK-W3 OK-W5 OK-W6 OK-W7 OK-S — BUILT)
 > Pages: options https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq · combined https://claude.ai/artifact/NgiS5jCMUUxewxkSV5RbSg.
 > **How it works:** the page decides what every widget shows (web-src/widgets2.js — pure: listsData, dayCard, moneyCard, agentsCard,

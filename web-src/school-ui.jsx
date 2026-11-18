@@ -3,6 +3,7 @@
    you set, or one you paste) — each found thing ticked when sure, an unclear one (which Thursday? no day? how much?) unticked with its
    question in yellow and its fields to fill; "Add N" saves the ticked ones to the child's school list + a reminder on the day; the week
    under it, every item editable or deletable. Reader: schoolmsg.js. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useMemo, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { readClassMessage } from "./schoolmsg.js";
@@ -12,7 +13,7 @@ const KIND = { exam: "Exam", fee: "Fee", trip: "Trip", bring: "Bring", holiday: 
 const ASK = { which: "Which day — this one or next week?", day: "When?", amount: "How much?" };
 const day = (s) => { try { return s ? new Date(s + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { weekday: "short", day: "numeric", month: "short" }) : ""; } catch (e) { return s; } };
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-function kept() { try { const N = window.AttuneNative; return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } }
+function kept() { try { const N = window.AttuneNative; return N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : []; } catch (e) { return []; } }
 export function SchoolPanel({ member, save, close, flash }) {
   const sch = member.school || { group: "", items: [], seen: [] };
   const [group, setGroup] = useState(sch.group || ""), [paste, setPaste] = useState(""), [found, setFound] = useState(null), [ed, setEd] = useState(null);

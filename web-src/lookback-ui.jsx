@@ -1,6 +1,7 @@
 /* ---- v6.40 Recall (agent C): the page. One search box over everything on the phone (lookback.js does the finding).
    Add screenshots → their text is read on the phone (ML Kit) and they are kept in Mind as photos; "Keep my notifications"
    → the phone keeps them 30 days (RecallLog.kt, never SMS). Nothing leaves the phone. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useState, useEffect, useMemo } from "react";
 import { recallStats } from "./learning-report.js";   // v7.7 the Recall index
 import { RecallReport } from "./learning-report-ui.jsx";
@@ -100,7 +101,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     const t = setTimeout(() => { setOlder(readJson(() => native.recallFind(JSON.stringify(wordsFor(q)), 400))); }, 250); return () => clearTimeout(t); }, [q]);
   const docs = useMemo(() => recallDocs({
     memory, chats: loadChats(), pages: loadArtifacts(),
-    notes: [...(native && native.recallNotes ? readJson(() => native.recallNotes()) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i).filter((n) => { try { const t = loadTeach(); return !isHidden(n, t) && !hiddenBy(labelOf(n, t)); } catch (e) { return true; } }),   // v9.9.3 L2: "never show Yazio"   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
+    notes: [...(native && native.recallNotes ? readJson(() => recallRaw(native)) : []), ...older, ...gmailNotes()].filter((n, i, a) => a.findIndex((x) => x.id === n.id) === i).filter((n) => { try { const t = loadTeach(); return !isHidden(n, t) && !hiddenBy(labelOf(n, t)); } catch (e) { return true; } }),   // v9.9.3 L2: "never show Yazio"   // v8.7: + older ones the phone kept (by the words asked) + the emails Gmail read
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
   }), [memory, tick, older]);
   const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
@@ -160,7 +161,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     if (!on) flash && flash(tr("New notifications are not kept now — the ones kept stay"));
   };
   const [sure, setSure] = useState(false);
-  const forgetAll = () => { if (!sure) return setSure(true); try { native.recallForgetAll(); } catch (e) {} setSure(false); setTick((t) => t + 1); flash && flash(tr("Kept notifications forgotten")); };
+  const forgetAll = () => { if (!sure) return setSure(true); try { forgetRecallCache(); native.recallForgetAll(); } catch (e) {} setSure(false); setTick((t) => t + 1); flash && flash(tr("Kept notifications forgotten")); };
   const kept = (() => { try { return native && native.recallCount ? +native.recallCount() : 0; } catch (e) { return 0; } })();
   const tap = (d) => {
     if (d.open && d.open.mode === "memory") { const r = memory.find((x) => x.id === d.open.id); if (r && openRec) openRec(r); return; }
@@ -168,7 +169,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
     if (d.open && d.open.artifact) { openArtifact && openArtifact(d.open.artifact); return; }
     setOpen(d);
   };
-  const forget = (d) => { try { native.recallForget(JSON.stringify([d.raw])); } catch (e) {} setOpen(null); setTick((t) => t + 1); };
+  const forget = (d) => { try { (forgetRecallCache(), native).recallForget(JSON.stringify([d.raw])); } catch (e) {} setOpen(null); setTick((t) => t + 1); };
   const when = (ts) => { try { return new Date(ts).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + " " + new Date(ts).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
   const chip = (k, label) => (
     <button key={k || "all"} onClick={() => setOnly(k)} data-testid={"recall-kind-" + (k || "all")}

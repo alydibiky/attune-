@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import { whoLines } from "./cmdrun.js";
 import * as FT from "./features.js";   // v10.1 F1 + F3
 import { enterSends } from "./keys.js";
@@ -1337,7 +1338,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v8.7 (Ali: "Liverpool 1-1 Chelsea" was in his notifications and the chat answered "Passage 1 mentions …"): a live score is
       // read first from the notifications the phone kept (Recall), by code — no web, no model; "latest" still searches (livefacts.js)
       if (typed && !img && !fileAtt && isScoreQuestion(typed) && !/\b(latest|update|check the web)\b|آخر نتيجة|اخر نتيجة|دور على النت/i.test(typed) && NATIVE && NATIVE.recallNotes) {
-        let ln = null; try { ln = liveFromNotes(JSON.parse(NATIVE.recallNotes() || "[]"), typed); } catch (e) { ln = null; }
+        let ln = null; try { ln = liveFromNotes(JSON.parse(recallRaw(NATIVE) || "[]"), typed); } catch (e) { ln = null; }
         if (ln) {
           const txt = /[\u0600-\u06FF]/.test(typed) ? ln.ar : tr(ln.en);
           patchMsg(cid, aiId, { text: txt, streaming: false, phase: "", secs: 0, fromNotification: ln.src });

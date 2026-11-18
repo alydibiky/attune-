@@ -1,6 +1,7 @@
 /* ---- v9.9.25 B7 travel screens (Ali's picks: TR1 B "ask first, then add", TR2 A+B "notifications AND the flight-day card that ticks along",
    TR3 A "Money · Papers tabs"). Logic: bookings.js, flightday.js, tripmoney.js. Trip = travel.js's trip (attune:trip:v1) + bookings, budget,
    spent, people / costs, travelMin, checkedIn, papers. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useMemo, useState } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { readBooking, applyBooking } from "./bookings.js";
@@ -10,7 +11,7 @@ import { btnP, btnS, inp, label, chip } from "./ui-kit.jsx";
 const day = (s) => { try { return s ? new Date(s + "T12:00:00").toLocaleDateString(dateLocale() || "en-GB", { weekday: "short", day: "numeric", month: "short" }) : ""; } catch (e) { return s; } };
 const n2 = (v) => (+v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const hm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-function kept() { try { const N = window.AttuneNative; return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } }
+function kept() { try { const N = window.AttuneNative; return N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : []; } catch (e) { return []; } }
 const line = (b) => b.kind === "flight" ? b.no + " · " + [b.from, b.to].filter(Boolean).join(" → ") + " · " + [day(b.date), b.time].filter(Boolean).join(" · ") : b.kind === "stay" ? [b.name || tr("Stay"), day(b.checkin) + (b.checkout ? " – " + day(b.checkout) : ""), b.nights ? tr("{n} nights", { n: b.nights }) : ""].filter(Boolean).join(" · ") : b.code;
 /** TR1: found bookings (ask first) + the trip's bookings in time order. */
 export function TripBookings({ trip, setTrip, flash }) {

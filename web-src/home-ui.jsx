@@ -65,7 +65,7 @@ import { LifeAnswer } from "./lifeask-ui.jsx";
 import { EmailCard } from "./email-ui.jsx";
 import * as LA from "./lifeask.js";
 import { connectNow, pickPerson, allStores } from "./connected.js";
-import { insights, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
+import { insights, insightsCached, loadSeen, saveSeen, dismiss as dismissSeen } from "./insights.js";
 import { withoutHidden as withoutRemoved, isRemoved } from "./removed.js";   // v9.1: removed + folded (Scout) tools leave menus
 import { loadDir } from "./entities.js";
 import { notesMoneyNow } from "./notes-money-ui.jsx";
@@ -203,7 +203,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const [fresh, setFresh] = useState(0);   // read again when Home is opened again / the app comes back
   useEffect(() => { const f = () => setFresh((n) => n + 1); const v = () => { if (!document.hidden) f(); }; window.addEventListener("attune-open", f); window.addEventListener("focus", f); document.addEventListener("visibilitychange", v);
     return () => { window.removeEventListener("attune-open", f); window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", v); }; }, []);
-  const smart = useMemo(() => { if (!minimal) return []; try { return insights(allStores(), loadDir(), { seen: seenS, notesPending: notesMoneyNow().length }); } catch (e) { return []; } }, [minimal, tick, rep, seenS, fresh]);
+  const smart = useMemo(() => { if (!minimal) return []; try { return insightsCached(allStores(), loadDir(), { seen: seenS, notesPending: notesMoneyNow().length }); } catch (e) { return []; } }, [minimal, tick, rep, seenS, fresh]);
   const openSmart = (x) => { if (x.person) { try { localStorage.setItem("attune:people:open", x.person); } catch (e) {} navTo("people"); return; } openLine(x.open); };
   const dropSmart = (x) => setSeenS(saveSeen(dismissSeen(seenS, x)));
   const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout, past: cmd && cmd.api ? onThisDay(cmd.api.records()) : null }) : null;

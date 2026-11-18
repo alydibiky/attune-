@@ -3,6 +3,7 @@
    Understanding: your words by code (English, Egyptian Arabic, Franco) → else the AI when a model is loaded → else "Which of
    these?". Nothing is saved before "I understood: … — Save". */
 import { suggestFrom } from "./autopilot.js";   // v9.9.30 what Autopilot handles is never asked
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useState } from "react";
 import { GraduationCap, Check, X, Undo2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -22,7 +23,7 @@ const quickAi = () => { try { return (typeof window !== "undefined" && window.__
 
 /** The notifications the phone kept (Recall + the money reader's), newest first, once each. */
 export function allNotes(N = N0()) {
-  const a = N && N.recallNotes ? readJson(() => N.recallNotes()) : [], b = N && N.payQueue ? readJson(() => N.payQueue()) : [];
+  const a = N && N.recallNotes ? readJson(() => recallRaw(N)) : [], b = N && N.payQueue ? readJson(() => N.payQueue()) : [];
   return [...a, ...b].filter((n, i, all) => n && n.id && all.findIndex((x) => x.id === n.id) === i).sort((x, y) => (y.ts || 0) - (x.ts || 0));
 }
 // A2: sentences typed in "Reply…" on the phone's question wait here until confirmed in Follow-ups

@@ -9,7 +9,7 @@ const here = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..")
 const [out, meta] = process.argv.slice(2);
 const arShim = { name: "ar-shim", setup(b) { b.onResolve({ filter: /(^|\/)i18n-ar\.js$/ }, () => ({ path: path.join(here, "build/i18n-ar-shim.js") })); } };
 const split = process.env.SPLIT || "";
-const r = await esbuild.build({ entryPoints: [path.join(here, "build/entry.jsx")], bundle: true, format: split ? "esm" : "iife", minify: true, jsx: "transform",
+const r = await esbuild.build({ entryPoints: [path.join(here, "build/entry.jsx")], bundle: true, format: split ? "esm" : "iife", minify: !process.env.ATTUNE_NOMIN, /* (ATTUNE_NOMIN=1: readable names, for a CPU profile) */ jsx: "transform",
   jsxFactory: "React.createElement", jsxFragment: "React.Fragment", target: "es2020", charset: "utf8", logLevel: "warning", metafile: !!meta,
   ...(split ? { splitting: true, outdir: split, entryNames: "[name]", chunkNames: "c-[hash]" } : { outfile: out }),
   alias: { react: path.join(here, "build/react-shim.js"), "react-dom/client": path.join(here, "build/reactdom-shim.js"), "lucide-react": path.join(here, "build/lucide-shim.js") },

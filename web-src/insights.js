@@ -135,3 +135,15 @@ export function loadSeen(st = typeof localStorage !== "undefined" ? localStorage
 /** "Not useful" on a finding: gone for 30 days, and its kind counts toward being shown less. */
 export function dismiss(seen, x, now = Date.now()) { const s = { gone: { ...(seen.gone || {}) }, mute: { ...(seen.mute || {}) } }; s.gone[x.id] = now; s.mute[x.k] = (s.mute[x.k] || 0) + 1; return s; }
 export function saveSeen(v, st = typeof localStorage !== "undefined" ? localStorage : null) { try { st && st.setItem(SEEN_KEY, JSON.stringify(v)); } catch (e) {} return v; }
+
+/* v10.6 (smoothness: Home took up to 1.5 s to come back on a phone filled like Ali's — "Attune noticed" matched every payment against
+   every person each time Home opened): the same stores (same number of things, the same newest one), the same people, the same hour
+   → the same answer, remembered. */
+let LAST = { k: "", v: [] };
+const fp = (x) => { const a = Array.isArray(x) ? x : (x && (x.txns || x.items || x.pots)) || []; const z = a[a.length - 1]; return a.length + ":" + (z ? String(z.id || z.ts || z.at || "") + String(z.amount || "") + String(z.done || "") : ""); };
+export function insightsCached(stores = {}, dir = { items: [] }, opts = {}) {
+  const now = opts.now || Date.now();
+  const k = [fp(stores.ledger), fp(stores.life), fp(stores.reminders), fp(stores.radar), fp(stores.pots), fp(stores.memory), fp(dir), JSON.stringify(opts.seen || {}).length, opts.notesPending || 0, Math.floor(now / 3600e3)].join("|");
+  if (k === LAST.k) return LAST.v;
+  const v = insights(stores, dir, opts); LAST = { k, v }; return v;
+}

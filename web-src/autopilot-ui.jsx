@@ -1,6 +1,7 @@
 /* ---- v9.8 I1 Autopilot on Home (Ali: "I1 ok"): what the phone's notifications mean, one card each, waiting for one tap — Add / Not
    this; "do these by yourself from now on?" after 3 of a kind; what was done by itself, each with Undo; the week's count. The logic is
    autopilot.js (tested); this file is the card. Saving goes through the same path as the Home box (window.__attuneApplyActions). */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
 import { Check, X, Undo2, Zap } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -13,7 +14,7 @@ const T = (k, v) => tr(k, v);
 const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
 // the kept notifications (Recall) + (v9.9) the payment notifications Money keeps even when Recall is off — so a Gemini payment is seen
 const readNotes = () => { try { const n = N(); if (!n) return [];
-  const a = n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : [], b = n.payQueue ? JSON.parse(n.payQueue() || "[]") : [];
+  const a = n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : [], b = n.payQueue ? JSON.parse(n.payQueue() || "[]") : [];
   const seen = new Set(a.map((x) => String(x.title || "") + "|" + String(x.text || "").slice(0, 80)));
   return [...a, ...b.filter((x) => !seen.has(String(x.title || "") + "|" + String(x.text || "").slice(0, 80)))]; } catch (e) { return []; } };
 const readLedger = () => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null"); } catch (e) { return null; } };
@@ -84,7 +85,10 @@ export function AutopilotCard() {
     // nothing was saved)
     if (!window.__attuneApplyActions) { const t = setTimeout(() => setReady((r) => r + 1), 300); return () => clearTimeout(t); }
     let st = s, changed = false;
-    for (const x of list) if (AP.isAuto(st, x)) { const r = apply(x); st = AP.accept(st, x, { auto: true, rid: (r && r.rid) || "" }); changed = true; }
+    // (v10.6 smoothness) everything done by itself is saved in ONE batch — each item keeps its own reminder id
+    const auto = list.filter((x) => AP.isAuto(st, x));
+    if (auto.length) { const acts = auto.map((x) => AP.actionsFor(x)); let r = null; try { r = window.__attuneApplyActions(acts.flat()); } catch (e) { r = null; }
+      let at = 0; auto.forEach((x, i) => { const n = acts[i].length, rid = ((r && r.rids) || []).slice(at, at + n).filter(Boolean).pop() || ""; at += n; st = AP.accept(st, x, { auto: true, rid }); }); changed = true; }
     for (const rid of AP.deliveredDone(notes, st)) { try { window.__attuneRemoveReminder && window.__attuneRemoveReminder(rid); } catch (e) {} st = { ...st, done: st.done.map((d) => (d.rid === rid ? { ...d, closed: true } : d)) }; changed = true; }
     if (changed) put(st);
   }, [list.map((x) => x.key).join(), notes.length, ready]);

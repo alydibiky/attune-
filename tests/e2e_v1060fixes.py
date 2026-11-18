@@ -41,8 +41,9 @@ with sync_playwright() as p:
             check(size[1] == "desk", name + ": Home's To do card has ✎ on each row")
         # Money's 💡
         if not size[1]:
-            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'money'}}))"); page.wait_for_timeout(1200)
-            page.click("[data-testid=tip-bulb]"); page.wait_for_timeout(600)
+            page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'money'}}))"); page.wait_for_timeout(500)   # (tapped quickly: the page's own tip timer must not undo it)
+            bulbs = page.locator("[data-testid=tip-bulb]:visible")
+            bulbs.first.click(); page.wait_for_timeout(600)
             tip = page.locator("[data-testid=coach-tip]").first
             bb = tip.bounding_box() if tip.count() else None
             head = page.locator("[data-testid=money-more]").bounding_box()

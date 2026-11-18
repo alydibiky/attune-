@@ -193,7 +193,9 @@ export function CoachHost({ mode, hold = false, inline = false }) {
   // title (TipBulb) shows the page's tips again. Still one new tip a day at most; "Show the tips again" in Settings starts over.
   const [st, setSt] = useState(() => j(C.COACH_KEY, {})), [more, setMore] = useState(false);
   const [tip, setTip] = useState(null), [asked, setAsked] = useState(0);   // asked = the 💡 was tapped: the page's tips in turn
-  useEffect(() => { setAsked(0); if (hold) { setTip(null); return; } const t = setTimeout(() => { const s = j(C.COACH_KEY, {}); setSt(s); setTip(C.tipFor(mode, s, Date.now(), more)); }, 1200); return () => clearTimeout(t); }, [mode, hold, more]);
+  // (v10.6 the e2e run: a 💡 tapped within 1.2 s of opening a page was undone by this timer — a tip asked for is never replaced)
+  const askedRef = React.useRef(0); askedRef.current = asked;
+  useEffect(() => { setAsked(0); askedRef.current = 0; if (hold) { setTip(null); return; } const t = setTimeout(() => { if (askedRef.current) return; const s = j(C.COACH_KEY, {}); setSt(s); setTip(C.tipFor(mode, s, Date.now(), more)); }, 1200); return () => clearTimeout(t); }, [mode, hold, more]);
   useEffect(() => { const on = (e) => { if (!e.detail || e.detail.mode !== mode) return; const all = C.TIPS.filter((x) => x.mode === mode); if (!all.length) return;
       setAsked((n) => { const k = n % all.length; setTip(all[k]); return n + 1; }); };
     window.addEventListener("attune-tip-show", on); return () => window.removeEventListener("attune-tip-show", on); }, [mode]);

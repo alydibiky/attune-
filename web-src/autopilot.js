@@ -170,12 +170,20 @@ export function inLedger(x, ledger) {
 }
 
 /** Every waiting suggestion: newest first, one per key, minus what was added, said no to, or is in Money already. */
+// v10.6 (smoothness: Home took 4 s with 3,000 kept notifications — every notification was read twice on each Home render): what one
+// notification means is remembered for a minute (the same notification, the same settings, the same number of others around it)
+const SEEN = new Map();
+function suggestCached(n, o) {
+  const k = [n && n.id, n && n.ts, String((n && n.text) || "").length, String((n && n.title) || "").length, (o.s.skipApps || []).join(","), (o.recent || []).length, Math.floor((o.now || 0) / 60000)].join("|");
+  if (SEEN.has(k)) return SEEN.get(k);
+  const x = suggestFrom(n, o); if (SEEN.size > 8000) SEEN.clear(); SEEN.set(k, x); return x;
+}
 export function suggestions(notes = [], { now = Date.now(), s = emptyState(), ledger = null, days = 3, life = null } = {}) {
   // v9.9.13: a subscription receipt counts for 14 days (Ali's Google AI Pro receipt of 7 Nov was gone after 3); the rest for `days`
   const since = now - Math.max(days, 14) * DAY, keys = new Set(), out = [];
   const list = [...notes].filter((n) => (n.ts || 0) >= since).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   for (const n of list) {
-    const x = suggestFrom(n, { now, recent: list, s }); if (!x || x.kind === "delivered") continue;
+    const x = suggestCached(n, { now, recent: list, s }); if (!x || x.kind === "delivered") continue;
     // v9.9.40 the new Autopilot (chatpilot.js) handles chat messages by the chat's role — this card keeps money, bills, deliveries, calls
     if (x.kind === "todo" && !s.oldTodos) continue;
     if (x.kind !== "subscription" && (n.ts || 0) < now - days * DAY) continue;
@@ -192,7 +200,7 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
 }
 /** "Delivered" notices → the delivery follow-ups that are now done (their reminder ids, to remove). */
 export function deliveredDone(notes = [], s = emptyState()) {
-  const apps = new Set(notes.map((n) => { const x = suggestFrom(n, { s }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));
+  const now = Date.now(), apps = new Set(notes.filter((n) => (n.ts || 0) >= now - 3 * DAY).map((n) => { const x = suggestCached(n, { s, now, recent: [] }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));   // (v10.6: the last 3 days, as the cards)
   return (s.done || []).filter((d) => d.kind === "followup" && apps.has(d.app) && !d.closed).map((d) => d.rid).filter(Boolean);
 }
 

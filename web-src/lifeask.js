@@ -6,6 +6,7 @@
    askLife(question, stores, { now }) → { kind, en, ar, rows?: [[label, value]], open?: tool id, sources: [tool ids] } | null
    stores = { ledger, life, care, radar, fit, reminders, memory } — the same objects each tool saves (loadStores() reads them).
    Tests: tests/unit/v731lifeask.test.mjs.                                                                                       */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import { myMoneyIntent, catAsked, answerMyMoney, spanOf, spanWords } from "./myledger.js";
 import { tr, getLang } from "./i18n.js";
 /** v9.9.38 (Ali: "are all the languages up to date?" — no: answers worked out by code came out in English in 18 languages): an answer
@@ -344,13 +345,20 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
 
 /** The stores as each tool saved them (null-safe). */
 export function loadStores(ls = typeof localStorage !== "undefined" ? localStorage : null) {
+  // v10.6 (smoothness: a phone filled like Ali's took 17 s to open — every save re-read EVERY store, all 3,000 kept notifications
+  // included, when it needed one): each store is read the first time it is asked for, once per call — the same values as before
   const j = (k, d) => { try { const v = JSON.parse((ls && ls.getItem(k)) || "null"); return v == null ? d : v; } catch (e) { return d; } };
-  const memKey = ls ? Object.keys(ls).find((k) => /^attune:memory:v\d+$/.test(k)) : null;
-  const mem = memKey ? j(memKey, []) : [];
-  const rem = j("attune:reminders:v1", []);
-  return { ledger: j("ledger.v3", null), life: j("attune:life:v1", { items: [] }), care: j("attune:care:v1", { members: [], meds: [], labs: [], taken: {} }), radar: j("attune:radar:v1", { items: [] }),
-    notes: (() => { try { const N = typeof window !== "undefined" && window.AttuneNative; return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } })(),
-    fit: j("attune:fit:v1", { days: {} }), family: j("attune:family:v1", null), reminders: Array.isArray(rem) ? rem : (rem && rem.items) || [], memory: Array.isArray(mem) ? mem : (mem && (mem.records || mem.items)) || [] };
+  const memo = {}, lazy = (k, f) => ({ get() { if (!(k in memo)) memo[k] = f(); return memo[k]; }, set(v) { memo[k] = v; }, enumerable: true, configurable: true });
+  const o = {};
+  Object.defineProperties(o, {
+    ledger: lazy("ledger", () => j("ledger.v3", null)), life: lazy("life", () => j("attune:life:v1", { items: [] })),
+    care: lazy("care", () => j("attune:care:v1", { members: [], meds: [], labs: [], taken: {} })), radar: lazy("radar", () => j("attune:radar:v1", { items: [] })),
+    notes: lazy("notes", () => { try { const N = typeof window !== "undefined" && window.AttuneNative; return N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : []; } catch (e) { return []; } }),
+    fit: lazy("fit", () => j("attune:fit:v1", { days: {} })), family: lazy("family", () => j("attune:family:v1", null)),
+    reminders: lazy("reminders", () => { const rem = j("attune:reminders:v1", []); return Array.isArray(rem) ? rem : (rem && rem.items) || []; }),
+    memory: lazy("memory", () => { const memKey = ls ? Object.keys(ls).find((k) => /^attune:memory:v\d+$/.test(k)) : null; const mem = memKey ? j(memKey, []) : []; return Array.isArray(mem) ? mem : (mem && (mem.records || mem.items)) || []; }),
+  });
+  return o;
 }
 
 /** Example questions for the page (each answered from a different tool). */

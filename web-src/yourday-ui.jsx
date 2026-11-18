@@ -1,6 +1,7 @@
 /* ---- v9.3 "Your day" on Home + its Settings (Ali, 5 Nov 2026: D1 A — prayers only when turned on in Settings; A2 A — Ramadan, also
    switched on in Settings, with a box to write anything; notifications → the day; D5 A simple mode; D2 B "safe to spend" on the widget).
    The logic is in yourday.js / daynotes.js / dayset.js (pure, tested); this file only shows it. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import { allowed } from "./plan.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { Moon, ListChecks, MessageCircle, Package, Plus, X, Bell, Radar, CalendarDays } from "lucide-react";
@@ -39,7 +40,7 @@ const dayTime = (t, now) => { const d = new Date(t), n = new Date(now); const sa
 /** The notifications kept on the phone (RecallLog), read again every 5 minutes. */
 function useNotes(on, now) {
   const slot = Math.floor(now / 300000);
-  return useMemo(() => { if (!on) return []; const n = N(); try { return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } }, [on, slot]);
+  return useMemo(() => { if (!on) return []; const n = N(); try { return n && n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : []; } catch (e) { return []; } }, [on, slot]);
 }
 
 /** Everything "Your day" adds to Home's To do card: Ramadan, the prayers, agents' news, what your messages say, Close the day. */
@@ -143,7 +144,7 @@ export function DaySettings() {
   const [city, setCity] = useState(prayerCity());
   const [showApps, setShowApps] = useState(false);
   const putCity = (c) => { setCity(c); try { localStorage.setItem(PRAYER_KEY, JSON.stringify({ ...readJson(PRAYER_KEY, {}), city: c })); } catch (e) {} set({}); };
-  const apps = useMemo(() => { const n = N(); let notes = []; try { notes = n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) {}
+  const apps = useMemo(() => { const n = N(); let notes = []; try { notes = n && n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : []; } catch (e) {}
     const m = new Map(); for (const x of notes) if (x && x.pkg && !m.has(x.pkg)) m.set(x.pkg, { pkg: x.pkg, app: x.app || x.pkg, kind: kindOf(x.pkg, x.app) }); return [...m.values()].sort((a, b) => a.app.localeCompare(b.app)); }, [showApps]);
   const off = new Set(ds.offApps);
   return <section className="space-y-1" data-testid="day-settings">

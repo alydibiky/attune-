@@ -1,6 +1,7 @@
 /* ---- v9.9.37 BR-4 the Attune brain (Ali picked BR-4 = BR-1 + BR-2 + BR-3): "What Attune knows" (facts with their source, Forget, Not
    right), Chat answers "how am I doing?" at once from them, the facts go with every question to the AI, and the Sunday analysis on Home.
    Pro; Free keeps the morning "Attune noticed" card. Recomputed every time Attune opens and every minute while it is open (lifefacts.js). */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
 import { tr } from "./i18n.js";
 import * as F from "./lifefacts.js";
@@ -8,7 +9,7 @@ import { allowed } from "./plan.js";
 import { proGate } from "./plan-ui.jsx";
 import { progressOf } from "./life.js";
 import { billsOf } from "./bills.js";
-import { insights, loadSeen } from "./insights.js";
+import { insights, insightsCached, loadSeen } from "./insights.js";
 import { allStores } from "./connected.js";
 import { loadDir } from "./entities.js";
 import { getLang } from "./i18n.js";
@@ -19,8 +20,8 @@ const saveMem = (m) => { try { localStorage.setItem(F.BRAIN_KEY, JSON.stringify(
 /** Everything the brain reads, from the stores. */
 export function brainStores(now = Date.now()) {
   const N = typeof window !== "undefined" && window.AttuneNative;
-  const ledger = j("ledger.v3", {}), notes = (() => { try { return N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : []; } catch (e) { return []; } })();
-  let noticed = []; try { noticed = insights(allStores(), loadDir(), { now, seen: loadSeen() }); } catch (e) {}
+  const ledger = j("ledger.v3", {}), notes = (() => { try { return N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : []; } catch (e) { return []; } })();
+  let noticed = []; try { noticed = insightsCached(allStores(), loadDir(), { now, seen: loadSeen() }); } catch (e) {}
   return { ledger, life: j("attune:life:v1", { items: [] }), radar: j("attune:radar:v1", { items: [] }), notes, minds: j("attune:notifmind:v1", {}),
     agents: j("attune:agents:v1", { agents: [] }), bills: (() => { try { return billsOf(ledger, now); } catch (e) { return []; } })(), noticed, lang: getLang() };
 }

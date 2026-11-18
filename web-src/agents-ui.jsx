@@ -2,6 +2,7 @@
    agent as one calm card (what it watches, the last check, what it found) — Scout and Message alerts among them — and
    "See all → Agents report". Any app opens by its name ("open Uber", «افتح طلبات»). Agents never sign in, book or pay: a price
    is read, an order is copied into the app, a delivery is read from the store app's own notification. Logic: agents.js. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import * as G from "./guardian.js";
 import { noteProUse } from "./trialuse.js";
 import React, { useEffect, useMemo, useState } from "react";
@@ -1465,7 +1466,7 @@ export function ClinicCard({ a, remove, toggle, openSite , setRules, understand,
 /** G6 — the travel day: check-in opens, leave home by, at the airport by, take-off; the gate and delays from the airline's notifications. */
 export function TripCard({ a, remove, toggle, setDrive, remindTrip, navTo , setRules, understand, flash}) {
   const [rulesOpen, setRulesOpen] = useState(false);
-  const notes = (() => { const n = N2(); try { return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } })();
+  const notes = (() => { const n = N2(); try { return n && n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : []; } catch (e) { return []; } })();
   const p = A2.tripPlan(a, notes, { drive: a.drive || 60 });
   const tm = (t) => { try { return new Date(t).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
   const rows = [[tr("Check-in opens"), whenTxt(p.checkIn), p.checkInOpen], [tr("Leave home by"), whenTxt(p.leaveBy), p.leaveSoon], [tr("At the airport by"), tm(p.atAirport), false], [tr("Takes off"), whenTxt(a.at), false]];

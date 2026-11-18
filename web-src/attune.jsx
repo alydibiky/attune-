@@ -1,3 +1,4 @@
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import { readable, negatedOrder } from "./wrapclean.js";
 import { enterSends } from "./keys.js";
 import { typedPayment } from "./sense.js";
@@ -153,13 +154,13 @@ import { loadGroups as waLoadGroups, loadRaw as waLoadRaw } from "./wagroups-sto
 // v9.9.40 rule 6: the WhatsApp exports shared to Attune (the groups library keeps them) are read once at start, for questions (K5)
 let WA_EXPORTS = [];
 // EX-1: a chat whose export was shared and that isn't described yet → "What I understood" on Home at once
-const askExports = () => { try { const N = window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
+const askExports = () => { try { const N = window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : [];
   const r = cpAskForExports(cpLoadCP(), WA_EXPORTS, cpLoadRoles(), Date.now(), notes); if (r.added) { cpSaveCP(r.st); window.dispatchEvent(new Event("attune-chatpilot")); } } catch (e) {} };
 const loadExports = async () => { try { const gs = await waLoadGroups(); const out = []; for (const g of gs.slice(0, 40)) { const t = await waLoadRaw(g.id); if (t) out.push({ title: g.title, text: t }); } WA_EXPORTS = out; askExports(); } catch (e) {} };
 try { setTimeout(loadExports, 1500); window.addEventListener("attune-wa-added", loadExports); } catch (e) {}
 /** v9.9.40 K5 (Ali: "when I ask what or when did Address East discuss the garage it should know"): { r (chatask), msgs [{ who, ts, text }] } or null */
 function askChatsNow(q) {
-  try { const N = typeof window !== "undefined" && window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(N.recallNotes() || "[]") : [];
+  try { const N = typeof window !== "undefined" && window.AttuneNative, notes = N && N.recallNotes ? JSON.parse(recallRaw(N) || "[]") : [];
     const roles = cpLoadRoles(), mb = cpMessagesByChat(notes, WA_EXPORTS, roles);
     // (a chat's export and its notifications can name it two ways — one person / a group: what you said about either counts for both)
     const twin = (k) => String(k).replace(/\|[gp]:/, (m) => (m === "|g:" ? "|p:" : "|g:"));
@@ -7880,7 +7881,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.5";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9911,7 +9912,7 @@ export default function App() {
     },
     // v9.8 (Ali: "translating document did not work"): a document attached in Chat + "translate" → the File Converter's checked
     // translation (the whole file, its layout kept, any size, part by part) — not a chat answer that only sees the first pages
-    knownFor: (q) => [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? (() => { try { return JSON.parse(NATIVE.recallNotes() || "[]"); } catch (e) { return []; } })() : [] })],   // v9.9.37 BR-2: what the brain knows goes with every question
+    knownFor: (q) => [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? (() => { try { return JSON.parse(recallRaw(NATIVE) || "[]"); } catch (e) { return []; } })() : [] })],   // v9.9.37 BR-2: what the brain knows goes with every question
     translateDoc: (file, lang) => { const to = lang || (() => { try { return localStorage.getItem("attune:translate:to") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } })();
       try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} window.__attuneConvertHandoff = { files: [file], target: "translate", lang: to }; navTo("convert"); return to; },
     doSure: (t) => { try { const now = Date.now();
@@ -9922,7 +9923,7 @@ export default function App() {
       const ag = parseAgent(t, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) return true;
       return doSure(t, { now, stores: loadLifeStores() }); } catch (e) { return true; } },
     openIt: (t) => { try { return AL.readOpen(t) ? (doRef.current ? doRef.current(t) : null) : null; } catch (e) { return null; } },   // v9.9.3 W2
-    whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },
+    whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(recallRaw(NATIVE) || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },
     // v9.9 edit by talking: "Sheikh pays 3000 now" (a plan with a total), "which maid?", "already 700" — said, nothing saved
     editSay: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask && u.ask.kind === "life-edit" ? u.ask : null; } catch (e) { return null; } },
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
@@ -10158,7 +10159,7 @@ export default function App() {
   useEffect(() => {
     const run = () => { try {
       const st = loadAgents(), hs = (st.agents || []).filter((a) => a.kind === "haggle" && a.on !== false); if (!hs.length) return;
-      const notes = NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [];
+      const notes = NATIVE && NATIVE.recallNotes ? JSON.parse(recallRaw(NATIVE) || "[]") : [];
       let auto = false; try { auto = !!(NATIVE && NATIVE.msgState && JSON.parse(NATIVE.msgState() || "{}").autoOn); } catch (e) {}
       const next = (st.agents || []).map((a) => {
         if (a.kind !== "haggle" || a.on === false) return a;
@@ -10175,14 +10176,22 @@ export default function App() {
   }, []);
   // v9.8 I1 Autopilot: a suggestion saved through the same path as the Home box (money, a bill, a reminder) → { rid } for its reminder
   useEffect(() => {
-    window.__attuneApplyActions = (actions) => { const now = Date.now(); let rid = "";
+    // v10.6 (smoothness: the first look at hundreds of bank SMS saved each one alone — every store read again and the whole ledger
+    // written again per payment): one batch reads the stores once, keeps each change in memory for the next action, and writes each
+    // store once at the end. rids = the reminder made by each action (by its place in the list).
+    const STORE_OF = { "ledger.v3": "ledger", "attune:life:v1": "life", "attune:radar:v1": "radar", "attune:care:v1": "care", "attune:fit:v1": "fit", "attune:family:v1": "family", "attune:reminders:v1": "reminders" };
+    window.__attuneApplyActions = (actions) => { const now = Date.now(); let rid = ""; const rids = [], stores = loadLifeStores(), writes = new Map();
       for (const a of actions || []) {
-        const r = doApply(a, loadLifeStores(), { now });
-        for (const [k, v] of Object.entries(r.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-        if (r.need === "reminder" && a.action && a.action.kind === "reminder") { rid = newReminderId(); scheduleReminder({ id: rid, at: a.action.at, title: a.action.title, body: "", repeat: "none", created: now, source: "autopilot" }); }
+        let one = "";
+        const r = doApply(a, stores, { now });
+        for (const [k, v] of Object.entries(r.stores || {})) { writes.set(k, v); if (STORE_OF[k]) stores[STORE_OF[k]] = k === "attune:reminders:v1" ? (Array.isArray(v) ? v : (v && v.items) || []) : v; }
+        if (r.need === "reminder" && a.action && a.action.kind === "reminder") { for (const [k, v] of writes) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } writes.clear();
+          rid = one = newReminderId(); scheduleReminder({ id: rid, at: a.action.at, title: a.action.title, body: "", repeat: "none", created: now, source: "autopilot" }); stores.reminders = loadReminders(); }
+        rids.push(one);
       }
+      for (const [k, v] of writes) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
       try { window.dispatchEvent(new Event("attune:data-changed")); } catch (e) {}
-      return { rid };
+      return { rid, rids };
     };
     // (v9.8, Ali: "I want to reply to it and tell it how to add it — a reminder, a subscription…"): Autopilot's reply box goes through
     // the Home box (doFromHome), its To-do button into the to-do list
@@ -10445,7 +10454,7 @@ export default function App() {
     jobs,
     api: {
       records: () => cmdRef.current.memory || [],
-      whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },   // v10.6 "where is my wife?" from Home
+      whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(recallRaw(NATIVE) || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },   // v10.6 "where is my wife?" from Home
       projectTask: (t) => { try { return parseProjectTask(t); } catch (e) { return null; } },   // v9.2 (6): a task for a project's board
       write: (messages) => callChat(messages, null, { think: false, maxTokens: 700, temperature: 0.4 }),   // v8.7 the email card
       detect: (text) => {
@@ -11771,7 +11780,7 @@ export default function App() {
           // v9.8 (Ali: "the chat is still stupid — I don't care if it takes 10 seconds, but the answer must be right"): the same brain as
           // every chat — what Attune can do, what it already knows that fits (notifications understood, people, payments), the
           // profile, room for a real answer (was 200 tokens, "1 to 3 short sentences")
-          let known = []; try { known = [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], connect: connectNow })]; } catch (e) {}
+          let known = []; try { known = [...brainKnown(q), ...knownFor(q, { notes: NATIVE && NATIVE.recallNotes ? JSON.parse(recallRaw(NATIVE) || "[]") : [], connect: connectNow })]; } catch (e) {}
           const prof = profileLine(profile);
           return callChat([{ role: "system", content: brainSystem({ voice: true, ui, known }) + (prof ? "\n\n" + prof : "") }, ...(past || []), { role: "user", content: lb + q }], null, { maxTokens: 520, temperature: 0.3, think: false }); } : null}
         openTool={(tool, lang) => { setVoiceOpen(false); setVoiceText(""); try { localStorage.setItem("attune:translate:tab", "doc"); if (lang) localStorage.setItem("attune:translate:to", lang); } catch (e) {} navTo(tool === "translate-doc" ? "translate" : "pdfchat"); }} /></Guard> : null}

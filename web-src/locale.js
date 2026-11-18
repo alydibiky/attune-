@@ -20,9 +20,11 @@ export const regionOf = (lang) => { const m = String(lang || "").match(/[-_]([A-
 const navLang = () => { try { return (navigator.languages && navigator.languages[0]) || navigator.language || ""; } catch (e) { return ""; } };
 
 /** The person's currency: Money's own setting first, then the phone's region, else USD. */
+const HC = { raw: null, cur: "" };
 export function homeCurrency(ledger, lang = navLang()) {
   if (ledger && /^[A-Z]{3}$/.test(ledger.currency || "")) return ledger.currency;
-  try { const L = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (L && /^[A-Z]{3}$/.test(L.currency || "")) return L.currency; } catch (e) {}
+  // (v10.6 smoothness: this was read for EVERY notification — the whole ledger parsed each time; now once per change of the ledger)
+  try { const raw = localStorage.getItem("ledger.v3") || "null"; if (raw !== HC.raw) { HC.raw = raw; const L = JSON.parse(raw); HC.cur = L && /^[A-Z]{3}$/.test(L.currency || "") ? L.currency : ""; } if (HC.cur) return HC.cur; } catch (e) {}
   // v6.47: the country the person chose (Settings → Your country) comes before the phone's language region
   try { const c = COUNTRIES[savedCountry()]; if (c) return c.cur; } catch (e) {}
   return REGION_CUR[regionOf(lang)] || "USD";

@@ -5,6 +5,7 @@
          Never from this chat
      NS-2 "Kept quietly today: N" (tap → by chat, "This mattered" → describe that chat again)
    The logic is chatpilot.js / autopilot2.js / chatroles.js (tested); this file carries out the effects and draws the card. */
+import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
 import { Check, Undo2, Zap, ShoppingCart, MessageCircle, BellRing, ListChecks } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -15,7 +16,7 @@ import { applyBought, itemsOf } from "./shoplist.js";
 import * as SL from "./secondlook.js";   // v9.9.40 K6
 
 const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
-const readNotes = () => { try { const n = N(); return n && n.recallNotes ? JSON.parse(n.recallNotes() || "[]") : []; } catch (e) { return []; } };
+const readNotes = () => { try { const n = N(); return n && n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : []; } catch (e) { return []; } };
 const myNames = () => { try { const p = JSON.parse(localStorage.getItem("attune:profile") || "{}"); return [p.name, p.nick, p.nameAr].filter(Boolean).flatMap((x) => [String(x), String(x).split(" ")[0]]); } catch (e) { return []; } };
 const T = (o) => (o && o.t ? tr(o.t, o.v) : "");
 const hm = (t) => { try { return new Date(t).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
