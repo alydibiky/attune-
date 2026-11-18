@@ -62,6 +62,17 @@ export function findIn(records, q, search) {
  * api: { detect(text) → { doActions, goal, metro, automation, watch, mission }, records(), translateTo(text) → default language,
  *        metroAsk(text) }
  */
+/** v10.6 the answer to "where is my wife?" — her newest location notification, or (nobody taught for that role yet) the people the
+ *  location app reported, newest first. */
+export function whoLines(wi) {
+  const when = (n) => { try { return new Date(n.ts).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+  const line = (n) => (n.app || "") + " · " + when(n) + ": " + String(n.title || "") + " — " + String(n.text || "").replace(/^🏁\s*/, "");
+  if (wi.person) return [wi.note ? { en: wi.person.name + " — " + line(wi.note), ar: wi.person.name + " — " + line(wi.note), open: "recall" }
+    : L(`No location notification about ${wi.person.name} yet. Life360 (or Google Maps location sharing) has to send notifications, and Recall must be on.`, `مفيش إشعار عن مكان ${wi.person.name} لسه. لازم Life360 (أو مشاركة الموقع في خرايط جوجل) يبعت إشعارات، وRecall يكون شغال.`, "recall")];
+  if (wi.people && wi.people.length) return [L("The newest from your location app:", "آخر حاجة من تطبيق الموقع:"), ...wi.people.map((x) => ({ en: line(x.note), ar: line(x.note), open: "recall" })),
+    L(`Tell me once who is your ${wi.role} — “Nada is my ${wi.role}” — and I'll answer by name.`, `قولّي مرة مين ${wi.role === "wife" ? "مراتك" : wi.role} — «ندى مراتي» — وهرد بالاسم.`)];
+  return [L(`No location notifications yet. Life360 (or Google Maps location sharing) has to send notifications, and Recall must be on.`, `مفيش إشعارات موقع لسه. لازم Life360 (أو مشاركة الموقع) يبعت إشعارات، وRecall يكون شغال.`, "recall")];
+}
 export function route(text, { files = [], api = {}, prefs = {}, kind = null } = {}) {
   const t = String(text || "").trim();
   const cmd = kind ? null : K.parseCommand(t);
@@ -77,7 +88,9 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
   const det = (api.detect && api.detect(t)) || {};
   const records = (api.records && api.records()) || [];
-  const g = K.guess(t, { ...det, hasFile: files.length > 0, things: W.thingsKnown(records) });
+  // v10.6: "where is my wife / where's Nada / «مراتي فين»" — a person, read from the location notifications (never a thing or a map)
+  let person = false; if (api.whereIs) try { person = !!api.whereIs(t); } catch (e) { person = false; }
+  const g = K.guess(t, { ...det, hasFile: files.length > 0, things: W.thingsKnown(records), person });
   const d = K.decide(g, prefs, t);
   if (d.ask) return { type: "ask", options: d.ask, sig: d.sig, text: t };
   return runKind(d.kind, t, { files, api });
@@ -110,6 +123,10 @@ function runKind(kind, text, { cmd = null, files = [], api = {}, slash = false }
       return { type: "whereSave", set };
     }
     case "whereAsk": {
+      // v10.6 (Ali, 18 Nov: "I asked where is my wife and it should have gone to notifications as we agreed — it knows who my wife is"):
+      // a person (a role or a saved person) is answered from the newest location notification (Life360…), never as a thing put away
+      if (api.whereIs) { let wi = null; try { wi = api.whereIs(/where|فين|وين|location|مكان/i.test(arg) ? arg : "where is " + arg); } catch (e) { wi = null; }
+        if (wi) return { type: "lines", lines: whoLines(wi) }; }
       const q = W.parseWhereAsk(arg) || { thing: arg.replace(/^(where('?s| is)|فين)\s+/i, "").replace(/[?؟]$/, ""), usual: false };
       const a = W.whereAnswer(records, q);
       return a ? { type: "lines", lines: [{ ...a, open: "memory" }] }

@@ -13039,4 +13039,5 @@ export const HI = {
   "2,500 from Sheikh": "शेख़ से 2,500",
   "add milk to Talabat and I spent 200 on koshary": "Talabat में दूध जोड़ो और मैंने कोशरी पर 200 ख़र्च किए",
   "Attune answers this in Chat.": "Attune इसका जवाब चैट में देगा।",
+  "Delivered ✓": "पहुँच गया ✓",
 };

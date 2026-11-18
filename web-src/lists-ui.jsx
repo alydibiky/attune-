@@ -10,7 +10,7 @@ import { Plus, Check, Trash2, ChevronRight, Repeat, X, ListChecks, CalendarDays,
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as L from "./lists.js";
 import { startFocus } from "./focus-ui.jsx";
-import { loadReminders, saveReminders } from "./actions.js";
+import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
 import * as U from "./ui-kit.jsx";
 import { YourDay } from "./yourday-ui.jsx";
 import { PIN_KEY } from "./widgets.js";
@@ -37,6 +37,21 @@ export function todayReminders(now = Date.now()) {
   return loadReminders().filter((r) => r && !r.done && r.source !== "scout" /* v9.9.39 an alert, not a to-do */ && r.at && r.at <= end.getTime() && (r.at >= now || ((!r.repeat || r.repeat === "none") && r.at >= now - 3 * 86400000)))
     .sort((a, b) => a.at - b.at).map((r) => ({ ...r, late: r.at < now }));
 }
+// v10.6 (Ali, 18 Nov: "I want the ability to edit these to-do lists"): a reminder's words changed / a reminder removed, from Home's card
+const renameReminder = (id, title) => { const list = loadReminders().map((r) => (r.id === id ? { ...r, title } : r)); saveReminders(list); try { syncToPhone(window.AttuneNative, list); window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} };   // (the phone's alarm says the new words too)
+const removeReminder = (id) => { saveReminders(loadReminders().filter((r) => r.id !== id)); try { window.AttuneNative && window.AttuneNative.unschedule && window.AttuneNative.unschedule(String(id)); window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} };
+/** One row of Home's "To do" being changed: the words in a box, Save / Delete / Cancel. */
+function RowEdit({ text, onSave, onDelete, onCancel }) {
+  const [v, setV] = useState(text);
+  return <div className="flex flex-wrap items-center gap-2 py-1" data-testid="todo-edit">
+    <input value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && v.trim()) onSave(v.trim()); if (e.key === "Escape") onCancel(); }} autoFocus dir="auto"
+      className="flex-1 min-w-[160px] min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3 text-[14.5px]" data-testid="todo-edit-input" />
+    <span className="flex gap-1.5">
+      <button onClick={() => v.trim() && onSave(v.trim())} className="h-10 px-3.5 rounded-full text-[13px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc,#fff)" }} data-testid="todo-edit-save">{tr("Save")}</button>
+      <button onClick={onDelete} aria-label={tr("Delete")} className="w-10 h-10 rounded-full grid place-items-center border border-[var(--c-ln)] text-[var(--c-neg)]" data-testid="todo-edit-delete"><Trash2 size={15} /></button>
+      <button onClick={onCancel} aria-label={tr("Cancel")} className="w-10 h-10 rounded-full grid place-items-center c-sub" data-testid="todo-edit-cancel"><X size={16} /></button></span>
+  </div>;
+}
 const markReminderDone = (id) => { saveReminders(loadReminders().map((r) => (r.id === id ? { ...r, done: true, doneAt: Date.now() } : r))); window.dispatchEvent(new CustomEvent("attune-lists")); };
 const timeOf = (t) => { try { return new Date(t).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
 
@@ -60,9 +75,9 @@ export function ListCard({ list, onTick, onOpen, compact = false, testid = "list
 }
 
 /** Home's "To do" card + the lists needed today (1A). Nothing to show → only a small "+ Add a to-do or a list" line. */
-export function HomeTodo({ records = [], onTickTodo, navTo, flash, now = Date.now() }) {
+export function HomeTodo({ records = [], onTickTodo, onEditTodo, onDeleteTodo, navTo, flash, now = Date.now() }) {
   const [st, put] = useLists();
-  const [, setTick] = useState(0);
+  const [, setTick] = useState(0), [editing, setEditing] = useState("");
   const todos = (records || []).filter((r) => r && r.meta && r.meta.todo && !r.meta.done).sort((a, b) => a.ts - b.ts);
   // v9.3 (D2): the widget shows these to-dos; a to-do ticked on the widget is marked done here (Home has Mind)
   useEffect(() => { widgetTodos(records, onTickTodo ? (id) => onTickTodo({ id }) : null); try { window.dispatchEvent(new CustomEvent("attune-lists")); } catch (e) {} }, [todos.map((r) => r.id).join()]);
@@ -70,16 +85,20 @@ export function HomeTodo({ records = [], onTickTodo, navTo, flash, now = Date.no
   const rem = todayReminders(now);
   const lists = L.homeLists(st, now);
   const late = rem.filter((r) => r.late).length;
-  const rows = [...rem.map((r) => ({ k: "r" + r.id, label: r.title, sub: (r.late ? tr("late") + " · " : "") + timeOf(r.at), bad: r.late, tick: () => { markReminderDone(r.id); setTick((n) => n + 1); } })),
-    ...todos.map((r) => ({ k: "t" + r.id, label: r.title || r.text, sub: "", todo: true, tick: () => onTickTodo && onTickTodo(r) }))];
+  const rows = [...rem.map((r) => ({ k: "r" + r.id, label: r.title, sub: (r.late ? tr("late") + " · " : "") + timeOf(r.at), bad: r.late, tick: () => { markReminderDone(r.id); setTick((n) => n + 1); },
+      save: (t) => { renameReminder(r.id, t); setTick((n) => n + 1); }, del: () => { removeReminder(r.id); setTick((n) => n + 1); } })),
+    ...todos.map((r) => ({ k: "t" + r.id, label: r.title || r.text, sub: "", todo: true, tick: () => onTickTodo && onTickTodo(r),
+      save: onEditTodo ? (t) => onEditTodo(r, t) : null, del: onDeleteTodo ? () => onDeleteTodo(r) : null }))];
   return <div className="space-y-2" data-testid="home-todo">
     <YourDay records={records} navTo={navTo} flash={flash} />
     {rows.length ? <div className="c-card space-y-0.5" data-testid="home-todo-card">
       <div className="flex items-center gap-2 mb-0.5"><span className="text-[12px] font-extrabold tracking-wide flex-1 uppercase" style={{ color: "var(--c-area-fu, var(--c-acc))" }}>{tr("To do")} · {tr("{n} left", { n: rows.length })}</span>
         {late ? <span className={U.tag("red")} data-testid="home-todo-late">{tr("{n} late", { n: late })}</span> : null}
         <button onClick={() => navTo("lists")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="home-todo-all">{tr("Lists")} ›</button></div>
-      {rows.slice(0, 5).map((x) => <div key={x.k} className="flex items-center gap-1"><div className="flex-1 min-w-0"><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>
+      {rows.slice(0, 5).map((x) => editing === x.k && x.save ? <RowEdit key={x.k} text={x.label} onSave={(t) => { x.save(t); setEditing(""); }} onDelete={() => { x.del && x.del(); setEditing(""); }} onCancel={() => setEditing("")} />
+        : <div key={x.k} className="flex items-center gap-1"><div className="flex-1 min-w-0"><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>
         {/* v9.9.19 T6: Focus on this to-do */}
+        {x.save ? <button onClick={() => setEditing(x.k)} aria-label={tr("Change")} title={tr("Change")} className="w-10 h-10 rounded-full grid place-items-center c-sub shrink-0" data-testid="todo-edit-open"><Pencil size={15} /></button> : null}
         {x.todo ? <button onClick={() => startFocus(x.label)} aria-label={tr("Focus")} title={tr("Focus")} className="w-10 h-10 rounded-full grid place-items-center c-acc shrink-0" data-testid="todo-focus">◷</button> : null}</div>)}
       {rows.length > 5 ? <button onClick={() => navTo("lists")} className="text-[12.5px] c-sub min-h-[36px]">{tr("+{n} more", { n: rows.length - 5 })}</button> : null}
     </div> : null}

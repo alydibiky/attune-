@@ -153,10 +153,15 @@ export function applyTeach(x, { dir, teach = emptyTeach(), now = Date.now() } = 
 // ---- reading notifications with what you taught --------------------------------------------------------------------------------------
 const PERSON_APPS = /life ?360|whatsapp|telegram|messenger|signal|viber|botim|find my|google family|family link/i;
 /** The person a notification is about (Life360 / chat apps put the name in the title). */
+// v10.6 (Ali's screenshot: "I see «ما يخص المرتبات» often in WhatsApp. Who is this? My wife · Family…"): a GROUP's name is never a person
+// (the phone marks group chats; in a group the person is who wrote), and a title made of words no name has — «ما يخص», "about", "for",
+// "team", "orders", «جروب» — is a chat's name, not a person's
+const NOT_NAME = /(?:^|\s)(?:ما|يخص|بخصوص|عن|في|بتاع|جروب|مجموعة|شغل|طلبات|الطلبات|اوردرات|عيلة|العيلة|الشركة|ادارة|إدارة|صيانة|اجتماع|the|for|about|of|team|group|orders?|work|office|family|dept|department|project|official|support|admin|club|class|news|updates?)(?:\s|$)/i;
 export function personOf(n) {
-  const title = String((n && n.title) || "").replace(/\s*\(\d+.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "").trim();
   if (!PERSON_APPS.test(String(n && (n.app || "")) + " " + String(n && (n.pkg || "")))) return "";
-  if (!title || title.length > 40 || /\d{2,}|:|·|http/.test(title) || title.split(/\s+/).length > 3) return "";
+  const raw = n && (n.group || n.grp) ? String(n.who || "") : String((n && n.title) || "");
+  const title = raw.replace(/\s*\(\d+.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "").trim();
+  if (!title || title.length > 40 || /\d{2,}|:|·|http/.test(title) || title.split(/\s+/).length > 3 || NOT_NAME.test(title)) return "";
   return title;
 }
 /** v9.9.38: the people told to come first ("Sara always comes first") — they lead Home's "who messaged you" (daynotes.js). */
@@ -186,12 +191,30 @@ export const skipAsk = (teach, name) => ({ ...teach, skip: [...new Set([...(teac
 
 /** Chat / voice: "where's my wife?" / «مراتي فين؟» → the newest notification about her, or null. */
 export function whereIs(q, notes = [], dir = { items: [] }) {
-  const t = String(q || "").toLowerCase();
-  if (!/\b(where|where's|wheres|location|arrived|reach(ed)?|got home)\b|فين|وصلت|وصل|مكانها|مكانه/i.test(t)) return null;
+  const t0 = String(q || "").toLowerCase().replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, "");
+  // v10.6 (the 10,000 run: "Her phone is off. Where is mum?"): only the sentence that ASKS counts — the one with the question words
+  const TRIG = /\b(where|where's|wheres|location|arrived|reach(ed)?|(?:got|get|gets|is|at)\s+home|left\s+(?:work|home|the office|office|school|the club|club)|track(?:ing)?)\b|\b(?:is|has)\b.{1,40}\b(?:home|back|arrived|there)\b|في\s+البيت|فين|وصلت|وصل|مكانها|مكانه|(?:^|\s)مكان\s|روحت|روّحت|رجعت|رجع البيت/i;
+  const segs = t0.split(/[.!؟?\n]+|\s+—\s+/).map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const t = (segs.filter((x) => TRIG.test(x)).pop() || t0.replace(/\s+/g, " ").trim());
+  if (!/\b(where|where's|wheres|location|arrived|reach(ed)?|(?:got|get|gets|is|at)\s+home|left\s+(?:work|home|the office|office|school|the club|club)|track(?:ing)?)\b|\b(?:is|has)\b.{1,40}\b(?:home|back|arrived|there)\b|في البيت|فين|وصلت|وصل|مكانها|مكانه|(?:^|\s)مكان\s|روحت|روّحت|رجعت|رجع البيت/i.test(t)) return null;
+  // v10.6: about a THING or a PLACE that belongs to the person — "where is my mom's house", "where did my wife put the keys", «بيت ماما فين»
+  if (/['’]s\s+\p{L}|\b(?:put|keep|kept|leave|hide|hid|place)\b|\bleft\b(?!\s+(?:work|home|the office|office|school|the club|club))|\b(?:house|home address|office|car|phone|keys?|bag|charger|passport)\b|حط|حطت|حطيت|(?:^|\s)بيت\s|شق[ةه]|عربي[ةه]|مفاتيح|شنط[ةه]|موبايل/iu.test(t.replace(/\b(?:where|what|who|how|it|that|there)['’]s\b/g, " ").replace(/\b(?:got|gets|get|is|at)\s+home\b/, ""))) return null;
   let p = nameFromRole(t, dir);
   if (!p) { const ms = mentions(q, dir) || []; if (ms.length && ms[0].ids.length === 1) p = dir.items.find((x) => x.id === ms[0].ids[0]); }
-  if (!p) return null;
+  const loc = (x) => /life ?360|find my|family|google maps|location shar/i.test(String(x.app || "") + " " + String(x.pkg || ""));
+  // v10.6 (Ali, 18 Nov: "I asked where is my wife and it should have gone to notifications as we agreed"): a ROLE ("my wife", «مراتي»)
+  // nobody was taught for yet is still a person, never a thing put away — the newest location notifications are shown, one line per
+  // person, so the right one can be tapped once ("Nada is my wife") and is known from then on
+  if (!p) { const role = roleIn(t); if (!role) return null;
+    const seen = new Set(), people = [];
+    for (const x of [...notes].filter(loc).sort((a, b) => (b.ts || 0) - (a.ts || 0))) { const nm = personOf(x); if (!nm || seen.has(f(nm))) continue; seen.add(f(nm)); people.push({ name: nm, note: x }); if (people.length >= 4) break; }
+    return { person: null, role, people }; }
   const k = f(p.name).split(" ")[0];
-  const n = [...notes].filter((x) => /life ?360|find my|family/i.test(String(x.app || "") + " " + String(x.pkg || "")) && f(personOf(x)).split(" ")[0] === k).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
+  const n = [...notes].filter((x) => loc(x) && f(personOf(x)).split(" ")[0] === k).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
   return { person: p, note: n || null };
+}
+/** v10.6: is this "where is …" about a person (a role word, or a person saved in People)? — never answered as a thing put away. */
+export function isPersonWhere(q, dir = { items: [] }) {
+  const t = String(q || "").toLowerCase(); if (roleIn(t)) return true;
+  try { const ms = mentions(q, dir) || []; return !!(ms.length && ms[0].ids.length && dir.items.some((x) => ms[0].ids.includes(x.id) && x.kind === "person")); } catch (e) { return false; }
 }

@@ -104,7 +104,8 @@
   /* While typing in Chat the bottom bar steps aside, so the text box sits
      right on top of the keyboard and what you type is always in view. */
   html.att-typing nav.fixed{display:none}
-  body{overflow-wrap:anywhere}
+  /* v10.6 (Ali: Tools cards squeezed letter by letter, "EG/P"): break-word, not anywhere — "anywhere" let every card shrink to one letter's width */
+  body{overflow-wrap:break-word}
   td,th,pre,code{overflow-wrap:normal}
   /* v6.43 (Ali: "words do not fit" — «Rea d», «Ch at», «2 pages» one letter a line): with "anywhere" a squeezed button
      could shrink to one letter wide. Buttons, tabs, labels and headings break only between words now (a word that is

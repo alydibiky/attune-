@@ -57,10 +57,11 @@ function BalanceHero({ rep, all, account, setAccount, wide, safe }) {
   return (
     <div className={U.card + " relative overflow-hidden p-[18px]"} data-testid="money-balance-hero">
       <span aria-hidden="true" className="pointer-events-none absolute -top-8 -end-8 w-36 h-36 rounded-full bg-[var(--c-soft)] opacity-60" />
-      <div className="relative flex items-start justify-between gap-3">
+      <div className="relative flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <div className={U.label}>{name ? T("Balance · {a}", { a: name }) : tr("Total balance · All accounts")}</div>
-          <div className={"mt-1 tabular-nums font-black tracking-tight leading-tight " + (wide ? "text-[34px]" : "text-[30px]")} dir="ltr" data-testid="money-balance">
+          {/* v10.6 (Ali's screenshot: "1,127,735.2 EG / P"): the amount and its currency stay on one line — a long amount is drawn smaller */}
+          <div className={"mt-1 tabular-nums font-black tracking-tight leading-tight whitespace-nowrap " + (fmt(rep.balance).length > 10 ? (wide ? "text-[28px]" : "text-[24px]") : fmt(rep.balance).length > 7 ? (wide ? "text-[31px]" : "text-[27px]") : (wide ? "text-[34px]" : "text-[30px]"))} dir="ltr" data-testid="money-balance">
             <span>{fmt(rep.balance)}</span><span className={"ms-1.5 text-[16px] font-bold " + U.muted}>{rep.cur}</span></div>
           {!account && rep.others.length ? <div className={"text-[12.5px] tabular-nums " + U.muted} dir="ltr">{rep.others.map((x) => fmt(x.balance) + " " + x.currency).join(" · ")}</div> : null}
         </div>
@@ -426,7 +427,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
 }
 
 /** The phone's header on the calm view and the Report: menu, title, Import (a payment message or photo) and the ledger. */
-export function MoneyPhoneHead({ onMenu, onImport, onLedger, ready }) {
+export function MoneyPhoneHead({ onMenu, onImport, onLedger, ready, bulb = null }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
@@ -437,6 +438,7 @@ export function MoneyPhoneHead({ onMenu, onImport, onLedger, ready }) {
       <div className="flex items-center gap-1.5">
         <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onImport} data-testid="money-tools"><Upload size={14} />{tr("Import")}</button>
         <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onLedger} data-testid="money-more" aria-label={tr("More")}><BookOpen size={15} />{tr("More")}</button>
+        {bulb}
       </div>
     </div>);
 }

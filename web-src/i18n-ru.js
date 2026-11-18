@@ -13038,4 +13038,5 @@ export const RU = {
   "2,500 from Sheikh": "2 500 от Шейха",
   "add milk to Talabat and I spent 200 on koshary": "добавь молоко в Talabat и я потратил 200 на кошари",
   "Attune answers this in Chat.": "Attune ответит на это в чате.",
+  "Delivered ✓": "Доставлено ✓",
 };

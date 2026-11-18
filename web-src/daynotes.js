@@ -86,13 +86,29 @@ export function dayFromNotes(notes, { now = Date.now(), offApps = [], asksDays =
       }
     }
     if ((kind === "shop" || kind === "sms" || kind === "email" || kind === "other") && isToday && DELIVERY.test(text + " " + (n.title || "")) && !money.test(text) && arriving.length < 5 && (() => { try { return understandNote(n).kind !== "promo"; } catch (e) { return true; } })())   // (v9.8: "300 EGP OFF … delivered in 15 minutes" is an offer)
-      arriving.push({ app: n.app || "", text: (n.title ? n.title + " — " : "") + text.slice(0, 120), at: n.ts });
+      arriving.push(parcelLine(n, text));
   }
+  // v10.6 (Ali's screenshot: Supplexon order #2812 twice under "Arriving" — once "out for delivery", once "has been delivered"): one line
+  // per order (the newest message wins), "Delivered" once it says so, and the message's first sentence only (no title repeated)
+  { const byKey = new Map(); for (const a of arriving) { const o = byKey.get(a.key); if (!o || a.at > o.at) byKey.set(a.key, a); }
+    arriving.splice(0, arriving.length, ...[...byKey.values()].sort((a, b) => b.at - a.at).slice(0, 4)); }
   for (const p of people.values()) p.first = isFirst(p.who, first) || (p.group ? isFirst(p.group, first) : false);
   return { people: [...people.values()].sort((a, b) => (b.first ? 1 : 0) - (a.first ? 1 : 0) || b.at - a.at), asks: asks.sort((a, b) => a.at - b.at), arriving, counts, total,
     apps: [...apps.entries()].map(([app, n]) => ({ app, n })).sort((a, b) => b.n - a.n) };
 }
 
+const DELIVERED = /\b(?:has been delivered|was delivered|delivered (?:to you|successfully|today)|is delivered|has arrived|got delivered|was handed)\b|تم التوصيل|تم تسليم|اتسلم|اتوصل|وصل الطلب|تم استلام الطلب/i;
+/** One parcel line: { app, key (the app + the order number), state: "delivered" | "coming", text (one short sentence), at }. */
+export function parcelLine(n, text0) {
+  const title = String(n.title || "").trim(), app = n.app || "";
+  let text = String(text0 || "").replace(/\s+/g, " ").trim();
+  if (title && title.length > 3) text = text.split(title).join(" ").replace(/\s+/g, " ").trim();
+  const no0 = (/#\s?(\d{3,})/.exec(text) || [])[1];
+  if (no0) { const i1 = text.indexOf(no0), i2 = text.indexOf(no0, i1 + no0.length); if (i2 > 0) text = text.slice(0, i2).replace(/\s*(?:order|طلب|اوردر)?\s*(?:no\.?|number|رقم)?\s*#?\s*$/i, "").trim(); }   // the shop repeats itself: "… #2812 has been delivered Order #2812 Your order…"
+  const first = (/^(.{12,110}?[.!؟?])(?:\s|$)/.exec(text) || [])[1] || (text.length > 90 ? text.slice(0, 88).replace(/\s+\S*$/, "") + "…" : text);
+  const no = (/#\s?(\d{3,})|(?:order|طلب|اوردر)\s*(?:no\.?|number|رقم)?\s*(\d{4,})/i.exec(title + " " + text) || []).slice(1).find(Boolean) || "";
+  return { app, key: app + "|" + (no || title.toLowerCase().slice(0, 30)), state: DELIVERED.test(title + " " + text) ? "delivered" : "coming", text: (title ? title + " — " : "") + first, at: n.ts || 0 };
+}
 /** A reminder made from something asked in a message ("Ahmed: can we meet tomorrow at 5?") — the person taps Add. */
 export function reminderFromAsk(a) {
   const words = String(a.text || "").replace(/\s+/g, " ").trim();

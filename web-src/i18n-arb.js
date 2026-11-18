@@ -13030,4 +13030,5 @@ export const ARB = {
   "2,500 from Sheikh": "٢٥٠٠ من الشيخ",
   "add milk to Talabat and I spent 200 on koshary": "أضف حليبًا إلى طلبات وأنفقت ٢٠٠ على كشري",
   "Attune answers this in Chat.": "يجيب أتيون عن هذا في المحادثة.",
+  "Delivered ✓": "تم التسليم ✓",
 };

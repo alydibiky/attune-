@@ -13038,4 +13038,5 @@ export const ZH = {
   "2,500 from Sheikh": "从 Sheikh 收到 2,500",
   "add milk to Talabat and I spent 200 on koshary": "把牛奶加到 Talabat，我在杂豆饭上花了 200",
   "Attune answers this in Chat.": "Attune 会在聊天里回答这个。",
+  "Delivered ✓": "已送达 ✓",
 };

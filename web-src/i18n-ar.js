@@ -10145,4 +10145,5 @@ export const AR = {
   "add milk to Talabat and I spent 200 on koshary": "ضيف لبن لطلبات وصرفت ٢٠٠ على كشري",
   "Attune answers this in Chat.": "أتيون هيرد على ده في الشات.",
   "Open Chat": "افتح الشات",
+  "Delivered ✓": "اتسلم ✓",
 };

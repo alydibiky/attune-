@@ -199,6 +199,7 @@ export function guess(text, ctx = {}) {
   // v9.9.18 (the hard run: "todo: order the cake" became an order agent, "new task: pay the maid" a payment): a sentence that STARTS by
   // naming the to-do list is a to-do, whatever the task says
   if (/^\s*(?:(?:new\s+)?(?:to-?do|todo|task)\s*[:\-]|don'?t forget\s*[:\-]|add to my (?:to-?do|todo|tasks?)(?: list)?\b|مهمة جديدة\s*[:\-]|ضيف للمهام)/i.test(t) && todoText(t)) { add("todoAdd", 0.99); return c; }
+  if (ctx.person) { add("whereAsk", 0.98); return c; }   // v10.6 where a PERSON is (her newest Life360 note) — one meaning only
   if (ctx.teach) add("do", 0.97);   // v9.9.3: teaching Attune is done at once (with Undo)
   if (ctx.metro) add("metro", 0.92);
   if (ctx.automation) add("automation", 0.9);

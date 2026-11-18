@@ -13038,4 +13038,5 @@ export const FA = {
   "2,500 from Sheikh": "۲٬۵۰۰ از شیخ",
   "add milk to Talabat and I spent 200 on koshary": "شیر را به Talabat اضافه کن و ۲۰۰ برای کشری خرج کردم",
   "Attune answers this in Chat.": "Attune در گفتگو به این پاسخ می‌دهد.",
+  "Delivered ✓": "تحویل شد ✓",
 };

@@ -13038,4 +13038,5 @@ export const KO = {
   "2,500 from Sheikh": "셰이크에게 2,500",
   "add milk to Talabat and I spent 200 on koshary": "Talabat에 우유 추가하고 코샤리에 200 썼어",
   "Attune answers this in Chat.": "Attune가 채팅에서 답할게요.",
+  "Delivered ✓": "배송 완료 ✓",
 };

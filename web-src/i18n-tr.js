@@ -13039,4 +13039,5 @@ export const TRK = {
   "2,500 from Sheikh": "Şeyh'ten 2.500",
   "add milk to Talabat and I spent 200 on koshary": "Talabat'a süt ekle ve koşariye 200 harcadım",
   "Attune answers this in Chat.": "Attune bunu sohbette yanıtlar.",
+  "Delivered ✓": "Teslim edildi ✓",
 };

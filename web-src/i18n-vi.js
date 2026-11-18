@@ -13038,4 +13038,5 @@ export const VI = {
   "2,500 from Sheikh": "2.500 từ Sheikh",
   "add milk to Talabat and I spent 200 on koshary": "thêm sữa vào Talabat và tôi đã tiêu 200 cho koshari",
   "Attune answers this in Chat.": "Attune trả lời việc này trong Chat.",
+  "Delivered ✓": "Đã giao ✓",
 };

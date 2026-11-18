@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { whoLines } from "./cmdrun.js";
 import * as FT from "./features.js";   // v10.1 F1 + F3
 import { enterSends } from "./keys.js";
 import * as BR from "./brain.js";
@@ -1005,6 +1006,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v9.9.3 L4: "where's my wife?" / «مراتي فين؟» — from the newest Life360 (or family locator) notification about her, by code
     if (route && !img && api.whereIs && !only) {
       const wi = api.whereIs(typed);
+      if (wi && !wi.person) { const cid = ensureChat(typed), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(typed);   // v10.6 a role nobody was taught for yet: the location app's people
+        const ls = whoLines(wi).map((l) => (ar ? l.ar : l.en));
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
+          { id: newId(), role: "assistant", card: { tone: "emerald", title: ls[0], detail: ls.slice(1).join("\n"), actions: [["Open Recall", "open:recall"]] } }] }));
+        setText(""); return; }
       if (wi) { const cid = ensureChat(typed), n = wi.note, ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(typed);
         const when = n ? new Date(n.ts).toLocaleString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
         patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },

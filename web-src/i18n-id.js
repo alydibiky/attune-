@@ -13039,4 +13039,5 @@ export const IDN = {
   "2,500 from Sheikh": "2.500 dari Sheikh",
   "add milk to Talabat and I spent 200 on koshary": "tambah susu ke Talabat dan aku belanja 200 untuk koshari",
   "Attune answers this in Chat.": "Attune menjawab ini di Chat.",
+  "Delivered ✓": "Terkirim ✓",
 };

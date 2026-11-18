@@ -388,7 +388,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           paywall promise. The box, "Right now" and "Your day" stay. */}
       {/* v9.2 (Ali picked 1A, 4 Nov): what is due or not finished, and the lists needed today, stay on Home until ticked */}
       {minimal && !rep ? <HomeTodo records={cmd && cmd.api && cmd.api.records ? cmd.api.records() : []} navTo={navTo}
-        onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} /> : null}
+        onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
+        onEditTodo={(x, t) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, title: t.slice(0, 90), text: t }))}
+        onDeleteTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, deleted: true, doneAt: Date.now() } }))} /> : null}
       {/* v9.9.19 T2 (Ali picked A): habits with this week's dots */}
       {minimal && !rep ? <HabitsCard /> : null}
       {/* v9.9.40 the new Autopilot (Ali's OK on K1–K6): chats by their role — the list chat's Shopping line, Done for you with the full

@@ -50,7 +50,7 @@ const Card = ({ id, label, sub, Icon, onClick, testid }) => (
     <span className="mt-0.5 text-[12.5px] text-[var(--c-mut)] leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
 
-export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, records = [], onTickTodo = null, toolsN = null }) {
+export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, records = [], onTickTodo = null, onEditTodo = null, onDeleteTodo = null, toolsN = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);   // v6.28 "Do it from Home"
   const facts = useMemo(() => todayFacts(), []);
@@ -109,7 +109,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
       <WeekCalendar navTo={navTo} />
       <UnderWeek navTo={navTo} />
       {/* v9.2 (Ali picked 1A): what is due or not finished, and the lists needed today — the same card as the phone's Home */}
-      <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} />
+      <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} onEditTodo={onEditTodo} onDeleteTodo={onDeleteTodo} />
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
         {cards.map(([id, label, sub, Icon]) => <Card key={id} id={id} label={label} sub={sub} Icon={Icon} onClick={() => navTo(id)} />)}
         <Card id="tools" label="All tools" sub={tr("{n} tools", { n: toolsN != null ? toolsN : tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />
@@ -151,7 +151,7 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
           })}
         </div>
       ) : pages ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
+        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 230px), 1fr))" }} data-testid="tools-results">
           {(top ? (groups && groups.length ? groups.flatMap((g) => g[1]).map((id) => tools.find((t) => t[0] === id)).filter(Boolean) : tools) : pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean)).filter(match).map(([id, label, sub, Icon]) => (
             <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start min-h-[56px] flex items-start gap-3 p-3.5 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
               <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
@@ -168,10 +168,10 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pag
         return (
           <section key={title} className="mb-6" data-testid="tools-group">
             <h2 className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-0 mb-2.5">{tr(title)}</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 230px), 1fr))" }}>{/* v10.6 (Ali's Tools screenshot: 2 squeezed columns on a phone) — as many as fit, each at least 230 px */}
               {list.map(([id, label, sub, Icon]) => (
                 <div key={id} className="group relative rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] hover:border-[var(--c-acc)] transition-colors duration-150">
-                  <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="w-full min-h-[56px] text-start flex items-start gap-3 p-3.5 pe-11">
+                  <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className={"w-full min-h-[56px] text-start flex items-start gap-3 p-3.5 " + (showPins ? "pe-11" : "")}>
                     <span className="w-10 h-10 shrink-0 rounded-[12px] bg-[var(--c-soft)] text-[var(--c-acc)] flex items-center justify-center"><Icon size={18} /></span>
                     <span className="min-w-0"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)] leading-tight">{tr(label)}</span>
                       <span className="block text-[12.5px] text-[var(--c-mut)] leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>

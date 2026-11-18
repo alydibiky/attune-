@@ -168,10 +168,10 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
 
   // v10.2 D1 (Ali OK'd "OK-D1"): the pieces of the Medicines tab, shared by the phone layout and the computer's list + details
   const medBtns = (<>
-          <div className="grid grid-cols-3 gap-2">
-            <button className={cardPad + " text-center py-3"} onClick={() => choosePhoto(fileRx.current)} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
-            <button className={cardPad + " text-center py-3"} onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
-            <button className={cardPad + " text-center py-3"} onClick={() => setDrafts((x) => [...x, { _k: "h" + Date.now() }])} data-testid="care-rx-hand"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Add by hand")}</span></button>
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 104px), 1fr))" }}>{/* v10.6 (the width audit: "Prescription" broke at 344 px) */}
+            <button className={cardPad + " text-center py-3 px-2!"} onClick={() => choosePhoto(fileRx.current)} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
+            <button className={cardPad + " text-center py-3 px-2!"} onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
+            <button className={cardPad + " text-center py-3 px-2!"} onClick={() => setDrafts((x) => [...x, { _k: "h" + Date.now() }])} data-testid="care-rx-hand"><Plus size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Add by hand")}</span></button>
           </div>
           <input ref={fileRx} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "rx"); e.target.value = ""; }} data-testid="care-rx-file" />
   </>);

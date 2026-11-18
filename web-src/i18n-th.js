@@ -13038,4 +13038,5 @@ export const TH = {
   "2,500 from Sheikh": "2,500 จากชีค",
   "add milk to Talabat and I spent 200 on koshary": "เพิ่มนมใน Talabat และฉันจ่าย 200 ค่าโคชารี",
   "Attune answers this in Chat.": "Attune จะตอบเรื่องนี้ในแชท",
+  "Delivered ✓": "ส่งถึงแล้ว ✓",
 };

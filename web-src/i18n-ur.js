@@ -13039,4 +13039,5 @@ export const UR = {
   "2,500 from Sheikh": "شیخ سے 2,500",
   "add milk to Talabat and I spent 200 on koshary": "Talabat میں دودھ ڈالو اور میں نے کشری پر 200 خرچ کیے",
   "Attune answers this in Chat.": "Attune اس کا جواب چیٹ میں دے گا۔",
+  "Delivered ✓": "پہنچ گیا ✓",
 };

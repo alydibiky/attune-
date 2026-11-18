@@ -13038,4 +13038,5 @@ export const JA = {
   "2,500 from Sheikh": "シェイクから 2,500",
   "add milk to Talabat and I spent 200 on koshary": "Talabat に牛乳を追加して、コシャリに 200 使った",
   "Attune answers this in Chat.": "Attune がチャットで答えます。",
+  "Delivered ✓": "配達済み ✓",
 };

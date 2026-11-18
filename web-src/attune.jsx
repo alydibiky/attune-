@@ -6263,7 +6263,7 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false, incoming, clearIncoming, openPlan, screen, onMenu, tabs, wide = false, navTo: goTo = null }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false, incoming, clearIncoming, openPlan, screen, onMenu, tabs, wide = false, navTo: goTo = null, tipBulb = null, tipSlot = null }) {
   // v7.2 (Gemini's "Area 1: Money", Ali sent it 24 Oct 2026): Money opens on a calm view; its Money Report is one tap away and the
   // ledger itself (Yusr) one more. Yusr stays loaded behind them (hidden), so the box, a shared payment and the Zakāt figures work.
   const [view, setView] = React.useState("calm");          // calm | report | ledger
@@ -6669,7 +6669,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
         </>) : (
         <>
           <div className="shrink-0 px-3.5 pt-3">
-            <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => setMoreOpen(true)} ready={ready} />
+            <MoneyPhoneHead onMenu={onMenu} onImport={() => setSheet(true)} onLedger={() => setMoreOpen(true)} ready={ready} bulb={tipBulb} />
+            {tipSlot ? <div className="pt-2">{tipSlot}</div> : null}
             {tabs && pane === "home" ? <div className="pt-2">{tabs}</div> : null}
             <MoneyBar panes={moneyPanes} pane={pane} setPane={setPane} onAdd={() => setAddOpen(true)} dots={{ bills: billsLate, zakat: !!(zakNow && zakNow.due) }} />
             <div className="h-3" />
@@ -8648,7 +8649,7 @@ export default function App() {
       <button onClick={() => navTo(pp[0])} data-testid="part-back" className="calm inline-flex items-center gap-1 min-h-[36px] rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)]! px-3.5 mb-3 text-[13px] font-bold text-[var(--c-mut)] hover:text-[var(--c-ink)]">
         <ChevronLeft size={15} />{tr(pp[0] === "timeline" ? "All follow-ups" : TAB_SHORT[pp[0]] || MODE_TITLES[pp[0]] || pp[0])}</button>); }
     return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
-      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={false} end={!wide && barHidden ? <TipBulb mode={mode} /> : null} /> : null;   // v8.7 (P5-A option 2): no bottom bars — Business too has its tabs on top
+      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={false} end={!wide && barHidden && mode !== "money" ? <TipBulb mode={mode} /> : null} /> : null;   // v8.7 (P5-A option 2): no bottom bars — Business too has its tabs on top
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
   useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); document.documentElement.classList.add("att-min"); } catch (e) {} }, []);
@@ -10444,6 +10445,7 @@ export default function App() {
     jobs,
     api: {
       records: () => cmdRef.current.memory || [],
+      whereIs: (q) => { try { return NT.whereIs(q, NATIVE && NATIVE.recallNotes ? JSON.parse(NATIVE.recallNotes() || "[]") : [], loadPeopleDir()); } catch (e) { return null; } },   // v10.6 "where is my wife?" from Home
       projectTask: (t) => { try { return parseProjectTask(t); } catch (e) { return null; } },   // v9.2 (6): a task for a project's board
       write: (messages) => callChat(messages, null, { think: false, maxTokens: 700, temperature: 0.4 }),   // v8.7 the email card
       detect: (text) => {
@@ -10656,7 +10658,7 @@ export default function App() {
         </header>
         {/* v10.2 T1 + T3 (Ali OK'd "OK-T"): the phone's tip is a line inside the page; the 💡 by the title shows a page's tips again */}
         {wide || (barHidden && mode === "home") ? <div className="relative h-0"><Guard name="tipbulb"><TipBulb mode={mode} className={"absolute end-0 z-[40] " + (mode === "home" && !wide ? "top-3" : "top-1")} /></Guard></div> : null}
-        {!wide && mode !== "home" ? <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} inline /></Guard> : null}
+        {!wide && mode !== "home" && mode !== "money" ? <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} inline /></Guard> : null}   {/* (v10.6 Money draws its own, under its header — the page's own header hid it) */}
 
         {/* The morning line — shown on every tab, once a day, only when there
             is something real to say. Computed, never generated. */}
@@ -10690,7 +10692,8 @@ export default function App() {
           <PhoneHome tipSlot={<Guard name="coach"><CoachHost mode="home" hold={showOnboard || showUpgrade} inline /></Guard>} cmd={cmd} trial={{ left: trialLeft, started: (() => { try { return !!localStorage.getItem(FIRST_RUN_KEY); } catch (e) { return false; } })(), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })(), bought: isPro(tier), pro: isPro(tier) || testingPro() || bonusUntil() > 0, open: () => setShowUpgrade(true) }} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
-          <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"} toolsN={toolCount(groupsShown)}
+          <DesktopHome doIt={doFromHome} records={memory} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
+            onEditTodo={(x, t) => updateRec(x.id, (r) => ({ ...r, title: t.slice(0, 90), text: t }))} onDeleteTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, deleted: true, doneAt: Date.now() } }))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"} toolsN={toolCount(groupsShown)}
             onAsk={(t, raw) => { setChatSeed(raw ? t : "\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
@@ -11354,7 +11357,8 @@ export default function App() {
         ) : mode === "money" ? (
           // v7.2: the same Money on a phone and a computer — the calm view first, the Money Report, then the ledger (Yusr)
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} trialPro={trialLeft > 0} openPlan={() => setShowUpgrade(true)}
-            wide={wide} navTo={navTo} onMenu={LEGACY_NAV || wide ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV || wide ? null : hubTabsEl} />
+            wide={wide} navTo={navTo} onMenu={LEGACY_NAV || wide ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV || wide ? null : hubTabsEl}
+            tipBulb={wide ? null : <Guard name="tipbulb"><TipBulb mode="money" className="shrink-0" /></Guard>} tipSlot={wide ? null : <Guard name="coach"><CoachHost mode="money" hold={showOnboard || showUpgrade} inline /></Guard>} />
         ) : mode === "travel" ? (
           // v6.27: Travel in design A "Calm" — five tabs, everything kept, the trip checked by code (travel-ui.jsx, travel.js)
           <TravelPage CPACKS={CPACKS} activePack={activePack} installedPacks={installedPacks} installPack={installPack} packView={packView}

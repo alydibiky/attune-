@@ -13039,4 +13039,5 @@ export const FR = {
   "2,500 from Sheikh": "2 500 de Sheikh",
   "add milk to Talabat and I spent 200 on koshary": "ajoute du lait à Talabat et j’ai dépensé 200 en koshari",
   "Attune answers this in Chat.": "Attune répond à ceci dans le chat.",
+  "Delivered ✓": "Livré ✓",
 };

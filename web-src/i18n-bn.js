@@ -13038,4 +13038,5 @@ export const BN = {
   "2,500 from Sheikh": "শেখের কাছ থেকে ২,৫০০",
   "add milk to Talabat and I spent 200 on koshary": "Talabat-এ দুধ যোগ করো আর কোশারিতে ২০০ খরচ করলাম",
   "Attune answers this in Chat.": "Attune চ্যাটে এর উত্তর দেবে।",
+  "Delivered ✓": "পৌঁছে গেছে ✓",
 };

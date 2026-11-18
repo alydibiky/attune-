@@ -62,6 +62,11 @@ export function readDescription(text0, learned = null) {
   { const L = learned || loadLearned(), k = keyOf(text); if (k && L[k] && ROLES.includes(L[k].role)) return { role: L[k].role, care: [], whenMe: false, people: [], unsure: false, by: "learned" }; }
   // the role is what the chat IS — the words before "only if …" / "or if someone mentions me"; the topics after it never set it
   // ("family group, only if someone mentions my crane" is family, not work)
+  // v10.6 (Ali's screenshot: "New chat · Orders — Not sure what Orders is yet", and «الطلبات» read as a shopping list — what he
+  // corrected on 17 Nov: "It's a group I put on all orders I buy"): a chat NAMED only "Orders" / «الطلبات» / «طلباتي» is a record of
+  // what you order — never a list to fill
+  if (/^(?:my |our |all )?(?:orders?|purchases|my purchases|اوردرات|الاوردرات|أوردرات|الأوردرات|الطلبات|طلبات|طلباتي|طلباتنا|المشتريات|مشترياتي)(?:\s*(?:📦|🛍️?|🛒))?$/i.test(text.replace(/[^\p{L}\p{N} 📦🛍🛒]/gu, "").trim()))
+    return { role: "orders", care: [], whenMe: false, people: [], unsure: false };
   const cm = CARE_LEAD.exec(text), mm = ME_W.exec(text);
   const cut = Math.min(cm ? cm.index : text.length, mm ? Math.max(0, mm.index - 12) : text.length);
   // «مش مهم غير لو …» / "not important unless …" — the "not important" belongs to the "unless", it is not the chat's role

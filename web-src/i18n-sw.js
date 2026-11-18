@@ -13039,4 +13039,5 @@ export const SW = {
   "2,500 from Sheikh": "2,500 kutoka kwa Sheikh",
   "add milk to Talabat and I spent 200 on koshary": "ongeza maziwa kwenye Talabat na nimetumia 200 kwa koshari",
   "Attune answers this in Chat.": "Attune atajibu hili kwenye Chat.",
+  "Delivered ✓": "Imefikishwa ✓",
 };
