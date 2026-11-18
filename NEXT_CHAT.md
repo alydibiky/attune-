@@ -22,6 +22,10 @@
 > sure as before, and its complete message as evidence). 10,000 notification run: 100 %, 0 interruptions; HARD 99.9 % (9,988 vs 9,987), 2.
 > The 10,000 HARD run (tests/bankcheck/gen.mjs, 84 % different shapes) found a real reader bug: a bank SMS in CAPITALS "RS.2500.00 DEBITED"
 > was not read (paytext.js normalises RS/RP) → 100 %; held-out (heldout.mjs) 100 %. e2e: tests/e2e_v1040fixes.py (phone + computer).
+> **Full run 18 Nov:** every unit test passes; 4 browser tests fail — e2e_v770chat, e2e_v830, e2e_v922agents, e2e_v922projects (time-outs
+> on project-item / the hotel offer) — and they fail the SAME way on ba5c8c4 (before v10.4, checked in a worktree): older, not from this
+> change. To look at next session. (tests/setup.sh: the llama.cpp UI download fails behind the proxy — build with
+> -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_BUILD_HTML=OFF and delete build-dl/tools/ui/dist.)
 > **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page
 > https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq (docs/mockups/widgets.html): A1/A2 the list widget (his Talabat one: today 4 rows,
 > no scroll, no untick), W1 Your day · W2 Money (+ the bank SMS Add ✓) · W3 Tell Attune box · W4 People & money · W5 Agents · W6 small
