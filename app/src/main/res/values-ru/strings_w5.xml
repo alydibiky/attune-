@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Ваш день</string>
+    <string name="w5_day_desc">Ближайшие 3 дела на сегодня — Готово, +1 ч и Оплачено прямо на главном экране</string>
+    <string name="w5_list_name">Attune · Списки</string>
+    <string name="w5_list_desc">Ваши списки — листайте, отмечайте, снимайте отметки и добавляйте, не открывая Attune</string>
+    <string name="w5_money_name">Attune · Деньги</string>
+    <string name="w5_money_desc">Сколько можно потратить сегодня, банковские SMS, Потратил / Получил</string>
+    <string name="w5_agents_name">Attune · Агенты</string>
+    <string name="w5_agents_desc">Что нашли ваши агенты — открыть точное объявление или приостановить</string>
+    <string name="w5_med_name">Attune · Лекарство</string>
+    <string name="w5_med_desc">Следующая доза — Принял или +30 мин</string>
+    <string name="w5_papers_name">Attune · Документы</string>
+    <string name="w5_papers_desc">Ближайший истекающий документ и как его продлить</string>
+    <string name="w5_trip_name">Attune · Поездка</string>
+    <string name="w5_trip_desc">Обратный отсчёт до следующей поездки</string>
+    <string name="w5_next_name">Attune · Ближайшая дата</string>
+    <string name="w5_next_desc">Ближайший день рождения или годовщина — напомнить</string>
+    <string name="w5_stack_name">Attune · Умная стопка</string>
+    <string name="w5_stack_desc">Один виджет показывает то, что важно сейчас; листайте остальное</string>
+</resources>

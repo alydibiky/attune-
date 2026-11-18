@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · يومك</string>
+    <string name="w5_day_desc">أهم ٣ حاجات النهارده — خلصت، بعد ساعة، ودفعت من على الشاشة الرئيسية</string>
+    <string name="w5_list_name">Attune · القوايم</string>
+    <string name="w5_list_desc">قوايمك — اسحب وعلّم وشيل العلامة وضيف من غير ما تفتح أتيون</string>
+    <string name="w5_money_name">Attune · الفلوس</string>
+    <string name="w5_money_desc">المسموح تصرفه النهارده، رسايل البنك تضيفها، صرفت / جالي</string>
+    <string name="w5_agents_name">Attune · الوكلاء</string>
+    <string name="w5_agents_desc">اللي الوكلاء لقوه — افتح الإعلان نفسه أو وقّفه</string>
+    <string name="w5_med_name">Attune · الدوا</string>
+    <string name="w5_med_desc">الجرعة الجاية — خدتها أو بعد نص ساعة</string>
+    <string name="w5_papers_name">Attune · الورق</string>
+    <string name="w5_papers_desc">أقرب ورقة هتخلص وإزاي تجددها</string>
+    <string name="w5_trip_name">Attune · السفرية</string>
+    <string name="w5_trip_desc">العد التنازلي لسفريتك الجاية</string>
+    <string name="w5_next_name">Attune · المناسبة الجاية</string>
+    <string name="w5_next_desc">عيد الميلاد أو الذكرى الجاية — فكّرني</string>
+    <string name="w5_stack_name">Attune · الويدجت الذكي</string>
+    <string name="w5_stack_desc">ويدجت واحد بيوريك اللي يناسب دلوقتي — اسحب تشوف الباقي</string>
+</resources>

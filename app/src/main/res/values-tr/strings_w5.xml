@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Günün</string>
+    <string name="w5_day_desc">Bugünün sıradaki 3 işi — Tamam, +1 sa ve Ödendi ana ekranda</string>
+    <string name="w5_list_name">Attune · Listeler</string>
+    <string name="w5_list_desc">Listelerin — Attune\'u açmadan kaydır, işaretle, işareti kaldır ve ekle</string>
+    <string name="w5_money_name">Attune · Para</string>
+    <string name="w5_money_desc">Bugün harcanabilir, eklenecek banka SMS\'leri, Harcadım / Aldım</string>
+    <string name="w5_agents_name">Attune · Ajanlar</string>
+    <string name="w5_agents_desc">Ajanlarının bulduğu — tam ilanı aç veya duraklat</string>
+    <string name="w5_med_name">Attune · İlaç</string>
+    <string name="w5_med_desc">Sıradaki doz — Alındı veya +30 dk</string>
+    <string name="w5_papers_name">Attune · Belgeler</string>
+    <string name="w5_papers_desc">Süresi dolacak sıradaki belge ve nasıl yenileneceği</string>
+    <string name="w5_trip_name">Attune · Seyahat</string>
+    <string name="w5_trip_desc">Sıradaki seyahatine geri sayım</string>
+    <string name="w5_next_name">Attune · Sonraki tarih</string>
+    <string name="w5_next_desc">Sıradaki doğum günü veya yıl dönümü — hatırlat</string>
+    <string name="w5_stack_name">Attune · Akıllı yığın</string>
+    <string name="w5_stack_desc">Şu an uyanı gösteren tek widget; gerisi için kaydır</string>
+</resources>

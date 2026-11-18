@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Siku yako</string>
+    <string name="w5_day_desc">Mambo 3 yajayo leo — Imekamilika, +saa 1 na Imelipwa kwenye skrini ya mwanzo</string>
+    <string name="w5_list_name">Attune · Orodha</string>
+    <string name="w5_list_desc">Orodha zako — sogeza, weka alama, ondoa alama na ongeza bila kufungua Attune</string>
+    <string name="w5_money_name">Attune · Pesa</string>
+    <string name="w5_money_desc">Unachoweza kutumia leo, SMS za benki za kuongeza, Nimetumia / Nimepata</string>
+    <string name="w5_agents_name">Attune · Mawakala</string>
+    <string name="w5_agents_desc">Walichopata mawakala wako — fungua tangazo kamili au sitisha</string>
+    <string name="w5_med_name">Attune · Dawa</string>
+    <string name="w5_med_desc">Dozi ijayo — Nimekunywa au +dak 30</string>
+    <string name="w5_papers_name">Attune · Nyaraka</string>
+    <string name="w5_papers_desc">Hati inayofuata kuisha na jinsi ya kuifanya upya</string>
+    <string name="w5_trip_name">Attune · Safari</string>
+    <string name="w5_trip_desc">Hesabu ya kurudi nyuma ya safari ijayo</string>
+    <string name="w5_next_name">Attune · Tarehe ijayo</string>
+    <string name="w5_next_desc">Siku ya kuzaliwa au maadhimisho yajayo — nikumbushe</string>
+    <string name="w5_stack_name">Attune · Rundo janja</string>
+    <string name="w5_stack_desc">Wijeti moja inayoonyesha kinachofaa sasa — telezesha kwa vingine</string>
+</resources>

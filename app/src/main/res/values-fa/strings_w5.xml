@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · روز تو</string>
+    <string name="w5_day_desc">۳ کار بعدی امروز — انجام شد، +۱ ساعت و پرداخت شد روی صفحه اصلی</string>
+    <string name="w5_list_name">Attune · فهرست‌ها</string>
+    <string name="w5_list_desc">فهرست‌هایت — بدون باز کردن Attune ورق بزن، تیک بزن، بردار و اضافه کن</string>
+    <string name="w5_money_name">Attune · پول</string>
+    <string name="w5_money_desc">مبلغ مجاز امروز، پیامک بانک برای افزودن، خرج کردم / گرفتم</string>
+    <string name="w5_agents_name">Attune · عامل‌ها</string>
+    <string name="w5_agents_desc">آنچه عامل‌هایت یافتند — آگهی دقیق را باز کن یا مکث کن</string>
+    <string name="w5_med_name">Attune · دارو</string>
+    <string name="w5_med_desc">دوز بعدی — خوردم یا +۳۰ دقیقه</string>
+    <string name="w5_papers_name">Attune · مدارک</string>
+    <string name="w5_papers_desc">مدرک بعدی که منقضی می‌شود و نحوه تمدید</string>
+    <string name="w5_trip_name">Attune · سفر</string>
+    <string name="w5_trip_desc">شمارش معکوس سفر بعدی</string>
+    <string name="w5_next_name">Attune · تاریخ بعدی</string>
+    <string name="w5_next_desc">تولد یا سالگرد بعدی — یادم بینداز</string>
+    <string name="w5_stack_name">Attune · پشته هوشمند</string>
+    <string name="w5_stack_desc">یک ویجت که الان مناسب را نشان می‌دهد — برای بقیه بکش</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · วันของคุณ</string>
+    <string name="w5_day_desc">3 อย่างถัดไปวันนี้ — เสร็จ, +1 ชม. และจ่ายแล้ว บนหน้าจอหลัก</string>
+    <string name="w5_list_name">Attune · รายการ</string>
+    <string name="w5_list_desc">รายการของคุณ — เลื่อน ติ๊ก เอาติ๊กออก และเพิ่มโดยไม่ต้องเปิด Attune</string>
+    <string name="w5_money_name">Attune · การเงิน</string>
+    <string name="w5_money_desc">ใช้ได้วันนี้ SMS ธนาคารที่จะเพิ่ม ฉันจ่าย / ฉันได้รับ</string>
+    <string name="w5_agents_name">Attune · เอเจนต์</string>
+    <string name="w5_agents_desc">สิ่งที่เอเจนต์เจอ — เปิดประกาศตรงตัวหรือหยุดชั่วคราว</string>
+    <string name="w5_med_name">Attune · ยา</string>
+    <string name="w5_med_desc">ยามื้อถัดไป — กินแล้ว หรือ +30 นาที</string>
+    <string name="w5_papers_name">Attune · เอกสาร</string>
+    <string name="w5_papers_desc">เอกสารถัดไปที่จะหมดอายุและวิธีต่ออายุ</string>
+    <string name="w5_trip_name">Attune · ทริป</string>
+    <string name="w5_trip_desc">นับถอยหลังทริปถัดไป</string>
+    <string name="w5_next_name">Attune · วันถัดไป</string>
+    <string name="w5_next_desc">วันเกิดหรือวันครบรอบถัดไป — เตือนฉัน</string>
+    <string name="w5_stack_name">Attune · สแตกอัจฉริยะ</string>
+    <string name="w5_stack_desc">วิดเจ็ตเดียวที่แสดงสิ่งที่เหมาะตอนนี้ — ปัดดูที่เหลือ</string>
+</resources>

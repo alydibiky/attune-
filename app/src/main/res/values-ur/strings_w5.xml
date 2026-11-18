@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · آپ کا دن</string>
+    <string name="w5_day_desc">آج کی اگلی 3 چیزیں — ہوم اسکرین پر ہی ہو گیا، +1 گھنٹہ اور ادا</string>
+    <string name="w5_list_name">Attune · فہرستیں</string>
+    <string name="w5_list_desc">آپ کی فہرستیں — Attune کھولے بغیر اسکرول، ٹِک، ان ٹِک اور شامل کریں</string>
+    <string name="w5_money_name">Attune · پیسے</string>
+    <string name="w5_money_desc">آج خرچ کرنے کے قابل، شامل کرنے کو بینک SMS، میں نے خرچ کیا / مجھے ملا</string>
+    <string name="w5_agents_name">Attune · ایجنٹ</string>
+    <string name="w5_agents_desc">آپ کے ایجنٹوں نے کیا پایا — اصل اشتہار کھولیں یا روکیں</string>
+    <string name="w5_med_name">Attune · دوا</string>
+    <string name="w5_med_desc">اگلی خوراک — لے لی یا +30 منٹ</string>
+    <string name="w5_papers_name">Attune · کاغذات</string>
+    <string name="w5_papers_desc">ختم ہونے والا اگلا کاغذ اور اس کی تجدید کیسے کریں</string>
+    <string name="w5_trip_name">Attune · سفر</string>
+    <string name="w5_trip_desc">اگلے سفر کی الٹی گنتی</string>
+    <string name="w5_next_name">Attune · اگلی تاریخ</string>
+    <string name="w5_next_desc">اگلی سالگرہ — یاد دلائیں</string>
+    <string name="w5_stack_name">Attune · اسمارٹ اسٹیک</string>
+    <string name="w5_stack_desc">ایک ویجٹ جو ابھی کے مطابق دکھاتا ہے — باقی کے لیے سوائپ کریں</string>
+</resources>

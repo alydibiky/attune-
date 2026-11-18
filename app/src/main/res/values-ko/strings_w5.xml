@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · 오늘 하루</string>
+    <string name="w5_day_desc">오늘의 다음 3가지 — 홈 화면에서 완료, +1시간, 결제함</string>
+    <string name="w5_list_name">Attune · 목록</string>
+    <string name="w5_list_desc">내 목록 — Attune를 열지 않고 스크롤, 체크, 해제, 추가</string>
+    <string name="w5_money_name">Attune · 돈</string>
+    <string name="w5_money_desc">오늘 쓸 수 있는 돈, 추가할 은행 문자, 썼어요 / 받았어요</string>
+    <string name="w5_agents_name">Attune · 에이전트</string>
+    <string name="w5_agents_desc">에이전트가 찾은 것 — 정확한 매물 열기 또는 일시정지</string>
+    <string name="w5_med_name">Attune · 약</string>
+    <string name="w5_med_desc">다음 복용 — 먹었음 또는 +30분</string>
+    <string name="w5_papers_name">Attune · 서류</string>
+    <string name="w5_papers_desc">다음에 만료되는 서류와 갱신 방법</string>
+    <string name="w5_trip_name">Attune · 여행</string>
+    <string name="w5_trip_desc">다음 여행 카운트다운</string>
+    <string name="w5_next_name">Attune · 다음 날짜</string>
+    <string name="w5_next_desc">다음 생일이나 기념일 — 알려줘</string>
+    <string name="w5_stack_name">Attune · 스마트 스택</string>
+    <string name="w5_stack_desc">지금 맞는 걸 보여주는 위젯 하나 — 나머지는 넘겨 보기</string>
+</resources>
