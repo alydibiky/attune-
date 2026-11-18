@@ -29,7 +29,7 @@
 > **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page
 > https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq (docs/mockups/widgets.html): A1/A2 the list widget (his Talabat one: today 4 rows,
 > no scroll, no untick), W1 Your day · W2 Money (+ the bank SMS Add ✓) · W3 Tell Attune box · W4 People & money · W5 Agents · W6 small
-> one-thing widgets · W7 smart stack (changes by time / SMS / place), S1/S2 look. Recommended A1 W1 W2 W7 S1. **Waiting for his picks.**
+> one-thing widgets · W7 smart stack (changes by time / SMS / place), S1/S2 look. Recommended A1 W1 W2 W7 S1. **Ali picked A1 W1 W2 W3 W5 W6 W7 S1 S2** → combined page with "What I understood": https://claude.ai/artifact/NgiS5jCMUUxewxkSV5RbSg (docs/mockups/widgets-combined.html) — **waiting for his OK** (OK-A1 … OK-S). APK v10.4: https://github.com/alydibiky/attune-/actions/runs/44340989703 (success).
 > Build notes for later: a scrolling list = RemoteViewsService + setRemoteAdapter + setPendingIntentTemplate (fill-in intents per row);
 > typing = a small dialog-themed Activity over the home screen (widgets can't hold a text field); the stack = a widget with
 > AdapterViewFlipper / StackView (API 31+ for swipe), pages chosen by code (time, reminders, a new SMS, PlaceGeo).

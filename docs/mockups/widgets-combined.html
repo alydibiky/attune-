@@ -1,0 +1,219 @@
+<title>Attune Widgets Combined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = a phone home screen with the widget + what it does + pick/note. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif;
+  /* the widgets: S1 = Attune's light card; the home screen = a dark wallpaper like Ali's */
+  --w-surf: #ffffff; --w-ink: #231c1e; --w-mut: #7a6f73; --w-ln: #ece5e7; --w-acc: #7a2a45; --w-soft: #f7e9ee; --w-ok: #1e7a43;
+  --wall1: #1c2029; --wall2: #4a4f5c;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 140px }
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 20px; font-weight: 900; margin: 0 0 4px; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 640px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.info ul { margin: 6px 0 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px } .pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+/* ---- the phone home screen + widgets ---- */
+.home { width: 250px; max-width: 100%; margin: 0 auto; border-radius: 26px; border: 6px solid #2b2426; overflow: hidden;
+  background: linear-gradient(160deg, var(--wall1), var(--wall2) 70%, #6b7080); padding: 10px 9px 14px; display: grid; gap: 9px; min-height: 360px; align-content: start; font-size: 11px; line-height: 1.35 }
+.sb { display: flex; justify-content: space-between; color: #e9ecf2; font-weight: 800; font-size: 10px; padding: 0 4px }
+.wg { background: var(--w-surf); color: var(--w-ink); border-radius: 18px; padding: 9px 10px; display: grid; gap: 5px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28) }
+.wg.glass { background: rgba(28, 31, 44, .72); color: #f2f3f7; border: 1px solid rgba(255, 255, 255, .14); --w-mut: #b7bccb; --w-ln: rgba(255, 255, 255, .12); --w-acc: #f0a8c0; --w-soft: rgba(240, 168, 192, .16); --w-ok: #7fdca4 }
+.wh { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 12px }
+.wh .sp { flex: 1 }
+.wh .n { color: var(--w-acc); font-size: 10.5px; font-weight: 900 }
+.ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--w-soft); color: var(--w-acc); font-weight: 900; font-size: 12px }
+.wr { display: flex; align-items: center; gap: 7px; min-height: 22px; border-top: 1px solid var(--w-ln); padding-top: 3px }
+.wr:first-of-type { border-top: 0 }
+.bx { width: 15px; height: 15px; border-radius: 4px; border: 2px solid var(--w-mut); flex: none; display: grid; place-items: center; font-size: 9px; font-weight: 900 }
+.bx.on { background: var(--w-acc); border-color: var(--w-acc); color: #fff }
+.wr.done span.t { color: var(--w-mut); text-decoration: line-through }
+.t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.mut { color: var(--w-mut) } .acc { color: var(--w-acc); font-weight: 900 } .ok { color: var(--w-ok); font-weight: 900 }
+.wb { display: inline-flex; align-items: center; gap: 3px; border-radius: 99px; padding: 2px 8px; font-weight: 900; font-size: 10px; background: var(--w-acc); color: #fff; white-space: nowrap }
+.wb.o { background: transparent; color: var(--w-acc); border: 1px solid var(--w-acc) }
+.btns { display: flex; gap: 5px; flex-wrap: wrap }
+.big { font-size: 20px; font-weight: 900; letter-spacing: -0.01em }
+.scroll { position: relative }
+.scroll::after { content: ""; position: absolute; inset-inline-end: -4px; top: 4px; width: 3px; height: 40%; border-radius: 3px; background: var(--w-ln) }
+.pop { background: var(--w-surf); color: var(--w-ink); border-radius: 18px; padding: 10px; display: grid; gap: 6px; box-shadow: 0 10px 28px rgba(0, 0, 0, .45); border: 2px solid var(--w-acc) }
+.inp { border: 1px solid var(--w-ln); border-radius: 10px; padding: 6px 8px; background: var(--w-soft); font-weight: 700 }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px } .keys i { font-style: normal; text-align: center; border-radius: 7px; background: var(--w-soft); padding: 3px 0; font-weight: 900 }
+.lbl { text-align: center; color: #e9ecf2; font-size: 9.5px; font-weight: 800; opacity: .85 }
+.dots { display: flex; justify-content: center; gap: 4px } .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--w-ln) } .dots i.on { background: var(--w-acc) }
+.dock { margin-top: auto; display: flex; justify-content: space-around; background: rgba(255, 255, 255, .14); border-radius: 18px; padding: 7px }
+.dock i { width: 26px; height: 26px; border-radius: 8px; background: rgba(255, 255, 255, .55); display: block }
+.g2w { display: grid; grid-template-columns: 1fr 1fr; gap: 7px }
+.mini { background: var(--w-surf); color: var(--w-ink); border-radius: 16px; padding: 8px; display: grid; gap: 3px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28) }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1000px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+.und { background: var(--soft); border-radius: 12px; padding: 10px 12px; margin-top: 8px }
+.und b { display: block; font-weight: 900; margin-bottom: 4px }
+.und ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px } @media (max-width: 640px) { .pair { grid-template-columns: 1fr } }
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Attune widgets: your picks together</h1>
+  <p class="lede">You picked <b>A1 W1 W2 W3 W5 W6 W7 S1 S2</b>. Here is each one as I will build it, with what I understood under it. If it's right, tick <b>OK</b>. If not, write what to change in its box. Then tap <b>Copy my picks</b>.</p>
+</header>
+<div class="fixed"><h2>For all of them</h2><ul>
+<li>Every tap works on the home screen and changes the app at once. Typing happens in a small box over your wallpaper, and Attune doesn't open.</li>
+<li><b>S1 + S2 together:</b> each widget follows the app's Look. <b>Plain</b> gives Attune's colours (S1), <b>Glass</b> gives dark glass (S2). Long-press the widget → <b>Look</b> to change only that widget.</li>
+<li>The old <b>To-dos</b> widget becomes <b>Your day</b> (W1). The old <b>A list</b> widget becomes the new list (A1). Widgets you already placed update by themselves.</li>
+<li>All 20 languages, right-to-left in Arabic. Tested on the phone and on the computer page that feeds them.</li>
+</ul></div>
+<section>
+  <div class="opt" data-code="OK-A1">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">🛒</span><span>Talabat</span><span class="sp"></span><span class="n">9 left</span><span class="wb o">‹ ›</span></div>
+<div class="scroll" style="display:grid;gap:2px"><div class="wr"><span class="bx"></span><span class="t">Tomatoes</span></div><div class="wr"><span class="bx"></span><span class="t">Bread</span></div><div class="wr"><span class="bx"></span><span class="t">Eggs · 30</span></div><div class="wr"><span class="bx"></span><span class="t">Milk</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Salsa</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Foul</span></div></div>
+<div class="btns"><span class="wb">+ Add</span><span class="wb o">Clear 4 ticked</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-A1</span>The list (scroll, tick / untick, add)</h3>
+      <div class="und"><b>What I understood</b><ul><li>All items scroll inside the widget. A tap ticks, a second tap unticks.</li><li>Ticked items go to the bottom, crossed out. The top says how many are left (9 left), not "13 of 13".</li><li><b>+ Add</b> opens the small box: type or say "cheese, pickles" → 2 items.</li><li><b>‹ ›</b> switches lists (Talabat, Travel, Pharmacy…). Each widget remembers its list, so you can place two.</li><li><b>Clear 4 ticked</b> removes the bought ones. A tap on the title opens the list in Attune.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-A1">OK OK-A1</label><textarea id="note-OK-A1" placeholder="Anything to change in OK-A1?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W1">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">☀</span><span>Your day · Saturday</span><span class="sp"></span><span class="n">3 left</span></div>
+<div class="wr"><span class="t"><b>10:00</b> The maid comes · 600</span><span class="wb">Done</span></div>
+<div class="wr"><span class="t"><b>1:00</b> Call the bank</span><span class="wb o">+1h</span><span class="wb">Done</span></div>
+<div class="wr"><span class="t">Electricity · 600 · due today</span><span class="wb">Paid</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W1</span>Your day</h3>
+      <div class="und"><b>What I understood</b><ul><li>Today's next 3 things from Reminders, Follow-ups and bills, in time order.</li><li><b>Done</b> marks it done in Attune. <b>+1h</b> moves the reminder. <b>Paid</b> adds the bill to Money as paid.</li><li>A tap on the line opens that exact item. When the day is empty: "Nothing left today ✓".</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W1">OK OK-W1</label><textarea id="note-OK-W1" placeholder="Anything to change in OK-W1?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W2">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">£</span><span>Money</span><span class="sp"></span><span class="mut">salary on the 25th</span><span class="wb o">👁</span></div>
+<div><span class="mut">Safe to spend today</span><div class="big">640 EGP</div></div>
+<div class="wr"><span class="t"><b>−350</b> CARREFOUR · CIB SMS</span><span class="wb">Add ✓</span><span class="wb o">✕</span></div>
+<div class="btns"><span class="wb">− I spent</span><span class="wb o">+ I got</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W2</span>Money</h3>
+      <div class="und"><b>What I understood</b><ul><li>Safe to spend today, counted to your next salary (the 25th).</li><li>A bank SMS that waits for your OK shows here: <b>Add ✓</b> saves it with its full message, <b>✕</b> dismisses it. This is the same check as the bank step.</li><li><b>− I spent</b> / <b>+ I got</b> open the small box: amount, a few words, category → saved in Money with Undo.</li><li><b>👁</b> hides the amounts (••• EGP) until you tap.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W2">OK OK-W2</label><textarea id="note-OK-W2" placeholder="Anything to change in OK-W2?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W3">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg" style="grid-template-columns:auto 1fr auto;align-items:center;display:grid"><span class="ic">A</span><span class="mut" style="font-weight:800">Tell Attune anything…</span><span class="wb">🎤</span></div>
+<div class="pop"><div class="inp">add milk to Talabat and I spent 200 on koshary</div><div class="wr"><span class="ok">✓</span><span class="t">Milk → Talabat</span><span class="wb o">Undo</span></div><div class="wr"><span class="ok">✓</span><span class="t">−200 Food · koshary</span><span class="wb o">Undo</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W3</span>Tell Attune (quick box)</h3>
+      <div class="und"><b>What I understood</b><ul><li>One line on the home screen. A tap opens the box with the keyboard, 🎤 opens it listening.</li><li>Anything you would type in Chat: "spent 200 on koshary", "add milk to Talabat", "remind me Saturday 10 the maid comes". Each part is done with its own <b>Undo</b>.</li><li>A question ("how much did I spend this week?") opens Chat with the answer.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W3">OK OK-W3</label><textarea id="note-OK-W3" placeholder="Anything to change in OK-W3?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W5">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">◎</span><span>Agents</span><span class="sp"></span><span class="mut">checked 8:00</span></div>
+<div class="wr"><span class="t"><b>PS5</b> · 21,499 at Noon · goal 20,000</span><span class="wb o">Open ↗</span></div>
+<div class="wr"><span class="t"><b>Hotel near the Haram</b> · 2,150 <span class="ok">−8%</span></span><span class="wb">Open ↗</span></div>
+<div class="wr"><span class="t mut">Cairo → Istanbul · not cheaper yet</span><span class="wb o">Pause</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W5</span>Agents</h3>
+      <div class="und"><b>What I understood</b><ul><li>Each agent's latest find with the price change since last time.</li><li><b>Open ↗</b> opens that exact listing in the phone's browser (the checked link from L1), never a search page.</li><li><b>Pause</b> stops that agent. The time it last checked is at the top.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W5">OK OK-W5</label><textarea id="note-OK-W5" placeholder="Anything to change in OK-W5?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W6">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="g2w"><div class="mini"><b>💊 Medicine</b><span>Vitamin D</span><span class="acc">9:00 pm</span><div class="btns"><span class="wb">Taken</span><span class="wb o">+30m</span></div></div>
+<div class="mini"><b>📄 Papers</b><span>Car licence</span><span class="acc">21 days</span><div class="btns"><span class="wb o">Steps</span></div></div></div>
+<div class="g2w"><div class="mini"><b>✈ Trip</b><span>Istanbul · 12 Dec</span><span class="acc">24 days</span><div class="btns"><span class="wb o">Packing 6/14</span></div></div>
+<div class="mini"><b>📅 Next</b><span>Mama's birthday</span><span class="acc">Thu</span><div class="btns"><span class="wb o">Remind</span></div></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W6</span>Four small widgets</h3>
+      <div class="und"><b>What I understood</b><ul><li>Four separate 2 × 2 widgets. You place the ones you want.</li><li><b>Medicine:</b> the next dose, <b>Taken</b> / <b>+30m</b>. <b>Papers:</b> the next to expire, <b>Steps</b> opens how to renew it.</li><li><b>Trip:</b> the countdown, a tap opens the packing list. <b>Next date:</b> the next birthday / anniversary, <b>Remind</b> sets a reminder the day before.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W6">OK OK-W6</label><textarea id="note-OK-W6" placeholder="Anything to change in OK-W6?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-W7">
+    <div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">✦</span><span>Attune · now</span><span class="sp"></span><span class="dots"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="wb o">📌</span></div>
+<div class="mut">You're near Carrefour Maadi</div>
+<div class="wr"><span class="bx"></span><span class="t">Talabat: Tomatoes, Bread, Eggs +6</span><span class="wb">Open list</span></div>
+<div class="wr"><span class="t"><b>−350</b> CIB SMS just now</span><span class="wb">Add ✓</span></div></div>
+<div class="wg"><div class="wh"><span class="ic">✦</span><span>Attune · now</span><span class="sp"></span><span class="dots"><i></i><i></i><i></i><i class="on"></i><i></i></span></div>
+<div class="mut">PS5 dropped to 19,850 at Noon</div><div class="btns"><span class="wb">Open ↗</span><span class="wb o">Stop watching</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-W7</span>Smart stack</h3>
+      <div class="und"><b>What I understood</b><ul><li>One widget whose page is chosen by code: the morning → Your day; near a shop on your list → that list (only with place reminders on); a bank SMS waiting → Add ✓; a medicine due → Taken; an agent found a better price → that offer; 10:30 pm → Close the day.</li><li>Swipe to see the other pages. The dots show which one. <b>📌</b> pins one page so it stays.</li><li>It never guesses. Each page has a clear reason (the time, a reminder, a new SMS, the place, an agent's find).</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-W7">OK OK-W7</label><textarea id="note-OK-W7" placeholder="Anything to change in OK-W7?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-S">
+    <div class="pair"><div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg"><div class="wh"><span class="ic">🛒</span><span>Talabat</span><span class="sp"></span><span class="n">9 left</span><span class="wb o">‹ ›</span></div>
+<div class="scroll" style="display:grid;gap:2px"><div class="wr"><span class="bx"></span><span class="t">Tomatoes</span></div><div class="wr"><span class="bx"></span><span class="t">Bread</span></div><div class="wr"><span class="bx"></span><span class="t">Eggs · 30</span></div><div class="wr"><span class="bx"></span><span class="t">Milk</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Salsa</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Foul</span></div></div>
+<div class="btns"><span class="wb">+ Add</span><span class="wb o">Clear 4 ticked</span></div></div></div><div class="home"><div class="sb"><span>9:05</span><span>Sat · 76</span></div><div class="wg glass"><div class="wh"><span class="ic">🛒</span><span>Talabat</span><span class="sp"></span><span class="n">9 left</span><span class="wb o">‹ ›</span></div>
+<div class="scroll" style="display:grid;gap:2px"><div class="wr"><span class="bx"></span><span class="t">Tomatoes</span></div><div class="wr"><span class="bx"></span><span class="t">Bread</span></div><div class="wr"><span class="bx"></span><span class="t">Eggs · 30</span></div><div class="wr"><span class="bx"></span><span class="t">Milk</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Salsa</span></div><div class="wr done"><span class="bx on">✓</span><span class="t">Foul</span></div></div>
+<div class="btns"><span class="wb">+ Add</span><span class="wb o">Clear 4 ticked</span></div></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-S</span>Both looks (S1 + S2)</h3>
+      <div class="und"><b>What I understood</b><ul><li>Left: Attune's colours (S1). Right: dark glass (S2).</li><li>By default each widget follows the Look you chose in the app (Plain → S1, Glass → S2).</li><li>Long-press a widget → <b>Look</b> to set that one widget alone.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-S">OK OK-S</label><textarea id="note-OK-S" placeholder="Anything to change in OK-S?"></textarea></div>
+    </div>
+  </div>
+</section>
+</div>
+<div class="bar-pick">
+  <div class="in">
+    <div class="codes" id="codes">Nothing ticked yet</div>
+    <button id="copy" type="button">Copy my picks</button>
+    <textarea id="fallback" hidden readonly aria-label="Your picks"></textarea>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = "attune-mock-widgets-combined";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>
