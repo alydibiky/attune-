@@ -21,6 +21,10 @@ import org.json.JSONObject
  * confirm. Tests: tests/unit/v727paylog.test.mjs (the page side).
  */
 class PayListener : NotificationListenerService() {
+    companion object {
+        /** v10.4: the connected listener (null while Android has it disconnected) — the page's "Check now" reads the shade again. */
+        @Volatile var live: PayListener? = null
+    }
     // v10.2 (the hard notification run): every notification is cleaned once, here, before anything keeps it — invisible direction marks
     // out, Arabic-Indic / Persian digits → 0-9 (٫ ٬ → . ,), every run of spaces and line breaks → one space (the page does the same)
     private fun clean(s: String): String {
@@ -48,6 +52,10 @@ class PayListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         try { PayLog.mark(applicationContext, "conn") } catch (e: Exception) { }
+        live = this
+        // v10.4 (Ali, 18 Nov: "fix the SMS notification for good"): a bank SMS that came while Android had us disconnected is still in
+        // the shade — read it now through the same money path (PayLog.add keeps each one once)
+        try { rescan() } catch (e: Exception) { }
         try {
             if (RecallLog.isOn(applicationContext)) for (sbn in activeNotifications ?: emptyArray()) {
                 if (sbn.packageName == packageName) continue
@@ -61,13 +69,28 @@ class PayListener : NotificationListenerService() {
     }
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        if (live === this) live = null
         try { if (android.os.Build.VERSION.SDK_INT >= 24) NotificationListenerService.requestRebind(ComponentName(this, PayListener::class.java)) } catch (e: Exception) { }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         try { PayLog.mark(applicationContext, "seen") } catch (e: Exception) { }
+        live = this
+        if (sbn != null) handle(sbn, true)
+    }
+
+    /** v10.4: the notifications still on screen, through the money path only (no alerts / auto-replies twice) → how many were looked at. */
+    fun rescan(): Int {
+        var n = 0
+        for (sbn in activeNotifications ?: emptyArray()) { if (sbn.packageName == packageName) continue; handle(sbn, false); n++ }
+        try { PayLog.mark(applicationContext, "rescan") } catch (e: Exception) { }
+        return n
+    }
+
+    /** One notification. fresh = it just arrived (alerts, chats, Recall, rules run); false = read again from the shade (money only). */
+    private fun handle(sbn: StatusBarNotification, fresh: Boolean) {
         try {
-            if (sbn == null || sbn.packageName == packageName) return
+            if (sbn.packageName == packageName) return
             WatchMatch.smsAllowed = Prefs.smsNotifs(applicationContext)   // the SMS switch (on unless the person turned it off)
             // v9.9 (Ali's Recall screenshot: "Payments · Maps · 50 m · At the roundabout…" ×20): turn-by-turn navigation, a download's
             // progress and other notifications that keep updating are not messages or payments — none of them is kept
@@ -81,6 +104,19 @@ class PayListener : NotificationListenerService() {
             // in full when the notification's own line is shorter
             try { (ex.getParcelableArray("android.messages")?.lastOrNull() as? android.os.Bundle)?.getCharSequence("text")?.toString()?.let { if (it.length > text.length) text = it } } catch (e: Exception) { }
             val all = "$title $text"
+            // v10.4: every SMS app notification leaves a short trace (who, whether its words were there, whether it was money) — so the
+            // page can say exactly why a bank SMS did or didn't reach Money. Never the words of a message that isn't money.
+            val sms = WatchMatch.isSms(sbn.packageName)
+            if (sms && fresh) try { SmsDiag.add(applicationContext, sbn.packageName, clean(title), clean(text), PayLog.looksLikeMoney(all), PayLog.isOtp(all), WatchMatch.smsAllowed) } catch (e: Exception) { }
+            if (!fresh) {
+                if (!PayLog.looksLikeMoney(all) || PayLog.isChatApp(sbn.packageName)) return
+                val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
+                PayLog.add(applicationContext, JSONObject()
+                    .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
+                    .put("pkg", sbn.packageName).put("app", label)
+                    .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime))
+                return
+            }
             // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
             try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
             // voice step 1.4: the newest chat messages and their reply actions, for "who messaged me?" / "reply to him…"
@@ -198,4 +234,27 @@ object PayLog {
         } catch (e: Exception) { }
         try { ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) { }
     }
+}
+
+/**
+ * v10.4 (Ali, 18 Nov 2026: "fix the SMS notification for good"): the last 20 SMS-app notifications, as a short trace — when, which app,
+ * the sender's name, whether the message's words were in the notification (some Messages apps hide them: "1 new message"), whether it
+ * looked like money, whether it was a one-time code. Never the words themselves. The page's bank check (bankcheck.js) reads it to say
+ * exactly what is happening: nothing arrives, the words are hidden, the messages aren't from a bank, or they are waiting in Money.
+ */
+object SmsDiag {
+    private const val PREFS = "attune.smsdiag"
+    private val GENERIC = Regex("(?i)^(\\d+\\s+)?(new )?(messages?|conversations?|sms)( received)?$|^\\d+ new messages?|^new message$|^message$|^رسال(ة|ه) جديد(ة|ه)$|^رسائل جديدة$|^\\d+ رسائل جديدة$|^nouveau message$|^nuevo mensaje$|^neue nachricht$|^yeni mesaj$")
+    /** Are the words of the message missing from its notification? */
+    fun hidden(text: String): Boolean { val t = text.trim(); return t.isEmpty() || GENERIC.containsMatchIn(t) }
+    @Synchronized fun add(ctx: Context, pkg: String, from: String, text: String, money: Boolean, otp: Boolean, sw: Boolean) {
+        val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val arr = try { JSONArray(p.getString("items", "[]")) } catch (e: Exception) { JSONArray() }
+        val out = JSONArray(); val start = maxOf(0, arr.length() - 19)
+        for (i in start until arr.length()) out.put(arr.get(i))
+        out.put(JSONObject().put("ts", System.currentTimeMillis()).put("pkg", pkg).put("from", from.take(40))
+            .put("hidden", hidden(text)).put("money", money).put("otp", otp).put("sw", sw))
+        p.edit().putString("items", out.toString()).apply()
+    }
+    fun list(ctx: Context): String = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("items", "[]") ?: "[]"
 }

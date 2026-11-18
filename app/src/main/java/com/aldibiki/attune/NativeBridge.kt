@@ -1631,6 +1631,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun listenerHealth(): String = try { PayLog.health(ctx) } catch (e: Throwable) { "{}" }
     @JavascriptInterface
     fun listenerHeal(): Boolean = try { PayLog.heal(ctx, force = true) } catch (e: Throwable) { false }
+    /** v10.4 the bank check: the last SMS notifications' trace (SmsDiag — never their words) + the listener's health, in one. */
+    @JavascriptInterface
+    fun smsDiag(): String = try { JSONObject(PayLog.health(ctx)).put("sms", JSONArray(SmsDiag.list(ctx))).put("smsSwitch", Prefs.smsNotifs(ctx)).put("live", PayListener.live != null).toString() } catch (e: Throwable) { "{}" }
+    /** v10.4 "Check now": reconnect the listener if it went quiet, and read the bank messages still in the shade again → how many looked at (-1: not connected). */
+    @JavascriptInterface
+    fun payRescan(): Int = try { val l = PayListener.live; if (l == null) { PayLog.heal(ctx, force = true); -1 } else l.rescan() } catch (e: Throwable) { -1 }
     @JavascriptInterface
     fun recallNotes(): String = try { RecallLog.items(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface

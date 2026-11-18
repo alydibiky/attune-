@@ -1,5 +1,29 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (18 Nov 2026 — v10.4: Ali's phone list "widgets / backup opens the wrong page / fix the SMS notification for good")
+> **(2) "Turn on backup" opened the old prompt-compressor page** (his screenshot): setup.js step 8 opens "backup", which is a PANEL, not a
+> page — navTo("backup") fell through every page to the last one in the chain (the compressor). Now attune.jsx PANEL_IDS (backup,
+> profile, plan): navTo + "attune-open" ("backup" or "panel:backup") open the panel. tests/unit/v1040fixes.test.mjs scans EVERY
+> `attune-open` / `navTo("…")` / `open: "…"` in web-src and fails if one names a page that doesn't exist (found only this one).
+> **(3) SMS "for good"** ("I can't press allow or tick, it does not do anything"): after access was on, the bank row said "Allowed ✓ —
+> waiting for the first message" with NO button for ever — whatever the real reason. Now web-src/bankcheck.js reads everything and says
+> WHICH it is, with the button that fixes it (setup-ui.jsx BankCheckBox under the row, and Chat's card): waiting (bank SMS read, waiting
+> for an OK — Free saves nothing alone → "Add them to Money" ticks the step) · asleep (Android paused the reader / quiet 6 h → "Fix it
+> now" = NativeBridge.payRescan: reads the shade again, else heal) · smsoff → "Turn SMS on" · hidden (the Messages app hides the words:
+> "1 new message" → where to switch it on) · notpay · notbank · nosms · off → Allow. The tick box itself is a button now (every row).
+> Phone side (PayListener.kt): onNotificationPosted → handle(sbn, fresh); on every (re)connect rescan() reads the notifications still
+> in the shade through the money path (a bank SMS that came while Android had us disconnected is no longer lost); `live` instance;
+> SmsDiag = the last 20 SMS-app notifications' trace (time, app, sender, words hidden?, money?, code? — never the words); bridge smsDiag().
+> The 10,000 HARD run (tests/bankcheck/gen.mjs, 84 % different shapes) found a real reader bug: a bank SMS in CAPITALS "RS.2500.00 DEBITED"
+> was not read (paytext.js normalises RS/RP) → 100 %; held-out (heldout.mjs) 100 %. e2e: tests/e2e_v1040fixes.py (phone + computer).
+> **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page
+> https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq (docs/mockups/widgets.html): A1/A2 the list widget (his Talabat one: today 4 rows,
+> no scroll, no untick), W1 Your day · W2 Money (+ the bank SMS Add ✓) · W3 Tell Attune box · W4 People & money · W5 Agents · W6 small
+> one-thing widgets · W7 smart stack (changes by time / SMS / place), S1/S2 look. Recommended A1 W1 W2 W7 S1. **Waiting for his picks.**
+> Build notes for later: a scrolling list = RemoteViewsService + setRemoteAdapter + setPendingIntentTemplate (fill-in intents per row);
+> typing = a small dialog-themed Activity over the home screen (widgets can't hold a text field); the stack = a widget with
+> AdapterViewFlipper / StackView (API 31+ for swipe), pages chosen by code (time, reminders, a new SMS, PlaceGeo).
+
 > ## START HERE (17 Nov 2026, later — v10.3: Ali picked K1 + OK-G1 OK-G2 OK-G3 — the glass look and the week calendar)
 > Mock-ups: calendar styles https://claude.ai/artifact/Pfx2JXzwa7sD5KThoBHkmB (he picked **K1**), combined
 > https://claude.ai/artifact/3CUkeHy43iX4zzt9xBdwLQ (v2 with K1; **OK-G1 OK-G2 OK-G3**). Built:

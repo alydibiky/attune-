@@ -128,8 +128,8 @@ chatpilot-ui.jsx: <button onClick={() => setQuietChat(quietChat === c ? "" : c)}
 home-ui.jsx: <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] 
 paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
 paylog-ui.jsx: <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
+setup-ui.jsx: {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] te
 slides-ui.jsx: <span className="text-[var(--c-acc)] shrink-0">{opts ? tr("Hide") : tr("Change")}</span></button>
-timeline-ui.jsx: <span className={"ms-1 " + U.muted}>{allOpen ? tr("Hide") : tr("See all ({n})", { n: coming.length })}</span></button>
 
 ## Edit
 agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[44px] text-start text-[15px] text-[var(--c-ink)] font-extrabold flex ite
@@ -205,6 +205,7 @@ attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)
 cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
 scamcheck-ui.jsx: <button onClick={() => check()} disabled={!text.trim()} className={U.btnP + " flex-1"} data-testid="scam-go">{tr("Check")}</button>
+setup-ui.jsx: {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] te
 
 ## Message alerts
 agents-ui.jsx: ...(alerts.some((x) => !String(x.id).startsWith("agent-")) ? [{ id: "alerts", label: tr("Message alerts"), dot: false, kind: "alert" }] : []
@@ -1392,7 +1393,7 @@ photogate.js: box.append(p, mk(tr("See Pro"), "photo-pro-see", () => { close(); 
 plan-ui.jsx: <button type="button" onClick={openPlan} className="min-h-[44px] h-11 rounded-[12px] px-4 font-extrabold text-[14px] bg-[var(--c-btn,var(--c
 setup-ui.jsx: else { setRun(null); say(!pro && p.done < 8 ? { tone: "emerald", title: tr("Free sets up the first 3 steps. Pro sets up the rest with you.")
 setup-ui.jsx: : <button onClick={openPlan} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "va
-setup-ui.jsx: {s.done || (s.id === "bank" && !s.locked && bankAllowed()) ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full t
+setup-ui.jsx: {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] te
 
 ## Pinned
 mind-ui.jsx: <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="min-h-[40px] text-[12.5px

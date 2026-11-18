@@ -8,6 +8,9 @@ import { tr } from "./i18n.js";
 import * as S from "./setup.js";
 import { proNow } from "./plan.js";
 import { openPlan } from "./plan-ui.jsx";
+import { bankCheck, SAY as BANK_SAY, BTN as BANK_BTN } from "./bankcheck.js";
+import { payReader, openAccess, addPaidNow } from "./paylog-ui.jsx";
+import { payOpts } from "./locale.js";
 
 const j = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
 /** Everything the steps look at, from the stores. */
@@ -24,10 +27,52 @@ const say = (card) => { try { window.dispatchEvent(new CustomEvent("attune-chat-
 // v10.0.3 (Ali, 16 Nov: "I do this but nothing happens and it stays unticked"): notification access given, but no bank message has
 // come yet — the step says so (it is ticked by itself with the first real message), instead of asking to allow again
 const bankAllowed = () => { try { const N = window.AttuneNative; return !!(N && N.payAccess && N.payAccess()); } catch (e) { return false; } };
-const bankWaiting = () => ({ tone: "emerald", title: tr("Allowed ✓ — Attune now reads your bank and wallet messages."), detail: tr("This step is ticked by itself when the first payment message arrives — nothing more to do."), setup: "bank",
-  actions: [[tr("Skip this one"), "setup:skip"], [tr("Stop for now"), "setup:stop"]] });
+/* v10.4 (Ali, 18 Nov: "I can't press allow or tick, it does not do anything" + "fix the SMS notification for good"): the bank step says
+   exactly what is happening (bankcheck.js) and always has the button that fixes it — Add the payments waiting for an OK, Fix the paused
+   reader, Turn SMS on, Allow — on the Set up page AND in Chat's card. */
+const rj = (f, d) => { try { const v = JSON.parse(f() || "null"); return v == null ? d : v; } catch (e) { return d; } };
+export function bankNow() {
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  let access = false; try { access = !!(N && N.payAccess && N.payAccess()); } catch (e) {}
+  const diag = N && N.smsDiag ? rj(() => N.smsDiag(), {}) : N && N.listenerHealth ? rj(() => N.listenerHealth(), {}) : {};
+  return bankCheck({ reader: payReader(N), access, diag, queue: N && N.payQueue ? rj(() => N.payQueue(), []) : [], old: j("attune:sms-old:v1", []),
+    done: j("attune:paylog:done", []), ledger: j("ledger.v3", {}), now: Date.now(), opts: (() => { try { return payOpts(); } catch (e) { return undefined; } })() });
+}
+const bankWords = (c) => { const w = BANK_SAY[c.state] || BANK_SAY.nosms;
+  return { t: tr(w.t, { n: c.n, f: c.from || tr("your SMS app") }), d: w.d ? tr(w.d) : "", a: w.a.filter((a) => a !== "add" || c.add.length) }; };
+/** Runs one of the bank step's buttons → a short line to show (or ""). */
+export function bankAct(a) {
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  try {
+    if (a === "allow") { if (N && N.openPayAccess) openAccess(N); return ""; }
+    if (a === "review") { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "money" } })); return ""; }
+    if (a === "smson") { N && N.setSmsNotifs && N.setSmsNotifs(true); return tr("SMS reading is on."); }
+    if (a === "add") { const c = bankNow(); let n = 0; for (const e of c.add) if (addPaidNow(e, N)) n++; return n ? tr("Added {n} to Money.", { n }) : ""; }
+    if (a === "fix" || a === "check") { let r = -1; try { r = N && N.payRescan ? N.payRescan() : -1; } catch (e) {} if (r < 0) try { N && N.listenerHeal && N.listenerHeal(); } catch (e) {}
+      return r < 0 ? tr("Reconnecting the reader — check again in a minute.") : tr("Checked."); }
+  } catch (e) {}
+  return "";
+}
+const bankWaiting = () => { const c = bankNow(), w = bankWords(c);
+  return { tone: "emerald", title: w.t, detail: w.d, setup: "bank",
+    actions: [...w.a.map((a) => [tr(BANK_BTN[a]), "setup:bank-" + a]), [tr("Skip this one"), "setup:skip"], [tr("Stop for now"), "setup:stop"]] }; };
 const ask = (s, pro) => s.id === "bank" && bankAllowed() ? bankWaiting() : ({ tone: "emerald", title: tr(s.ask), detail: s.eg ? tr("For example: {x}", { x: tr(s.eg) }) : "", setup: s.id,
   actions: [...(s.btn ? [[tr(s.btn), "setup:" + s.id]] : []), [tr("Skip this one"), "setup:skip"], [tr("Stop for now"), "setup:stop"]] });
+
+/** v10.4 under the bank step on the Set up page: what is happening and the button that fixes it. */
+export function BankCheckBox({ bump }) {
+  const [msg, setMsg] = useState(""), c = bankNow(), w = bankWords(c);
+  if (c.state === "done") return null;
+  const run = (a) => { const m = bankAct(a); setMsg(m); setTimeout(() => bump && bump(), a === "fix" || a === "check" ? 1500 : 50); };
+  return <div className="rounded-[12px] px-3 py-2.5 mb-2 space-y-1.5 border border-[var(--c-ln)]" style={{ background: "var(--c-soft)" }} data-testid="bank-check" data-state={c.state}>
+    <p className="m-0 text-[13px] font-bold" dir="auto">{w.t}</p>
+    {w.d ? <p className="m-0 text-[12.5px] c-sub" dir="auto">{w.d}</p> : null}
+    {c.state === "waiting" ? c.entries.slice(0, 3).map((e) => <p key={e.id} className="m-0 text-[12.5px] tabular-nums" dir="auto">{(e.direction === "in" ? "+" : "−") + e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (e.currency || "") + (e.party ? " · " + e.party : "") + (e.from ? " · " + e.from : "")}</p>) : null}
+    {w.a.length ? <div className="flex flex-wrap gap-2 pt-0.5">{w.a.map((a, i) => <button key={a} onClick={() => run(a)} className={"h-9 px-3 rounded-full text-[12.5px] font-extrabold " + (i ? "border border-[var(--c-acc)] text-[var(--c-acc)]" : "")}
+      style={i ? null : { background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid={"bank-" + a}>{tr(BANK_BTN[a])}</button>)}</div> : null}
+    {msg ? <p className="m-0 text-[12px] font-bold text-[var(--c-acc)]" data-testid="bank-msg" dir="auto">{msg}</p> : null}
+  </div>;
+}
 
 /** Starts (or continues) the interview in Chat at the first step not done — or at `id`. */
 export function startSetup(id = null) {
@@ -57,6 +102,8 @@ export function SetupDriver({ trial }) {
       if (a === "stop") { setRun(null); say({ tone: "emerald", title: tr("OK — continue any time from Home or Settings → Set up your life."), detail: "", actions: [] }); return; }
       if (a === "skip" && run) { const p = S.progress(setupData(), proNow()); const nx = p.steps.find((s) => !s.done && !s.locked && s.id !== run.id && !(run.skipped || []).includes(s.id));
         if (nx) { setRun({ id: nx.id, skipped: [...(run.skipped || []), run.id] }); say(ask(nx, proNow())); } else { setRun(null); say({ tone: "emerald", title: tr("That's all for now."), detail: "", actions: [] }); } return; }
+      if (a.startsWith("bank-")) { const m = bankAct(a.slice(5)); if (m) say({ tone: "emerald", title: m, detail: "", actions: [] });
+        if (a === "bank-fix" || a === "bank-check") setTimeout(() => { const r = getRun(); if (r && r.id === "bank" && !S.stepState(setupData()).bank.done) say(bankWaiting()); }, 2500); return; }
       if (a === "bank") { try { N && N.openPayAccess ? N.openPayAccess() : window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "money" } })); } catch (x) {} return; }
       const step = S.STEPS.find((s) => s.id === a); if (step) try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: step.open } })); } catch (x) {}
     };
@@ -110,7 +157,7 @@ export function SetupHomeCard({ trial }) {
 
 /** Settings → Set up your life: every step with what was found, the monthly check-up (Pro), and the tips to see again. */
 export function SetupPage({ back }) {
-  const [, bump] = useState(0);
+  const [, bump] = useState(0), [bankOpen, setBankOpen] = useState(true);   // v10.4: the bank check shows at once
   useEffect(() => { const t = setInterval(() => bump((x) => x + 1), 3000); return () => clearInterval(t); }, []);
   const pro = proNow(), d = setupData(), p = S.progress(d, pro), cu = useMemo(() => (pro ? S.checkup(d) : []), [pro, JSON.stringify(d).length]);
   // (v9.9.38, the 1M test: outside .calm the accent was undefined — every "Do it" was white on white, every ✓ invisible)
@@ -120,13 +167,16 @@ export function SetupPage({ back }) {
       <div className="h-1.5 rounded-full bg-[var(--c-ln)] overflow-hidden"><i className="block h-full bg-[var(--c-acc)]" style={{ width: (100 * p.done / p.total) + "%" }} /></div>
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{tr("A step counts only when Attune really has it — a real salary, a real bank message, real papers.")}</p></div>
     <div className="c-card divide-y divide-[var(--c-ln)]">
-      {p.steps.map((s) => <div key={s.id} className="flex items-center gap-3 min-h-[56px] py-1.5" data-testid="setup-step" data-id={s.id} data-done={s.done ? "1" : "0"}>
-        <span className={"w-6 h-6 rounded-[7px] grid place-items-center text-[12px] font-black shrink-0 " + (s.done ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "border-2 border-[var(--c-ln)]")}>{s.done ? "✓" : s.locked ? "🔒" : ""}</span>
+      {p.steps.map((s) => { const bankOn = s.id === "bank" && !s.locked && !s.done && bankAllowed();
+        // v10.4 (Ali: "I can't press allow or tick, it does not do anything"): the box is a button too — the same as the row's button
+        const go = s.done ? null : s.locked ? openPlan : bankOn ? () => setBankOpen((v) => !v) : () => startSetup(s.id);
+        return <React.Fragment key={s.id}><div className="flex items-center gap-3 min-h-[56px] py-1.5" data-testid="setup-step" data-id={s.id} data-done={s.done ? "1" : "0"}>
+        <button disabled={!go} onClick={go || undefined} aria-label={tr(s.title)} className={"w-6 h-6 rounded-[7px] grid place-items-center text-[12px] font-black shrink-0 " + (s.done ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "border-2 border-[var(--c-ln)]")} data-testid="setup-box">{s.done ? "✓" : s.locked ? "🔒" : ""}</button>
         <span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{tr(s.title)}</b>
           <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.id === "bank" && bankAllowed() ? tr("Allowed ✓ — waiting for the first message") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : tr("Not yet")}</span></span>
-        {s.done || (s.id === "bank" && !s.locked && bankAllowed()) ? null : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]">{tr("See Pro")}</button>
+        {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]" data-testid="setup-bank-check">{bankOpen ? tr("Hide") : tr("Check")}</button> : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]">{tr("See Pro")}</button>
           : <button onClick={() => startSetup(s.id)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr("Do it")}</button>}
-      </div>)}
+      </div>{bankOn && bankOpen ? <BankCheckBox bump={() => bump((x) => x + 1)} /> : null}</React.Fragment>; })}
     </div>
     {pro ? <div className="c-card space-y-1.5" data-testid="setup-checkup"><b className="block text-[14px]">{tr("This month's check-up")}</b>
       {cu.length ? cu.slice(0, 6).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">{x.kind === "paper" ? tr("{t} ends in {n} days ({d})", { t: x.title, n: x.days, d: x.date }) : tr("Not set up yet: {t}", { t: tr(x.title) })}</p>)

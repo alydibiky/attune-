@@ -35,6 +35,8 @@ function payNormalize(s) {
     .replace(/٬/g, ",")      // Arabic thousands separator
     .replace(/‏|‎/g, "")
     // v9.9.16 (the world corpus): "NGN15,000.00", "Rs.1,200", "Rp1.500.000" — a currency glued to its number (or with a dot) is read apart
+    // v10.4 (the bank-check run): a bank SMS in CAPITALS — "RS.2500.00 DEBITED" — is "Rs" / "Rp" all the same
+    .replace(/(?<![A-Za-z])(RS|RP)(?=\.?\s?\d)/g, (m) => m[0] + m[1].toLowerCase())
     .replace(/(?<![A-Za-z])([A-Z]{3})(?=\d)/g, "$1 ").replace(/(?<![A-Za-z])(Rs|Rp|RM|INR|PKR|Dhs?|AED|SAR|R|N|Tk)\.\s?(?=\d)/g, "$1 ")
     .replace(/[  ]/g, " ");
 }
