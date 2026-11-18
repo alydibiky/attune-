@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · La tua giornata</string>
+    <string name="w5_day_desc">Le prossime 3 cose di oggi: Fatto, +1 h e Pagato sulla schermata home</string>
+    <string name="w5_list_name">Attune · Liste</string>
+    <string name="w5_list_desc">Le tue liste: scorri, spunta, togli la spunta e aggiungi senza aprire Attune</string>
+    <string name="w5_money_name">Attune · Soldi</string>
+    <string name="w5_money_desc">Quanto puoi spendere oggi, SMS della banca da aggiungere, Ho speso / Ho ricevuto</string>
+    <string name="w5_agents_name">Attune · Agenti</string>
+    <string name="w5_agents_desc">Cosa hanno trovato i tuoi agenti: apri l’annuncio esatto o metti in pausa</string>
+    <string name="w5_med_name">Attune · Medicina</string>
+    <string name="w5_med_desc">La prossima dose: Presa o +30 min</string>
+    <string name="w5_papers_name">Attune · Documenti</string>
+    <string name="w5_papers_desc">Il prossimo documento in scadenza e come rinnovarlo</string>
+    <string name="w5_trip_name">Attune · Viaggio</string>
+    <string name="w5_trip_desc">Il conto alla rovescia del prossimo viaggio</string>
+    <string name="w5_next_name">Attune · Prossima data</string>
+    <string name="w5_next_desc">Il prossimo compleanno o anniversario: ricordamelo</string>
+    <string name="w5_stack_name">Attune · Pila intelligente</string>
+    <string name="w5_stack_desc">Un widget che mostra ciò che serve ora; scorri per il resto</string>
+</resources>

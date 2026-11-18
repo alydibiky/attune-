@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · 你的一天</string>
+    <string name="w5_day_desc">今天接下来的 3 件事——在主屏上直接完成、推迟 1 小时、已付</string>
+    <string name="w5_list_name">Attune · 清单</string>
+    <string name="w5_list_desc">你的清单——不打开 Attune 就能滚动、勾选、取消勾选和添加</string>
+    <string name="w5_money_name">Attune · 财务</string>
+    <string name="w5_money_desc">今天可花、待添加的银行短信、我花了 / 我收到</string>
+    <string name="w5_agents_name">Attune · 代理</string>
+    <string name="w5_agents_desc">代理找到的——打开那条具体房源/商品或暂停</string>
+    <string name="w5_med_name">Attune · 药</string>
+    <string name="w5_med_desc">下一次用药——已服或推迟 30 分钟</string>
+    <string name="w5_papers_name">Attune · 证件</string>
+    <string name="w5_papers_desc">下一个到期的证件及如何续办</string>
+    <string name="w5_trip_name">Attune · 旅行</string>
+    <string name="w5_trip_desc">下一次旅行的倒计时</string>
+    <string name="w5_next_name">Attune · 下个日子</string>
+    <string name="w5_next_desc">下一个生日或纪念日——提醒我</string>
+    <string name="w5_stack_name">Attune · 智能堆叠</string>
+    <string name="w5_stack_desc">一个小部件显示此刻该看的——滑动看其余</string>
+</resources>

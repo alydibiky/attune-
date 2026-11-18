@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/w5p_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="12dp" android:background="@drawable/w5_bg_s1">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/w5p_icon" android:layout_width="24dp" android:layout_height="24dp" android:gravity="center" android:textSize="13sp" />
+        <TextView android:id="@+id/w5p_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:paddingStart="6dp" android:textSize="14sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/w5p_count" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:textStyle="bold" android:paddingStart="6dp" />
+        <TextView android:id="@+id/w5p_pin" android:layout_width="32dp" android:layout_height="30dp" android:gravity="center" android:text="📌" android:textSize="12sp" />
+    </LinearLayout>
+    <TextView android:id="@+id/w5p_reason" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11.5sp" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+    <TextView android:id="@+id/w5p_big" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="20sp" android:textStyle="bold" android:visibility="gone" />
+    <TextView android:id="@+id/w5p_line" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12.5sp" android:maxLines="2" android:ellipsize="end" android:visibility="gone" />
+    <LinearLayout android:id="@+id/w5p_r0" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/w5p_t0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/w5p_s0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:paddingStart="6dp" android:paddingEnd="4dp" />
+        <TextView android:id="@+id/w5p_a0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+        <TextView android:id="@+id/w5p_b0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/w5p_r1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/w5p_t1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/w5p_s1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:paddingStart="6dp" android:paddingEnd="4dp" />
+        <TextView android:id="@+id/w5p_a1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+        <TextView android:id="@+id/w5p_b1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/w5p_r2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="34dp" android:visibility="gone">
+        <TextView android:id="@+id/w5p_t2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/w5p_s2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:paddingStart="6dp" android:paddingEnd="4dp" />
+        <TextView android:id="@+id/w5p_a2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+        <TextView android:id="@+id/w5p_b2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="30dp" android:gravity="center" android:paddingStart="10dp" android:paddingEnd="10dp" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:visibility="gone" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="6dp">
+        <TextView android:id="@+id/w5p_f0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="32dp" android:gravity="center" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="6dp" android:textSize="12.5sp" android:textStyle="bold" android:visibility="gone" />
+        <TextView android:id="@+id/w5p_f1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="32dp" android:gravity="center" android:paddingStart="14dp" android:paddingEnd="14dp" android:textSize="12.5sp" android:textStyle="bold" android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

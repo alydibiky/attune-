@@ -20,6 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * the browser, so no third-party page can reach this interface.
  */
 class NativeBridge(private val ctx: Context, private val web: WebView) {
+    // v10.5: the running app's page hears about a widget tap at once (W5.handle → "attune-widget-acts")
+    init { if (ctx is MainActivity) W5.web = java.lang.ref.WeakReference(web) }
 
     private val pool = Executors.newCachedThreadPool()
     private val cancels = ConcurrentHashMap<String, AtomicBoolean>()
@@ -1213,6 +1215,29 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
      *  launcher was asked to add it now (Android shows its own "Add to home screen" question), "no" when this launcher can't. */
     @JavascriptInterface
     fun pinListWidget(): String = try { Widgets.pin(ctx, Widgets.LIST) } catch (e: Exception) { "no" }
+    /** v10.5 the interactive widgets (AttuneWidgets.kt): the page's data for every widget, the taps kept on the home screen, forget the
+     *  applied ones (their keys), put one on the home screen ("has" | "asked" | "no"), how many of each are placed. */
+    @JavascriptInterface
+    fun setWidgets(json: String): Boolean = try { W5.saveAll(ctx, json); true } catch (e: Exception) { false }
+    @JavascriptInterface
+    fun widgetActs(): String = try { W5.acts(ctx) } catch (e: Exception) { "[]" }
+    @JavascriptInterface
+    fun clearWidgetActs(keys: String) { try { W5.clearActs(ctx, keys) } catch (e: Exception) { } }
+    @JavascriptInterface
+    fun pinWidget(kind: String): String = try {
+        if (kind == "box") { val mgr = android.appwidget.AppWidgetManager.getInstance(ctx); val cn = android.content.ComponentName(ctx, BoxWidget::class.java)
+            if (mgr.getAppWidgetIds(cn).isNotEmpty()) "has" else if (mgr.isRequestPinAppWidgetSupported && mgr.requestPinAppWidget(cn, null, null)) "asked" else "no" }
+        else W5.pin(ctx, kind) } catch (e: Exception) { "no" }
+    @JavascriptInterface
+    fun widgetsPlaced(): String = try { W5.placed(ctx) } catch (e: Exception) { "{}" }
+    /** The small box over the home screen: is this page in it, and close it. */
+    @JavascriptInterface
+    fun isQuickBox(): Boolean = ctx is QuickBoxActivity
+    @JavascriptInterface
+    fun quickClose() { try { (ctx as? QuickBoxActivity)?.close() } catch (e: Exception) { } }
+    /** The box can't do it here (a question, a note for Mind…): Attune opens on that page with the words. */
+    @JavascriptInterface
+    fun quickOpen(mode: String, text: String) { try { (ctx as? QuickBoxActivity)?.openApp(mode, text) } catch (e: Exception) { } }
     @JavascriptInterface
     fun widgetTicks(): String = try { Widgets.ticks(ctx) } catch (e: Exception) { "[]" }
     @JavascriptInterface

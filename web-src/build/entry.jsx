@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "../attune.jsx";
 import { preloadPages } from "../lazy.jsx";
+import { QuickBox, quickParams } from "../quickbox-ui.jsx";
 
 // v6.28 (Ali: "sometimes the app crashes"): every page already has its own guard (guard.jsx); this one catches what is OUTSIDE a
 // page — a window, a sheet, the sidebar — so an error there shows a way back instead of a blank app. Errors (also those in
@@ -31,5 +32,7 @@ class RootGuard extends React.Component {
 
 const root = document.getElementById("root");
 document.getElementById("boot").remove();
-createRoot(root).render(React.createElement(RootGuard, null, React.createElement(App)));
-preloadPages();   // v10.2: the rarely used pages, fetched quietly after the first screen (lazy.jsx)
+// v10.5: the small box over the home screen (QuickBoxActivity: ?quick=…) draws only the box — the app itself is not started
+const quick = quickParams();
+if (quick) createRoot(root).render(React.createElement(RootGuard, null, React.createElement(QuickBox, quick)));
+else { createRoot(root).render(React.createElement(RootGuard, null, React.createElement(App))); preloadPages(); }   // v10.2: the rarely used pages, fetched quietly after the first screen (lazy.jsx)

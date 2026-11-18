@@ -10,4 +10,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_box"
     android:description="@string/widget_box_desc"
+    android:configure="com.aldibiki.attune.W5LookActivity" android:widgetFeatures="reconfigurable|configuration_optional"
     android:widgetCategory="home_screen" />

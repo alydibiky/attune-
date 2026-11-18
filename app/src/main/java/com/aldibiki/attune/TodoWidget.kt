@@ -21,12 +21,11 @@ import org.json.JSONObject
  * A tick on the home screen is kept here (WidgetTick) and the row leaves the widget at once; the page applies the ticks the next time
  * Attune opens (NativeBridge.widgetTicks → clearWidgetTicks). Nothing leaves the phone.
  */
-class TodoWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, mgr: AppWidgetManager, ids: IntArray) { for (id in ids) mgr.updateAppWidget(id, Widgets.views(ctx, Widgets.TODO)) }
-}
-class ListWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, mgr: AppWidgetManager, ids: IntArray) { for (id in ids) mgr.updateAppWidget(id, Widgets.views(ctx, Widgets.LIST)) }
-}
+// v10.5: the two v9.3 widgets are drawn by the new engine (AttuneWidgets.kt) — the To-dos widget is now "Your day" (W1), the list
+// widget the new scrolling list (A1). Same class names, so the widgets people already placed update by themselves.
+class TodoWidget : W5Provider("day")
+class ListWidget : W5Provider("list")
+/** The v9.3 tick receiver: ticks made on an old widget before the update still reach the page (Widgets.ticks). */
 class WidgetTick : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val which = intent.getStringExtra("which") ?: return
@@ -44,24 +43,12 @@ object Widgets {
     fun save(ctx: Context, which: String, json: String) {
         JSONObject(json)   // refuse anything that isn't JSON
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(which, json).apply()
-        refresh(ctx, which)
     }
 
-    private fun refresh(ctx: Context, which: String) {
-        val mgr = AppWidgetManager.getInstance(ctx)
-        val cls = if (which == TODO) TodoWidget::class.java else ListWidget::class.java
-        val ids = mgr.getAppWidgetIds(ComponentName(ctx, cls))
-        if (ids.isNotEmpty()) { val v = views(ctx, which); for (id in ids) mgr.updateAppWidget(id, v) }
-    }
+    private fun refresh(ctx: Context, which: String) { W5.refresh(ctx, if (which == TODO) "day" else "list") }
 
     /** Put this widget on the home screen if it isn't there: "has" | "asked" | "no". */
-    fun pin(ctx: Context, which: String): String {
-        val mgr = AppWidgetManager.getInstance(ctx)
-        val cn = ComponentName(ctx, if (which == TODO) TodoWidget::class.java else ListWidget::class.java)
-        if (mgr.getAppWidgetIds(cn).isNotEmpty()) { refresh(ctx, which); return "has" }
-        if (android.os.Build.VERSION.SDK_INT < 26 || !mgr.isRequestPinAppWidgetSupported) return "no"
-        return if (mgr.requestPinAppWidget(cn, null, null)) "asked" else "no"
-    }
+    fun pin(ctx: Context, which: String): String = W5.pin(ctx, if (which == TODO) "day" else "list")
 
     /** A tick on the home screen: kept for the page, and the row leaves the widget now. */
     @Synchronized fun tick(ctx: Context, which: String, kind: String, id: String) {
@@ -78,39 +65,4 @@ object Widgets {
 
     fun ticks(ctx: Context): String = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("ticks", "[]") ?: "[]"
     fun clearTicks(ctx: Context) { ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("ticks", "[]").apply() }
-
-    fun views(ctx: Context, which: String): RemoteViews {
-        val todo = which == TODO
-        val v = RemoteViews(ctx.packageName, if (todo) R.layout.widget_todo else R.layout.widget_list)
-        val d = try { JSONObject(ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(which, "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
-        val pre = if (todo) "wt" else "wl"
-        fun rid(name: String) = ctx.resources.getIdentifier(pre + "_" + name, "id", ctx.packageName)
-        d.optString("title").takeIf { it.isNotBlank() }?.let { v.setTextViewText(rid("title"), it.take(60)) }
-        v.setTextViewText(rid("side"), d.optString("side").take(40))
-        val foot = d.optString("foot")
-        v.setViewVisibility(rid("foot"), if (foot.isNotBlank()) View.VISIBLE else View.GONE); v.setTextViewText(rid("foot"), foot.take(60))
-        d.optString("empty").takeIf { it.isNotBlank() }?.let { v.setTextViewText(rid("empty"), it.take(120)) }
-        val rows = d.optJSONArray("rows") ?: JSONArray()
-        val max = if (todo) 4 else 5
-        var shown = 0
-        for (i in 0 until max) {
-            val row = rid("row$i"); val r = rows.optJSONObject(i)
-            if (r == null) { v.setViewVisibility(row, View.GONE); continue }
-            shown++
-            v.setViewVisibility(row, View.VISIBLE)
-            val done = r.optBoolean("done")
-            v.setTextViewText(rid("box$i"), if (done) "☑" else "☐")
-            v.setTextViewText(rid("text$i"), r.optString("text").take(80))
-            v.setTextViewText(rid("sub$i"), r.optString("sub").take(20))
-            if (!done) {
-                val t = Intent(ctx, WidgetTick::class.java).putExtra("which", which).putExtra("kind", r.optString("kind")).putExtra("id", r.optString("id"))
-                v.setOnClickPendingIntent(rid("box$i"), PendingIntent.getBroadcast(ctx, ("tick-$which-" + r.optString("id")).hashCode(), t, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-            }
-        }
-        v.setViewVisibility(rid("empty"), if (shown == 0) View.VISIBLE else View.GONE)
-        // the rest of the widget opens Attune (on To-dos & lists)
-        val open = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP).putExtra(EXTRA_OPEN_PAGE, "lists")
-        v.setOnClickPendingIntent(rid("root"), PendingIntent.getActivity(ctx, ("widget-open-$which").hashCode(), open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-        return v
-    }
 }

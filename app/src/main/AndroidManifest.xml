@@ -279,18 +279,59 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_fit_info" />
         </receiver>
         <!-- v9.3 (Ali picked D2 — all three, people choose): to-dos (+ next prayer, + safe to spend) and one pinned list (TodoWidget.kt). -->
-        <receiver android:name=".TodoWidget" android:exported="true" android:label="@string/widget_todo_name">
+        <receiver android:name=".TodoWidget" android:exported="true" android:label="@string/w5_day_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_todo_info" />
         </receiver>
-        <receiver android:name=".ListWidget" android:exported="true" android:label="@string/widget_list_name">
+        <receiver android:name=".ListWidget" android:exported="true" android:label="@string/w5_list_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_list_info" />
         </receiver>
+        <!-- v10.5 the interactive widgets (AttuneWidgets.kt, Ali OK'd OK-A1 OK-W1 OK-W2 OK-W3 OK-W5 OK-W6 OK-W7 OK-S) -->
+        <receiver android:name=".MoneyWidget" android:exported="true" android:label="@string/w5_money_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_money_info" />
+        </receiver>
+        <receiver android:name=".AgentsWidget" android:exported="true" android:label="@string/w5_agents_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_agents_info" />
+        </receiver>
+        <receiver android:name=".MedWidget" android:exported="true" android:label="@string/w5_med_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_med_info" />
+        </receiver>
+        <receiver android:name=".PapersWidget" android:exported="true" android:label="@string/w5_papers_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_papers_info" />
+        </receiver>
+        <receiver android:name=".TripWidget" android:exported="true" android:label="@string/w5_trip_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_trip_info" />
+        </receiver>
+        <receiver android:name=".NextWidget" android:exported="true" android:label="@string/w5_next_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_next_info" />
+        </receiver>
+        <receiver android:name=".StackWidget" android:exported="true" android:label="@string/w5_stack_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/w5_stack_info" />
+        </receiver>
+        <receiver android:name=".W5Act" android:exported="false" />
+        <service android:name=".W5ListService" android:exported="false" android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <service android:name=".W5StackService" android:exported="false" android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <activity android:name=".W5Tap" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true" android:noHistory="true" android:taskAffinity="com.aldibiki.attune.w5tap" />
+        <activity android:name=".QuickBoxActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true" android:taskAffinity="com.aldibiki.attune.quick" android:windowSoftInputMode="adjustResize|stateVisible"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode" />
+        <activity android:name=".W5LookActivity" android:exported="true" android:theme="@android:style/Theme.DeviceDefault.Light.Dialog.NoActionBar"
+            android:excludeFromRecents="true" android:taskAffinity="com.aldibiki.attune.w5look">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
         <!-- a tick on a widget row (not exported: only Attune's own widgets send it) -->
         <receiver android:name=".WidgetTick" android:exported="false" />
         <!-- v8.7: the Attune box on the home screen (BoxWidget.kt): tap to type, the mic to speak. -->

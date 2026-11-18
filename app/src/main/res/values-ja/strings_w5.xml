@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · 今日</string>
+    <string name="w5_day_desc">今日の次の3件——ホーム画面で完了・+1時間・支払い済み</string>
+    <string name="w5_list_name">Attune · リスト</string>
+    <string name="w5_list_desc">リスト——Attuneを開かずにスクロール、チェック、解除、追加</string>
+    <string name="w5_money_name">Attune · お金</string>
+    <string name="w5_money_desc">今日使える額、追加する銀行SMS、使った / もらった</string>
+    <string name="w5_agents_name">Attune · エージェント</string>
+    <string name="w5_agents_desc">エージェントの見つけたもの——その出品を開く、または一時停止</string>
+    <string name="w5_med_name">Attune · 薬</string>
+    <string name="w5_med_desc">次の服用——飲んだ、または+30分</string>
+    <string name="w5_papers_name">Attune · 書類</string>
+    <string name="w5_papers_desc">次に期限が切れる書類と更新方法</string>
+    <string name="w5_trip_name">Attune · 旅行</string>
+    <string name="w5_trip_desc">次の旅行までのカウントダウン</string>
+    <string name="w5_next_name">Attune · 次の記念日</string>
+    <string name="w5_next_desc">次の誕生日・記念日——知らせて</string>
+    <string name="w5_stack_name">Attune · スマートスタック</string>
+    <string name="w5_stack_desc">今に合うものを見せるウィジェット——スワイプで他も</string>
+</resources>

@@ -1,5 +1,29 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (18 Nov 2026, later — v10.5: Ali OK'd the widgets — OK-A1 OK-W1 OK-W2 OK-W3 OK-W5 OK-W6 OK-W7 OK-S — BUILT)
+> Pages: options https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq · combined https://claude.ai/artifact/NgiS5jCMUUxewxkSV5RbSg.
+> **How it works:** the page decides what every widget shows (web-src/widgets2.js — pure: listsData, dayCard, moneyCard, agentsCard,
+> medCard, papersCard, tripCard, nextCard, stackData; widgets-ui.jsx widgetsData → NativeBridge.setWidgets). The phone only draws
+> (app/…/AttuneWidgets.kt, object W5: one card layout w5_card + rows/buttons added per widget; the list = ListView via W5ListService;
+> the stack = StackView via W5StackService, its taps through the see-through W5Tap activity). A tap changes the widget at once and is
+> kept as {w,a,id,at} (W5.record); the page applies each ONCE (widgets2.js applyActs + widgets-ui.jsx applyWidgetActs: reminders done /
+> +1h, bills paid, list tick / untick / clear, medicine taken / +30m, agent paused, date reminder, the bank SMS Add ✓ / ✕ through
+> paylog addPaidNow) — at once when Attune runs (W5.ping → "attune-widget-acts"), else on the next open; seen keys in
+> attune:widget:acts-seen. "Open ↗" = ACTION_VIEW of the agent's checked listing; a line opens its page.
+> **The small box** (OK-W3, A1 "+ Add", W2 "I spent / I got"): QuickBoxActivity (own task affinity, see-through) loads
+> index.html?quick=say|voice|list|spend|got&list=<id>; build/entry.jsx then renders ONLY quickbox-ui.jsx (the app isn't started):
+> doit.js understandAll → apply with Undo per part, lists addItem (widgets2.itemsOf: commas / and / «و», drops "thanks 🙏"),
+> money (spendOf: «٢٠٠ كشري»); a question or a Mind note → "Open Chat" (NativeBridge.quickOpen → MainActivity with the words).
+> 🎤 = Android's speech box (RecognizerIntent) → window.__quickHeard.
+> **Widgets:** TodoWidget = Your day, ListWidget = the list (same class names: placed widgets update), MoneyWidget, BoxWidget (now the
+> small box), AgentsWidget, MedWidget, PapersWidget, TripWidget, NextWidget, StackWidget. **Look (OK-S):** each follows the app's Look
+> (Plain → S1 colours w5_s1_* + night, Glass → S2); long-press → the widget's settings → W5LookActivity (this one widget only).
+> Picker names: res/values*/strings_w5.xml (20 languages). Page words: 56 new lines in all 20 i18n files.
+> **Tests:** tests/widgets/gen.mjs (10,000 composed HARD: 100 %, 99.2 % different shapes — it found 2 real reader gaps, fixed:
+> "thanks 🙏 / ok / شكرا" glued to a typed item, and ties in Your day's order), heldout.mjs 100 %, tests/unit/v1050widgets.test.mjs,
+> tests/e2e_v1050widgets.py (phone + computer). Kotlin compiled here (Android SDK in /opt/android-sdk: `ANDROID_HOME=/opt/android-sdk
+> /opt/gradle/bin/gradle :app:compileFullDebugKotlin`). **Not seen on a real phone yet — Ali's phone test is the check of the drawing.**
+
 > ## START HERE (18 Nov 2026 — v10.4: Ali's phone list "widgets / backup opens the wrong page / fix the SMS notification for good")
 > **(2) "Turn on backup" opened the old prompt-compressor page** (his screenshot): setup.js step 8 opens "backup", which is a PANEL, not a
 > page — navTo("backup") fell through every page to the last one in the chain (the compressor). Now attune.jsx PANEL_IDS (backup,

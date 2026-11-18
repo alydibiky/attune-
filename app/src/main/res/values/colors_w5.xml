@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): S1 = Attune's colours (light, and dark grey in the phone's dark mode);
+     S2 = dark glass (fixed, see AttuneWidgets.Palette). -->
+<resources>
+    <color name="w5_s1_bg">#FFFFFF</color>
+    <color name="w5_s1_ink">#231C1E</color>
+    <color name="w5_s1_mut">#7A6F73</color>
+    <color name="w5_s1_acc">#7A2A45</color>
+    <color name="w5_s1_ln">#ECE5E7</color>
+    <color name="w5_s1_on">#FFFFFF</color>
+</resources>

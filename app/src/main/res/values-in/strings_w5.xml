@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Harimu</string>
+    <string name="w5_day_desc">3 hal berikutnya hari ini — Selesai, +1 jam, dan Dibayar di layar utama</string>
+    <string name="w5_list_name">Attune · Daftar</string>
+    <string name="w5_list_desc">Daftarmu — gulir, centang, hapus centang, dan tambah tanpa membuka Attune</string>
+    <string name="w5_money_name">Attune · Uang</string>
+    <string name="w5_money_desc">Aman dibelanjakan hari ini, SMS bank untuk ditambah, Aku belanja / Aku dapat</string>
+    <string name="w5_agents_name">Attune · Agen</string>
+    <string name="w5_agents_desc">Temuan agenmu — buka iklan persisnya atau jeda</string>
+    <string name="w5_med_name">Attune · Obat</string>
+    <string name="w5_med_desc">Dosis berikutnya — Diminum atau +30 mnt</string>
+    <string name="w5_papers_name">Attune · Dokumen</string>
+    <string name="w5_papers_desc">Dokumen berikutnya yang habis masa berlakunya dan cara memperpanjang</string>
+    <string name="w5_trip_name">Attune · Perjalanan</string>
+    <string name="w5_trip_desc">Hitung mundur perjalanan berikutnya</string>
+    <string name="w5_next_name">Attune · Tanggal berikutnya</string>
+    <string name="w5_next_desc">Ulang tahun atau peringatan berikutnya — ingatkan aku</string>
+    <string name="w5_stack_name">Attune · Tumpukan pintar</string>
+    <string name="w5_stack_desc">Satu widget yang menampilkan yang pas sekarang — geser untuk sisanya</string>
+</resources>

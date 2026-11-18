@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Ngày của bạn</string>
+    <string name="w5_day_desc">3 việc tiếp theo hôm nay — Xong, +1 giờ và Đã trả ngay trên màn hình chính</string>
+    <string name="w5_list_name">Attune · Danh sách</string>
+    <string name="w5_list_desc">Danh sách của bạn — cuộn, đánh dấu, bỏ dấu và thêm mà không mở Attune</string>
+    <string name="w5_money_name">Attune · Tiền</string>
+    <string name="w5_money_desc">Có thể tiêu hôm nay, SMS ngân hàng để thêm, Tôi đã tiêu / Tôi nhận</string>
+    <string name="w5_agents_name">Attune · Tác nhân</string>
+    <string name="w5_agents_desc">Những gì tác nhân tìm được — mở đúng tin hoặc tạm dừng</string>
+    <string name="w5_med_name">Attune · Thuốc</string>
+    <string name="w5_med_desc">Liều tiếp theo — Đã uống hoặc +30 phút</string>
+    <string name="w5_papers_name">Attune · Giấy tờ</string>
+    <string name="w5_papers_desc">Giấy tờ sắp hết hạn tiếp theo và cách gia hạn</string>
+    <string name="w5_trip_name">Attune · Chuyến đi</string>
+    <string name="w5_trip_desc">Đếm ngược chuyến đi tới</string>
+    <string name="w5_next_name">Attune · Ngày tới</string>
+    <string name="w5_next_desc">Sinh nhật hoặc kỷ niệm tới — nhắc tôi</string>
+    <string name="w5_stack_name">Attune · Ngăn xếp thông minh</string>
+    <string name="w5_stack_desc">Một widget hiện điều phù hợp lúc này — vuốt để xem phần còn lại</string>
+</resources>

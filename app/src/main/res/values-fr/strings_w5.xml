@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · Votre journée</string>
+    <string name="w5_day_desc">Les 3 prochaines choses du jour : Fait, +1 h et Payé sur l’écran d’accueil</string>
+    <string name="w5_list_name">Attune · Listes</string>
+    <string name="w5_list_desc">Vos listes : faites défiler, cochez, décochez et ajoutez sans ouvrir Attune</string>
+    <string name="w5_money_name">Attune · Argent</string>
+    <string name="w5_money_desc">Ce que vous pouvez dépenser aujourd’hui, SMS bancaires à ajouter, J’ai dépensé / J’ai reçu</string>
+    <string name="w5_agents_name">Attune · Agents</string>
+    <string name="w5_agents_desc">Ce que vos agents ont trouvé : ouvrez l’annonce exacte ou mettez en pause</string>
+    <string name="w5_med_name">Attune · Médicament</string>
+    <string name="w5_med_desc">La prochaine prise : Prise ou +30 min</string>
+    <string name="w5_papers_name">Attune · Papiers</string>
+    <string name="w5_papers_desc">Le prochain papier qui expire et comment le renouveler</string>
+    <string name="w5_trip_name">Attune · Voyage</string>
+    <string name="w5_trip_desc">Le compte à rebours de votre prochain voyage</string>
+    <string name="w5_next_name">Attune · Prochaine date</string>
+    <string name="w5_next_desc">Le prochain anniversaire : rappelle-le-moi</string>
+    <string name="w5_stack_name">Attune · Pile intelligente</string>
+    <string name="w5_stack_desc">Un widget qui montre ce qui compte maintenant ; balayez pour le reste</string>
+</resources>

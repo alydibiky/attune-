@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · তোমার দিন</string>
+    <string name="w5_day_desc">আজকের পরের ৩টি কাজ — হোম স্ক্রিনেই হয়েছে, +১ ঘণ্টা আর পরিশোধ</string>
+    <string name="w5_list_name">Attune · তালিকা</string>
+    <string name="w5_list_desc">তোমার তালিকা — Attune না খুলেই স্ক্রল, টিক, আনটিক আর যোগ করো</string>
+    <string name="w5_money_name">Attune · টাকা</string>
+    <string name="w5_money_desc">আজ খরচযোগ্য, যোগ করার ব্যাংক SMS, আমি খরচ করলাম / পেলাম</string>
+    <string name="w5_agents_name">Attune · এজেন্ট</string>
+    <string name="w5_agents_desc">এজেন্টরা যা পেল — সঠিক বিজ্ঞাপন খোলো বা থামাও</string>
+    <string name="w5_med_name">Attune · ওষুধ</string>
+    <string name="w5_med_desc">পরের ডোজ — খেয়েছি বা +৩০ মিনিট</string>
+    <string name="w5_papers_name">Attune · কাগজপত্র</string>
+    <string name="w5_papers_desc">পরের মেয়াদ শেষ হওয়া কাগজ আর নবায়নের উপায়</string>
+    <string name="w5_trip_name">Attune · ভ্রমণ</string>
+    <string name="w5_trip_desc">পরের ভ্রমণের কাউন্টডাউন</string>
+    <string name="w5_next_name">Attune · পরের তারিখ</string>
+    <string name="w5_next_desc">পরের জন্মদিন বা বার্ষিকী — মনে করিয়ে দাও</string>
+    <string name="w5_stack_name">Attune · স্মার্ট স্ট্যাক</string>
+    <string name="w5_stack_desc">একটি উইজেট যা এখন যা দরকার দেখায় — বাকিটা দেখতে সোয়াইপ করো</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="w5_s1_bg">#221C1E</color>
+    <color name="w5_s1_ink">#F3ECEE</color>
+    <color name="w5_s1_mut">#B3A6AB</color>
+    <color name="w5_s1_acc">#E39AB3</color>
+    <color name="w5_s1_ln">#3A3134</color>
+    <color name="w5_s1_on">#2A1219</color>
+</resources>

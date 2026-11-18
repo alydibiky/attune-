@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v10.5 the interactive widgets (AttuneWidgets.kt): names and lines in the widget picker. -->
+<resources>
+    <string name="w5_day_name">Attune · आपका दिन</string>
+    <string name="w5_day_desc">आज की अगली 3 चीज़ें — होम स्क्रीन पर ही हो गया, +1 घंटा और भुगतान</string>
+    <string name="w5_list_name">Attune · सूचियाँ</string>
+    <string name="w5_list_desc">आपकी सूचियाँ — Attune खोले बिना स्क्रॉल, टिक, अनटिक और जोड़ें</string>
+    <string name="w5_money_name">Attune · पैसे</string>
+    <string name="w5_money_desc">आज ख़र्च करने लायक़, जोड़ने के लिए बैंक SMS, मैंने ख़र्च किया / मुझे मिला</string>
+    <string name="w5_agents_name">Attune · एजेंट</string>
+    <string name="w5_agents_desc">आपके एजेंटों ने क्या पाया — सटीक लिस्टिंग खोलें या रोकें</string>
+    <string name="w5_med_name">Attune · दवा</string>
+    <string name="w5_med_desc">अगली ख़ुराक — ले ली या +30 मिनट</string>
+    <string name="w5_papers_name">Attune · कागज़ात</string>
+    <string name="w5_papers_desc">अगला ख़त्म होने वाला कागज़ और उसे कैसे नवीनीकृत करें</string>
+    <string name="w5_trip_name">Attune · यात्रा</string>
+    <string name="w5_trip_desc">आपकी अगली यात्रा की उलटी गिनती</string>
+    <string name="w5_next_name">Attune · अगली तारीख़</string>
+    <string name="w5_next_desc">अगला जन्मदिन या सालगिरह — याद दिलाएँ</string>
+    <string name="w5_stack_name">Attune · स्मार्ट स्टैक</string>
+    <string name="w5_stack_desc">एक विजेट जो अभी के हिसाब से दिखाता है — बाक़ी के लिए स्वाइप करें</string>
+</resources>
