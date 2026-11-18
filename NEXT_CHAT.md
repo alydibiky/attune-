@@ -38,6 +38,8 @@
 >   (no page) not; Book on a checked offer opens its checked page with the dates straight away (no second check). The old v9.1 check
 >   "Booking app via appsList/openAnyApp" was for APKs older than openInApp (every current build has it, so the page never takes that
 >   path); replaced by v9.5's "the phone's own browser first", then "Android's app for the link" (still checked).
+>   Full run after the fix: every unit test and 239 of 240 browser tests pass; e2e_v996mentions timed out once on note-promise-go in
+>   the full run and passes alone (a timing flake in the cloud, like e2e_v5).
 > **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page
 > https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq (docs/mockups/widgets.html): A1/A2 the list widget (his Talabat one: today 4 rows,
 > no scroll, no untick), W1 Your day · W2 Money (+ the bank SMS Add ✓) · W3 Tell Attune box · W4 People & money · W5 Agents · W6 small
