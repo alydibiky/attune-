@@ -14,5 +14,9 @@
             </intent-filter>
         </service>
         <service android:name=".AttuneKeyboard" tools:node="remove" />
+        <!-- v10.8: the Play build's barcode + text readers come from Play services (build.gradle.kts) — fetched at install, so a
+             photo is read offline from the first day -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode,ocr,barcode_ui,subject_segment,ica"
+            tools:replace="android:value" />
     </application>
 </manifest>

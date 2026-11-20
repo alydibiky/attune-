@@ -1,0 +1,252 @@
+<title>Attune Launch Picks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Cairo:wght@500;700;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = a phone screen (the Play page or an Attune screen) + what it means + pick/note. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif; --ar: "Cairo", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 160px }
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 20px; font-weight: 900; margin: 0 0 4px; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+section > p { margin: 0; color: var(--mut); max-width: 75ch }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 20px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 640px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px } .pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible, input:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 6px }
+.num { font-variant-numeric: tabular-nums; font-weight: 900 }
+/* ---- phone frames (they show a phone, so they keep the phone's own light colours in both themes) ---- */
+.ph { width: 260px; max-width: 100%; margin: 0 auto; border-radius: 26px; border: 6px solid #2b2426; overflow: hidden; background: #fff; color: #1f1f1f; font-size: 11.5px; line-height: 1.4; display: grid; gap: 8px; padding: 10px; align-content: start; min-height: 380px }
+.ph[dir=rtl] { font-family: var(--ar) }
+.sbar { display: flex; justify-content: space-between; font-weight: 800; font-size: 10px; color: #444 }
+.play-top { display: flex; gap: 10px; align-items: center }
+.icon { width: 52px; height: 52px; border-radius: 13px; flex: none; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 22px; background: linear-gradient(145deg, #8c2f50, #5d1c33); font-family: var(--font) }
+.pname { font-weight: 900; font-size: 13.5px; line-height: 1.25 }
+.pdev { color: #0b7a55; font-weight: 800; font-size: 10.5px }
+.pstats { display: flex; justify-content: space-around; text-align: center; color: #555; font-size: 10px; border-block: 1px solid #eee; padding: 5px 0 }
+.pstats b { display: block; color: #1f1f1f; font-size: 11.5px }
+.install { background: #0b7a55; color: #fff; text-align: center; border-radius: 99px; padding: 6px; font-weight: 900 }
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px }
+.shot { border-radius: 9px; aspect-ratio: 9 / 17; overflow: hidden; display: grid; align-content: start; gap: 3px; padding: 5px; font-size: 7.5px; line-height: 1.25 }
+.s1 { background: #f6f3f3; border: 1px solid #e6dfe1 } .s1 .cap { font-weight: 900; color: #7a2a45; font-size: 8px }
+.s2 { background: linear-gradient(170deg, #7a2a45, #2d1520); color: #fff } .s2 .cap { font-weight: 900; font-size: 9.5px; line-height: 1.2 }
+.mini { background: #fff; color: #231c1e; border-radius: 5px; padding: 3px 4px; border: 1px solid #ece5e7 }
+.s2 .mini { transform: rotate(-3deg); box-shadow: 0 4px 10px rgba(0, 0, 0, .35) }
+.short { font-weight: 800; font-size: 11.5px }
+.about { color: #555; font-size: 10.5px } .about b { color: #1f1f1f }
+.c { background: #fff; border: 1px solid #ece5e7; border-radius: 14px; padding: 9px 10px; display: grid; gap: 6px; min-width: 0 }
+.c h4 { margin: 0; font-size: 12px; font-weight: 900 } .m { color: #7a6f73 } .a { color: #7a2a45; font-weight: 900 }
+.pb { background: #7a2a45; color: #fff; border-radius: 99px; padding: 4px 11px; font-weight: 900; font-size: 10.5px; display: inline-block }
+.pb.o { background: #fff; color: #7a2a45; border: 1px solid #7a2a45 }
+.row { display: flex; align-items: center; gap: 8px; padding: 6px 2px; border-top: 1px solid #ece5e7 } .row:first-of-type { border-top: 0 } .row .t { flex: 1; min-width: 0 }
+.log { font-family: ui-monospace, Menlo, monospace; font-size: 9px; background: #f7f4f3; border-radius: 8px; padding: 6px; white-space: pre-wrap; color: #4a3f43 }
+.app { background: #f4f2f1 } .dim { position: relative } .dim::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .0) }
+.bar { height: 6px; border-radius: 6px; background: linear-gradient(90deg, #7a2a45 45%, #ece5e7 45%) }
+.fieldrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.fieldrow input { flex: 1; min-width: 200px; font: inherit; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); padding: 10px 12px; min-height: 44px }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1000px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word; max-height: 30vh; overflow-y: auto }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+</style>
+<div class="wrap">
+<header><h1>Launch: store page, crash reports, languages</h1>
+<p class="lede">These parts of the launch list change what people see, so you pick first. Tick, add a note on any option, then <b>Copy my picks</b> and paste them to me. Everything else on the list doesn't change the look, so I'm working on it now.</p>
+<p class="quote">"Do first 6, also for ur information I won't be able to reach any testers for the other languages"</p></header>
+
+<div class="fixed"><h2>Being done now (no choice needed)</h2><ul>
+<li><b>Size.</b> The phone APK is <span class="num">88 MB</span>. The Play version already leaves Python out: it downloads the first time someone uses code, which saves <span class="num">19 MB</span>. I'm also removing the words of removed features from all 20 languages (about a quarter of them). And the two photo readers (text and barcodes) will come from Google Play services instead of inside the app. Nothing on screen changes.</li>
+<li><b>Every Arabic screen</b> (Settings, Chat, Writing, Lists, Travel, Projects, Tools, Setup and the rest): read and fixed in Egyptian Arabic.</li>
+<li><b>Speed</b>: every page measured with a full phone at a mid-range phone's speed. The goal is under 1 second to open.</li>
+<li><b>Battery</b>: everything that runs in the background is checked and anything wasteful is cut. A small battery log is added so your phone gives real 24-hour numbers.</li>
+<li><b>The 18 other languages, without testers</b>: I read every line in each language, translate it back to English, and fix wrong meanings. Each fix gets a test.</li>
+</ul></div>
+
+<section><h2>ST · The store page (what people read before installing)</h2>
+<p>The old draft sold "your meals and fitness" (removed) and "AI on your phone". Since 4 Nov Attune is a life planner and organiser with offline AI. Each option is the top of the Play page: name, the one-line description and the first three screenshots. Arabic first, English underneath.</p>
+  <div class="opt rec" data-code="ST1">
+    <div class="ph" dir="rtl"><div class="sbar"><span>٩:٤١</span><span>Google Play</span></div>
+      <div class="play-top"><div class="icon">A</div><div><div class="pname">Attune — يومك وفلوسك ومواعيدك</div><div class="pdev">Aldibiki</div></div></div>
+      <div class="pstats"><div><b>٤٫٨★</b>تقييم</div><div><b>جديد</b>تطبيق</div><div><b>+٣</b>سن</div></div>
+      <div class="install">تثبيت</div>
+      <div class="short">نظّم يومك وفلوسك ومواعيدك وناسك في مكان واحد — بذكاء اصطناعي شغّال من غير نت.</div>
+      <div class="shots"><div class="shot s1"><span class="cap">يومك كله في شاشة</span><div class="mini">٩:٠٠ كلّم ورشة الونش</div><div class="mini">١٢:٠٠ ادفع للبنت</div></div><div class="shot s1"><span class="cap">فلوسك من رسائل البنك</span><div class="mini">−٣٥٠ كارفور</div><div class="mini">تقدر تصرف ٢٠٠٠ النهارده</div></div><div class="shot s1"><span class="cap">قولها وهو يرتّبها</span><div class="mini">«فكرني أدفع الكهربا يوم ١٠»</div></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">ST1</span>Your life, organised<span class="tag">Recommended</span></h3>
+      <p>Leads with what Attune does for your day: your day, money, dates and people in one place, with offline AI as the second line.</p>
+      <p><b>EN:</b> "Attune — Life Planner &amp; AI" · "Your day, money, dates and people in one place, with AI that works offline."</p>
+      <div class="pm"><span><b>+</b> Says what the app is in one line; matches your brand from 4 Nov.</span><span><b>−</b> Privacy only shows up in the long description.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-ST1">Pick ST1</label><textarea id="note-ST1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="ST2">
+    <div class="ph" dir="rtl"><div class="sbar"><span>٩:٤١</span><span>Google Play</span></div>
+      <div class="play-top"><div class="icon">A</div><div><div class="pname">Attune — مساعد خاص على موبايلك</div><div class="pdev">Aldibiki</div></div></div>
+      <div class="pstats"><div><b>٤٫٨★</b>تقييم</div><div><b>جديد</b>تطبيق</div><div><b>+٣</b>سن</div></div>
+      <div class="install">تثبيت</div>
+      <div class="short">خاص. على موبايلك. من غير حساب. ينظّم يومك وفلوسك ومواعيدك — ومفيش حاجة بتطلع برّه.</div>
+      <div class="shots"><div class="shot s1"><span class="cap">مفيش حاجة بتطلع من موبايلك</span><div class="mini">🔒 شغّال من غير نت</div></div><div class="shot s1"><span class="cap">فلوسك من رسائل البنك</span><div class="mini">−٣٥٠ كارفور</div></div><div class="shot s1"><span class="cap">يومك كله في شاشة</span><div class="mini">٩:٠٠ كلّم ورشة الونش</div></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">ST2</span>Private first</h3>
+      <p>Leads with privacy: on your phone, no account, nothing leaves it. Then what it organises.</p>
+      <p><b>EN:</b> "Attune — Private AI Planner" · "Private, on your phone, no account. Organises your day, money and dates; nothing leaves the phone."</p>
+      <div class="pm"><span><b>+</b> The strongest difference from other apps; good for people who worry about bank messages.</span><span><b>−</b> People see why it's safe before they see what it does.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-ST2">Pick ST2</label><textarea id="note-ST2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="ST3">
+    <div class="ph" dir="rtl"><div class="sbar"><span>٩:٤١</span><span>Google Play</span></div>
+      <div class="play-top"><div class="icon">A</div><div><div class="pname">Attune — قولها وهو يرتّبها</div><div class="pdev">Aldibiki</div></div></div>
+      <div class="pstats"><div><b>٤٫٨★</b>تقييم</div><div><b>جديد</b>تطبيق</div><div><b>+٣</b>سن</div></div>
+      <div class="install">تثبيت</div>
+      <div class="short">«صرفت ٢٥٠ على الغدا» · «أحمد عليه ٥٠٠» · «فكرني يوم ١٠» — اكتبها زي ما بتقولها وAttune يرتّبها.</div>
+      <div class="shots"><div class="shot s1"><span class="cap">«صرفت ٢٥٠ على الغدا»</span><div class="mini">✓ اتسجلت في الفلوس</div></div><div class="shot s1"><span class="cap">«أحمد عليه ٥٠٠»</span><div class="mini">✓ هفكرك أول الشهر</div></div><div class="shot s1"><span class="cap">«مراتي فين؟»</span><div class="mini">وصلت البيت ١٠:٤٢</div></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">ST3</span>Say it, it's sorted</h3>
+      <p>Leads with real sentences people type and what Attune does with each.</p>
+      <p><b>EN:</b> "Attune — Say it, it's sorted" · "“Spent 250 on lunch” · “Ahmed owes me 500” · “Remind me on the 10th”: type it like you'd say it."</p>
+      <div class="pm"><span><b>+</b> Shows the magic straight away; very Egyptian.</span><span><b>−</b> The name doesn't say "planner", so it's found less in searches.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-ST3">Pick ST3</label><textarea id="note-ST3" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<section><h2>SS · How the screenshots look</h2>
+<p>Play shows these big on the store page. I'll make them from the real app, with your kind of examples (no real bank numbers).</p>
+  <div class="opt rec" data-code="SS1">
+    <div class="ph app" dir="rtl"><div class="shots" style="grid-template-columns:1fr 1fr"><div class="shot s1" style="font-size:9px"><span class="cap" style="font-size:10.5px">يومك كله في شاشة</span><div class="mini">النهارده · ٣ حاجات</div><div class="mini">٩:٠٠ كلّم ورشة الونش</div><div class="mini">١٢:٠٠ ادفع للبنت ٧٠٠</div><div class="mini">✈ عمرة · السبت</div></div><div class="shot s1" style="font-size:9px"><span class="cap" style="font-size:10.5px">فلوسك من رسائل البنك</span><div class="mini">−٣٥٠ كارفور المعادي</div><div class="mini">+٢٥٠٠ الشيخ</div><div class="mini">تقدر تصرف ٢٠٠٠ النهارده</div></div></div></div>
+    <div class="info">
+      <h3><span class="code">SS1</span>The real screen, one line above it<span class="tag">Recommended</span></h3>
+      <p>The real Attune screen fills the picture, with a short line in the theme colour above it. Calm and honest, like the app.</p>
+      <div class="pm"><span><b>+</b> People see exactly what they get; easy to keep up to date.</span><span><b>−</b> Less eye-catching in a list of apps.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS1">Pick SS1</label><textarea id="note-SS1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="SS2">
+    <div class="ph app" dir="rtl"><div class="shots" style="grid-template-columns:1fr 1fr"><div class="shot s2" style="font-size:9px"><span class="cap" style="font-size:13px">يومك كله<br>في شاشة واحدة</span><div class="mini">٩:٠٠ كلّم ورشة الونش</div><div class="mini">١٢:٠٠ ادفع للبنت ٧٠٠</div></div><div class="shot s2" style="font-size:9px"><span class="cap" style="font-size:13px">فلوسك<br>بتتسجل لوحدها</span><div class="mini">−٣٥٠ كارفور المعادي</div><div class="mini">تقدر تصرف ٢٠٠٠</div></div></div></div>
+    <div class="info">
+      <h3><span class="code">SS2</span>A big headline, the phone tilted</h3>
+      <p>A burgundy background, a big Arabic headline, and the screen slightly tilted under it, like big brands do.</p>
+      <div class="pm"><span><b>+</b> Stands out in the store.</span><span><b>−</b> Less of the real screen shows; looks more like an ad.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS2">Pick SS2</label><textarea id="note-SS2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<section><h2>CR · When the app has a problem (crash reports)</h2>
+<p>Today, if Attune closes by itself, nobody knows why. These options keep a short note on the phone. Nothing is ever sent by itself: you see the report first and send it yourself (WhatsApp or e-mail) to the support address. The report has the app version, the phone model and the error lines, and none of your messages, money or people.</p>
+  <div class="opt" data-code="CR1">
+    <div class="ph app"><div class="c"><h4>Settings</h4><div class="row"><span class="t">Backup</span><span class="m">›</span></div><div class="row"><span class="t">Language</span><span class="m">›</span></div><div class="row" style="background:#f7e9ee;border-radius:8px"><span class="t"><b>Problems the app had</b><br><span class="m">2 in the last 7 days</span></span><span class="m">›</span></div></div>
+      <div class="c"><h4>Problems the app had</h4><div class="log">20 Nov 09:41 · Money page
+TypeError: cannot read 'amount'
+Attune 10.7 · Galaxy Z Fold6 · Android 17</div><div><span class="pb">Send a report</span> <span class="pb o">Clear</span></div><p class="m" style="margin:0">Only what's shown here is sent.</p></div></div>
+    <div class="info">
+      <h3><span class="code">CR1</span>Only in Settings</h3>
+      <p>A row in Settings, "Problems the app had (2)", with the list and a <b>Send a report</b> button.</p>
+      <div class="pm"><span><b>+</b> Never interrupts anyone.</span><span><b>−</b> Most people will never find it, so you get few reports.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-CR1">Pick CR1</label><textarea id="note-CR1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+  <div class="opt rec" data-code="CR3">
+    <div class="ph app"><div class="c" style="border-color:#7a2a45"><h4 class="a">Attune closed by itself last time</h4><p class="m" style="margin:0">Sorry about that. Send the report so it gets fixed? You see it before it's sent.</p><div><span class="pb">See and send</span> <span class="pb o">Not now</span></div></div>
+      <div class="c"><h4>Good morning, Ali</h4><div class="row"><span class="t">9:00 Call the crane yard</span></div><div class="row"><span class="t">12:00 Pay the maid 700</span></div></div>
+      <div class="c"><h4>Settings</h4><div class="row"><span class="t"><b>Problems the app had</b> · 1</span><span class="m">›</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">CR3</span>A card the next time it opens, and in Settings<span class="tag">Recommended</span></h3>
+      <p>Only after the app actually closed by itself: a small card on Home the next time it opens, "Attune closed by itself last time", with <b>See and send</b> or <b>Not now</b>. The same list is always in Settings. Smaller problems that don't close the app stay quietly in Settings.</p>
+      <div class="pm"><span><b>+</b> You hear about the problems that matter, during the closed test too.</span><span><b>−</b> One extra card after a crash (shown once).</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-CR3">Pick CR3</label><textarea id="note-CR3" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<section><h2>LG · The 20 languages on the first install</h2>
+<p>After removing the words of removed features, all 20 languages together add about <span class="num">5.5 MB</span> to the download. An installed app is around 65 MB either way.</p>
+  <div class="opt rec" data-code="LG1">
+    <div class="ph app"><div class="c"><h4>Language</h4><div class="row"><span class="t">English</span></div><div class="row"><span class="t" style="font-family:var(--ar)">مصري (العربية)</span><span class="a">✓</span></div><div class="row"><span class="t">Español</span></div><div class="row"><span class="t">Français</span></div><div class="row"><span class="t">हिन्दी</span></div><div class="row m"><span class="t">+ 15 more · all on the phone</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">LG1</span>All 20 inside the app<span class="tag">Recommended</span></h3>
+      <p>Every language works straight away, with no internet. Same as today, but smaller.</p>
+      <div class="pm"><span><b>+</b> Keeps the "works offline" promise for everything.</span><span><b>−</b> About 5 MB more to download than LG2.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-LG1">Pick LG1</label><textarea id="note-LG1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="LG2">
+    <div class="ph app"><div class="c"><h4>Language</h4><div class="row"><span class="t">English</span></div><div class="row"><span class="t" style="font-family:var(--ar)">مصري (العربية)</span><span class="a">✓</span></div><div class="row"><span class="t">Español<br><span class="m">Downloading… 0.3 MB</span><div class="bar"></div></span></div><div class="row"><span class="t">Français <span class="m">· ↓ 0.3 MB</span></span></div><div class="row"><span class="t">हिन्दी <span class="m">· ↓ 0.4 MB</span></span></div></div></div>
+    <div class="info">
+      <h3><span class="code">LG2</span>Only the phone's language inside, the rest when picked</h3>
+      <p>English, Egyptian Arabic and the phone's own language are inside. Another language downloads in a second or two the first time you pick it.</p>
+      <div class="pm"><span><b>+</b> About 5 MB smaller to download.</span><span><b>−</b> Switching to a new language needs the internet once.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-LG2">Pick LG2</label><textarea id="note-LG2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<section><h2>MAIL · The support e-mail</h2>
+<p>Play requires a support e-mail on the store page. Crash reports go there too. Type the address in the note.</p>
+  <div class="opt" data-code="MAIL">
+    <div class="ph app" dir="rtl"><div class="c"><h4>تواصل مع المطوّر</h4><div class="row"><span class="t">✉ البريد: <span class="m">support@…</span></span></div><div class="row"><span class="t">🔒 سياسة الخصوصية</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">MAIL</span>The support e-mail</h3>
+      <p>Shown on the Play page under "App support" and used by <b>Send a report</b>. It can be a new Gmail just for Attune.</p>
+      <div class="pick"><label><input type="checkbox" id="pick-MAIL">Use this e-mail</label><textarea id="note-MAIL" placeholder="The e-mail address"></textarea></div>
+    </div>
+  </div>
+</section>
+</div>
+<div class="bar-pick">
+  <div class="in">
+    <div class="codes" id="codes">Nothing ticked yet</div>
+    <button id="copy" type="button">Copy my picks</button>
+    <textarea id="fallback" hidden readonly aria-label="Your picks"></textarea>
+  </div>
+</div>
+<script>
+(() => {
+  const KEY = "attune-mock-launch-store";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>

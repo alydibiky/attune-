@@ -28,8 +28,8 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 
 ## Week 2 (10–16 Nov): the closed test is running — fix what testers find
 - [ ] Testers' reports → fixed within a day; each fix gets a test so it can't come back.
-- [ ] Ask testers who speak French, Spanish, Hindi, Urdu, Indonesian, Turkish… to read their language for 10 minutes — the
-      only real check of meaning for the 18 other languages.
+- [ ] ~~Ask testers who speak French, Spanish, Hindi, Urdu…~~ Ali has none (20 Nov) → Claude reads every line of the 18 other languages
+      and translates it back (L7).
 - [ ] The 9 persona reviews (REVIEW_P1–P9) re-run on the release build; anything "broken" or "confusing" fixed.
 - [ ] Agents: hotels + products checked on the real sites from Egypt; Scout on Dubizzle / Hatla2ee.
 
@@ -49,6 +49,12 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 - First release scope: **leave the 3 out** — already so in the `play` flavor (no overlay permission, no keyboard; the page hides
   Video Downloader when `attune_play` is true). The APK Ali installs stays "full".
 - The app's name in Egyptian Arabic: **"Attune"** everywhere (52 places changed); only the spoken wake word stays «يا أتيون».
+
+## Ali's answers (20 Nov)
+- "Do first 6": store listing, crash log + Send a report, every Arabic screen, every page < 1 s, packs on first use, battery.
+- **No testers for the other languages** ("I won't be able to reach any testers for the other languages") → the meaning check of the
+  18 other languages is done by Claude: every line read in its language and translated back to English, wrong meanings fixed and kept
+  as a test (task L7).
 
 ## Decisions only Ali can make (asked 2 Nov)
 1. Is the Play developer account made, personal or organisation? Has the closed test started?
