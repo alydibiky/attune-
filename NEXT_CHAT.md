@@ -26,6 +26,7 @@
 > (__attuneApplyActions batches: stores once, writes once, rids per action); "Attune noticed" recomputed on every Home (insightsCached).
 > **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/Cj1UCB4s6GnQYvqwCba9eY (docs/mockups/motion-writing-fold.html):
 > AN1–AN3 motion (live demos; rec. AN1), WR1–WR3 the Writing page with every old tool (rec. WR1), FO1–FO3 an unfolded foldable (rec. FO1).
+> **Ali picked AN2, WR2 + WR3 (+ "choose the model or AI"), FO1** → combined https://claude.ai/artifact/FzSAVxTqNgwcueg12pZhaf — waiting for his OK.
 
 > ## START HERE (18 Nov 2026, later — v10.5: Ali OK'd the widgets — OK-A1 OK-W1 OK-W2 OK-W3 OK-W5 OK-W6 OK-W7 OK-S — BUILT)
 > Pages: options https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq · combined https://claude.ai/artifact/NgiS5jCMUUxewxkSV5RbSg.

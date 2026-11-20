@@ -1,0 +1,178 @@
+<title>Attune Motion Writing Fold Combined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = a phone home screen with the widget + what it does + pick/note. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif;
+  /* the widgets: S1 = Attune's light card; the home screen = a dark wallpaper like Ali's */
+  --w-surf: #ffffff; --w-ink: #231c1e; --w-mut: #7a6f73; --w-ln: #ece5e7; --w-acc: #7a2a45; --w-soft: #f7e9ee; --w-ok: #1e7a43;
+  --wall1: #1c2029; --wall2: #4a4f5c;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 140px }
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 28px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 20px; font-weight: 900; margin: 0 0 4px; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 640px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.info ul { margin: 6px 0 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px } .pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+/* ---- the phone home screen + widgets ---- */
+.home { width: 250px; max-width: 100%; margin: 0 auto; border-radius: 26px; border: 6px solid #2b2426; overflow: hidden;
+  background: linear-gradient(160deg, var(--wall1), var(--wall2) 70%, #6b7080); padding: 10px 9px 14px; display: grid; gap: 9px; min-height: 360px; align-content: start; font-size: 11px; line-height: 1.35 }
+.sb { display: flex; justify-content: space-between; color: #e9ecf2; font-weight: 800; font-size: 10px; padding: 0 4px }
+.wg { background: var(--w-surf); color: var(--w-ink); border-radius: 18px; padding: 9px 10px; display: grid; gap: 5px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28) }
+.wg.glass { background: rgba(28, 31, 44, .72); color: #f2f3f7; border: 1px solid rgba(255, 255, 255, .14); --w-mut: #b7bccb; --w-ln: rgba(255, 255, 255, .12); --w-acc: #f0a8c0; --w-soft: rgba(240, 168, 192, .16); --w-ok: #7fdca4 }
+.wh { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 12px }
+.wh .sp { flex: 1 }
+.wh .n { color: var(--w-acc); font-size: 10.5px; font-weight: 900 }
+.ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--w-soft); color: var(--w-acc); font-weight: 900; font-size: 12px }
+.wr { display: flex; align-items: center; gap: 7px; min-height: 22px; border-top: 1px solid var(--w-ln); padding-top: 3px }
+.wr:first-of-type { border-top: 0 }
+.bx { width: 15px; height: 15px; border-radius: 4px; border: 2px solid var(--w-mut); flex: none; display: grid; place-items: center; font-size: 9px; font-weight: 900 }
+.bx.on { background: var(--w-acc); border-color: var(--w-acc); color: #fff }
+.wr.done span.t { color: var(--w-mut); text-decoration: line-through }
+.t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.mut { color: var(--w-mut) } .acc { color: var(--w-acc); font-weight: 900 } .ok { color: var(--w-ok); font-weight: 900 }
+.wb { display: inline-flex; align-items: center; gap: 3px; border-radius: 99px; padding: 2px 8px; font-weight: 900; font-size: 10px; background: var(--w-acc); color: #fff; white-space: nowrap }
+.wb.o { background: transparent; color: var(--w-acc); border: 1px solid var(--w-acc) }
+.btns { display: flex; gap: 5px; flex-wrap: wrap }
+.big { font-size: 20px; font-weight: 900; letter-spacing: -0.01em }
+.scroll { position: relative }
+.scroll::after { content: ""; position: absolute; inset-inline-end: -4px; top: 4px; width: 3px; height: 40%; border-radius: 3px; background: var(--w-ln) }
+.pop { background: var(--w-surf); color: var(--w-ink); border-radius: 18px; padding: 10px; display: grid; gap: 6px; box-shadow: 0 10px 28px rgba(0, 0, 0, .45); border: 2px solid var(--w-acc) }
+.inp { border: 1px solid var(--w-ln); border-radius: 10px; padding: 6px 8px; background: var(--w-soft); font-weight: 700 }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px } .keys i { font-style: normal; text-align: center; border-radius: 7px; background: var(--w-soft); padding: 3px 0; font-weight: 900 }
+.lbl { text-align: center; color: #e9ecf2; font-size: 9.5px; font-weight: 800; opacity: .85 }
+.dots { display: flex; justify-content: center; gap: 4px } .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--w-ln) } .dots i.on { background: var(--w-acc) }
+.dock { margin-top: auto; display: flex; justify-content: space-around; background: rgba(255, 255, 255, .14); border-radius: 18px; padding: 7px }
+.dock i { width: 26px; height: 26px; border-radius: 8px; background: rgba(255, 255, 255, .55); display: block }
+.g2w { display: grid; grid-template-columns: 1fr 1fr; gap: 7px }
+.mini { background: var(--w-surf); color: var(--w-ink); border-radius: 16px; padding: 8px; display: grid; gap: 3px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28) }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1000px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+
+.ph { width: 250px; max-width: 100%; margin: 0 auto; border-radius: 26px; border: 6px solid #2b2426; overflow: hidden; background: #f4f2f1; color: #231c1e; font-size: 11.5px; line-height: 1.35; display: grid; gap: 8px; padding: 10px; align-content: start; min-height: 360px; position: relative }
+.ph.wide { width: 100%; max-width: 520px; min-height: 300px }
+.c { background: #fff; border: 1px solid #ece5e7; border-radius: 14px; padding: 9px 10px; display: grid; gap: 6px; min-width: 0 }
+.c h4 { margin: 0; font-size: 12px; font-weight: 900 } .m { color: #7a6f73 } .a { color: #7a2a45; font-weight: 900 }
+.chips { display: flex; gap: 5px; flex-wrap: wrap } .chip { border: 1px solid #ece5e7; border-radius: 99px; padding: 2px 9px; font-weight: 800; font-size: 10.5px; background: #fff }
+.chip.on { background: #f7e9ee; color: #7a2a45; border-color: #7a2a45 } .pb { background: #7a2a45; color: #fff; border-radius: 99px; padding: 4px 11px; font-weight: 900; font-size: 10.5px; display: inline-block }
+.ta { border: 1px solid #ece5e7; border-radius: 10px; padding: 7px; background: #f7f4f3; min-height: 44px }
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 6px } .tabs { display: flex; gap: 10px; border-bottom: 1px solid #ece5e7; padding-bottom: 5px; font-weight: 800 } .tabs .on { color: #7a2a45; border-bottom: 2px solid #7a2a45 }
+.slider { height: 5px; border-radius: 5px; background: linear-gradient(90deg, #7a2a45 50%, #ece5e7 50%) }
+.row { display: flex; align-items: center; gap: 8px; padding: 6px 2px; border-top: 1px solid #ece5e7; overflow: hidden }
+.row:first-of-type { border-top: 0 } .bx { width: 17px; height: 17px; border-radius: 5px; border: 2px solid #b8a9ae; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 900; cursor: pointer; flex: none }
+.demo button.re { font: inherit; font-size: 11px; border: 1px solid #7a2a45; color: #7a2a45; background: #fff; border-radius: 99px; padding: 3px 10px; font-weight: 800; cursor: pointer }
+/* AN1 calm */ .an1 .row.done .bx { background: #7a2a45; border-color: #7a2a45; transition: background .2s } .an1 .row.done span.t { text-decoration: line-through; color: #8a7d81; transition: color .2s }
+.an1 .row.gone { animation: an1out .42s ease .35s forwards } @keyframes an1out { to { opacity: 0; transform: translateY(-6px); max-height: 0; padding-block: 0; border-width: 0 } }
+.an1 .row { max-height: 40px }
+/* AN2 lively */ .an2 .row.done .bx { background: #7a2a45; border-color: #7a2a45; animation: pop .35s cubic-bezier(.2, 1.6, .4, 1) } @keyframes pop { 0% { transform: scale(.4) } 100% { transform: scale(1) } }
+.an2 .row.gone { animation: an2out .5s cubic-bezier(.5, 0, .75, 0) .45s forwards } @keyframes an2out { to { opacity: 0; transform: translateX(110%); max-height: 0; padding-block: 0; border-width: 0 } }
+.an2 .row { max-height: 40px; position: relative } .spark { position: absolute; left: 8px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: #e39ab3; animation: spark .6s ease-out forwards } @keyframes spark { to { transform: translate(var(--x), var(--y)) scale(.2); opacity: 0 } }
+/* AN3 minimal */ .an3 .row.gone { animation: an3out .18s linear .15s forwards } @keyframes an3out { to { opacity: 0; max-height: 0; padding-block: 0; border-width: 0 } } .an3 .row { max-height: 40px } .an3 .row.done .bx { background: #7a2a45; border-color: #7a2a45 }
+.pg { transition: none } .pageA, .pageB { position: absolute; inset: 44px 10px 10px; display: grid; gap: 7px; align-content: start }
+@media (prefers-reduced-motion: reduce) { .demo * { animation-duration: .01s !important; transition-duration: .01s !important } }
+.fold { display: grid; grid-template-columns: 120px 1fr; gap: 6px; min-height: 230px } .fold3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px } .side { background: #fff; border: 1px solid #ece5e7; border-radius: 12px; padding: 6px; display: grid; gap: 3px; align-content: start; font-weight: 800; font-size: 10.5px } .side span { padding: 3px 5px; border-radius: 6px } .side .on { background: #f7e9ee; color: #7a2a45 }
+</style>
+<div class="wrap">
+<header><h1>Your picks together</h1><p class="lede">You picked <b>AN2</b>, <b>WR2 + WR3</b> (with choosing the AI and the model) and <b>FO1</b>. Here is each as I will build it, with what I understood. Tick <b>OK</b> or write what to change, then <b>Copy my picks</b>.</p></header>
+<section>
+  <div class="opt" data-code="OK-AN">
+    <div class="ph demo an2"><div class="c"><h4 class="a">TO DO · 4 LEFT</h4><div class="list"><div class="row"><span class="bx" data-tick></span><span class="t">Hear the voice notes of the apps group</span></div><div class="row"><span class="bx" data-tick></span><span class="t">Try aldibiki website</span></div><div class="row"><span class="bx" data-tick></span><span class="t">Ask about maid in address east</span></div><div class="row"><span class="bx" data-tick></span><span class="t">Tell Osama: the desk, the LED, the cameras</span></div></div><div><button class="re" data-reset>Show them again</button></div></div><p class="m" style="margin:0">Tap a box ☐ — live.</p></div>
+    <div class="info">
+      <h3><span class="code">OK-AN</span>Lively motion (AN2)</h3>
+      <div class="und" style="background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="display:block;font-weight:900;margin-bottom:4px">What I understood</b><ul style="margin:0;padding-inline-start:18px;display:grid;gap:3px;font-size:14px"><li>A tick: the box pops, a few sparks, the line slides away and the rest close the gap (about 0.5 s). The same for Done, Paid and Taken everywhere: Home, Lists, Follow-ups, Money's waiting payments, Medicines.</li><li>Pages slide in sideways, like iPhone screens. Going back slides the other way, and the phone's back gesture too.</li><li>Buttons press in a little when tapped. Sheets and boxes slide up from the bottom. Cards on a page appear one after another.</li><li>A deleted or dismissed card slides out with Undo.</li><li>If the phone is set to "remove animations", Attune follows it. Motion never delays a tap, and the computer gets the same, a little calmer.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-AN">OK OK-AN</label><textarea id="note-OK-AN" placeholder="Anything to change in OK-AN?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-WR">
+    <div class="ph"><div class="c"><h4>Writing</h4><div class="tabs"><span class="on">Improve</span><span>Shorten</span><span>Humanize</span><span>Copilot</span><span>Recipes</span></div>
+<div class="m" style="font-weight:800">For <span class="chip on">Claude</span> <span class="chip">ChatGPT</span> <span class="chip">Gemini</span> +8</div>
+<div class="m" style="font-weight:800">Written by <span class="chip on">On this phone · Qwen 3 4B ▾</span></div>
+<div class="ta">Your text v1 · 412 words</div><span class="pb">Improve for Claude</span></div>
+<div class="c"><b class="a">v2 · Improved for Claude · 380 words</b><div class="ta">Role: … Task: … Output: …</div><div class="chips"><span class="pb">Copy</span><span class="chip">→ Shorten</span><span class="chip">→ Humanize</span></div></div>
+<div class="c"><b class="a">v3 · Shortened to 50% · 190 words</b><div class="chips"><span class="pb">Copy</span><span class="chip">↶ back to v2</span></div></div></div>
+    <div class="info">
+      <h3><span class="code">OK-WR</span>Writing: a tab per tool + versions (WR2 + WR3)</h3>
+      <div class="und" style="background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="display:block;font-weight:900;margin-bottom:4px">What I understood</b><ul style="margin:0;padding-inline-start:18px;display:grid;gap:3px;font-size:14px"><li>Five tabs, Improve · Shorten · Humanize · Copilot · Recipes, each with its old settings: Shorten's 10–90% slider, Trim (offline) or AI, and the chat-history box; Humanize's tone; Copilot to paste another AI's answer; Recipes = the Prompt lab.</li><li><b>For:</b> which AI the text is for (Claude, ChatGPT, Gemini, Grok, DeepSeek, Qwen, Mistral, Llama, Kimi, Copilot, Perplexity). Each gets its own advice, as before.</li><li><b>Written by:</b> which model does the writing — any model downloaded on your phone (or your computer), chosen from a list, or the online model when you allow it. <i>Is this what you meant by "choose the model or AI"?</i></li><li>Each run adds a version under the last (v2, v3…) with its tool and word count. Keep going from any version, go back, or copy one.</li><li>The same page on the computer, with the versions in a column beside the text.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-WR">OK OK-WR</label><textarea id="note-OK-WR" placeholder="Anything to change in OK-WR?"></textarea></div>
+    </div>
+  </div>
+  <div class="opt" data-code="OK-FO">
+    <div class="ph wide"><div class="fold" style="grid-template-columns:118px 1fr"><div class="side"><span>Home</span><span class="on">Projects</span><span>Money</span><span>Follow-ups</span><span>Lists</span><span>Agents</span><span>Health</span></div>
+<div class="fold3"><div class="c"><b>Projects</b><span class="chip on">Aldibiki website</span><span class="chip">Crane yard</span><span class="chip">Wedding</span></div><div class="c"><h4>Aldibiki website</h4><span class="m">3 tasks · due 30 Nov</span><div class="ta">Try the new home page…</div><span class="pb">+ Task</span></div></div></div>
+<p class="m" style="margin:6px 0 0;text-align:center">Unfolded (about 670–840 px): menu · list · details. Folded: the phone layout, on the same page.</p></div>
+    <div class="info">
+      <h3><span class="code">OK-FO</span>An unfolded foldable like the computer (FO1)</h3>
+      <div class="und" style="background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="display:block;font-weight:900;margin-bottom:4px">What I understood</b><ul style="margin:0;padding-inline-start:18px;display:grid;gap:3px;font-size:14px"><li>Open the phone: Attune switches to the computer layout, with the menu on the side, the list in the middle and the open item on the right. Close it: back to the phone layout, on the same page and item.</li><li>Built for 670–900 px wide screens: nothing cut, no word broken, nothing scrolling sideways. Checked by the width test at 673, 768 and 884 px on every page, and on the cover screen (344 px).</li><li>Where a page is too narrow for three parts, the menu folds to icons, so the list and details keep their room.</li><li>Your bar: clear, good-looking, nothing cut, better than other apps. Before I say it's done, I'll send you a picture of each main page at the open size.</li></ul></div>
+      <div class="pick"><label><input type="checkbox" id="pick-OK-FO">OK OK-FO</label><textarea id="note-OK-FO" placeholder="Anything to change in OK-FO?"></textarea></div>
+    </div>
+  </div>
+</section>
+</div>
+<div class="bar-pick">
+  <div class="in">
+    <div class="codes" id="codes">Nothing ticked yet</div>
+    <button id="copy" type="button">Copy my picks</button>
+    <textarea id="fallback" hidden readonly aria-label="Your picks"></textarea>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = "attune-mock-mwf-combined";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>
+<script>
+(() => { for (const demo of document.querySelectorAll(".demo")) {
+  const list = demo.querySelector(".list"), html = list.innerHTML, lively = demo.classList.contains("an2");
+  const wire = () => list.querySelectorAll("[data-tick]").forEach((b) => b.addEventListener("click", () => { const row = b.closest(".row"); if (row.classList.contains("done")) return; row.classList.add("done"); b.textContent = "✓";
+    if (lively) for (let i = 0; i < 6; i++) { const s = document.createElement("i"); s.className = "spark"; s.style.setProperty("--x", (Math.cos(i) * 22) + "px"); s.style.setProperty("--y", (Math.sin(i) * 16) + "px"); row.appendChild(s); }
+    row.classList.add("gone"); const h = demo.querySelector("h4"); setTimeout(() => { const n = list.querySelectorAll(".row:not(.gone)").length; h.textContent = "TO DO · " + n + " LEFT"; }, 500); }));
+  wire(); demo.querySelector("[data-reset]").addEventListener("click", () => { list.innerHTML = html; demo.querySelector("h4").textContent = "TO DO · 4 LEFT"; wire(); }); } })();
+</script>
