@@ -6,7 +6,7 @@
 import { TripBookings, FlightDayCard, TripMoney, TripPapers } from "./trip-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { Plane, Languages, RefreshCw, Loader2, Copy, Volume2, AlertTriangle, Maximize2, X, Search, Camera, ShieldCheck, Bell, MapPin, Check } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as T from "./travel.js";
 import * as K from "./ui-kit.jsx";
 import { SplitView } from "./split-ui.jsx";
@@ -32,6 +32,8 @@ function Section({ title, right, children, testid }) {
     {title ? <div className="flex items-center justify-between gap-2"><p className={K.label + " m-0"}>{tr(title)}</p>{right || null}</div> : null}
     {children}</section>);
 }
+// v10.8: "September 2026" (how the entry rules record when they were checked) in the app's language
+const asOfShown = (t) => { try { const d = new Date("1 " + t); return isNaN(d) ? t : d.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" }); } catch (e) { return t; } };
 const List = ({ items, dir, warn }) => (
   <ul className="space-y-1.5 m-0 p-0 list-none" dir={dir}>{items.map((x, i) => <li key={i} className={"text-[13.5px] leading-snug ps-3 border-s-2 " + (warn ? "c-warn" : "")} style={{ borderColor: warn ? "var(--c-warn)" : "var(--c-ln)" }}>{tr(x)}</li>)}</ul>);
 
@@ -209,13 +211,13 @@ export function TravelPage(p) {
               <button onClick={() => { try { navigator.clipboard.writeText(tripChecklist(entry, nationality)); } catch (e) {} flash(tr("Checklist copied")); }} className="c-sub underline bg-transparent border-0 p-0 cursor-pointer"><Copy size={11} className="inline me-1" />{tr("Copy the checklist")}</button>
               <button onClick={() => { remember({ kind: "note", title: "Trip to " + entry.to, text: tripChecklist(entry, nationality), output: "", tags: ["trip", activePack] }); flash(tr("Saved to Memory — searchable offline")); }} className="c-sub underline bg-transparent border-0 p-0 cursor-pointer">{tr("Keep it in Memory")}</button>
             </div>
-            <p className="c-warn text-[12px] m-0">{tr("Checked")} {entry.asOf}{tr(". Entry rules change with no notice and the cost of being wrong is a denied boarding — confirm with the embassy or the official portal before you book.")}</p>
+            <p className="c-warn text-[12px] m-0">{tr("Checked")} {asOfShown(entry.asOf)}{tr(". Entry rules change with no notice and the cost of being wrong is a denied boarding — confirm with the embassy or the official portal before you book.")}</p>
           </Section>) : null}
 
           {!wide ? book : null}
           {owedCard}
           <Section title="Apps you'll need" right={<span className="c-sub">{tr("install before you fly")}</span>}>
-            <ul className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("apps").map((a, i) => { const m = a.match(/^(.*?)\s+[—–-]\s+(.*)$/); return <li key={i} className="text-[13.5px]">{tr(m ? m[1] : a)}{m ? <span className="c-sub"> — {tr(m[2])}</span> : null}</li>; })}</ul>
+            <ul className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("apps").map((a, i) => { const whole = tr(a); const m = whole === a ? a.match(/^(.*?)\s+[—–-]\s+(.*)$/) : null; if (whole !== a) return <li key={i} className="text-[13.5px]">{whole}</li>; return <li key={i} className="text-[13.5px]">{tr(m ? m[1] : a)}{m ? <span className="c-sub"> — {tr(m[2])}</span> : null}</li>; })}</ul>
             <p className="c-sub m-0">{tr("Some of these can't be installed or signed up for once you're in the country — do it while you still have your home connection.")}</p>
           </Section>
           </div>
@@ -265,7 +267,7 @@ export function TravelPage(p) {
           <div className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-wrap">{PHRASE_TAGS.map(([k, l]) => <button key={k} className={K.chip(phraseTag === k)} aria-selected={phraseTag === k} onClick={() => setPhraseTag(k)}>{tr(l)}</button>)}</div>
           </div><div className="space-y-3 min-w-0">
           <div className="c-list" data-testid="travel-phrases">
-            {pack.phrases.map((ph, i) => ({ ...ph, mine: (packView && packView.gloss && packView.gloss[i]) || ph.en }))
+            {pack.phrases.map((ph, i) => ({ ...ph, mine: (packView && packView.gloss && packView.gloss[i]) || tr(ph.en) }))   // v10.8: the meaning in the app's language (built in, no model needed)
               .filter((ph) => phraseTag === "all" || ph.tag === phraseTag)
               .filter((ph) => !phraseFilter.trim() || (ph.en + ph.mine + ph.loc).toLowerCase().includes(phraseFilter.toLowerCase()))
               .map((ph) => (

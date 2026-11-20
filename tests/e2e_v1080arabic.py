@@ -11,7 +11,7 @@ env = Env(); errors = []
 OK = set("""Attune Google WhatsApp Gmail CIB EGP USD PDF Word Excel AI Life360 Talabat YouTube Instagram Facebook Chrome Android iPhone Wi-Fi
 OK GPS SMS API Play Store App Pro Free Claude ChatGPT Gemini Grok DeepSeek Qwen Mistral Kimi Copilot Perplexity Microsoft Chat Le Llama Gemma
 Phi PNG JPG MB GB KB Bluetooth Instapay InstaPay Fawry Vodafone Cash Uber Careem Amazon Noon Jumia Booking Airbnb Shein Netflix Spotify
-PowerPoint Zoom Teams Outlook Telegram Signal Huawei Samsung Xiaomi Honor Galaxy Fold Health Connect Fitbit Garmin Strava Yazio Scout
+PowerPoint Zoom Teams BiTaksi Getir İstanbulkart Outlook Telegram Signal Huawei Samsung Xiaomi Honor Galaxy Fold Health Connect Fitbit Garmin Strava Yazio Scout
 Mind Hijri QR VAT ID AM PM km kg cm min Alt CSV Takeout Mail Export mbox Zenith Everest Core Sense Blaze Flash Usd Cib Opening balance
 Bread Eggs Milk Tomatoes Salsa Foul Lettuce Cucumber CARREFOUR MAADI CAI""".split())
 src = open(os.path.join(os.path.dirname(__file__), "..", "web-src", "attune.jsx"), encoding="utf-8").read()
@@ -33,9 +33,9 @@ with sync_playwright() as p:
               for (const e of document.querySelectorAll('#root [placeholder],#root [aria-label]')) for (const a of ['placeholder','aria-label']) { const v = e.getAttribute(a); if (v) out.push(v); }
               return out; }""")
             for s in txt:
-                words = [x for x in re.findall(r"[A-Za-z][A-Za-z'’\-]{2,}", s) if x not in OK and x.capitalize() not in OK and x.upper() not in OK]
+                words = [x for x in re.findall(r"[A-Za-zÀ-ÿİıŞşĞğ][A-Za-zÀ-ÿİıŞşĞğ'’\-]{2,}", s) if x not in OK and x.capitalize() not in OK and x.upper() not in OK]
                 if not words or re.search(r"https?://|@|\.com", s): continue
-                if s in packs or s.strip("“”\"") in packs or re.sub(r"\s+\d{4}$", "", s) in packs or any(s in v for v in [packs]): known.add(s[:80]); continue
+                # v10.8: the travel guides are in Egyptian Arabic now too — only a country's own place / app names stay as written
                 bad.setdefault(m, set()).add(s[:90])
             page.keyboard.press("Escape")
         ctx.close()
