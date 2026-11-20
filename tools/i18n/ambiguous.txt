@@ -1005,13 +1005,13 @@ spaces-ui.jsx: <button onClick={download} className="min-w-[56px] min-h-[52px] f
 
 ## Not now
 chatpilot-ui.jsx: <button onClick={() => { CR.saveRole(a.key, { role: "", ok: false }); done(); }} className="min-h-[40px] px-3 rounded-[10px] border border-[
+crash-ui.jsx: <button onClick={() => done(false)} className="min-h-[44px] px-4 rounded-full font-extrabold text-[13.5px] border border-[var(--c-ln)] c-sub
 home-ui.jsx: <button onClick={() => done("typed", true)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-typed-later">{tr("Not now")}</button></
 home-ui.jsx: <button onClick={() => done("week", !pro)} className="h-10 px-3 c-sub text-[13px]" data-testid="pro-week-close">{pro ? tr("OK") : tr("Not no
 home-ui.jsx: {note.kind === "ended" ? <button onClick={close} className="h-10 px-3 c-sub text-[13px]" data-testid="home-trial-close">{tr("Not now")}</but
 messages-ui.jsx: askTitle: T("Send to {who} now?", { who: a.who }), sendLabel: tr("Send"), skipLabel: tr("Not now") } }));
 messages-ui.jsx: <button onClick={() => setExplain(false)} className={U.btnS}>{tr("Not now")}</button></div>
 mind-ui.jsx: <button onClick={() => setHidePast(true)} className="min-h-[40px] text-[12.5px] font-bold px-3 rounded-[12px] text-[var(--c-mut)]">{tr("Not 
-notelabels-ui.jsx: <button onClick={notNow} className={CHIP + " c-sub inline-flex items-center gap-1"} data-testid="note-ask-skip"><X size={13} />{tr("Not now"
 
 ## Why
 chatpilot-ui.jsx: <p className="m-0" dir="auto"><b>{tr("Why")}</b> {T(d.why)}</p></div>
