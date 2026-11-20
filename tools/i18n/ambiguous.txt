@@ -432,7 +432,7 @@ spaces-ui.jsx: {b.dates.length ? <div data-testid="project-brain-dates"><p class
 ## Checked
 agents-ui.jsx: o.verified ? [tr("Checked"), ago(o.verified.at)] : (a.checks || []).length ? [tr("Checked"), ago(a.checks[a.checks.length - 1].at)] : null].
 agents-ui.jsx: o.verified ? [tr("Checked"), ago(o.verified.at)] : (a.checks || []).length ? [tr("Checked"), ago(a.checks[a.checks.length - 1].at)] : null].
-travel-ui.jsx: <p className="c-warn text-[12px] m-0">{tr("Checked")} {entry.asOf}{tr(". Entry rules change with no notice and the cost of being wrong is a 
+travel-ui.jsx: <p className="c-warn text-[12px] m-0">{tr("Checked")} {asOfShown(entry.asOf)}{tr(". Entry rules change with no notice and the cost of being 
 
 ## Jobs
 aijobs-ui.jsx: <p className={label + " m-0"}>{tr("Jobs")} · {s.jobs.length}</p>
