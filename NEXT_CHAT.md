@@ -94,8 +94,22 @@
 > was not read (paytext.js normalises RS/RP) → 100 %; held-out (heldout.mjs) 100 %. e2e: tests/e2e_v1040fixes.py (phone + computer).
 > **Full run 18 Nov:** every unit test passes; 4 browser tests fail — e2e_v770chat, e2e_v830, e2e_v922agents, e2e_v922projects (time-outs
 > on project-item / the hotel offer) — and they fail the SAME way on ba5c8c4 (before v10.4, checked in a worktree): older, not from this
-> change. To look at next session. (tests/setup.sh: the llama.cpp UI download fails behind the proxy — build with
+> change. (tests/setup.sh: the llama.cpp UI download fails behind the proxy — build with
 > -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_BUILD_HTML=OFF and delete build-dl/tools/ui/dist.)
+> **FIXED (18 Nov, later) — all 4 now pass.** They described behaviour Ali changed on purpose in v10.2 (his "OK-D1 OK-L1"):
+> - **D1** (e2e_v922projects, e2e_v770chat): on a computer Projects is a list + details (`projects-split-row`), no `project-item` card.
+>   Tests now read the split row on a computer. **One real app fix found:** the computer's list row had dropped the phone card's line —
+>   a project with no tasks showed an empty line. spaces-ui.jsx projectLine(): the same words on both devices ("n chats · k files ·
+>   updated d" or the due date · "n tasks left" · "n due"); no new strings (all already in the 20 languages).
+> - **L1** (e2e_v922agents, e2e_v830): a tap on an offer opens ITS page in Attune first (OfferPage), "Open this listing" goes on; after
+>   each round the best 3 are checked one by one (check mode). Tests now go card → offer page → Open this listing (same check: Hilton,
+>   by name, with the dates) → Back. e2e_v830's fake phone now answers check mode like AgentBrowser.kt (one hotel page, never a list),
+>   and the test checks more than before: 6 days in ONE search window AND then 3 checks; Hilton + Al Safwah kept as checked, Swissotel
+>   (no page) not; Book on a checked offer opens its checked page with the dates straight away (no second check). The old v9.1 check
+>   "Booking app via appsList/openAnyApp" was for APKs older than openInApp (every current build has it, so the page never takes that
+>   path); replaced by v9.5's "the phone's own browser first", then "Android's app for the link" (still checked).
+>   Full run after the fix: every unit test and 239 of 240 browser tests pass; e2e_v996mentions timed out once on note-promise-go in
+>   the full run and passes alone (a timing flake in the cloud, like e2e_v5).
 > **(1) Widgets** ("widgets for most things, smart, interactive — do things without opening the app"): MOCKUPS rule → options page
 > https://claude.ai/artifact/D2n3P5cw4CQZmCMFspYPbq (docs/mockups/widgets.html): A1/A2 the list widget (his Talabat one: today 4 rows,
 > no scroll, no untick), W1 Your day · W2 Money (+ the bank SMS Add ✓) · W3 Tell Attune box · W4 People & money · W5 Agents · W6 small

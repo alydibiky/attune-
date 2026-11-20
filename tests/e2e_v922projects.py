@@ -40,7 +40,8 @@ with sync_playwright() as p:
         page.fill("[data-testid=home-ask]", "add buy tiles to Flat renovation"); (page.click("[data-testid=home-send]") if page.locator("[data-testid=home-send]").count() else page.keyboard.press("Enter"))   # v9.8: on a phone Enter is a new line; page.wait_for_timeout(700)
         check("Flat renovation" in page.inner_text("body") and any(t["text"] == "buy tiles" for t in projects(page)[0]["tasks"]), tag + "“add buy tiles to Flat renovation” in the box → a card on its board")
         go(page, "projects")
-        it = page.inner_text("[data-testid=project-item]")
+        # v10.2 D1 (Ali's "OK-D1"): on a computer the projects are a list on the left (projects-split-row), the open project on the right
+        it = page.locator("[data-testid=project-item], [data-testid=projects-split-row]").first.inner_text()
         check("tasks left" in it, tag + "the list shows how many tasks are left: " + it.replace("\n", " · ")[:100])
         ctx.close()
     errs = real_errors(errors)

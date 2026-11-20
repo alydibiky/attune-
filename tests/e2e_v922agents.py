@@ -57,9 +57,15 @@ with sync_playwright() as p:
     hotel.locator("[data-testid=agent-rule-chip]", has_text="walk").click(); page.wait_for_timeout(300)
     check("maxWalk" not in agents(page)["h1"]["rules"] and page.locator("[data-testid=agent-more]").count() == 1, "× on a chip removes that rule only — Swissôtel is back")
     # v9.2 round 3 (Ali: "when it opens Booking it doesn't open the specific listing"): the card's button opens the best offer itself
-    page.click("[data-testid=agent-watch] [data-testid=agent-open]"); page.wait_for_timeout(200)
+    # v10.2 L1 (Ali's "OK-L1": "it should still redirect me to the right listing"): the tap opens THAT offer's page in Attune first,
+    # then "Open this listing" goes on to the hotel itself
+    page.click("[data-testid=agent-watch] [data-testid=agent-open]"); page.wait_for_selector("[data-testid=offer-page]", timeout=5000)
+    check("Hilton" in page.inner_text("[data-testid=offer-name]"), "“Open the best offer” → that offer's own page in Attune (L1): " + page.inner_text("[data-testid=offer-name]")[:80])
+    page.click("[data-testid=offer-open]"); page.wait_for_timeout(300)
     op = page.evaluate("window.__opened") or ""
-    check("ss=Hilton" in op and "booking.com" in op, "“Open the best offer” opens THAT hotel (searched by its own name, with the dates), not the whole list: " + op[:120])
+    check("ss=Hilton" in op and "booking.com" in op, "…“Open this listing” opens THAT hotel (searched by its own name, with the dates), not the whole list: " + op[:120])
+    page.click("[data-testid=offer-back]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=offer-page]").count() == 0, "…Back returns to the agents")
     check(page.locator("[data-testid=agent-watch] [data-testid=agent-actions] button").count() == 2, "one row: Check now + Open the best offer (the site search lives in ⋯)")
     # ⋯ menu: pause
     hotel.locator("[data-testid=agent-menu]").click(); hotel.locator("[data-testid=agent-toggle]").click(); page.wait_for_timeout(300)

@@ -202,13 +202,18 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
   // v10.2 D1 (Ali OK'd "OK-D1"): on a computer the projects are a list on the left and the open project on the right
   const wideD1 = useWide();
   const split = (view) => <SplitView testid="projects-split" listLabel={tr("Projects")} find findHint="Find a project"
-    items={list.map((p) => { const tp = taskProgress(p); return { key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: [p.due ? tr("Due") + " " + (() => { try { return new Date(p.due + "T12:00:00").toLocaleDateString(dateLocale() || undefined, { day: "numeric", month: "short" }); } catch (e) { return p.due; } })() : "", tp && tp.of ? tr("{a} of {b} done", { a: tp.done, b: tp.of }) : "", dueRepeats(p).length ? tr("{n} due", { n: dueRepeats(p).length }) : ""].filter(Boolean).join(" · ") }; })}
+    items={list.map((p) => ({ key: p.id, icon: p.emoji || "📁", title: p.name || tr("Untitled"), sub: projectLine(p) }))}
     sel={openId} onSel={(k) => { setOpenId(k); setSub(null); }}
     head={<button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [], due: "" })} className="w-full min-h-[40px] rounded-[12px] border border-dashed border-[var(--c-ln)] text-[13px] font-extrabold text-[var(--c-acc)] hover:border-[var(--c-acc)]" data-testid="projects-split-new">+ {tr("New project")}</button>}
     detail={view} />;
   const [chatsSaved, setChatsSaved] = useState(0);   // v9.2 round 3: Chat saves just after this page opened → read the chats again
   useEffect(() => { const f = () => setChatsSaved((n) => n + 1); window.addEventListener("attune-chats-saved", f); return () => window.removeEventListener("attune-chats-saved", f); }, []);
   const allChats = useMemo(() => loadChats(), [list, openId, chatsSaved]);
+  // one line for a project, the same words on the phone card and in the computer's list (v10.4 fix: the split list had dropped
+  // "n chats · k files · updated" and "n tasks left")
+  const projectLine = (p) => { const cs = allChats.filter((c) => c.projectId === p.id), last = Math.max(p.updated || 0, ...cs.map((c) => c.updated || 0)), nd = dueRepeats(p).length, tp = taskProgress(p);
+    return [p.due ? dueText(p.due) : tr("{n} chats · {k} files", { n: cs.length, k: (p.knowledge || []).length }) + (last > 0 ? " · " + tr("updated {d}", { d: shortDate(last) }) : ""),
+      tp && tp.of ? tr("{n} tasks left", { n: tp.left }) : "", nd ? tr("{n} due", { n: nd }) : ""].filter(Boolean).join(" · "); };
   const chats = useMemo(() => (cur ? allChats.filter((c) => c.projectId === cur.id) : []), [allChats, cur && cur.id]);
   const assistants = useMemo(() => loadAssistants(), [openId, sub]);
   const save = (p, msg) => { const r = upsertProject(p); if (!r) { flash && flash(tr(msg || "Storage is full — remove some files first")); return null; } reload(); return r; };
