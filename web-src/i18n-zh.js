@@ -1428,7 +1428,7 @@ export const ZH = {
   "I sell spare parts to workshops": "我向修理厂销售零配件",
   "Latest records": "最新记录",
   "Leave without saving the changes?": "不保存更改就离开？",
-  "Left": "左侧",
+  "Left": "剩余",
   "Links between tables": "表格之间的关联",
   "Make it green instead of blue": "把蓝色改成绿色",
   "Must be filled in": "必填",
@@ -13070,4 +13070,20 @@ export const ZH = {
   "Personal": "个人",
   "Study": "学习",
   "Technique": "技巧",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“艾哈迈德欠我 500”",
+  "{p} downloaded — works with no internet": "{p} 已下载——无网络也能用",
+  "{p} is ready": "{p} 已就绪",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "小模型，效果更轻",
+  "Models up to Core": "最高到 Core 的模型",
+  "Models up to Sense and Blaze+": "最高到 Sense 和 Blaze+ 的模型",
+  "Every phone model up to Zenith+, Everest in flash mode": "最高到 Zenith+ 的所有手机模型，闪速模式下的 Everest",
+  "Every model, the biggest included": "所有模型，包括最大的",
+  "Start date": "开始日期",
+  "Planned": "计划",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "家",
+  "work (the workplace)": "单位",
+  "school (the place)": "学校",
 };

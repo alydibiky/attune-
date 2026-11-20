@@ -1429,7 +1429,7 @@ export const UR = {
   "I sell spare parts to workshops": "میں ورکشاپس کو اسپیئر پارٹس بیچتا ہوں",
   "Latest records": "تازہ ترین ریکارڈ",
   "Leave without saving the changes?": "تبدیلیاں محفوظ کیے بغیر نکلیں؟",
-  "Left": "بائیں",
+  "Left": "باقی",
   "Links between tables": "ٹیبلز کے درمیان لنکس",
   "Make it green instead of blue": "اسے نیلے کے بجائے سبز کریں",
   "Must be filled in": "بھرنا لازمی ہے",
@@ -1539,7 +1539,7 @@ export const UR = {
   "Company": "کمپنی",
   "Start (2021-03)": "آغاز (2021-03)",
   "End": "اختتام",
-  "Start": "آغاز",
+  "Start": "شروع کریں",
   "I still work here": "میں ابھی یہیں کام کرتا ہوں",
   "Degree / course": "ڈگری / کورس",
   "School": "تعلیمی ادارہ",
@@ -13071,4 +13071,20 @@ export const UR = {
   "Personal": "ذاتی",
   "Study": "پڑھائی",
   "Technique": "تکنیک",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“احمد پر میرے 500 باقی ہیں”",
+  "{p} downloaded — works with no internet": "{p} ڈاؤن لوڈ ہو گیا — انٹرنیٹ کے بغیر چلتا ہے",
+  "{p} is ready": "{p} تیار ہے",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "چھوٹے ماڈل، ہلکے اثرات",
+  "Models up to Core": "Core تک کے ماڈل",
+  "Models up to Sense and Blaze+": "Sense اور Blaze+ تک کے ماڈل",
+  "Every phone model up to Zenith+, Everest in flash mode": "Zenith+ تک تمام فون ماڈل، فلیش موڈ میں Everest",
+  "Every model, the biggest included": "تمام ماڈل، سب سے بڑے بھی",
+  "Start date": "شروع ہونے کی تاریخ",
+  "Planned": "منصوبہ",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "گھر",
+  "work (the workplace)": "دفتر",
+  "school (the place)": "اسکول",
 };

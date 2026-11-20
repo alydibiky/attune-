@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { learnReport } from "./learning-report.js";   // v7.7 the Learning Report
 import { LearningReport, StreakPill, SeeAll } from "./learning-report-ui.jsx";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock, Layers, BookOpen, HelpCircle } from "lucide-react";
-import { getLang, tr } from "./i18n.js";
+import { getLang, tr, dateLocale } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
@@ -213,7 +213,7 @@ function Step({ icon: I, title, sub, done, onClick, testid, disabled }) {
     </button>);
 }
 const frame = (el, testid) => <div className={page + " rounded-[20px] p-4 md:p-6"} style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
-const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const fmtDay = (t) => new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" });
 const cardsWord = (n) => (n === 1 ? tr("1 card") : tr("{n} cards", { n }));
 
 export function LearnPage({ llm, modelReady, openEngine, flash, native, call, openId, clearOpen, illustrate, listen }) {

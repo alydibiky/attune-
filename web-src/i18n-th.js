@@ -1428,7 +1428,7 @@ export const TH = {
   "I sell spare parts to workshops": "ฉันขายอะไหล่ให้อู่ซ่อมรถ",
   "Latest records": "ระเบียนล่าสุด",
   "Leave without saving the changes?": "ออกโดยไม่บันทึกการเปลี่ยนแปลงไหม",
-  "Left": "ซ้าย",
+  "Left": "คงเหลือ",
   "Links between tables": "การเชื่อมโยงระหว่างตาราง",
   "Make it green instead of blue": "เปลี่ยนเป็นสีเขียวแทนสีน้ำเงิน",
   "Must be filled in": "ต้องกรอก",
@@ -13070,4 +13070,20 @@ export const TH = {
   "Personal": "ส่วนตัว",
   "Study": "เรียน",
   "Technique": "เทคนิค",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“อาห์เหม็ดติดเงินฉัน 500”",
+  "{p} downloaded — works with no internet": "ดาวน์โหลด {p} แล้ว — ใช้ได้โดยไม่ต้องมีเน็ต",
+  "{p} is ready": "{p} พร้อมแล้ว",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "โมเดลเล็ก เอฟเฟกต์เบาลง",
+  "Models up to Core": "โมเดลถึง Core",
+  "Models up to Sense and Blaze+": "โมเดลถึง Sense และ Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "ทุกโมเดลบนมือถือถึง Zenith+ และ Everest ในโหมดแฟลช",
+  "Every model, the biggest included": "ทุกโมเดล รวมถึงตัวใหญ่ที่สุด",
+  "Start date": "วันที่เริ่ม",
+  "Planned": "ที่วางแผน",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "บ้าน",
+  "work (the workplace)": "ที่ทำงาน",
+  "school (the place)": "โรงเรียน",
 };

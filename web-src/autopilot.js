@@ -198,10 +198,25 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
   }
   return out;
 }
+/** v10.8 (launch, no long freeze after opening): the same as suggestions(), but each notification is read in small pieces while the
+ *  phone is idle (≈ 30 ms each, newest first); the last step is suggestions() itself, which then only finds what is remembered. */
+export function suggestionsSoon(notes = [], o = {}) {
+  const now = o.now || Date.now(), s = o.s || emptyState(), since = now - Math.max(o.days || 3, 14) * DAY;
+  const list = [...notes].filter((n) => (n.ts || 0) >= since).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const later = typeof requestIdleCallback === "function" ? (f) => requestIdleCallback(f, { timeout: 500 }) : (f) => setTimeout(f, 0);
+  return new Promise((done) => { let i = 0;
+    const step = () => { const end = Date.now() + 30; while (i < list.length && Date.now() < end) { try { suggestCached(list[i], { now, recent: list, s }); } catch (e) {} i++; }
+      if (i < list.length) later(step); else done(suggestions(notes, { ...o, now })); };
+    later(step); });
+}
 /** "Delivered" notices → the delivery follow-ups that are now done (their reminder ids, to remove). */
 export function deliveredDone(notes = [], s = emptyState()) {
-  const now = Date.now(), apps = new Set(notes.map((n) => { const x = suggestCached(n, { s, now, recent: [] }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));   // (v10.6: each reading remembered)
-  return (s.done || []).filter((d) => d.kind === "followup" && apps.has(d.app) && !d.closed).map((d) => d.rid).filter(Boolean);
+  // v10.8 (launch, opening < 1 s): only when a delivery follow-up is open, and only the notifications since it started (2 days'
+  // margin) — it read every kept notification (3,000) on each Home
+  const open = (s.done || []).filter((d) => d.kind === "followup" && !d.closed && d.rid); if (!open.length) return [];
+  const from = Math.min(...open.map((d) => d.at || 0)) - 2 * DAY;
+  const now = Date.now(), apps = new Set(notes.filter((n) => (n.ts || 0) >= from).map((n) => { const x = suggestCached(n, { s, now, recent: [] }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));   // (v10.6: each reading remembered)
+  return open.filter((d) => apps.has(d.app)).map((d) => d.rid);
 }
 
 /** The kind of a suggestion as "auto" sees it: CIB expenses, Amazon deliveries… */

@@ -63,7 +63,8 @@ class WakeService : Service() {
         } catch (e: Exception) { stopSelf(); return START_NOT_STICKY }   // e.g. started from the background (Android does not allow the mic then)
         if (receiver == null) {
             receiver = object : BroadcastReceiver() { override fun onReceive(c: Context, i: Intent) { refresh() } }
-            val f = IntentFilter().apply { addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_POWER_CONNECTED); addAction(Intent.ACTION_POWER_DISCONNECTED) }
+            val f = IntentFilter().apply { addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_POWER_CONNECTED); addAction(Intent.ACTION_POWER_DISCONNECTED)
+                addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED); addAction(Intent.ACTION_BATTERY_LOW); addAction(Intent.ACTION_BATTERY_OKAY) }   // v10.8 (battery)
             try { registerReceiver(receiver, f) } catch (e: Exception) {}
         }
         refresh()
@@ -78,6 +79,7 @@ class WakeService : Service() {
         if (now < pausedUntil) return false
         if (heardAt > 0 && now - heardAt < 45_000) return false   // the voice screen has the mic; it gives it back (wakeResume) or after 45 s
         if (selfListening) return false
+        if (BatteryGuard.holdMic(this)) return false   // v10.8 (battery): Battery saver on, or the battery at 15 % or less and not charging
         return when (Prefs.wakeWhen(this)) {
             "screen" -> (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
             "charging" -> (getSystemService(BATTERY_SERVICE) as BatteryManager).isCharging
@@ -87,7 +89,7 @@ class WakeService : Service() {
 
     private fun refresh() {
         val want = wanted()
-        if (want && loop == null) start() else if (!want && loop != null) stopLoop()
+        if (want && loop == null) { BatteryGuard.log(this, "wake word: listening"); start() } else if (!want && loop != null) { BatteryGuard.log(this, "wake word: stopped"); stopLoop() }
         try { getSystemService(NotificationManager::class.java)?.notify(ID, note()) } catch (e: Exception) {}
         if (heardAt > 0) android.os.Handler(mainLooper).postDelayed({ if (running || loop == null) refresh() }, 46_000)
     }

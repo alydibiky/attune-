@@ -33,7 +33,7 @@ const PANES_N = "lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:gap
 const EVERY = { month: "a month", week: "a week", year: "a year" };
 
 // v7.2 tick labels: "Oct" for a monthly payment, "Sat 24" for a weekly one; amounts short ("1k")
-const tickDay = (d, weekly) => { try { const x = new Date(d + "T12:00:00"); return x.toLocaleDateString(undefined, weekly ? { weekday: "short", day: "numeric" } : { month: "short", year: x.getFullYear() !== new Date().getFullYear() ? "2-digit" : undefined }); } catch (e) { return d.slice(5); } };
+const tickDay = (d, weekly) => { try { const x = new Date(d + "T12:00:00"); return x.toLocaleDateString(dateLocale(), weekly ? { weekday: "short", day: "numeric" } : { month: "short", year: x.getFullYear() !== new Date().getFullYear() ? "2-digit" : undefined }); } catch (e) { return d.slice(5); } };
 const short = (n) => (n >= 1000 && n % 100 === 0 ? (n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k" : fmt(n));
 export function describe(c) {
   const per = c.every ? " " + tr(EVERY[c.every]) : "";
@@ -43,7 +43,7 @@ export function describe(c) {
       + (last > 0 && Math.abs(last - c.amount) >= 1 ? " · " + tr("the last one {l}", { l: fmt(last) }) : ""); }
   if (c.kind === "circle") return tr("{a} {cur}{per} · {n} months", { a: fmt(c.amount), cur: c.currency, per, n: c.count }) + (c.myTurn ? " · " + tr("your turn: {k}", { k: c.myTurn }) : "");
   if (c.kind === "debt") return fmt(c.amount) + " " + c.currency;
-  if (c.kind === "regular") return tr("{a} {cur} each time · {when}", { a: fmt(c.amount), cur: c.currency, when: c.every === "week" && c.start ? tr("every {d}", { d: new Date(c.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "long" }) }) : tr(EVERY[c.every] || "a week") }) + " · " + tr("tick the day — it goes into Money by itself");
+  if (c.kind === "regular") return tr("{a} {cur} each time · {when}", { a: fmt(c.amount), cur: c.currency, when: c.every === "week" && c.start ? tr("every {d}", { d: new Date(c.start + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "long" }) }) : tr(EVERY[c.every] || "a week") }) + " · " + tr("tick the day — it goes into Money by itself");
   return fmt(c.amount) + " " + c.currency + per;
 }
 export function heading(c) {

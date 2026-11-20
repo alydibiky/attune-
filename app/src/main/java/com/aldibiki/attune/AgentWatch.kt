@@ -352,7 +352,11 @@ class AgentWatchReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val done = goAsync()
         Thread {
-            try { AgentWatch.run(ctx.applicationContext) } catch (e: Exception) {} finally { done.finish() }
+            try { val c = ctx.applicationContext
+                // v10.8 (battery): a low battery that isn't charging → this round waits for the next one
+                if (BatteryGuard.low(c)) { BatteryGuard.log(c, "skipped: agents (battery low)"); AgentWatch.arm(c) }
+                else { BatteryGuard.log(c, "agents"); AgentWatch.run(c) }
+            } catch (e: Exception) {} finally { done.finish() }
         }.start()
     }
 }

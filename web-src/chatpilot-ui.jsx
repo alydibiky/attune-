@@ -8,7 +8,7 @@
 import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
 import { Check, Undo2, Zap, ShoppingCart, MessageCircle, BellRing, ListChecks } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as CP from "./chatpilot.js";
 import * as CR from "./chatroles.js";
 import * as L from "./lists.js";
@@ -19,7 +19,7 @@ const N = () => (typeof window !== "undefined" ? window.AttuneNative : null);
 const readNotes = () => { try { const n = N(); return n && n.recallNotes ? JSON.parse(recallRaw(n) || "[]") : []; } catch (e) { return []; } };
 const myNames = () => { try { const p = JSON.parse(localStorage.getItem("attune:profile") || "{}"); return [p.name, p.nick, p.nameAr].filter(Boolean).flatMap((x) => [String(x), String(x).split(" ")[0]]); } catch (e) { return []; } };
 const T = (o) => (o && o.t ? tr(o.t, o.v) : "");
-const hm = (t) => { try { return new Date(t).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+const hm = (t) => { try { return new Date(t).toLocaleString(dateLocale(), { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
 const tomorrow9 = () => { const d = new Date(Date.now() + 864e5); d.setHours(9, 0, 0, 0); return d.getTime(); };
 const open = (mode) => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode } })); } catch (e) {} };
 const flash = (m) => { try { window.dispatchEvent(new CustomEvent("attune-flash", { detail: m })); } catch (e) {} };
@@ -215,7 +215,7 @@ export function ChatPilotCard({ old = null }) {
         <button onClick={() => { const k = Object.keys(CR.loadRoles()).find((x) => x.endsWith(":" + c.toLowerCase())) || ""; put({ ...st, ask: [{ key: k || "whatsapp|g:" + c.toLowerCase(), chat: c, group: true, guess: { role: "" }, at: Date.now() }, ...st.ask] }); setQuietOpen(false); }}
           className="min-h-[36px] px-2.5 rounded-[10px] border border-[var(--c-ln)] text-[12px] font-bold shrink-0" data-testid="cp-mattered">{tr("This mattered")}</button></div>
         {quietChat === c ? <div className="rounded-[12px] bg-[var(--c-surf-2)] p-2 mt-1 space-y-1.5 max-h-[320px] overflow-y-auto" data-testid="cp-quiet-msgs">
-          {keptOf(c).map((m) => <div key={m.id} className="text-[12.5px]"><span className="block c-sub text-[11px]" dir="auto">{m.from.who ? m.from.who + " · " : ""}{new Date(m.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
+          {keptOf(c).map((m) => <div key={m.id} className="text-[12.5px]"><span className="block c-sub text-[11px]" dir="auto">{m.from.who ? m.from.who + " · " : ""}{new Date(m.at).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" })}</span>
             <span className="block whitespace-pre-wrap break-words" dir="auto">{m.from.text || "—"}</span></div>)}
           {keptOf(c).length < n ? <p className="m-0 text-[11.5px] c-sub">{tr("Only the last 200 kept messages are shown here — all of them are in Recall.")}</p> : null}
         </div> : null}</div>)}</div> : null}

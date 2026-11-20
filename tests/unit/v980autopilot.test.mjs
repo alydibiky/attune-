@@ -43,8 +43,12 @@ ok(s.done[0].key === "x:9", "a thing done by itself is listed with Undo"); s = A
 const s2 = AP.refuse(s0, by("followup")[0], { app: true });
 ok(AP.suggestions(notes, { now, s: s2 }).every((x) => x.kind !== "followup"), "'Not this' for Amazon deliveries → never again");
 // delivered closes the follow-up
-const s3 = AP.accept(s0, { ...by("followup")[0] }, { rid: "rem-77" });
+const s3 = AP.accept(s0, { ...by("followup")[0] }, { rid: "rem-77", now });   // (v10.8: accepted at the test's own time)
 ok(AP.deliveredDone([{ id: 20, pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered", ts: now }], s3).join() === "rem-77", "'Delivered' closes the delivery follow-up");
+// v10.8 (opening < 1 s): no open follow-up → nothing is read; a "Delivered" from long before the follow-up started never closes it
+ok(AP.deliveredDone([{ id: 20, pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered", ts: now }], s0).length === 0, "no open follow-up → nothing to close");
+ok(AP.deliveredDone([{ id: 21, pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered", ts: now - 9 * 24 * H }], s3).length === 0, "an old 'Delivered' (9 days before) doesn't close a new follow-up");
+ok(AP.deliveredDone([{ id: 22, pkg: "com.amazon.mShop.android.shopping", app: "Amazon Shopping", title: "Delivered", text: "Your package was delivered", ts: now - 20 * H }], s3).join() === "rem-77", "…one from the day before still does (2 days' margin)");
 ok(AP.actionsFor(ex)[0].kind === "money" && AP.actionsFor(by("callback")[0])[0].kind === "reminder" && AP.actionsFor(by("bill")[0])[0].c.kind === "bill", "each becomes what the Home box would save");
 ok(AP.weekCount(s, now) >= 3, "the week's count");
 console.log(`ALL PASSED v980autopilot (${n} checks)`);

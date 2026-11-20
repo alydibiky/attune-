@@ -1428,7 +1428,7 @@ export const BN = {
   "I sell spare parts to workshops": "আমি ওয়ার্কশপে স্পেয়ার পার্টস বিক্রি করি",
   "Latest records": "সর্বশেষ রেকর্ড",
   "Leave without saving the changes?": "পরিবর্তন সেভ না করে বের হবেন?",
-  "Left": "বাঁ",
+  "Left": "বাকি",
   "Links between tables": "টেবিলের মধ্যে লিংক",
   "Make it green instead of blue": "নীলের বদলে সবুজ করুন",
   "Must be filled in": "পূরণ করা বাধ্যতামূলক",
@@ -1538,7 +1538,7 @@ export const BN = {
   "Company": "কোম্পানি",
   "Start (2021-03)": "শুরু (2021-03)",
   "End": "শেষ",
-  "Start": "শুরু",
+  "Start": "শুরু করুন",
   "I still work here": "আমি এখনও এখানে কাজ করি",
   "Degree / course": "ডিগ্রি / কোর্স",
   "School": "শিক্ষাপ্রতিষ্ঠান",
@@ -13070,4 +13070,20 @@ export const BN = {
   "Personal": "ব্যক্তিগত",
   "Study": "পড়াশোনা",
   "Technique": "কৌশল",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“আহমেদ আমার কাছে ৫০০ ধারে”",
+  "{p} downloaded — works with no internet": "{p} ডাউনলোড হয়েছে — ইন্টারনেট ছাড়াই চলে",
+  "{p} is ready": "{p} তৈরি",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "ছোট মডেল, হালকা ইফেক্ট",
+  "Models up to Core": "Core পর্যন্ত মডেল",
+  "Models up to Sense and Blaze+": "Sense ও Blaze+ পর্যন্ত মডেল",
+  "Every phone model up to Zenith+, Everest in flash mode": "Zenith+ পর্যন্ত সব ফোন মডেল, ফ্ল্যাশ মোডে Everest",
+  "Every model, the biggest included": "সব মডেল, সবচেয়ে বড়গুলোও",
+  "Start date": "শুরুর তারিখ",
+  "Planned": "পরিকল্পিত",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "বাড়ি",
+  "work (the workplace)": "অফিস",
+  "school (the place)": "স্কুল",
 };

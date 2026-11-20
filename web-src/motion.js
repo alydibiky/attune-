@@ -5,6 +5,16 @@
      pageIn(el, dir, wide)         a page slides in from the side it came from (back = the other way); its cards then appear one by one
    Everything follows the phone's "remove animations" (prefers-reduced-motion): no motion, the save at once. The computer is calmer
    (shorter, smaller). CSS for buttons pressing in and sheets sliding up: build/tw.css (v10.7). */
+import { useEffect, useState } from "react";
+/** v10.8 (launch, opening < 1 s): true once the first screen is drawn and the phone has a quiet moment — heavy cards (Autopilot,
+ *  "Attune noticed") are worked out then, instead of holding up the first screen. */
+export function useAfterFirstPaint(maxWait = 700) {
+  const [go, setGo] = useState(false);
+  useEffect(() => { let id = 0; const done = () => setGo(true);
+    const raf = requestAnimationFrame(() => { id = typeof requestIdleCallback === "function" ? requestIdleCallback(done, { timeout: maxWait }) : setTimeout(done, 60); });
+    return () => { cancelAnimationFrame(raf); try { typeof cancelIdleCallback === "function" ? cancelIdleCallback(id) : clearTimeout(id); } catch (e) {} }; }, []);
+  return go;
+}
 export const calm = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
 const SPARK = ["var(--c-acc)", "#e39ab3", "#f2b84b", "var(--c-acc)", "#7fdca4", "#e39ab3"];
 

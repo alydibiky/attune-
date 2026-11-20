@@ -194,6 +194,24 @@ export function wordsFor(q, now = Date.now()) {
 /** v9.9 (Ali's screenshot: Maps' "50 m · At the roundabout, continue straight…" kept 20 times as "Payments"): a turn-by-turn step
  *  from a maps app is not kept (the phone no longer keeps new ones — PayListener.kt; this hides the ones kept before). */
 export const isNavNote = (x) => /maps|waze|navigation|here\.wego|citymapper/i.test(String((x && (x.pkg || "")) + " " + ((x && x.app) || ""))) && /^\s*[\d.,]+\s*(m|km|ft|mi|م|كم)\b|\b(roundabout|turn (left|right)|continue (straight|onto)|head (north|south|east|west)|keep (left|right)|exit|arrive)|دوران|لف (يمين|شمال)|اتجه|استمر/i.test(String((x && x.title) || "") + " " + String((x && x.text) || ""));
+const DOC_CACHE = new Map();
+function noteMeaning(n, day, minds) {
+  const ck = day + "|" + n.id + "|" + (n.ts || 0) + "|" + String(n.text || "").length + "|" + (minds[String(n.id)] ? 1 : 0);
+  let hit = DOC_CACHE.get(ck);
+  if (!hit) { let u = null; try { u = understandNote(n); } catch (e) {}
+    let mw = ""; try { mw = mindWords(minds[String(n.id)] || comprehend(n)); } catch (e) {}
+    hit = { u, mw }; if (DOC_CACHE.size > 12000) DOC_CACHE.clear(); DOC_CACHE.set(ck, hit); }
+  return hit;
+}
+/** v10.8: work out the kept notifications' meanings in small pieces while the app is idle (≈ 40 ms each), newest first,
+ *  so the Recall page opens at once. Stops by itself; calling it again only does what is new. */
+export function warmRecall(notes = [], { slice = 40 } = {}) {
+  const day = new Date().toDateString(), minds = storedMinds(), list = notes.filter((n) => n && !isNavNote(n)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  let i = 0; const later = typeof requestIdleCallback === "function" ? (f) => requestIdleCallback(f, { timeout: 2000 }) : (f) => setTimeout(f, 30);
+  const step = () => { const end = Date.now() + slice; while (i < list.length && Date.now() < end) { try { noteMeaning(list[i], day, minds); } catch (e) {} i++; }
+    if (i < list.length) later(step); };
+  later(step);
+}
 export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pays = [] } = {}) {
   const docs = [];
   for (const r of memory) {
@@ -202,8 +220,11 @@ export function recallDocs({ memory = [], notes = [], chats = [], pages = [], pa
   }
   // v9.8: a notification also carries what it MEANS (delivery, money out, missed call, a message from…) — found without its words
   const minds = storedMinds();
-  for (const n of notes) { if (isNavNote(n)) continue; let u = null; try { u = understandNote(n); } catch (e) {}
-    let mw = ""; try { mw = mindWords(minds[String(n.id)] || comprehend(n)); } catch (e) {}
+  const day = new Date().toDateString();
+  for (const n of notes) { if (isNavNote(n)) continue;
+    // v10.8 (launch, every page < 1 s): a notification's meaning is worked out once a day and remembered — the Recall page
+    // read all of them (3,000 on a full phone) each time it opened: 8.4 s at a mid-range phone's speed
+    let { u, mw } = noteMeaning(n, day, minds);
     if (mw) u = { ...(u || {}), words: ((u && u.words) || "") + " " + mw };
     docs.push({ id: "n:" + n.id, kind: "note", title: n.title || "", text: (n.text || "") + (u && u.words ? "\n" + u.words : ""), ts: n.ts || 0, app: n.app || "", pkg: n.pkg || "", raw: n.id, meaning: u ? u.kind : "", shown: n.text || "" }); }
   for (const c of chats) {

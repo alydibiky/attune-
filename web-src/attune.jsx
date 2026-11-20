@@ -111,7 +111,7 @@ import * as AL from "./applinks.js";
 import * as WT from "./webtask.js";
 import * as RELAY from "./relay.js";   // v9.9.8 M2
 import * as MEAN from "./meaning.js";
-import { recallDocs as RDOCS } from "./lookback.js";
+import { recallDocs as RDOCS, warmRecall } from "./lookback.js";
 import { loadBooking as loadBookingProfile } from "./agent-ui.jsx";
 import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
@@ -7883,7 +7883,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8098,6 +8098,9 @@ export default function App() {
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
   // v10.7 (OK-AN): pages slide in from the side they came from — forward from the right, back from the left (motion.js pageIn)
   const navDir = useRef("fwd"), pageRef = useRef(null), firstPage = useRef(true);
+  // v10.8 (launch, every page < 1 s): once the first screen is up and the app is idle, the kept notifications' meanings are
+  // worked out in small pieces, so the Recall page opens at once (it took 8.4 s on a full mid-range phone)
+  useEffect(() => { const t = setTimeout(() => { try { if (NATIVE && NATIVE.recallNotes) warmRecall(JSON.parse(recallRaw(NATIVE) || "[]")); } catch (e) {} }, 6000); return () => clearTimeout(t); }, []);
   useEffect(() => { if (firstPage.current) { firstPage.current = false; return; } const d = navDir.current; navDir.current = "fwd"; requestAnimationFrame(() => pageIn(pageRef.current, document.documentElement.dir === "rtl" ? (d === "back" ? "fwd" : "back") : d, wide)); }, [mode]);
   const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v10.4 (Ali's screenshot, 18 Nov: "Turn on backup" opened the old prompt page): Backup, Profile and Plan are panels over the page, not pages — any way in opens the panel */ { const pn = String(m || "").replace(/^panel:/, ""); if (PANEL_IDS.has(pn)) { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: pn })); } catch (e) {} return; } } /* v9.9.19 B4: screens that open over the page */ if (m === "braindump") { try { window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text: "" } })); } catch (e) {} return; } if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); navDir.current = "fwd"; modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
@@ -9367,9 +9370,9 @@ export default function App() {
             ...customActions.map((c) => [c.label, c.instruction, "out"])];
   }, [inKind, customActions]);
   const installPack = (k) => {
-    if (installedPacks.includes(k)) { setActivePack(k); return flash(CPACKS[k].name + " is ready"); }
+    if (installedPacks.includes(k)) { setActivePack(k); return flash(tr("{p} is ready", { p: countryShown(k, CPACKS[k].name) })); }
     setInstalledPacks((p) => [...p, k]); setActivePack(k);
-    flash(CPACKS[k].name + " downloaded — works with no internet");
+    flash(tr("{p} downloaded — works with no internet", { p: countryShown(k, CPACKS[k].name) }));
   };
   const packKeyI18n = activePack ? activePack + ":" + myLang : "";
   const packView = myLang === "en" ? null : (packI18n[packKeyI18n] || null);

@@ -239,7 +239,6 @@ email-ui.jsx: {canSend ? <button onClick={send} disabled={busy || !body.trim()} 
 ## Start
 agents-ui.jsx: <div className="flex gap-2"><button onClick={() => start(planDraft.sentence, { ...planDraft.d, planOk: true })} className={U.btnP} data-test
 attune.jsx: <div className="flex gap-2"><button onClick={start} className="flex-1 min-h-[46px] rounded-[14px] bg-[var(--c-btn,var(--c-acc))] text-[var(-
-cv-ui.jsx: <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><
 focus-ui.jsx: <button className={btnP + " w-full"} disabled={!pick.task.trim()} onClick={() => { const t = pick.task.trim(), pl = pick.plan; setPick(null)
 setup-ui.jsx: <div className="flex gap-2">{p.next ? <button onClick={() => startSetup()} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" s
 
@@ -684,6 +683,7 @@ chat.jsx: <button onClick={voice} className={`w-11 h-11 rounded-full flex items-
 home-ui.jsx: {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " 
 home-ui.jsx: {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " 
 lifeask-ui.jsx: {voice ? <button type="button" onClick={voice} className={btnS + " min-w-[48px] h-12 min-h-[48px]"} aria-label={tr("Speak")}><Mic size={17} 
+ui-kit.jsx: {onVoice ? <button type="button" className={round + (listening ? " border-[var(--c-neg)]! text-[var(--c-neg)]!" : "")} onClick={async () => 
 voice-ui.jsx: <button onClick={listen} disabled={!N || !N.listen} aria-label={tr("Speak")} className={"w-[74px] h-[74px] rounded-full grid place-items-cen
 
 ## Think
@@ -730,11 +730,6 @@ attune.jsx: <div className="flex items-center justify-between"><h2 className="te
 attune.jsx: <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
 attune.jsx: <summary className="cursor-pointer select-none text-[13.5px] text-slate-300">{tr("Settings")}</summary>
 docs-ui.jsx: {edit ? <button onClick={() => setGear(gear === f.id ? "" : f.id)} aria-label={tr("Settings")} aria-expanded={gear === f.id} className={B2 +
-
-## Plan
-attune.jsx: <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[96px] rounded-[20px] border border-[var(--c-ln)] bg-
-attune.jsx: <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="min-h-[76px] rounded-[20px] border border-[var(--c-ln)] bg-
-planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
 
 ## Backup
 attune.jsx: <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`min-h-[96px] rounded-[20px] borde
@@ -1423,7 +1418,7 @@ money-pages-ui.jsx: <Head title={tr("Accounts")} right={<button className={U.btn
 
 ## Spent
 money-calm-ui.jsx: <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: "var(--c-neg)" }} />{tr("Sp
-planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
+planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Planned")}</th><th className={th}>{tr("Spent")}</th>
 report-ui.jsx: pill={safe.today > 0 ? tr("On track") : tr("Spent")} tone={safe.today > 0 ? "" : "late"} pct={safe.perDay > 0 ? (safe.today / safe.perDay) *
 report-ui.jsx: {hasS ? <span className="inline-flex items-center gap-1"><i className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "var(--c-ac
 trip-ui.jsx: <div className="flex gap-2 items-center"><input inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} placeholder={tr("Sp
@@ -1535,7 +1530,7 @@ travel-ui.jsx: <label><span className="c-sub">{tr("People")}</span><input type="
 
 ## Item
 planner-ui.jsx: <th className={stick + " " + cellCls + " text-start font-extrabold"}>{tr("Item")}</th>
-planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th
+planner-ui.jsx: <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Planned")}</th><th className={th}>{tr("Spent")}</th>
 yearplan.js: const head = [ar ? "البند" : tr("Item"), ...g.months.map((m) => new Date(m + "-15").toLocaleDateString(dateLocale() || "en", { month: "short
 
 ## Total income

@@ -226,7 +226,7 @@ function PlanTable({ plan, ledger, cur, ar, toYear }) {
   return <div className="space-y-3" data-testid="planner-table">
     <div className={U.card + " overflow-x-auto"}>
       <table className="w-full text-[13px] border-collapse" dir={isRTL() ? "rtl" : "ltr"}>
-        <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Plan")}</th><th className={th}>{tr("Spent")}</th><th className={th}>{tr("Left")}</th></tr></thead>
+        <thead><tr><th className={th + " text-start!"}>{tr("Item")}</th><th className={th}>{tr("Planned")}</th><th className={th}>{tr("Spent")}</th><th className={th}>{tr("Left")}</th></tr></thead>
         <tbody>{G.map(([g, l]) => { const rs = rows.filter((r) => r.group === g); if (!rs.length) return null;
           return <React.Fragment key={g}><tr><td colSpan={4} className="px-2 pt-3 pb-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-acc)]">{l}</td></tr>
             {rs.map((r, i) => <tr key={i} data-testid="planner-row"><td className={td + " text-start! font-semibold"} dir="auto">{r.cat ? flexLabel(r, ledger, ar) : r.what}</td><td className={td}>{fmt(r.plan)}</td><td className={td}>{fmt(r.actual)}</td>

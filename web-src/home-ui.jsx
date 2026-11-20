@@ -5,6 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import * as FT from "./features.js";   // v10.1 F3
+import { useAfterFirstPaint } from "./motion.js";
 import { SetupHomeCard, quiet as quietTests } from "./setup-ui.jsx";
 import { BrainHome } from "./brain-ui.jsx";
 import { pricesFor } from "./billing.js";
@@ -203,7 +204,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const [fresh, setFresh] = useState(0);   // read again when Home is opened again / the app comes back
   useEffect(() => { const f = () => setFresh((n) => n + 1); const v = () => { if (!document.hidden) f(); }; window.addEventListener("attune-open", f); window.addEventListener("focus", f); document.addEventListener("visibilitychange", v);
     return () => { window.removeEventListener("attune-open", f); window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", v); }; }, []);
-  const smart = useMemo(() => { if (!minimal) return []; try { return insightsCached(allStores(), loadDir(), { seen: seenS, notesPending: notesMoneyNow().length }); } catch (e) { return []; } }, [minimal, tick, rep, seenS, fresh]);
+  const painted = useAfterFirstPaint();   // v10.8: the heavy cards come a moment after the first screen
+  const smart = useMemo(() => { if (!minimal || !painted) return []; try { return insightsCached(allStores(), loadDir(), { seen: seenS, notesPending: notesMoneyNow().length }); } catch (e) { return []; } }, [minimal, tick, rep, seenS, fresh, painted]);
   const openSmart = (x) => { if (x.person) { try { localStorage.setItem("attune:people:open", x.person); } catch (e) {} navTo("people"); return; } openLine(x.open); };
   const dropSmart = (x) => setSeenS(saveSeen(dismissSeen(seenS, x)));
   const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout, past: cmd && cmd.api ? onThisDay(cmd.api.records()) : null }) : null;
@@ -426,7 +428,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
                     setTick((n) => n + 1); }}
                   aria-label={tr("Paid")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-regular-tick" />
                 <button onClick={() => navTo(x.pay.kind === "radar" ? "radar" : "life")} className="flex-1 min-w-0 text-start"><b className="block truncate text-[14px]" dir="auto">{x.title}</b>
-                  <span className={x.late ? "c-neg" : "c-sub"}>{x.late ? tr("Was due {d} — paid?", { d: new Date(x.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" }) }) : tr("Due today — paid? Tick it")}</span></button>
+                  <span className={x.late ? "c-neg" : "c-sub"}>{x.late ? tr("Was due {d} — paid?", { d: new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric" }) }) : tr("Due today — paid? Tick it")}</span></button>
                 {x.pay.kind === "radar" ? <button onClick={() => { payRadar(x.pay.id, false); setNote(tr("Marked as not renewed — {t}", { t: x.title })); setTick((n) => n + 1); }} className="c-sub text-[12px] shrink-0 px-1" data-testid="home-pay-no">{tr("No")}</button> : null}
                 <span className="c-pill due"><span className="c-num">{fmt(x.amount)}</span></span>
               </div>
@@ -437,7 +439,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             ) : (
               <button key={i} onClick={() => navTo(x.from === "life" ? "life" : x.from === "radar" ? "radar" : x.from === "care" ? "care" : "money")} className="w-full flex items-center gap-3 py-2 text-start" data-testid="home-due">
                 <span className="w-[18px] h-[18px] rounded-md shrink-0" style={{ border: "1.6px solid var(--c-mut)" }} />
-                <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late ? tr("Late") : tr("Medicine due")) : x.late ? tr("Late") : new Date(x.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span></span>
+                <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late ? tr("Late") : tr("Medicine due")) : x.late ? tr("Late") : new Date(x.date + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })}</span></span>
                 {x.dose ? null : <span className={"c-pill " + (x.late ? "late" : x.dir === "in" ? "" : "due")}><span className="c-num">{x.dir === "in" ? "+" : ""}{fmt(x.amount)}</span></span>}
               </button>))}
             {note ? <p className="c-pos text-[13px] m-0 py-1" data-testid="home-regular-note" dir="auto">✓ {note}</p> : null}

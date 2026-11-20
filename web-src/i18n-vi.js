@@ -1428,7 +1428,7 @@ export const VI = {
   "I sell spare parts to workshops": "Tôi bán phụ tùng cho các xưởng sửa chữa",
   "Latest records": "Bản ghi mới nhất",
   "Leave without saving the changes?": "Thoát mà không lưu thay đổi?",
-  "Left": "Trái",
+  "Left": "Còn lại",
   "Links between tables": "Liên kết giữa các bảng",
   "Make it green instead of blue": "Đổi sang màu xanh lá thay vì xanh dương",
   "Must be filled in": "Bắt buộc điền",
@@ -13070,4 +13070,20 @@ export const VI = {
   "Personal": "Cá nhân",
   "Study": "Học tập",
   "Technique": "Kỹ thuật",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“Ahmed nợ tôi 500”",
+  "{p} downloaded — works with no internet": "Đã tải {p} — dùng được khi không có mạng",
+  "{p} is ready": "{p} đã sẵn sàng",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Mô hình nhỏ, hiệu ứng nhẹ hơn",
+  "Models up to Core": "Mô hình đến Core",
+  "Models up to Sense and Blaze+": "Mô hình đến Sense và Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Mọi mô hình điện thoại đến Zenith+, Everest ở chế độ flash",
+  "Every model, the biggest included": "Mọi mô hình, kể cả lớn nhất",
+  "Start date": "Ngày bắt đầu",
+  "Planned": "Dự kiến",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "nhà",
+  "work (the workplace)": "chỗ làm",
+  "school (the place)": "trường",
 };

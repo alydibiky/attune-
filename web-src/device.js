@@ -6,12 +6,12 @@
 
 export const LEVELS = [
   null,
-  { level: 1, name: "Light", ar: "خفيف", maxModel: "sm", studio: "off", lite: true, hide: ["studio"], what: "Small models, no Studio, lighter effects" },
-  { level: 2, name: "Standard", ar: "قياسي", maxModel: "md", studio: "fast", lite: false, hide: [], what: "Models up to Core, fast Studio pictures" },
-  { level: 3, name: "Strong", ar: "قوي", maxModel: "lg", studio: "xl", lite: false, hide: [], what: "Models up to Sense and Blaze+, sharper Studio pictures" },
+  { level: 1, name: "Light", ar: "خفيف", maxModel: "sm", studio: "off", lite: true, hide: ["studio"], what: "Small models, lighter effects" },
+  { level: 2, name: "Standard", ar: "قياسي", maxModel: "md", studio: "fast", lite: false, hide: [], what: "Models up to Core" },
+  { level: 3, name: "Strong", ar: "قوي", maxModel: "lg", studio: "xl", lite: false, hide: [], what: "Models up to Sense and Blaze+" },
   // v6.29 Flash-MoE: a flagship also gets Everest (35B-A3B) — its experts are read from storage as needed (flash-moe.yml)
-  { level: 4, name: "Flagship", ar: "رائد", maxModel: "max", extra: ["moe-xl"], studio: "full", lite: false, hide: [], what: "Every phone model up to Zenith+, Everest in flash mode, full Studio" },
-  { level: 5, name: "Computer", ar: "كمبيوتر", maxModel: "moe-xl-long", studio: "full", lite: false, hide: [], what: "Everything, the biggest models and full Studio" },
+  { level: 4, name: "Flagship", ar: "رائد", maxModel: "max", extra: ["moe-xl"], studio: "full", lite: false, hide: [], what: "Every phone model up to Zenith+, Everest in flash mode" },
+  { level: 5, name: "Computer", ar: "كمبيوتر", maxModel: "moe-xl-long", studio: "full", lite: false, hide: [], what: "Every model, the biggest included" },
 ];
 // the model ids in order of size (power.js brands): a device offers those up to its maxModel
 export const MODEL_ORDER = ["xs", "sm", "fast-e2b", "md-lo", "md", "md-hi", "md-max", "fast-e4b", "lg", "xl", "max", "moe-lg", "ultra", "moe-xl", "moe-xl-long"];

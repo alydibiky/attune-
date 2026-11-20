@@ -110,7 +110,7 @@ function SectionEditor({ s, update, improveJob }) {
             <Bullets list={it.bullets} onChange={(b) => upd(i, { bullets: b })} onImprove={() => improveJob(it, i)} />
           </> : s.type === "education" ? <>
             <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Degree / course")}><In value={it.degree} onChange={(v) => upd(i, { degree: v })} /></Lbl><Lbl t={tr("School")}><In value={it.school} onChange={(v) => upd(i, { school: v })} /></Lbl></div>
-            <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><Lbl t={tr("End")}><In value={it.end} onChange={(v) => upd(i, { end: v })} dir="ltr" /></Lbl></div>
+            <div className="grid grid-cols-2 gap-2"><Lbl t={tr("Start date")}><In value={it.start} onChange={(v) => upd(i, { start: v })} dir="ltr" /></Lbl><Lbl t={tr("End")}><In value={it.end} onChange={(v) => upd(i, { end: v })} dir="ltr" /></Lbl></div>
             <Lbl t={tr("Note (optional)")}><In value={it.note} onChange={(v) => upd(i, { note: v })} /></Lbl>
           </> : s.type === "skills" ? <>
             <Lbl t={tr("Group name (optional)")}><In value={it.name} onChange={(v) => upd(i, { name: v })} /></Lbl>

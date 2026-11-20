@@ -1,10 +1,11 @@
 /* ---- v9.8 I1 Autopilot on Home (Ali: "I1 ok"): what the phone's notifications mean, one card each, waiting for one tap — Add / Not
    this; "do these by yourself from now on?" after 3 of a kind; what was done by itself, each with Undo; the week's count. The logic is
    autopilot.js (tested); this file is the card. Saving goes through the same path as the Home box (window.__attuneApplyActions). */
-import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
+import { recallRaw, forgetRecallCache } from "./notecache.js";
+import { useAfterFirstPaint } from "./motion.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
 import { Check, X, Undo2, Zap } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { loadLife, saveLife } from "./life.js";
 import { undoSubPay } from "./subpay.js";
 import * as AP from "./autopilot.js";
@@ -19,7 +20,7 @@ const readNotes = () => { try { const n = N(); if (!n) return [];
   return [...a, ...b.filter((x) => !seen.has(String(x.title || "") + "|" + String(x.text || "").slice(0, 80)))]; } catch (e) { return []; } };
 const readLedger = () => { try { return JSON.parse(localStorage.getItem("ledger.v3") || "null"); } catch (e) { return null; } };
 const fmt = (v) => Math.round(v || 0).toLocaleString("en-US");
-const when = (t) => { try { return new Date(t).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return ""; } };
+const when = (t) => { try { return new Date(t).toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return ""; } };
 const LINE = { expense: "Expense", income: "Income", followup: "Follow-up", todo: "To-do", callback: "Call back", bill: "Bill" };
 const apply = (x) => { try { return window.__attuneApplyActions ? window.__attuneApplyActions(AP.actionsFor(x)) : null; } catch (e) { return null; } };
 
@@ -67,7 +68,9 @@ function Item({ x, open, setOpen, add, no, done }) {
   </div>;
 }
 
-export function AutopilotCard() {
+/** v10.8 (launch, opening < 1 s): the card works out the notifications in its own quiet moment, after Home is drawn. */
+export function AutopilotCard() { const go = useAfterFirstPaint(1200); return go ? <AutopilotCardNow /> : null; }
+function AutopilotCardNow() {
   const [s, setS] = useState(AP.loadAP);
   const [slot, setSlot] = useState(() => Math.floor(Date.now() / 120000));
   useEffect(() => { const t = setInterval(() => setSlot(Math.floor(Date.now() / 120000)), 60000); return () => clearInterval(t); }, []);
@@ -78,11 +81,15 @@ export function AutopilotCard() {
   const [ready, setReady] = useState(0);
   const flash = (m) => { try { window.dispatchEvent(new CustomEvent("attune-flash", { detail: m })); } catch (e) {} };
   const notes = useMemo(readNotes, [slot]);
-  const list = useMemo(() => AP.suggestions(notes, { now: Date.now(), s, ledger: readLedger(), life: loadLife() }), [notes, s]);
+  // v10.8: worked out in small pieces (no long freeze just after opening); the card shows once it knows
+  const [soon, setSoon] = useState(null);
+  useEffect(() => { let live = true; AP.suggestionsSoon(notes, { now: Date.now(), s, ledger: readLedger(), life: loadLife() }).then((l) => { if (live) setSoon(l); }); return () => { live = false; }; }, [notes, s]);
+  const list = soon || [];
   // what you allowed is done by itself (listed below with Undo); a "Delivered" closes its follow-up
   useEffect(() => {
     // (v9.9: on the first open the app's save path is set up a moment after this card — wait for it, or "done for you" was shown and
     // nothing was saved)
+    if (!soon) return;   // (v10.8: still being worked out)
     if (!window.__attuneApplyActions) { const t = setTimeout(() => setReady((r) => r + 1), 300); return () => clearTimeout(t); }
     let st = s, changed = false;
     // (v10.6 smoothness) everything done by itself is saved in ONE batch — each item keeps its own reminder id
@@ -91,7 +98,7 @@ export function AutopilotCard() {
       let at = 0; auto.forEach((x, i) => { const n = acts[i].length, rid = ((r && r.rids) || []).slice(at, at + n).filter(Boolean).pop() || ""; at += n; st = AP.accept(st, x, { auto: true, rid }); }); changed = true; }
     for (const rid of AP.deliveredDone(notes, st)) { try { window.__attuneRemoveReminder && window.__attuneRemoveReminder(rid); } catch (e) {} st = { ...st, done: st.done.map((d) => (d.rid === rid ? { ...d, closed: true } : d)) }; changed = true; }
     if (changed) put(st);
-  }, [list.map((x) => x.key).join(), notes.length, ready]);
+  }, [list.map((x) => x.key).join(), notes.length, ready, !!soon]);
   const add = (x) => { const r = apply(x); put(AP.accept(s, x, { rid: (r && r.rid) || "" })); };
   const no = (x, all) => put(AP.refuse(s, x, { app: all }));
   const undo = (d) => { try { d.rid && window.__attuneRemoveReminder && window.__attuneRemoveReminder(d.rid); } catch (e) {}

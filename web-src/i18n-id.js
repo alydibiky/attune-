@@ -1429,7 +1429,7 @@ export const IDN = {
   "I sell spare parts to workshops": "Saya menjual suku cadang ke bengkel",
   "Latest records": "Data terbaru",
   "Leave without saving the changes?": "Keluar tanpa menyimpan perubahan?",
-  "Left": "Kiri",
+  "Left": "Sisa",
   "Links between tables": "Tautan antar tabel",
   "Make it green instead of blue": "Jadikan hijau, bukan biru",
   "Must be filled in": "Wajib diisi",
@@ -5299,7 +5299,7 @@ export const IDN = {
   "Signature": "Tanda tangan",
   "Received by": "Diterima oleh",
   "Statement of account": "Laporan rekening",
-  "Details": "Keterangan",
+  "Details": "Detail",
   "Debit": "Debit",
   "Credit": "Kredit",
   "Sales this month": "Penjualan bulan ini",
@@ -13071,4 +13071,20 @@ export const IDN = {
   "Personal": "Pribadi",
   "Study": "Belajar",
   "Technique": "Teknik",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“Ahmed berutang 500 padaku”",
+  "{p} downloaded — works with no internet": "{p} sudah diunduh — bisa tanpa internet",
+  "{p} is ready": "{p} siap",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Model kecil, efek lebih ringan",
+  "Models up to Core": "Model hingga Core",
+  "Models up to Sense and Blaze+": "Model hingga Sense dan Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Semua model ponsel hingga Zenith+, Everest dalam mode flash",
+  "Every model, the biggest included": "Semua model, termasuk yang terbesar",
+  "Start date": "Tanggal mulai",
+  "Planned": "Rencana",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "rumah",
+  "work (the workplace)": "kantor",
+  "school (the place)": "sekolah",
 };

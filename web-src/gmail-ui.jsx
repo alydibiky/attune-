@@ -2,7 +2,7 @@
    Overpaying check and in Recall. Not in the Android app (the website, the computer app) → nothing.                      */
 import React, { useState } from "react";
 import { FileText as Mail } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as G from "./gmail.js";
 import * as U from "./ui-kit.jsx";
 import { PLAY_BUILD, GMAIL_VERIFIED } from "./buildflags.js";
@@ -25,7 +25,7 @@ export function GmailCard({ onRead, compact = false }) {
     setG(G.loadGmail()); setBusy(false);
   };
   const off = () => { G.disconnectGmail(); setG(G.loadGmail()); setMsg(""); };
-  const last = g.last ? new Date(g.last).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const last = g.last ? new Date(g.last).toLocaleString(dateLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
   return <div className={(compact ? "" : U.card + " ") + "px-3.5 py-3"} data-testid="gmail-card">
     <p className="m-0 text-[13.5px] font-extrabold flex items-center gap-2"><Mail size={15} className="text-[var(--c-acc)]" />{g.on ? tr("Gmail is connected") : tr("Read my Gmail by itself")}</p>
     <p className={"m-0 mt-0.5 text-[12.5px] leading-relaxed " + U.muted}>{msg || (g.on && g.reconnect ? tr("Google asks you to confirm again — tap Read now.") : g.on ? tr("Once a day Attune reads the new emails about money — receipts, bank alerts, subscriptions, price changes. Last read: {t}. {n} kept for Recall.", { t: last || "—", n: g.emails.length })

@@ -1429,7 +1429,7 @@ export const PT = {
   "I sell spare parts to workshops": "Vendo peças para oficinas",
   "Latest records": "Últimos registros",
   "Leave without saving the changes?": "Sair sem salvar as alterações?",
-  "Left": "Esquerda",
+  "Left": "Restante",
   "Links between tables": "Ligações entre tabelas",
   "Make it green instead of blue": "Deixe verde em vez de azul",
   "Must be filled in": "Preenchimento obrigatório",
@@ -1539,7 +1539,7 @@ export const PT = {
   "Company": "Empresa",
   "Start (2021-03)": "Início (2021-03)",
   "End": "Fim",
-  "Start": "Início",
+  "Start": "Começar",
   "I still work here": "Ainda trabalho aqui",
   "Degree / course": "Formação / curso",
   "School": "Instituição",
@@ -13071,4 +13071,20 @@ export const PT = {
   "Personal": "Pessoal",
   "Study": "Estudo",
   "Technique": "Técnica",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“O Ahmed me deve 500”",
+  "{p} downloaded — works with no internet": "{p} baixado — funciona sem internet",
+  "{p} is ready": "{p} está pronto",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Modelos pequenos, efeitos mais leves",
+  "Models up to Core": "Modelos até o Core",
+  "Models up to Sense and Blaze+": "Modelos até o Sense e o Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Todos os modelos de celular até o Zenith+, Everest no modo flash",
+  "Every model, the biggest included": "Todos os modelos, inclusive os maiores",
+  "Start date": "Data de início",
+  "Planned": "Previsto",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "casa",
+  "work (the workplace)": "o trabalho",
+  "school (the place)": "a escola",
 };

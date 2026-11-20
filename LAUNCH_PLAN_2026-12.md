@@ -20,11 +20,14 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 - [x] Language audit of all 20 dictionaries as a test; two-meaning words split (Left, Free, Word, Model, Background, Update, Read).
 - [x] **Sentence bank → 500 real sentences** (511 on 3 Nov; started at 65: `tests/unit/v908bank.test.mjs` — found and fixed 6 real misses) (English, Egyptian Arabic, Franco, + the 18 others): every kind (reminder, money,
       agent, research, food, people, deadline, translate…) — each must land where it belongs; run on every test run.
-- [ ] Read every Arabic screen (Chat, Settings, Business, Fit & Food, Learn, Studio, Library… — Home, Money, People & plans,
-      Follow-ups, Health, Reminders, Agents done) and fix wording; finish the two-meaning list (307 words).
+- [x] Read every Arabic screen (20 Nov, v10.8: all 31 pages + Settings read; «أتيون» → Attune in 74 + 46 lines (only the wake word
+      keeps «يا أتيون»), «الزق» → «الصق», «تفكير» → «تذكيرات», a garbled Projects line, dates in the app's language on 21 screens,
+      Start / Schedule / Plan / Details / School split or fixed; tests unit v1080arabic + e2e_v1080arabic). Open: the travel guides'
+      own text (43 countries, ~214 KB) is English only — a content job, asked to Ali.
 - [x] The app's name in Egyptian Arabic: "Attune" everywhere (Ali picked).
-- [ ] Crash and freeze safety: an on-phone crash log + "Send a report" (nothing sent by itself); every page opens < 1 s on a
-      mid-range phone (the Agents page was slow — find any other).
+- [ ] Crash and freeze safety: an on-phone crash log + "Send a report" (nothing sent by itself) — waiting for Ali's CR pick;
+      [x] every page < 1 s on a mid-range phone with a full phone (20 Nov, v10.8: Recall 8.6 s → 0.5–0.9 s, the box at 1.7–2.2 s,
+      the longest freeze after opening 3.1 → 1.0–1.2 s; Autopilot and "Attune noticed" worked out after the first screen, in pieces).
 
 ## Week 2 (10–16 Nov): the closed test is running — fix what testers find
 - [ ] Testers' reports → fixed within a day; each fix gets a test so it can't come back.
@@ -36,8 +39,10 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 ## Week 3 (17–23 Nov): store and speed
 - [ ] Store listing (STORE_LISTING.md): Arabic first, 6 screenshots of the hero flows, a 30-second video.
 - [ ] Data safety, Health Connect, foreground-service and financial-features declarations (REVIEW_P7 list).
-- [ ] Size (115 MB) and first-run speed: optional packs download on first use.
-- [ ] Battery: background checks (agents, wake word, scout night) measured over 24 h.
+- [x] Size: Python already downloads on first use in the Play build (19 MB); v10.8: shipped language files without removed features'
+      lines (22 → 17 MB), the Play build reads barcodes / text through Play services. LG1/LG2 (all languages inside or not) waits for Ali.
+- [x] Battery (v10.8): the wake word stops on Battery saver or ≤ 15 % (not charging); agents' and Scout's rounds wait while the
+      battery is low; an on-phone battery log of every background job. [ ] The real 24 h numbers come from Ali's phone (the log).
 
 ## Week 4 (24–30 Nov): freeze
 - [ ] 28 Nov: release candidate — no new features, only fixes; full test suite + a real-phone pass of every page.

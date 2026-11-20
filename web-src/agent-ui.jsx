@@ -2,7 +2,7 @@
    "Booking details" the in-app browser may fill (kept on the phone only: localStorage "attune:agent:profile").
    No page of its own: the agent lives in Chat, Travel, Maps and the Radar (Ali: "don't make the app cluttered").   */
 import React, { useState } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { planTask, cityName } from "./agent.js";
 import { regionOf } from "./locale.js";
 import { cardPad, inp, muted } from "./ui-kit.jsx";
@@ -17,7 +17,7 @@ const CAPITAL_AIRPORT = { EG: "CAI", SA: "RUH", AE: "DXB", KW: "KWI", QA: "DOH",
   BD: "DAC", LK: "CMB", NP: "KTM", TH: "BKK", MY: "KUL", SG: "SIN", ID: "CGK", PH: "MNL", VN: "SGN", HK: "HKG", CN: "PEK", TW: "TPE", KR: "ICN", JP: "NRT", AU: "SYD", NZ: "AKL",
   ZA: "JNB", NG: "LOS", KE: "NBO", ET: "ADD", GH: "ACC" };
 export const myCountry = () => { try { return regionOf((navigator.languages && navigator.languages[0]) || navigator.language || ""); } catch (e) { return ""; } };
-const DAYFMT = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return iso; } };
+const DAYFMT = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return iso; } };
 
 /** A request typed in Chat → the card { title, detail, actions, links } or null. */
 export function agentCard(text, { now = Date.now(), order = "dmy", inApp = false } = {}) {

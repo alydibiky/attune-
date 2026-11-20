@@ -1429,7 +1429,7 @@ export const SW = {
   "I sell spare parts to workshops": "Ninauza vipuri kwa karakana",
   "Latest records": "Rekodi za hivi karibuni",
   "Leave without saving the changes?": "Ondoka bila kuhifadhi mabadiliko?",
-  "Left": "Kushoto",
+  "Left": "Kilichobaki",
   "Links between tables": "Viungo kati ya majedwali",
   "Make it green instead of blue": "Ifanye kijani badala ya bluu",
   "Must be filled in": "Lazima ijazwe",
@@ -1539,7 +1539,7 @@ export const SW = {
   "Company": "Kampuni",
   "Start (2021-03)": "Mwanzo (2021-03)",
   "End": "Mwisho",
-  "Start": "Mwanzo",
+  "Start": "Anza",
   "I still work here": "Bado ninafanya kazi hapa",
   "Degree / course": "Shahada / kozi",
   "School": "Shule",
@@ -13071,4 +13071,20 @@ export const SW = {
   "Personal": "Binafsi",
   "Study": "Masomo",
   "Technique": "Mbinu",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“Ahmed ananidai 500”",
+  "{p} downloaded — works with no internet": "{p} imepakuliwa — inafanya kazi bila intaneti",
+  "{p} is ready": "{p} iko tayari",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Miundo midogo, madoido mepesi",
+  "Models up to Core": "Miundo hadi Core",
+  "Models up to Sense and Blaze+": "Miundo hadi Sense na Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Miundo yote ya simu hadi Zenith+, Everest kwa hali ya flash",
+  "Every model, the biggest included": "Miundo yote, ikiwemo mikubwa zaidi",
+  "Start date": "Tarehe ya kuanza",
+  "Planned": "Iliyopangwa",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "nyumbani",
+  "work (the workplace)": "kazini",
+  "school (the place)": "shuleni",
 };

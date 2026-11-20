@@ -5,7 +5,7 @@
    "Check on the 1st of every month" rings a reminder. Free: the total and the first finding; Pro: everything.            */
 import React, { useMemo, useRef, useState } from "react";
 import { ChevronDown, ExternalLink, FileText as Mail, ClipboardPaste, Bell, Crown, Check, X } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as O from "./overpay.js";
 import { GmailCard } from "./gmail-ui.jsx";
 import { cancelLink } from "./deadlines.js";
@@ -23,7 +23,7 @@ const CAD = { month: "a month", quarter: "every 3 months", year: "a year" };
 const DONE = { trial: ["Cancelled it", "Keep it"], hike: ["I fixed it", "It's fine"], overlap: ["I cancelled one", "I use them all"], renewal: ["Cancelled it", "Let it renew"], perk: ["Claimed", "Not for me"] };
 const SRC = { email: "From an email", notification: "From a notification", payment: "From a payment in Money", radar: "From Deadline Radar", paste: "From a pasted email" };
 const openLink = (label, url) => { try { window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: { label, url }, plan: null, inApp: false } })); } catch (e) {} };
-const day = (t) => { try { return new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
+const day = (t) => { try { return new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
 
 function payQueue() { const N = typeof window !== "undefined" && window.AttuneNative; try { return JSON.parse((N && N.payQueue && N.payQueue()) || "[]"); } catch (e) { return []; } }
 

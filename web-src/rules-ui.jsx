@@ -2,7 +2,7 @@
    Change; "One question first" with choices when a name or a part wasn't clear; "Your rules" with on / off. Logic: rules.js +
    rulestore.js (tested). */
 import React, { useState, useEffect } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as RS from "./rulestore.js";
 import { ruleRoom } from "./plan.js";
 import { openPlan } from "./plan-ui.jsx";
@@ -51,7 +51,7 @@ export function RulesSection({ native, flash, schedule, unschedule, lang }) {
           <div className="flex-1 min-w-0"><p className="m-0 text-[14px] font-bold break-words" dir="auto">{l.when} → {l.dos.join(" · ")}</p>{!r.live ? <p className="m-0 text-[11.5px] text-[var(--c-warn)]">{tr("Waiting for the phone part")}</p> : null}
             {r.live && ["bluetooth", "charging", "wifi"].includes((r.when || {}).type) ? <p className="m-0 text-[11.5px] text-[var(--c-mut)]" data-testid="rule-speed">
               <span className="font-bold" style={{ color: "var(--c-acc)" }}>{r.when.type === "bluetooth" ? tr("instant") : tr("within 15 min")}</span>
-              {status["fired_" + r.id] ? " · " + tr("last: {t}", { t: new Date(status["fired_" + r.id]).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" }) }) : ""}</p> : null}</div>
+              {status["fired_" + r.id] ? " · " + tr("last: {t}", { t: new Date(status["fired_" + r.id]).toLocaleString(dateLocale(), { weekday: "short", hour: "2-digit", minute: "2-digit" }) }) : ""}</p> : null}</div>
           <button className="min-h-[36px] px-3 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => { RS.removeRule(r.id, { unschedule, native, lang }); setRules(RS.loadRules()); flash && flash(tr("Removed")); }} data-testid="rule-remove">{tr("Remove")}</button></div>; })}
       </div> : null}
     </div>);

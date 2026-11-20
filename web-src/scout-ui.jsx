@@ -8,7 +8,7 @@ import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink
 import { COUNTRIES, myCountry } from "./country.js";
 // v9.9.19: the person's own money — an ad priced in another country's is from another country
 const localCur = () => { try { return (COUNTRIES[myCountry()] || {}).cur || "EGP"; } catch (e) { return "EGP"; } };
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as S from "./scout.js";
 import * as K from "./ui-kit.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -202,7 +202,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
           <div key={x.id} className={K.card + " p-3.5 flex items-start gap-2"} style={x.id === sel ? { borderColor: "var(--c-acc-2)" } : {}} data-testid="scout-goal">
             <button className="flex-1 min-w-0 text-start" onClick={() => setSel(x.id)}>
               <b className="block text-[14.5px] font-extrabold" dir="auto">{x.g.what || x.text}</b>
-              <span className="c-sub text-[12px]">{tr(KIND[x.g.kind] ? KIND[x.g.kind][0] : "Search")}{x.g.max ? " · ≤ " + fmt(x.g.max) : ""}{x.g.place ? " · " + x.g.place : ""} · {x.lastRun ? tr("{n} matches", { n: x.lastCount || 0 }) + " · " + new Date(x.lastRun).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" }) : tr("not run yet")}{x.on === false ? " · " + tr("paused") : ""}</span>
+              <span className="c-sub text-[12px]">{tr(KIND[x.g.kind] ? KIND[x.g.kind][0] : "Search")}{x.g.max ? " · ≤ " + fmt(x.g.max) : ""}{x.g.place ? " · " + x.g.place : ""} · {x.lastRun ? tr("{n} matches", { n: x.lastCount || 0 }) + " · " + new Date(x.lastRun).toLocaleString(dateLocale(), { weekday: "short", hour: "2-digit", minute: "2-digit" }) : tr("not run yet")}{x.on === false ? " · " + tr("paused") : ""}</span>
               {busy && busy.id === x.id ? <span className="c-acc text-[12px] flex items-center gap-1 mt-0.5" data-testid="scout-busy"><Loader2 size={12} className="animate-spin" />{tr("Searching {i} of {n}…", { i: busy.i, n: busy.n })}</span> : null}
             </button>
             <button className="c-sub min-w-[44px] min-h-[44px] grid place-items-center rounded-[12px] hover:text-[var(--c-acc)]" aria-label={tr("Check now")} title={tr("Check now")} disabled={!!busy} onClick={() => run(x)} data-testid="scout-run"><RefreshCw size={15} /></button>

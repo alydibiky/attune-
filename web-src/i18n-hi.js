@@ -1429,7 +1429,7 @@ export const HI = {
   "I sell spare parts to workshops": "मैं वर्कशॉप को स्पेयर पार्ट्स बेचता हूँ",
   "Latest records": "नए रिकॉर्ड",
   "Leave without saving the changes?": "बदलाव सेव किए बिना निकलें?",
-  "Left": "बाएँ",
+  "Left": "बाकी",
   "Links between tables": "टेबल के बीच लिंक",
   "Make it green instead of blue": "इसे नीले की जगह हरा करो",
   "Must be filled in": "भरना ज़रूरी है",
@@ -1539,7 +1539,7 @@ export const HI = {
   "Company": "कंपनी",
   "Start (2021-03)": "शुरुआत (2021-03)",
   "End": "अंत",
-  "Start": "शुरुआत",
+  "Start": "शुरू करें",
   "I still work here": "मैं अभी भी यहाँ काम करता/करती हूँ",
   "Degree / course": "डिग्री / कोर्स",
   "School": "स्कूल / कॉलेज",
@@ -13071,4 +13071,20 @@ export const HI = {
   "Personal": "निजी",
   "Study": "पढ़ाई",
   "Technique": "तकनीक",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“अहमद पर मेरे 500 बाकी हैं”",
+  "{p} downloaded — works with no internet": "{p} डाउनलोड हो गया — बिना इंटरनेट चलता है",
+  "{p} is ready": "{p} तैयार है",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "छोटे मॉडल, हल्के इफ़ेक्ट",
+  "Models up to Core": "Core तक के मॉडल",
+  "Models up to Sense and Blaze+": "Sense और Blaze+ तक के मॉडल",
+  "Every phone model up to Zenith+, Everest in flash mode": "Zenith+ तक के सभी फ़ोन मॉडल, फ़्लैश मोड में Everest",
+  "Every model, the biggest included": "सभी मॉडल, सबसे बड़े भी",
+  "Start date": "शुरू होने की तारीख",
+  "Planned": "योजना",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "घर",
+  "work (the workplace)": "दफ़्तर",
+  "school (the place)": "स्कूल",
 };

@@ -1428,7 +1428,7 @@ export const RU = {
   "I sell spare parts to workshops": "Продаю запчасти мастерским",
   "Latest records": "Последние записи",
   "Leave without saving the changes?": "Выйти без сохранения изменений?",
-  "Left": "Слева",
+  "Left": "Осталось",
   "Links between tables": "Связи между таблицами",
   "Make it green instead of blue": "Сделай зелёным вместо синего",
   "Must be filled in": "Обязательное поле",
@@ -1538,7 +1538,7 @@ export const RU = {
   "Company": "Компания",
   "Start (2021-03)": "Начало (2021-03)",
   "End": "Конец",
-  "Start": "Начало",
+  "Start": "Начать",
   "I still work here": "Работаю здесь сейчас",
   "Degree / course": "Степень / курс",
   "School": "Учебное заведение",
@@ -13070,4 +13070,20 @@ export const RU = {
   "Personal": "Личное",
   "Study": "Учёба",
   "Technique": "Техника",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "«Ахмед должен мне 500»",
+  "{p} downloaded — works with no internet": "{p}: загружено — работает без интернета",
+  "{p} is ready": "{p}: готово",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Небольшие модели, облегчённые эффекты",
+  "Models up to Core": "Модели до Core",
+  "Models up to Sense and Blaze+": "Модели до Sense и Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Все модели для телефона до Zenith+, Everest во флеш-режиме",
+  "Every model, the biggest included": "Все модели, включая самые большие",
+  "Start date": "Дата начала",
+  "Planned": "План",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "дом",
+  "work (the workplace)": "работа",
+  "school (the place)": "школа",
 };

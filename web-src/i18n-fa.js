@@ -1428,7 +1428,7 @@ export const FA = {
   "I sell spare parts to workshops": "به تعمیرگاه‌ها لوازم یدکی می‌فروشم",
   "Latest records": "آخرین رکوردها",
   "Leave without saving the changes?": "بدون ذخیرهٔ تغییرات خارج می‌شوید؟",
-  "Left": "چپ",
+  "Left": "باقی‌مانده",
   "Links between tables": "پیوند بین جدول‌ها",
   "Make it green instead of blue": "به‌جای آبی، سبزش کن",
   "Must be filled in": "باید پر شود",
@@ -1538,7 +1538,7 @@ export const FA = {
   "Company": "شرکت",
   "Start (2021-03)": "شروع (2021-03)",
   "End": "پایان",
-  "Start": "شروع",
+  "Start": "شروع کن",
   "I still work here": "هنوز اینجا کار می‌کنم",
   "Degree / course": "مدرک / دوره",
   "School": "مدرسه",
@@ -13070,4 +13070,20 @@ export const FA = {
   "Personal": "شخصی",
   "Study": "درس",
   "Technique": "تکنیک",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "«احمد ۵۰۰ به من بدهکار است»",
+  "{p} downloaded — works with no internet": "{p} دانلود شد — بدون اینترنت کار می‌کند",
+  "{p} is ready": "{p} آماده است",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "مدل‌های کوچک، جلوه‌های سبک‌تر",
+  "Models up to Core": "مدل‌ها تا Core",
+  "Models up to Sense and Blaze+": "مدل‌ها تا Sense و Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "همه مدل‌های گوشی تا Zenith+، Everest در حالت فلش",
+  "Every model, the biggest included": "همه مدل‌ها، حتی بزرگ‌ترین‌ها",
+  "Start date": "تاریخ شروع",
+  "Planned": "برنامه‌ریزی‌شده",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "خانه",
+  "work (the workplace)": "محل کار",
+  "school (the place)": "مدرسه",
 };

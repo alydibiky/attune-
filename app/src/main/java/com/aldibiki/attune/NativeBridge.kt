@@ -215,6 +215,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     }
 
     // v8.7 (P7): Python for Code, downloaded on first use in the Play build (PyPack.kt); progress comes as 'attune-pypack' events
+    /** v10.8 (battery): what ran in the background and the battery then — the newest 400 lines; stays on the phone. */
+    @JavascriptInterface
+    fun batteryLog(): String = try { BatteryGuard.json(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun batteryNow(): String = try { JSONObject().put("pct", BatteryGuard.level(ctx)).put("charging", BatteryGuard.charging(ctx)).put("saver", BatteryGuard.saver(ctx)).put("holdMic", BatteryGuard.holdMic(ctx)).toString() } catch (e: Throwable) { "{}" }
+
     @JavascriptInterface
     fun pyPackStatus(): String = try { PyPack.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("ready", false).toString() }
     @JavascriptInterface

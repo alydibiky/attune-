@@ -4,7 +4,7 @@
    (salarysort.js, tested on 10,000 salaries in 30 currencies). A row that doesn't fit the salary is flagged, never silently cut.
    Opens from the Automations page, from Home when a salary came in the last 5 days, and from "salary" in Chat. */
 import React, { useState } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { salaryOf, sortSalary } from "./salarysort.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
@@ -41,7 +41,7 @@ export function SalaryPage({ flash }) {
   return (
     <div className="calm space-y-3 text-[var(--c-ink)]" data-testid="salary-page">
       <div className={card + " flex items-center justify-between"} data-testid="salary-head">
-        <div><p className="m-0 text-[14px] font-extrabold">{tr("Salary arrived")}</p><p className="m-0 text-[12.5px] text-[var(--c-mut)]">{new Date(sal.at).toLocaleDateString(undefined, { day: "numeric", month: "long" })}{sal.parts > 1 ? " · " + tr("{n} parts", { n: sal.parts }) : ""}</p></div>
+        <div><p className="m-0 text-[14px] font-extrabold">{tr("Salary arrived")}</p><p className="m-0 text-[12.5px] text-[var(--c-mut)]">{new Date(sal.at).toLocaleDateString(dateLocale(), { day: "numeric", month: "long" })}{sal.parts > 1 ? " · " + tr("{n} parts", { n: sal.parts }) : ""}</p></div>
         <span className="text-[18px] font-extrabold" style={{ color: "var(--c-pos, #1e7a43)" }}>+{fmt(sal.amount)} {sal.currency}</span></div>
       {!edit ? <div className={card + " space-y-1"} data-testid="salary-plan">
         <p className={label}>{tr("Your plan")}</p>

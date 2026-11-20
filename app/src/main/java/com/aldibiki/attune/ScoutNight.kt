@@ -101,7 +101,9 @@ class ScoutNightReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val done = goAsync()
         Thread {
-            try { ScoutNight.run(ctx.applicationContext) } catch (e: Exception) {} finally { done.finish() }
+            try { val c = ctx.applicationContext
+                if (BatteryGuard.low(c)) BatteryGuard.log(c, "skipped: scout (battery low)") else { BatteryGuard.log(c, "scout"); ScoutNight.run(c) }   // v10.8 (battery)
+            } catch (e: Exception) {} finally { done.finish() }
         }.start()
     }
 }

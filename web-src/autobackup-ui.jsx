@@ -1,6 +1,6 @@
 /* ---- v8.7 the "Back up by itself every day" card (like WhatsApp) — in Backup & restore and on the Recall page (autobackup.js). */
 import React, { useEffect, useState } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as A from "./autobackup.js";
 import * as U from "./ui-kit.jsx";
 
@@ -15,7 +15,7 @@ export function AutoBackupCard({ native: N, nativeCall, flash, compact = false }
   const now = async () => { setBusy(true); setErr(""); try { await A.runAutoBackup(nativeCall, N); setA(A.loadAuto()); flash && flash(tr("Backed up")); } catch (e) { setErr(tr(String((e && e.message) || e))); } setBusy(false); };
   const ready = a.on && a.pw && st.set;
   const where = st.set ? (st.where === "drive" ? tr("Google Drive · {f}", { f: st.name }) : tr("This phone · {f}", { f: st.name })) : "";
-  const last = a.last ? new Date(a.last).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const last = a.last ? new Date(a.last).toLocaleString(dateLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
   return <div className={(compact ? "" : U.card + " ") + "px-3.5 py-3 space-y-2"} data-testid="autobackup">
     <p className="m-0 text-[13.5px] font-extrabold">{ready ? tr("Backs up by itself every day") : tr("Back up by itself every day")}</p>
     <p className={"m-0 text-[12.5px] leading-relaxed " + U.muted}>{ready ? tr("To {w}. Last: {t}. Everything, with Recall's messages, locked with your backup password; the newest 3 are kept.", { w: where, t: last || "—" })

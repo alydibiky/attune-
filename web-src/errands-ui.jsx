@@ -4,13 +4,13 @@
 import { UpkeepSection } from "./upkeep-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Check, Trash2, ChevronDown, Loader2 } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import * as E from "./errands.js";
 import { myCountry } from "./country.js";
 import * as U from "./ui-kit.jsx";
 
 const T = (k, v) => tr(k, v);
-const when = (t) => { try { return new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
+const when = (t) => { try { return new Date(t).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
 const WHY = { due: "Due now", late: "Late", expires: "Coming up", check: "Time to check" };
 
 export function ErrandsPage({ nativeCall, flash, profile = {} }) {

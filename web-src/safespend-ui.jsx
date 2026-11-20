@@ -4,7 +4,7 @@
 import { planMonth, loadPots } from "./planner.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { tr, getLang } from "./i18n.js";
+import { tr, getLang, dateLocale } from "./i18n.js";
 import { safeToSpend } from "./safespend.js";
 import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
@@ -33,7 +33,7 @@ function useSafe(nonce) {
   }, [v, nonce]);
 }
 
-const dayName = (s) => { try { return new Date(s + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return s; } };
+const dayName = (s) => { try { return new Date(s + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }); } catch (e) { return s; } };   // v10.8: in the app's language («٣٠ نوفمبر», not "Nov 30")
 
 function Details({ s, setCushion }) {
   const [c, setC] = useState(String(s.cushion || ""));

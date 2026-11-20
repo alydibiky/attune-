@@ -1428,7 +1428,7 @@ export const KO = {
   "I sell spare parts to workshops": "정비소에 부품을 팔아요",
   "Latest records": "최근 기록",
   "Leave without saving the changes?": "변경 사항을 저장하지 않고 나갈까요?",
-  "Left": "왼쪽",
+  "Left": "남음",
   "Links between tables": "표 사이 연결",
   "Make it green instead of blue": "파란색 대신 초록색으로 바꿔 줘",
   "Must be filled in": "필수 입력",
@@ -1538,7 +1538,7 @@ export const KO = {
   "Company": "회사",
   "Start (2021-03)": "시작 (2021-03)",
   "End": "종료",
-  "Start": "시작",
+  "Start": "시작하기",
   "I still work here": "현재 재직 중",
   "Degree / course": "학위 / 과정",
   "School": "학교",
@@ -13070,4 +13070,20 @@ export const KO = {
   "Personal": "개인",
   "Study": "공부",
   "Technique": "기법",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "“아흐메드가 나한테 500 빚졌어”",
+  "{p} downloaded — works with no internet": "{p} 다운로드 완료 — 인터넷 없이 작동해요",
+  "{p} is ready": "{p} 준비 완료",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "작은 모델, 가벼운 효과",
+  "Models up to Core": "Core까지의 모델",
+  "Models up to Sense and Blaze+": "Sense와 Blaze+까지의 모델",
+  "Every phone model up to Zenith+, Everest in flash mode": "Zenith+까지의 모든 휴대폰 모델, 플래시 모드의 Everest",
+  "Every model, the biggest included": "가장 큰 모델까지 모든 모델",
+  "Start date": "시작일",
+  "Planned": "계획",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "집",
+  "work (the workplace)": "직장",
+  "school (the place)": "학교",
 };

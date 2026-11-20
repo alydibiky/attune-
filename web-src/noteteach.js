@@ -128,7 +128,9 @@ export function understood(x, { ar = false, tr = (s, v) => s.replace(/\{(\w+)\}/
   if (!u) return "";
   if (u.kind === "hide") return ar ? `مش هعرض إشعارات ${u.app} تاني` : tr("I won't show {a} notifications any more", { a: u.app });
   if (u.kind === "first") return ar ? `${u.who} يبقى الأول دايماً` : tr("{n} always comes first", { n: u.who });
-  const at = u.place ? (ar ? { Home: "البيت", Work: "الشغل", School: "الجامعة" }[u.place] : tr(u.place, {})) : "";
+  // v10.8 (launch, meanings): the place has its own words — tr("Home") is the app's main page («Inicio», «Startseite»…), not a house
+  const PLACE = { Home: "home (the house)", Work: "work (the workplace)", School: "school (the place)" };
+  const at = u.place ? (ar ? { Home: "البيت", Work: "الشغل", School: "الجامعة" }[u.place] : ((k) => { const t = tr(k, {}); return t === k ? u.place : t; })(PLACE[u.place] || u.place)) : "";
   if (u.kind === "leave") return ar ? `هقولك لما ${u.who} يمشي${at ? " من " + at : ""}` : tr("I'll tell you when {n} leaves{p}", { n: u.who, p: at ? " — " + at : "" });
   return ar ? `هقولك لما ${u.who} يوصل${at ? " " + at : ""}` : tr("I'll tell you when {n} arrives{p}", { n: u.who, p: at ? " — " + at : "" });
 }

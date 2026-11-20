@@ -1429,7 +1429,7 @@ export const FR = {
   "I sell spare parts to workshops": "Je vends des pièces détachées aux garages",
   "Latest records": "Dernières fiches",
   "Leave without saving the changes?": "Quitter sans enregistrer les modifications ?",
-  "Left": "Gauche",
+  "Left": "Reste",
   "Links between tables": "Liens entre les tables",
   "Make it green instead of blue": "Passer en vert au lieu de bleu",
   "Must be filled in": "Obligatoire",
@@ -1539,7 +1539,7 @@ export const FR = {
   "Company": "Entreprise",
   "Start (2021-03)": "Début (2021-03)",
   "End": "Fin",
-  "Start": "Début",
+  "Start": "Commencer",
   "I still work here": "J'y travaille toujours",
   "Degree / course": "Diplôme / formation",
   "School": "Établissement",
@@ -13071,4 +13071,20 @@ export const FR = {
   "Personal": "Personnel",
   "Study": "Études",
   "Technique": "Technique",
+  // v10.8 launch: Arabic screens read
+  "“Ahmed owes me 500”": "« Ahmed me doit 500 »",
+  "{p} downloaded — works with no internet": "{p} téléchargé — fonctionne sans internet",
+  "{p} is ready": "{p} est prêt",
+  // v10.8 device levels without Studio (archived)
+  "Small models, lighter effects": "Petits modèles, effets plus légers",
+  "Models up to Core": "Modèles jusqu’à Core",
+  "Models up to Sense and Blaze+": "Modèles jusqu’à Sense et Blaze+",
+  "Every phone model up to Zenith+, Everest in flash mode": "Tous les modèles mobiles jusqu’à Zenith+, Everest en mode flash",
+  "Every model, the biggest included": "Tous les modèles, même les plus grands",
+  "Start date": "Date de début",
+  "Planned": "Prévu",
+  // v10.8 places (not the app's Home page)
+  "home (the house)": "la maison",
+  "work (the workplace)": "le travail",
+  "school (the place)": "l’école",
 };
