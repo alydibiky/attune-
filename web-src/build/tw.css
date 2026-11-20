@@ -159,14 +159,14 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
 }
 
 /* v10.7 lively motion (Ali OK'd OK-AN — motion.js does the ticks and the pages): buttons press in a little, and a sheet or box that opens
-   over the page (a dimmed full-screen layer) slides up into place. Off when the phone is set to remove animations. */
+   over the page (a dimmed full-screen layer — bg-black/…; never a full page like the artifact viewer) slides up into place. Off when the phone is set to remove animations. */
 @media (prefers-reduced-motion: no-preference) {
   button:not(:disabled), [role=button] { transition: transform .12s cubic-bezier(.2,.8,.2,1); }
   button:not(:disabled):active, [role=button]:active { transform: scale(.96); }
   @keyframes att-sheet-up { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes att-dim-in { from { background-color: transparent; } }
-  .fixed.inset-0:not([data-testid=phone-side]) > :not(.fixed):not(.absolute):not(script):not(style) { animation: att-sheet-up .28s cubic-bezier(.2,.8,.2,1) both; }
-  html:not(.att-wide) .fixed.inset-0:not([data-testid=phone-side]) > :not(.fixed):not(.absolute) { animation-duration: .32s; }
+  .fixed.inset-0[class*="bg-black"]:not([data-testid=phone-side]) > :not(.fixed):not(.absolute):not(script):not(style) { animation: att-sheet-up .28s cubic-bezier(.2,.8,.2,1) both; }
+  html:not(.att-wide) .fixed.inset-0[class*="bg-black"]:not([data-testid=phone-side]) > :not(.fixed):not(.absolute) { animation-duration: .32s; }
   /* the phone's side menu comes in from its own side (the right in Arabic), not up */
   @keyframes att-side-in { from { transform: translateX(-100%); } to { transform: none; } }
   @keyframes att-side-in-rtl { from { transform: translateX(100%); } to { transform: none; } }
