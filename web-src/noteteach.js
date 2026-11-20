@@ -192,6 +192,8 @@ export const skipAsk = (teach, name) => ({ ...teach, skip: [...new Set([...(teac
 /** Chat / voice: "where's my wife?" / «مراتي فين؟» → the newest notification about her, or null. */
 export function whereIs(q, notes = [], dir = { items: [] }) {
   const t0 = String(q || "").toLowerCase().replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, "");
+  // an ALERT for later ("tell me when my wife gets home", «قولّي لما مراتي توصل») is a watch rule, not "where is she now"
+  if (/\b(?:tell|notify|alert|remind|ping|text|message) me\b[^.?!]{0,30}\b(?:when|once|as soon as|if)\b|\blet me know\b[^.?!]{0,20}\b(?:when|once|as soon as|if)\b|(?:قول(?:ّ)?ي|بلغني|نبهني|عرفني|ابعتلي)\s+(?:لما|اول ما|أول ما|لو)|(?:لما|اول ما|أول ما)\s+.{1,30}(?:قول(?:ّ)?ي|بلغني|نبهني|عرفني)/i.test(t0)) return null;
   // v10.6 (the 10,000 run: "Her phone is off. Where is mum?"): only the sentence that ASKS counts — the one with the question words
   const TRIG = /\b(where|where's|wheres|location|arrived|reach(ed)?|(?:got|get|gets|is|at)\s+home|left\s+(?:work|home|the office|office|school|the club|club)|track(?:ing)?)\b|\b(?:is|has)\b.{1,40}\b(?:home|back|arrived|there)\b|في\s+البيت|فين|وصلت|وصل|مكانها|مكانه|(?:^|\s)مكان\s|روحت|روّحت|رجعت|رجع البيت/i;
   const segs = t0.split(/[.!؟?\n]+|\s+—\s+/).map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean);

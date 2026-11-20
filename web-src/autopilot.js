@@ -200,7 +200,7 @@ export function suggestions(notes = [], { now = Date.now(), s = emptyState(), le
 }
 /** "Delivered" notices → the delivery follow-ups that are now done (their reminder ids, to remove). */
 export function deliveredDone(notes = [], s = emptyState()) {
-  const now = Date.now(), apps = new Set(notes.filter((n) => (n.ts || 0) >= now - 3 * DAY).map((n) => { const x = suggestCached(n, { s, now, recent: [] }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));   // (v10.6: the last 3 days, as the cards)
+  const now = Date.now(), apps = new Set(notes.map((n) => { const x = suggestCached(n, { s, now, recent: [] }); return x && x.kind === "delivered" ? x.app : null; }).filter(Boolean));   // (v10.6: each reading remembered)
   return (s.done || []).filter((d) => d.kind === "followup" && apps.has(d.app) && !d.closed).map((d) => d.rid).filter(Boolean);
 }
 

@@ -156,7 +156,7 @@ export function RecallPage({ memory = [], remember, native, call, readText, open
   const toggleNotes = () => {
     const on = !notesOn;
     if (on && !access) { try { native.openPayAccess(); } catch (e) {} flash && flash(tr("Turn on Notification access for Attune, then come back")); }
-    try { native.recallNotesOn(on); } catch (e) {}
+    try { (forgetRecallCache(), native).recallNotesOn(on); } catch (e) {}
     setNotesOn(on); setTick((t) => t + 1);
     if (!on) flash && flash(tr("New notifications are not kept now — the ones kept stay"));
   };
