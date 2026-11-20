@@ -63,7 +63,7 @@ export function WritingStudio({ engine = {}, targets = [], flash }) {
     className={U.area + " min-h-[150px]"} data-testid="writing-text" />;
   const versions = [...st.versions].reverse();
   return (
-    <div className="space-y-4" data-testid="writing-page">
+    <div className="calm space-y-4" data-testid="writing-page">
       <div className="flex items-end gap-3 flex-wrap"><div className="flex-1 min-w-0"><h2 className={U.pageH1}>{tr("Writing")}</h2>
         <p className={"m-0 mt-0.5 text-[13px] " + U.muted}>{tr("Improve a prompt for any AI, shorten it, make it sound like you — each run keeps a version.")}</p></div>
         {st.versions.length ? <button onClick={() => put({ ...st, versions: [] })} className={"min-h-[40px] text-[12.5px] font-bold underline " + U.muted} data-testid="writing-clear">{tr("Clear the versions")}</button> : null}</div>

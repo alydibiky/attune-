@@ -45,6 +45,8 @@ with sync_playwright() as p:
         check(page.locator("[data-testid=writing-page]").is_visible(), name + ": the Writing page opens")
         for t in ("improve", "shorten", "humanize", "copilot", "recipes"): check(page.locator("[data-testid=writing-tab-%s]" % t).count() == 1, name + ": tab " + t)
         check(page.locator("[data-testid=writing-for-chatgpt]").count() == 1 and page.locator("[data-testid=writing-for-gemini]").count() == 1, name + ": For ChatGPT / Gemini")
+        bg = page.evaluate("getComputedStyle(document.querySelector('[data-testid=writing-go]')).backgroundColor")
+        check(bg not in ("rgba(0, 0, 0, 0)", "transparent"), name + ": the main button has its colour (it was drawn as bare text): " + bg)
         page.locator("[data-testid=writing-for-gemini]").click()
         page.locator("[data-testid=writing-tab-shorten]").click(); page.fill("[data-testid=writing-text]", LONG)
         page.locator("[data-testid=writing-trim]").click(); page.wait_for_timeout(600)
