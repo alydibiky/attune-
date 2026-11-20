@@ -234,7 +234,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
     <div className="calm shrink-0 px-2 py-2" data-testid="paylog"><div className={U.card}>
       <button onClick={() => setOpen((v) => !v)} className="w-full min-h-[52px] flex items-center gap-2 px-3.5 py-2.5 text-start" data-testid="paylog-open">
         <Bell size={15} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[13.5px] font-extrabold">{tr("{n} payments read from your notifications", { n: items.length })}</span>
-        <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
+        <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Check")}</span></button>
       {open ? (
         <div className="px-3.5 pb-3.5 space-y-2">
           {items.slice(0, 30).map((e) => (

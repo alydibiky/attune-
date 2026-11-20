@@ -15,6 +15,15 @@ for (const [l, nm] of Object.entries(L)) {
 const JA = (await import("../../web-src/i18n-ja.js")).JA; ok(JA.Clear === "クリア", "ja: Clear = クリア");
 const DE = (await import("../../web-src/i18n-de.js")).DE; ok(DE["Didn't come"] === "Nicht gekommen", "de: “Didn't come” is a person");
 for (const [l, nm] of [["es", "ES"], ["it", "IT"], ["tr", "TRK"], ["id", "IDN"]]) { const d = (await import("../../web-src/i18n-" + l + ".js"))[nm]; ok(!/concepto|descrizione|açıklama|keterangan/i.test(d.Details), l + ": “Details” = details: " + d.Details); }
+ok(DE.Emergency === "Notfall" && DE.Jobs === "Aufgaben", "de: the emergency card is «Notfall» (not savings); night jobs «Aufgaben»");
+{ const ZH = (await import("../../web-src/i18n-zh.js")).ZH; ok(ZH.Jobs === "任务", "zh: night jobs = 任务 (not work orders)"); }
+{ const fs = await import("fs"); const pl = fs.readFileSync(new URL("../../web-src/paylog-ui.jsx", import.meta.url), "utf8"), mp = fs.readFileSync(new URL("../../web-src/money-pages-ui.jsx", import.meta.url), "utf8");
+  ok(!/tr\("Review"\)/.test(pl), "payments: “Check” (Review read as “revise for an exam” in 7 languages)");
+  ok(/tr\("Zakāt certificate"\)/.test(mp), "Zakāt: its own “certificate” line (ja «資格» is a qualification, for the CV)"); }
+{ const g = async (l, n) => (await import("../../web-src/i18n-" + l + ".js"))[n];
+  const TH = await g("th", "TH"), VI = await g("vi", "VI"), ZH2 = await g("zh", "ZH"), RU = await g("ru", "RU"), JA2 = await g("ja", "JA");
+  ok(!/ถูก/.test(TH["Not yet"]) && !/đúng/.test(VI["Not yet"]) && !/不对/.test(ZH2["Not yet"]), "“Not yet” = not done yet (it read “not correct yet” in th / vi / zh)");
+  ok(DE.Design === "Design" && RU.Design === "Оформление" && JA2.Design === "デザイン", "“Design” = the look (slides, CV), not an engineering draft"); }
 // "tell me when my wife gets home": the place is a house, not the app's Home page («Inicio», «Startseite»)
 const NT = await import("../../web-src/noteteach.js");
 const ES = (await import("../../web-src/i18n-es.js")).ES, DE2 = (await import("../../web-src/i18n-de.js")).DE;

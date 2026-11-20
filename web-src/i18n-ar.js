@@ -10194,4 +10194,5 @@ export const AR = {
   "home (the house)": "البيت",
   "work (the workplace)": "الشغل",
   "school (the place)": "الجامعة",
+  "Zakāt certificate": "شهادة الزكاة",
 };

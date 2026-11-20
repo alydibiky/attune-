@@ -4078,7 +4078,7 @@ export const VI = {
   "answer: {a}": "đáp án: {a}",
   "Step {i} of {n}": "Bước {i}/{n}",
   "Your answer": "Câu trả lời của bạn",
-  "Not yet": "Chưa đúng",
+  "Not yet": "Chưa",
   "Here is how:": "Cách làm như sau:",
   "Right!": "Đúng rồi!",
   "Play the lesson": "Phát bài học",
@@ -13086,4 +13086,5 @@ export const VI = {
   "home (the house)": "nhà",
   "work (the workplace)": "chỗ làm",
   "school (the place)": "trường",
+  "Zakāt certificate": "Giấy chứng nhận zakat",
 };

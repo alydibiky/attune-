@@ -1,5 +1,28 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (20 Nov 2026, later — v10.8: launch items 1–6, Ali: "Do first 6" + "I won't be able to reach any testers for the other languages")
+> **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/DxuJVkUozBd3UHUgvSFNux (docs/mockups/launch-store.html) — store page
+> ST1–ST3, screenshots SS1–SS2, crash reports CR1/CR3, languages on the first install LG1/LG2, the support e-mail MAIL (rec. ST1 SS1 CR3 LG1).
+> Then build: the store listing (STORE_LISTING.md, AR + EN, 6 screenshots) and the crash log + Send a report (BatteryGuard's log goes in it).
+> **Speed (L4)** with a phone filled like his (3,000 kept notifications, 900 payments, 250 reminders), CPU ×4: Recall 8.6 s → 0.5–0.9 s
+> (lookback.js noteMeaning cached per day + warmRecall in idle pieces 6 s after start); Autopilot works out its cards in idle pieces
+> (autopilot.js suggestionsSoon; deliveredDone reads only since the oldest open follow-up); Home's AutopilotCard and "Attune noticed" wait
+> for the first screen (motion.js useAfterFirstPaint). The box is drawn at 1.7–2.2 s; the longest freeze after opening 3.1 → 1.0–1.2 s.
+> (Measure with the page's own clock — a MutationObserver — Playwright's wait_for_selector can't check during a long task: it showed 7 s.)
+> **Size (L5):** Python already leaves the Play build (19 MB, pypack). New: build/i18n-split.mjs ships only the lines the code can show
+> (22 → 17 MB; unit v1080size: every tr("…") line kept in every language); the Play build reads barcodes / text through Play services
+> (playImplementation + manifest DEPENDENCIES barcode,ocr) — full/lite/auto keep them inside for phones without Google (Huawei).
+> **Battery (L6):** BatteryGuard.kt — the wake word stops on Battery saver or ≤ 15 % not charging (listens again by itself); agents'
+> and Scout's rounds wait while low; an on-phone log of every background job (NativeBridge.batteryLog / batteryNow) — for the report page.
+> **Arabic screens (L3):** every page + Settings read: «أتيون» → Attune (74 Egyptian + 46 Fusha lines; the wake word keeps «يا أتيون»),
+> «الزق» → «الصق», «تفكير» → «تذكيرات», a garbled Projects line, «أسبوعك», device levels without Studio, dates in the app's language on 21
+> screens (toLocaleDateString(dateLocale())), "Start" (buttons) vs "Start date" (CV), "Plan" (Pro) vs "Planned" (month plan), Schedule,
+> Details, School. e2e_v1080arabic: no English left on any page in Arabic (phone + computer). **Open: the travel guides (COUNTRY_PACKS,
+> 43 countries, ~214 KB) are English only — ask Ali before translating (a content job).**
+> **Other languages without testers (L7):** checked by meaning: month plan "Left" = money left (it was the DIRECTION in all 20, «شمال»
+> too), "Start" a verb, Japanese "Clear" was «他のアプリから保存», "Details", German "Didn't come"; "tell me when my wife gets home" said
+> the app's Home page («Inicio») — places have their own words now. unit v1080meaning. Next: the rest of the 270 two-meaning words.
+
 > ## START HERE (20 Nov 2026 — v10.7: Ali OK'd OK-AN ("also make to-do lists editable easily"), OK-WR ("For" = which AI — ChatGPT,
 > Gemini…; NOT which model writes on the phone: Attune picks the best way itself), OK-FO — BUILT)
 > **Motion** (web-src/motion.js): tickOut(el, then, {leave}) — the tick box pops, 6 sparks, the row ([data-tickrow]) slides away and

@@ -4078,7 +4078,7 @@ export const TH = {
   "answer: {a}": "คำตอบ: {a}",
   "Step {i} of {n}": "ขั้นที่ {i} จาก {n}",
   "Your answer": "คำตอบของคุณ",
-  "Not yet": "ยังไม่ถูก",
+  "Not yet": "ยังไม่ได้",
   "Here is how:": "ทำแบบนี้:",
   "Right!": "ถูกต้อง!",
   "Play the lesson": "เล่นบทเรียน",
@@ -13086,4 +13086,5 @@ export const TH = {
   "home (the house)": "บ้าน",
   "work (the workplace)": "ที่ทำงาน",
   "school (the place)": "โรงเรียน",
+  "Zakāt certificate": "ใบรับรองซะกาต",
 };

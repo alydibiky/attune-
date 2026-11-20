@@ -3128,7 +3128,7 @@ export const RU = {
   "That code is not valid.": "Этот код недействителен.",
   "Records": "Записи",
   "Data": "Данные",
-  "Design": "Проект",
+  "Design": "Оформление",
   "Summary": "Сводка",
   "Continue ▸": "Продолжить ▸",
   "long answer — tap Continue": "длинный ответ — нажмите «Продолжить»",
@@ -13086,4 +13086,5 @@ export const RU = {
   "home (the house)": "дом",
   "work (the workplace)": "работа",
   "school (the place)": "школа",
+  "Zakāt certificate": "Справка о закяте",
 };

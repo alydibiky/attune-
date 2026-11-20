@@ -13087,4 +13087,5 @@ export const FR = {
   "home (the house)": "la maison",
   "work (the workplace)": "le travail",
   "school (the place)": "l’école",
+  "Zakāt certificate": "Attestation de zakât",
 };

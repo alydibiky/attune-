@@ -13086,4 +13086,5 @@ export const FA = {
   "home (the house)": "خانه",
   "work (the workplace)": "محل کار",
   "school (the place)": "مدرسه",
+  "Zakāt certificate": "گواهی زکات",
 };

@@ -13078,4 +13078,5 @@ export const ARB = {
   "home (the house)": "المنزل",
   "work (the workplace)": "العمل",
   "school (the place)": "المدرسة",
+  "Zakāt certificate": "شهادة الزكاة",
 };

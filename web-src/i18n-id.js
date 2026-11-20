@@ -13087,4 +13087,5 @@ export const IDN = {
   "home (the house)": "rumah",
   "work (the workplace)": "kantor",
   "school (the place)": "sekolah",
+  "Zakāt certificate": "Sertifikat zakat",
 };

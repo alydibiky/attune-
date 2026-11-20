@@ -13087,4 +13087,5 @@ export const SW = {
   "home (the house)": "nyumbani",
   "work (the workplace)": "kazini",
   "school (the place)": "shuleni",
+  "Zakāt certificate": "Cheti cha zaka",
 };

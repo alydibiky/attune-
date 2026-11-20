@@ -13087,4 +13087,5 @@ export const TRK = {
   "home (the house)": "ev",
   "work (the workplace)": "iş yeri",
   "school (the place)": "okul",
+  "Zakāt certificate": "Zekât belgesi",
 };

@@ -13086,4 +13086,5 @@ export const KO = {
   "home (the house)": "집",
   "work (the workplace)": "직장",
   "school (the place)": "학교",
+  "Zakāt certificate": "자카트 증명서",
 };

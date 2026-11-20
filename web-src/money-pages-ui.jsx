@@ -293,7 +293,7 @@ export function ZakatMore({ more, cur, runDo, openLedger, flash }) {
       {(more.history || []).map((h) => <div key={h.id} className="flex items-center gap-2 py-2.5 border-t border-[var(--c-ln)] first:border-t-0" data-testid="zakat-history-row">
         <span className="flex-1 min-w-0"><b className="block text-[14px] tabular-nums" dir="ltr">{amt(h.paid, h.currency)}</b>
           <span className="block text-[12px] c-sub">{dayLabel(h.date)}{h.hijri ? " · " + h.hijri : ""}{h.due ? " · " + T("due {d}", { d: amt(h.due, h.currency) }) : ""}</span></span>
-        <button onClick={() => cert(h)} disabled={!!busy} className={U.btnS + " shrink-0"} data-testid="zakat-cert">{tr("Certificate")}</button></div>)}
+        <button onClick={() => cert(h)} disabled={!!busy} className={U.btnS + " shrink-0"} data-testid="zakat-cert">{tr("Zakāt certificate")}</button></div>)}
       {!(more.history || []).length ? <p className="m-0 text-[13px] c-sub py-1">{tr("No closed year yet — when you finish paying a year's Zakāt, close it here and keep its certificate.")}</p> : null}
     </Card>
     {/* the old tab's closing note (the ledger's own words), in the person's language */}

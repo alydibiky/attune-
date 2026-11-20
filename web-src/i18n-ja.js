@@ -3128,7 +3128,7 @@ export const JA = {
   "That code is not valid.": "コードが無効です。",
   "Records": "レコード",
   "Data": "データ",
-  "Design": "設計",
+  "Design": "デザイン",
   "Summary": "まとめ",
   "Continue ▸": "続ける ▸",
   "long answer — tap Continue": "長い回答です。続けるをタップ",
@@ -13086,4 +13086,5 @@ export const JA = {
   "home (the house)": "家",
   "work (the workplace)": "職場",
   "school (the place)": "学校",
+  "Zakāt certificate": "ザカート証明書",
 };

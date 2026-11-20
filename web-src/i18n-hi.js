@@ -13087,4 +13087,5 @@ export const HI = {
   "home (the house)": "घर",
   "work (the workplace)": "दफ़्तर",
   "school (the place)": "स्कूल",
+  "Zakāt certificate": "ज़कात प्रमाणपत्र",
 };

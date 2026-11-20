@@ -13086,4 +13086,5 @@ export const BN = {
   "home (the house)": "বাড়ি",
   "work (the workplace)": "অফিস",
   "school (the place)": "স্কুল",
+  "Zakāt certificate": "যাকাত সনদ",
 };

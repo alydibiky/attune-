@@ -13087,4 +13087,5 @@ export const UR = {
   "home (the house)": "گھر",
   "work (the workplace)": "دفتر",
   "school (the place)": "اسکول",
+  "Zakāt certificate": "زکوٰۃ سرٹیفکیٹ",
 };

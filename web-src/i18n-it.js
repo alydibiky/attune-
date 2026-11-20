@@ -3129,7 +3129,7 @@ export const IT = {
   "That code is not valid.": "Quel codice non è valido.",
   "Records": "Record",
   "Data": "Dati",
-  "Design": "Progetto",
+  "Design": "Stile",
   "Summary": "Riepilogo",
   "Continue ▸": "Continua ▸",
   "long answer — tap Continue": "risposta lunga: tocca Continua",
@@ -13087,4 +13087,5 @@ export const IT = {
   "home (the house)": "casa",
   "work (the workplace)": "il lavoro",
   "school (the place)": "la scuola",
+  "Zakāt certificate": "Certificato di zakat",
 };
