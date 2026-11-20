@@ -153,7 +153,7 @@ chatpilot-ui.jsx: <button type="submit" disabled={!say.trim() || step === "model
 code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
 donelog-ui.jsx: <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleStr
-lists-ui.jsx: {x.save ? <button onClick={() => setEditing(x.k)} aria-label={tr("Change")} title={tr("Change")} className="w-10 h-10 rounded-full grid plac
+lists-ui.jsx: <button onClick={onLabel} className="flex-1 min-w-0 min-h-[44px] text-start flex items-center" data-testid={testid + "-words"} title={tr("Ch
 
 ## Checking…
 agents-ui.jsx: <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy

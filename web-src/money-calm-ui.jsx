@@ -149,7 +149,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
   // the computer: two calm panes — the box, the balance and the latest on one side; the totals, one "right now" and the Report on the other
   const safe = <SafeSpend inline />;
   return (
-    <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }} data-testid="money-calm">
+    <div className="grid gap-[18px] items-start att-2col" data-testid="money-calm">
       <div className="flex flex-col gap-3.5 min-w-0">
         {box}
         <BoxResult res={result} clear={clearResult} openLedger={openLedger} />
@@ -418,7 +418,7 @@ export function MoneyReport({ rep, all, wide, back, zak, exportCsv, exportPdf, o
         <Tile label={now ? tr("Spent this month") : spentL} value={amt(rep.month.out, rep.cur)} tone="neg" sub={T("{n} entries across {c} categories", { n: rep.month.count, c: rep.month.cats.length })} testid="money-rep-out" />
         <Tile label={tr("Bills · Next 7 days")} value={amt(rep.dueTotal, rep.cur)} tone={rep.due.length ? "warn" : ""} sub={rep.due.length ? rep.due.slice(0, 2).map((d) => d.note + " " + dayLabel(d.date)).join(" · ") : tr("No bills due this week.")} testid="money-rep-bills" />
       </div>
-      <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>
+      <div className="grid gap-[18px] items-start att-2col">
         <div className="flex flex-col gap-3.5 min-w-0"><Cashflow rep={rep} wide /><ZakatCard zak={zak} cur={all.cur} openZakat={openZakat} /></div>
         <div className="flex flex-col gap-3.5 min-w-0"><WhereItWent rep={rep} wide />{rep.month.in > 0 ? <WhereItWent rep={rep} wide income /> : null}<Weeks rep={rep} /></div>
       </div>

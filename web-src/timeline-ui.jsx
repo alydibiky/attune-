@@ -2,6 +2,7 @@
    payments, bills, debts and the promises people made in chats — each with "what slips if you skip this" and a tap that opens
    the page that owns it. Code only (timeline.js), from the same stores those pages keep. */
 import { projectDates } from "./projlinks.js";   // v10.1 P1
+import { tickOut } from "./motion.js";   // v10.7 OK-AN
 import { loadProjects, openProject } from "./spaces.js";
 import { MyThings } from "./things-ui.jsx";   // v10.1 T1
 import React, { useEffect, useMemo, useState } from "react";
@@ -194,7 +195,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
         {asks.map((a) => <div key={a.id} className={bubble} data-testid="fu-q" data-act="note-ask">
           <NoteAskCard ask={a} flash={flash} onDone={(m) => { setAsks((x) => x.filter((y) => y.id !== a.id)); if (m) setLog((l) => [...l, { id: "na:" + a.id, q: "", a: a.src.name, msg: m, undo: null }]); }} /></div>)}
         {qs.map((x) => { const act = actionOf(x), l = act === "ask" ? lifeOf(x) : null;
-          return <div key={x.id + "@" + x.date} className={bubble} data-testid="fu-q" data-act={act || "open"} data-kind={x.kind}>
+          return <div key={x.id + "@" + x.date} className={bubble} data-testid="fu-q" data-act={act || "open"} data-kind={x.kind} data-tickrow="">
             {act === "ask" && l && l.c.person
               ? <PersonAsk x={{ amount: x.amount, title: x.what + (x.late ? " · " + tr("Late") : ""), late: x.late, ask: { id: l.c.id, i: l.i, cur: l.c.currency, person: l.c.person, dir: l.c.dir } }} onDone={(m) => answer(x, m.startsWith(tr("I'll ask again tomorrow")) ? tr("Not yet") : tr("Paid"), m, null)} />
               : <>
@@ -205,7 +206,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
                     onDone={(r) => { setPaying(""); answer(x, tr("Paid"), r.recorded ? tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: l.c.currency || "", t: [r.account, r.cat].filter(Boolean).join(" · ") }) : tr("Done"), () => { r.undo(); setV((y) => y + 1); }); }} /> : null; })()
                   : act === "pay" ? <><button className={BP} onClick={() => { const l = lifeOf(x); if (l && l.c.planned && !(l.c.payer && l.c.payer !== "me")) setPaying(x.id + "@" + x.date); else came(x); }} data-testid="fu-yes">{x.ck === "regular" ? tr("Came ✓") : tr("Paid")}</button>
                     {x.ck === "regular" ? <button className={B} onClick={() => didnt(x)} data-testid="fu-no">{tr("Didn't come")}</button> : <button className={B} onClick={() => later(x, tr("Not yet"))} data-testid="fu-no">{tr("Not yet")}</button>}</> : null}
-                  {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={() => later(x, tr("Tomorrow"))} data-testid="fu-no">{tr("Tomorrow")}</button></> : null}
+                  {act === "done" ? <><button className={BP} onClick={(e) => tickOut(e.currentTarget, () => did(x))} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={() => later(x, tr("Tomorrow"))} data-testid="fu-no">{tr("Tomorrow")}</button></> : null}
                   {act === "errand" ? <button className={BP} onClick={() => navTo && navTo("errands")} data-testid="fu-open">{tr("Open")}</button> : null}
                   {!act ? <><button className={BP} onClick={() => openItem(x)} data-testid="fu-open">{tr("Open")}</button><button className={B} onClick={() => later(x, tr("Later"))} data-testid="fu-no">{tr("Later")}</button></> : null}
                 </div></>}

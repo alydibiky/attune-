@@ -122,7 +122,7 @@ html:not(.att-light) .wk-seg button.on { background: rgba(255,255,255,.14); colo
 html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A0F15 }
 .wk-allday { row-gap: 4px; margin-bottom: 8px; align-items: center } .wk-lab { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--c-mut); text-align: end; padding-inline-end: 6px; align-self: center }
 .wk-pill { border-radius: 8px; padding: 5px 8px; font-weight: 800; font-size: 11.5px; display: flex; gap: 6px; align-items: center; justify-content: space-between; min-width: 0; min-height: 26px; text-align: start; white-space: nowrap }
-.wk-pill .wk-pn { min-width: 0; overflow: hidden; text-overflow: ellipsis } .wk-pill em { flex: none; font-style: normal; font-weight: 900; font-variant-numeric: tabular-nums }
+.wk-pill .wk-pn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2 }   /* v10.7: two lines in a narrow day (an open foldable), never cut to "CARR…" */ .wk-pill em { flex: none; font-style: normal; font-weight: 900; font-variant-numeric: tabular-nums }
 .wk-more { font-size: 11px; font-weight: 800; color: var(--c-mut); padding-inline-start: 8px }
 .wk-grid { position: relative } .wk-hours { position: relative } .wk-hours span { position: absolute; inset-inline-end: 8px; transform: translateY(-6px); font-size: 10px; font-weight: 700; color: var(--c-mut) }
 .wk-col { position: relative; border-radius: 10px; background: var(--wk-col) } .wk-col.wk-today { background: var(--wk-today) }
@@ -157,3 +157,24 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
   .att-pane .lg\:grid-cols-3, .att-pane .md\:grid-cols-3, .att-pane .xl\:grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .att-pane .lg\:space-y-0 > :not(:last-child) { margin-bottom: 0.5rem; }
 }
+
+/* v10.7 lively motion (Ali OK'd OK-AN — motion.js does the ticks and the pages): buttons press in a little, and a sheet or box that opens
+   over the page (a dimmed full-screen layer) slides up into place. Off when the phone is set to remove animations. */
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled), [role=button] { transition: transform .12s cubic-bezier(.2,.8,.2,1); }
+  button:not(:disabled):active, [role=button]:active { transform: scale(.96); }
+  @keyframes att-sheet-up { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes att-dim-in { from { background-color: transparent; } }
+  .fixed.inset-0 > :not(.fixed):not(.absolute):not(script):not(style) { animation: att-sheet-up .28s cubic-bezier(.2,.8,.2,1) both; }
+  html:not(.att-wide) .fixed.inset-0 > :not(.fixed):not(.absolute) { animation-duration: .32s; }
+}
+
+/* v10.7 the Writing page: the versions beside the text when there is room (computer, an unfolded foldable) */
+.writing-cols { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .writing-cols:has(> [data-testid=writing-versions]) { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); } }
+
+/* v10.7 (OK-FO: an open foldable like the computer, "nothing is cut"): the page measures ITSELF (style + inline-size containment only —
+   fixed sheets and the + button are not affected); a page's two columns (.att-2col: Money) only when the page has 820 px for them. */
+.att-cq { container-type: inline-size; container-name: page; }
+.att-2col { grid-template-columns: minmax(0, 1fr); }
+@container page (min-width: 820px) { .att-2col { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); } }

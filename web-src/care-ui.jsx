@@ -3,6 +3,7 @@
    shown with what was read, missing parts asked; daily reminders; interaction warnings quoted from official labels) · Lab
    results (read from a report, judged only by its printed range, trends) · Family. See care.js for the safety rules.
    Tests: tests/e2e_v727care.py.                                                                                              */
+import { tickOut } from "./motion.js";   // v10.7 OK-AN
 import { photoOk, askRetake } from "./photogate.js";
 import React, { useEffect, useRef, useState } from "react";
 import { choosePhoto } from "./photopick.js";
@@ -230,10 +231,10 @@ export function CarePage({ readText, search, webSearch, packs, installPack, remi
       {tab === "today" ? (
         <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start" data-testid="care-today">
           {!doses.length ? <p className="c-sub">{tr("No doses today. Add a prescription in Medicines.")}</p> : doses.map((x) => (
-            <button key={x.key} onClick={() => take(x.key)} className={cardPad + " w-full flex items-center gap-3 text-start py-2.5"} data-testid="care-dose-row" aria-pressed={x.taken}>
+            <button key={x.key} onClick={(e) => (x.taken ? take(x.key) : tickOut(e.currentTarget, () => take(x.key), { leave: false }))} className={cardPad + " w-full flex items-center gap-3 text-start py-2.5"} data-testid="care-dose-row" aria-pressed={x.taken} data-tickrow="">
               <span className={"c-num tabular-nums font-extrabold w-14 " + (x.late ? "c-neg" : "")}>{x.time}</span>
               <span className="flex-1 min-w-0"><b className="block" dir="auto">{x.med.name} {x.med.strength}</b><span className="c-sub text-[12.5px]" dir="auto">{[x.member && members.length > 1 ? x.member.name : "", x.med.dose, x.med.food ? tr(x.med.food) : ""].filter(Boolean).join(" · ")}</span></span>
-              <span className="w-7 h-7 rounded-full grid place-items-center shrink-0" style={{ background: x.taken ? "var(--c-acc)" : "transparent", border: "1.5px solid " + (x.late ? "var(--c-neg)" : "var(--c-ln)"), color: "var(--c-on-acc)" }}>{x.taken ? <Check size={15} /> : null}</span>
+              <span data-tickbox="" className="w-7 h-7 rounded-full grid place-items-center shrink-0" style={{ background: x.taken ? "var(--c-acc)" : "transparent", border: "1.5px solid " + (x.late ? "var(--c-neg)" : "var(--c-ln)"), color: "var(--c-on-acc)" }}>{x.taken ? <Check size={15} /> : null}</span>
             </button>))}
         </div>) : null}
 

@@ -41,6 +41,10 @@ PROBE = r"""() => {
       const rects = [...rg.getClientRects()].filter((x) => x.width > 0.5);
       if (rects.length > 1 && Math.abs(rects[0].top - rects[rects.length - 1].top) > 4 && !/[-‑–]/.test(w)) { out.push('word broken: “' + w + '” in ' + label(el)); break; } }
     if (out.length > 20) break; }
+  // v10.7 (Ali on the open foldable: "nothing is cut"): a line shortened with "…" that hides more than 40 % of its words
+  for (const e of document.querySelectorAll('#root *')) { const cs = getComputedStyle(e); if (cs.textOverflow !== 'ellipsis' || hiddenAway(e)) continue;
+    const r = e.getBoundingClientRect(); if (r.width < 8 || !e.textContent.trim()) continue;
+    if (e.scrollWidth > e.clientWidth * 1.7 && e.textContent.trim().length > 6) { out.push('cut short: ' + label(e)); if (out.length > 24) break; } }
   // text drawn in a see-through colour (v10.6: a toast's words were the glass page's transparent background colour)
   for (const e of document.querySelectorAll('#root *')) { if (!e.childNodes.length || ![...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())) continue;
     const cs = getComputedStyle(e); if (hiddenAway(e)) continue; const m = /rgba\([^)]*,\s*([\d.]+)\)/.exec(cs.color); if ((m && +m[1] < 0.05) || cs.color === 'transparent') { out.push('invisible text: ' + label(e)); break; } }
@@ -51,7 +55,7 @@ bad = {}
 with sync_playwright() as p:
     br = p.chromium.launch()
     for w in WIDTHS:
-        desk = w >= 1024
+        desk = w >= 640
         ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=(w, 860) if desk else None, extra_init=SEED)
         if not desk: page.set_viewport_size({"width": w, "height": 860})
         page.goto(env.url); page.wait_for_timeout(1800)

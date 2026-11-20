@@ -10,8 +10,11 @@ import { tr } from "./i18n.js";
 import { useBackDepth } from "./backstack.js";
 import { SetupSideStrip } from "./setup-ui.jsx";   // v9.9.39 SB-4
 
-export const SIDE_W = 268;
-const WIDE_Q = "(min-width: 1024px)";
+export const SIDE_W = 268, RAIL_W = 72;
+// v10.7 (Ali OK'd OK-FO: "an unfolded foldable like the computer — as long as it looks good, nothing is cut, it is clear"): the computer's
+// layout from 640 px (an open foldable, a tablet); below 900 px the side menu is a strip of icons (RAIL_W) so the list and the details
+// keep their room — ☰ opens the whole menu over the page.
+const WIDE_Q = "(min-width: 640px)", RAIL_Q = "(max-width: 899px)";
 const OPEN_KEY = "attune:side:open";
 
 /** true on a computer-sized screen; follows the window as it is resized */
@@ -27,18 +30,45 @@ export function useDesktopWide() {
   return w;
 }
 
-/** The sidebar open/closed (remembered); sets the page's --side / --nav-h so fixed panels make room. */
+/** true on a screen 640–899 px wide (an open foldable): the side menu is a strip of icons */
+export function useRail() {
+  const mq = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(RAIL_Q) : null;
+  const [r, setR] = useState(() => !!(mq && mq.matches));
+  useEffect(() => { if (!mq) return; const f = () => setR(mq.matches); f(); mq.addEventListener ? mq.addEventListener("change", f) : mq.addListener(f);
+    return () => (mq.removeEventListener ? mq.removeEventListener("change", f) : mq.removeListener(f)); }, []);
+  return r;
+}
+/** The sidebar open/closed (remembered); sets the page's --side / --nav-h so fixed panels make room. rail = icons only (an open
+ *  foldable); expanded = the whole menu over the page for a moment. */
 export function useSide(wide) {
   const [open, setOpenRaw] = useState(() => { try { return localStorage.getItem(OPEN_KEY) !== "0"; } catch (e) { return true; } });
   const setOpen = (v) => { setOpenRaw(v); try { localStorage.setItem(OPEN_KEY, v ? "1" : "0"); } catch (e) {} };
-  const shown = wide && open;
+  const railMq = useRail(), rail = wide && railMq, [expanded, setExpanded] = useState(false);
+  const shown = wide && (open || rail);
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("att-wide", !!wide);
-    root.style.setProperty("--side", shown ? SIDE_W + "px" : "0px");
+    root.classList.toggle("att-wide", !!wide); root.classList.toggle("att-rail", !!rail);
+    root.style.setProperty("--side", shown ? (rail ? RAIL_W : SIDE_W) + "px" : "0px");
     root.style.setProperty("--nav-h", wide ? "0px" : "58px");
-  }, [wide, shown]);
-  return { shown, open, setOpen };
+  }, [wide, shown, rail]);
+  useEffect(() => { if (!rail) setExpanded(false); }, [rail]);
+  return { shown, open, setOpen, rail, expanded, setExpanded };
+}
+/** v10.7 OK-FO: the side menu as a strip of icons (an open foldable). */
+export function SideRail({ mode, places = [], activePlace = null, navTo, onNewChat, onExpand }) {
+  const on = (id) => (activePlace || mode) === id;
+  const btn = (key, label, Icon, go, act = false, testid = "") => <button key={key} onClick={go} title={tr(label)} aria-label={tr(label)} data-testid={testid || "rail-" + key}
+    className={"w-12 h-12 shrink-0 grid place-items-center rounded-[14px] transition-colors duration-150 " + (act ? "bg-[var(--c-soft)] text-[var(--c-acc)]" : "text-[var(--c-mut)] hover:bg-[var(--c-surf-2)]")}><Icon size={20} /></button>;
+  return <aside className="calm fixed top-0 bottom-0 start-0 z-[56] flex flex-col items-center gap-1 py-3 bg-[var(--c-surf)]! text-[var(--c-ink)] border-e border-[var(--c-ln)]" style={{ width: RAIL_W }} data-testid="side-rail">
+    {btn("menu", "Menu", PanelLeft, onExpand, false, "rail-menu")}
+    {btn("new", "New chat", Plus, onNewChat)}
+    {btn("search", "Find a feature or a chat", Search, onExpand)}
+    <div className="w-8 h-px bg-[var(--c-ln)] my-1.5" />
+    <div className="att-scroll flex-1 min-h-0 overflow-y-auto flex flex-col items-center gap-1 w-full">
+      {places.filter(([id]) => id !== "@").map(([id, label, Icon]) => btn(id, label, Icon, () => navTo(id), on(id)))}
+      {btn("projects", "Projects", Folder, () => navTo("projects"), mode === "projects")}
+    </div>
+  </aside>;
 }
 
 // ---- v6.25: pinned tools (the ★ on the Tools page) and the tools used lately (the Home page) ----

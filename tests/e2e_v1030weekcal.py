@@ -17,7 +17,7 @@ LIFE = {"items": [{"id": "s1", "kind": "installment", "dir": "in", "person": "Sh
 LEDGER = {"currency": "EGP", "accounts": [{"id": "a", "currency": "EGP", "name": "CIB", "start": 30000}], "recurring": [], "txns": [
     {"id": "t1", "date": d(0), "type": "expense", "amount": 1160, "note": "CIB transfer", "account": "a", "ts": ms(0, 0, 5)},
     {"id": "t2", "date": d(0), "type": "expense", "amount": 800, "note": "FACES", "account": "a"}]}
-TRIP = {"depart": d(1), "ret": d(9), "to": "Umrah · Makkah"}
+TRIP = {"depart": d(0), "ret": d(8), "to": "Umrah · Makkah"}
 def init(theme=None):
     s = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));"
          "localStorage.setItem('attune:reminders:v1',%s);localStorage.setItem('attune:life:v1',%s);localStorage.setItem('ledger.v3',%s);localStorage.setItem('attune:trip:v1',%s);"

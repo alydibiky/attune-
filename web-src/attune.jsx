@@ -1,4 +1,5 @@
-import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
+import { recallRaw, forgetRecallCache } from "./notecache.js";
+import { pageIn } from "./motion.js";   // v10.7 OK-AN   // v10.6 one fetch shared
 import { readable, negatedOrder } from "./wrapclean.js";
 import { enterSends } from "./keys.js";
 import { typedPayment } from "./sense.js";
@@ -20,7 +21,7 @@ import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats, applyChatCmd } from "./chat.jsx";
-import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
+import { SideRail, DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { lazyPage, preloadPages } from "./lazy.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -184,7 +185,7 @@ function boughtFromLists(text) {
 import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
 import { addShared as addSharedToProject } from "./projlinks.js";   // v10.1 P4
 import { ListChecks } from "lucide-react";
-import { WritingBox } from "./writing-ui.jsx";
+import { WritingStudio } from "./writing-ui.jsx";   // v10.7 OK-WR
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
 import { expandQueries, mergeHits } from "./research.js";
@@ -2067,7 +2068,8 @@ ${rawInput}
   return callClaude(content, { prefix: prefixKey(docKey, "field", profile) });
 }
 
-async function aiHumanize(text, sample, profile) {
+const HUMAN_TONE = { warmer: "warmer and friendlier", firmer: "firmer and more direct", formal: "more formal", casual: "casual and relaxed" };   // v10.7 the Writing page's tones
+async function aiHumanize(text, sample, profile, tone = "") {
   const persona = profileLine(profile);
   const content =
 `You are an editing engine. Rewrite the text inside <draft> so it reads like natural human writing.
@@ -2077,7 +2079,7 @@ Rules:
 - Remove the tells of generic machine prose: repetitive sentence rhythm, over-balanced "not only X but Y" constructions, stock transitions (moreover, furthermore, in conclusion), inflated adjectives, and tidy three-item lists that pad rather than inform.
 - Vary sentence length naturally. Let some sentences be short. Use plain words over elevated ones.
 - Keep any technical terms, names, and numbers untouched.
-${sample && sample.trim() ? "- Match the voice, rhythm, vocabulary and formality of the writing sample below. This is the single most important rule — the result should sound like the same person wrote it.\n" : "- Keep a natural, direct voice.\n"}- Output ONLY the rewritten text. No preamble, no commentary.
+${HUMAN_TONE[tone] ? "- Make the tone " + HUMAN_TONE[tone] + ".\n" : ""}${sample && sample.trim() ? "- Match the voice, rhythm, vocabulary and formality of the writing sample below. This is the single most important rule — the result should sound like the same person wrote it.\n" : "- Keep a natural, direct voice.\n"}- Output ONLY the rewritten text. No preamble, no commentary.
 ${languageRule(null, text)}
 ${persona ? persona + "\n" : ""}${sample && sample.trim() ? "<sample of the user's own writing>\n" + sample + "\n</sample>\n\n" : ""}<draft>
 ${text}
@@ -7881,7 +7883,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8094,7 +8096,10 @@ export default function App() {
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   // v7.6 (Ali: "your life and translate integrated in home in a minimal way — remove these pages"): Your life is a chip on Home's box
-  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v10.4 (Ali's screenshot, 18 Nov: "Turn on backup" opened the old prompt page): Backup, Profile and Plan are panels over the page, not pages — any way in opens the panel */ { const pn = String(m || "").replace(/^panel:/, ""); if (PANEL_IDS.has(pn)) { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: pn })); } catch (e) {} return; } } /* v9.9.19 B4: screens that open over the page */ if (m === "braindump") { try { window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text: "" } })); } catch (e) {} return; } if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
+  // v10.7 (OK-AN): pages slide in from the side they came from — forward from the right, back from the left (motion.js pageIn)
+  const navDir = useRef("fwd"), pageRef = useRef(null), firstPage = useRef(true);
+  useEffect(() => { if (firstPage.current) { firstPage.current = false; return; } const d = navDir.current; navDir.current = "fwd"; requestAnimationFrame(() => pageIn(pageRef.current, document.documentElement.dir === "rtl" ? (d === "back" ? "fwd" : "back") : d, wide)); }, [mode]);
+  const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v10.4 (Ali's screenshot, 18 Nov: "Turn on backup" opened the old prompt page): Backup, Profile and Plan are panels over the page, not pages — any way in opens the panel */ { const pn = String(m || "").replace(/^panel:/, ""); if (PANEL_IDS.has(pn)) { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: pn })); } catch (e) {} return; } } /* v9.9.19 B4: screens that open over the page */ if (m === "braindump") { try { window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text: "" } })); } catch (e) {} return; } if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); navDir.current = "fwd"; modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -10580,8 +10585,8 @@ export default function App() {
     // v5.41: back to the screen you came from (it reopens where you were — useSticky)
     let prev = modeHist.current.pop();
     while (prev && prev === modeRef.current) prev = modeHist.current.pop();
-    if (prev) { modeRef.current = prev; setModeRaw(prev); return; }
-    if (mode !== rootMode) { modeRef.current = rootMode; setModeRaw(rootMode); }
+    if (prev) { navDir.current = "back"; modeRef.current = prev; setModeRaw(prev); return; }
+    if (mode !== rootMode) { navDir.current = "back"; modeRef.current = rootMode; setModeRaw(rootMode); }
   };
 
   // Bridge for the phone's hardware/gesture Back. The native wrapper calls
@@ -10617,13 +10622,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
-      {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
+      {side.shown && side.rail ? <Guard name="rail"><SideRail mode={mode} places={LEGACY_NAV ? [] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "home" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} navTo={(m) => { setMoreOpen(false); navTo(m); }}
+        onNewChat={() => { setMoreOpen(false); navTo("home"); setNewChatSignal((n) => n + 1); }} onExpand={() => side.setExpanded(true)} /></Guard> : null}
+      {side.shown && side.rail && side.expanded ? <div className="fixed inset-0 z-[55] bg-black/40" onClick={() => side.setExpanded(false)} data-testid="rail-backdrop" /> : null}
+      {side.shown && (!side.rail || side.expanded) ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
         places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "home" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("home"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
         chatCmd={(c) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} }}
-        onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
+        onClose={() => (side.rail ? side.setExpanded(false) : side.setOpen(false))} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
         openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
@@ -10636,7 +10644,7 @@ export default function App() {
           onClose={() => setPhoneSide(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
           openEngine={() => { setPhoneSide(false); setShowEngine(true); }} openProfile={() => { setPhoneSide(false); setShowProfile(true); }} openUpgrade={() => { setPhoneSide(false); setShowUpgrade(true); }}
           openBackup={() => { setPhoneSide(false); setShowBackup(true); }} openSettings={() => { setPhoneSide(false); setMoreOpen(true); }} /></div></div></Guard> : null}
-      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24")}>
+      <div ref={pageRef} className={"att-cq " + (mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24"))}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 min-h-[60px] py-2 mb-3 border-b border-slate-800/70" + (barHidden ? " hidden" : "")}>
@@ -11678,7 +11686,14 @@ export default function App() {
               return goldGram(oz, homeCurrency() === "USD" ? 1 : rate, karat); }}
             openLink={(url, label) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: { label: label || url, url }, plan: null, inApp: false } }))} />
         ) : mode === "write" ? (
-          <WritingBox onGo={(k, t) => { setChatSeed("\u0002" + (k === "improve" ? "improve this prompt for ChatGPT:\n" : k === "compress" ? "make this shorter:\n" : "humanize this:\n") + t); navTo("chat"); }} />
+          // v10.7 (Ali OK'd OK-WR): the old tools' own tuned instructions, through Attune's best engine (nothing to choose)
+          <WritingStudio flash={flash} targets={Object.entries(TOOLS).map(([k, v]) => [k, v.label])}
+            engine={{ recipes: BUNDLED_LIBRARY.recipes,
+              improve: (t, target) => aiRewrite({ input: t, tool: TOOLS[target] ? target : "chatgpt", tone: "Auto", audience: "General", lang: "auto", pack: "none", profile }),
+              shorten: (t, pct, history) => (history && history.trim() ? aiCompress(t, history) : aiCompressTarget(t, pct, profile)),
+              trim: (t, history) => compressPrompt(t, history),
+              humanize: (t, sample, tone) => aiHumanize(t, sample, profile, tone),
+              copilot: (answer, intent, target) => copilotOptimize(answer && answer.trim() ? [{ role: "ai", text: answer }] : [], intent || "reply to their last message and move toward my goal", TOOLS[target] ? target : "chatgpt", "", profile) }} />
         ) : (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">

@@ -492,7 +492,7 @@ export function ProjectsPage({ startChat, openChat, openArtifact, openPage, flas
         {[["assistants", "🧑‍🏫", "Your assistants", nAssist, "They answer inside a project — “Answers as”"], ["skills", "🔁", "Your skills", nSkills, "Your own recipes — a project runs them as “Repeats”"]].map(([id, em, l, n, sub], i) =>
           <button key={id} onClick={() => openPage(id)} className={"w-full min-h-[56px] flex items-center gap-3 px-3 rounded-[12px] text-start hover:bg-[var(--c-surf-2)] " + (i ? "border-t border-[var(--c-ln)]" : "")} data-testid={"project-open-" + id}>
             <span className="text-[20px] w-8 text-center">{em}</span>
-            <span className="flex-1 min-w-0"><b className="block text-[14.5px] text-[var(--c-ink)]">{tr(l)} · <span className="tabular-nums">{n}</span></b><span className="block text-[12px] text-[var(--c-mut)] truncate">{tr(sub)}</span></span>
+            <span className="flex-1 min-w-0"><b className="block text-[14.5px] text-[var(--c-ink)]">{tr(l)} · <span className="tabular-nums">{n}</span></b><span className="block text-[12px] text-[var(--c-mut)] leading-snug">{tr(sub)}</span></span>
             <ChevronRight size={16} className="shrink-0 text-[var(--c-mut)] rtl:rotate-180" /></button>)}
       </div> : null}
     </div>

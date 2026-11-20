@@ -10,6 +10,7 @@ import { Plus, Check, Trash2, ChevronRight, Repeat, X, ListChecks, CalendarDays,
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as L from "./lists.js";
 import { startFocus } from "./focus-ui.jsx";
+import { tickOut } from "./motion.js";
 import { loadReminders, saveReminders, syncToPhone } from "./actions.js";
 import * as U from "./ui-kit.jsx";
 import { YourDay } from "./yourday-ui.jsx";
@@ -55,9 +56,18 @@ function RowEdit({ text, onSave, onDelete, onCancel }) {
 const markReminderDone = (id) => { saveReminders(loadReminders().map((r) => (r.id === id ? { ...r, done: true, doneAt: Date.now() } : r))); window.dispatchEvent(new CustomEvent("attune-lists")); };
 const timeOf = (t) => { try { return new Date(t).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
 
-const Box = ({ on, onClick, label, testid, tone }) => <button onClick={onClick} aria-pressed={!!on} className="w-full min-h-[44px] flex items-center gap-2.5 text-start" data-testid={testid}>
-  <span className="w-5 h-5 rounded-md shrink-0 grid place-items-center" style={{ border: "2px solid " + (tone === "bad" ? "var(--c-neg)" : "var(--c-acc)"), background: on ? "var(--c-acc)" : "transparent" }}>{on ? <Check size={13} color="#fff" strokeWidth={3} /> : null}</span>
-  <span className={"flex-1 min-w-0 text-[14px] " + (on ? "line-through c-sub" : "")} dir="auto">{label}</span></button>;
+// v10.7 (OK-AN): a tick pops with sparks; anim "leave" = the row then slides away (it leaves this list), "stay" = it stays, crossed out.
+// (Ali: "make to-do lists editable easily") onLabel: a tap on the WORDS edits them; the box alone ticks. rowSelf = this is the whole row.
+const Box = ({ on, onClick, label, testid, tone, anim = "", onLabel = null, rowSelf = true }) => {
+  const tick = (e) => { if (!on && anim) tickOut(e.currentTarget, () => onClick(e), { leave: anim === "leave" }); else onClick(e); };
+  const sq = <span data-tickbox="" className="w-5 h-5 rounded-md shrink-0 grid place-items-center" style={{ border: "2px solid " + (tone === "bad" ? "var(--c-neg)" : "var(--c-acc)"), background: on ? "var(--c-acc)" : "transparent" }}>{on ? <Check size={13} color="#fff" strokeWidth={3} /> : null}</span>;
+  const words = <span className={"flex-1 min-w-0 text-[14px] " + (on ? "line-through c-sub" : "")} dir="auto">{label}</span>;
+  const row = anim && rowSelf ? { "data-tickrow": "" } : {};
+  if (!onLabel) return <button onClick={tick} aria-pressed={!!on} className="w-full min-h-[44px] flex items-center gap-2.5 text-start" data-testid={testid} {...row}>{sq}{words}</button>;
+  return <div className="w-full min-h-[44px] flex items-center gap-1" {...row}>
+    <button onClick={tick} aria-pressed={!!on} aria-label={on ? tr("Untick") : tr("Tick")} className="w-11 h-11 -ms-2.5 shrink-0 grid place-items-center" data-testid={testid}>{sq}</button>
+    <button onClick={onLabel} className="flex-1 min-w-0 min-h-[44px] text-start flex items-center" data-testid={testid + "-words"} title={tr("Change")}>{words}</button></div>;
+};
 
 /** One list with its ticks — on Home, in Chat's answer and on the page. */
 export function ListCard({ list, onTick, onOpen, compact = false, testid = "list-card" }) {
@@ -68,7 +78,7 @@ export function ListCard({ list, onTick, onOpen, compact = false, testid = "list
       <span className="text-[12px] c-sub shrink-0">{lineText(w)}</span></div>
     <b className="block text-[15px]">{tr("{a} of {b} done", { a: p.done, b: p.of })}</b>
     <div className="c-bar" aria-hidden="true"><i style={{ width: (p.of ? Math.round(p.done / p.of * 100) : 0) + "%" }} /></div>
-    {(compact ? list.items.filter((x) => !x.done).slice(0, 4) : list.items).map((x) => <Box key={x.id} on={x.done} onClick={() => onTick(list, x)} label={x.text} testid="list-item" />)}
+    {(compact ? list.items.filter((x) => !x.done).slice(0, 4) : list.items).map((x) => <Box key={x.id} on={x.done} onClick={() => onTick(list, x)} label={x.text} testid="list-item" anim={compact ? "leave" : "stay"} />)}
     {compact && list.items.filter((x) => !x.done).length > 4 ? <p className="m-0 text-[12.5px] c-sub">{tr("+{n} more", { n: list.items.filter((x) => !x.done).length - 4 })}</p> : null}
     {onOpen ? <button onClick={onOpen} className={U.btnS + " h-10! min-h-[40px]!"} data-testid="list-open">{tr("Open the list")}</button> : null}
   </div>;
@@ -96,7 +106,7 @@ export function HomeTodo({ records = [], onTickTodo, onEditTodo, onDeleteTodo, n
         {late ? <span className={U.tag("red")} data-testid="home-todo-late">{tr("{n} late", { n: late })}</span> : null}
         <button onClick={() => navTo("lists")} className="text-[12.5px] font-extrabold c-acc min-h-[36px] px-1" data-testid="home-todo-all">{tr("Lists")} ›</button></div>
       {rows.slice(0, 5).map((x) => editing === x.k && x.save ? <RowEdit key={x.k} text={x.label} onSave={(t) => { x.save(t); setEditing(""); }} onDelete={() => { x.del && x.del(); setEditing(""); }} onCancel={() => setEditing("")} />
-        : <div key={x.k} className="flex items-center gap-1"><div className="flex-1 min-w-0"><Box on={false} onClick={x.tick} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>
+        : <div key={x.k} className="flex items-center gap-1" data-tickrow=""><div className="flex-1 min-w-0"><Box on={false} onClick={x.tick} anim="leave" rowSelf={false} onLabel={x.save ? () => setEditing(x.k) : null} tone={x.bad ? "bad" : ""} label={<span><span className={x.bad ? "font-extrabold text-[var(--c-neg)]" : ""}>{x.label}</span>{x.sub ? <span className="block text-[12px] c-sub">{x.sub}</span> : null}</span>} testid="home-todo-row" /></div>
         {/* v9.9.19 T6: Focus on this to-do */}
         {x.save ? <button onClick={() => setEditing(x.k)} aria-label={tr("Change")} title={tr("Change")} className="w-10 h-10 rounded-full grid place-items-center c-sub shrink-0" data-testid="todo-edit-open"><Pencil size={15} /></button> : null}
         {x.todo ? <button onClick={() => startFocus(x.label)} aria-label={tr("Focus")} title={tr("Focus")} className="w-10 h-10 rounded-full grid place-items-center c-acc shrink-0" data-testid="todo-focus">◷</button> : null}</div>)}
@@ -214,7 +224,7 @@ export function ListsPage({ records = [], onTickTodo, onAddTodo, flash }) {
                 <button className={U.btnS} data-testid="lists-item-edit-save">{tr("Save")}</button>
                 <button type="button" onClick={() => setItemEdit(null)} className="w-10 h-11 grid place-items-center c-sub" aria-label={tr("Cancel")}><X size={16} /></button></form>
             : <div key={x.id} className="flex items-center gap-0.5" data-testid="lists-item-row">
-                <div className="flex-1 min-w-0"><Box on={x.done} onClick={() => put(L.tick(st, l.id, x.id, now))} label={x.text} testid="lists-item" /></div>
+                <div className="flex-1 min-w-0"><Box on={x.done} onClick={() => put(L.tick(st, l.id, x.id, now))} label={x.text} testid="lists-item" anim="stay" onLabel={() => setItemEdit({ list: l.id, id: x.id, text: x.text })} /></div>
                 <button onClick={() => setItemEdit({ list: l.id, id: x.id, text: x.text })} className="w-10 h-11 grid place-items-center c-sub shrink-0" aria-label={tr("Edit") + " — " + x.text} data-testid="lists-item-rename"><Pencil size={15} /></button>
                 <button onClick={() => { put(L.removeItem(st, l.id, x.id)); flash && flash(tr("Removed")); }} className="w-10 h-11 grid place-items-center c-sub shrink-0" aria-label={tr("Delete") + " — " + x.text} data-testid="lists-item-delete"><Trash2 size={15} /></button></div>)}
           <form onSubmit={(e) => { e.preventDefault(); const t = (addTo[l.id] || "").trim(); if (!t) return; put(L.addItem(st, l.id, t)); setAddTo({ ...addTo, [l.id]: "" }); }} className="flex gap-2 pt-1">

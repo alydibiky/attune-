@@ -1,5 +1,23 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (20 Nov 2026 — v10.7: Ali OK'd OK-AN ("also make to-do lists editable easily"), OK-WR ("For" = which AI — ChatGPT,
+> Gemini…; NOT which model writes on the phone: Attune picks the best way itself), OK-FO — BUILT)
+> **Motion** (web-src/motion.js): tickOut(el, then, {leave}) — the tick box pops, 6 sparks, the row ([data-tickrow]) slides away and
+> the rest close the gap, THEN the save runs (fallback 1 s; "remove animations" on the phone = no motion, saved at once). Used by Home's
+> To do + lists (lists-ui Box anim="leave"/"stay"), Follow-ups Done (timeline-ui), payments ✓/✕ (paylog-ui), medicine doses (care-ui).
+> pageIn(el, dir, wide): a page slides in from the right going forward, from the left going back (RTL flipped), cards one by one
+> (attune.jsx navDir + pageRef). tw.css: buttons press in, sheets slide up.
+> **To-dos editable easily:** tap a to-do's WORDS (Home + Lists) → its edit (Save / Delete); the ✎ stays too.
+> **Writing page** (writing-ui.jsx WritingStudio — every old tool, a better look): tabs Improve · Shorten (slider % + the chat so far) ·
+> Humanize (tones + your sample) · Copilot (paste the AI's answer → your next prompt) · Recipes; "For" chips = which AI the prompt is
+> for (ChatGPT, Gemini, Claude… + More…); every run keeps a version (v2, v3… last 20, attune:writing:v1) with Copy · Keep going ·
+> → other tools · delete; two columns on a wide screen. No engine picker — the app chooses.
+> **Foldable open = computer layout** (side-ui.jsx): ≥ 640 px wide = the computer's layout; 640–899 px a 72 px side RAIL (SideRail:
+> menu, new, search, places, projects) that expands over the page; pages are containers (.att-cq) so two-column parts (.att-2col)
+> stack until the PAGE has 820 px. e2e_v1060layout.py now also fails a line cut short with "…" that hides > 40 % (Ali: "nothing is
+> cut") and found 2 (Projects skills line, the week's all-day pill) — fixed. Tests: unit v1070motion, e2e_v1070.py.
+> e2e_v1030weekcal "the trip is one bar" failed only on Fridays (Egypt's week starts Saturday; the trip started tomorrow) — test fixed.
+
 > ## START HERE (18–19 Nov 2026 — v10.6: Ali's list "not optimized everywhere / where is my wife / edit to-dos / animations / foldables / Writing / smarter / smooth")
 > **Layout everywhere** (his Tools screenshot squeezed letter by letter, Money "1,127,735.2 EG / P"): the root cause was shell.html
 > `body{overflow-wrap:anywhere}` (lets every flex / grid item shrink to one letter) → `break-word`. Tools grids auto-fill ≥ 230 px,

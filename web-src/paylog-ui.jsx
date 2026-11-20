@@ -2,6 +2,7 @@
    Notification access off → one card that says what it does and opens Android's switch. On → "N payments read from
    your notifications": each with Add / Dismiss, and Add all. Added ones go to Money through the bridge (Yusr "add-txns");
    handled ids are remembered here and forgotten on the phone (payForget). Tests: tests/e2e_v727paylog.py.            */
+import { tickOut } from "./motion.js";   // v10.7 OK-AN
 import { allowed } from "./plan.js";
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
@@ -237,14 +238,14 @@ export function PayInbox({ N, onAdd, ready = true }) {
       {open ? (
         <div className="px-3.5 pb-3.5 space-y-2">
           {items.slice(0, 30).map((e) => (
-            <div key={e.id} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item"><div className="flex items-center gap-2">
+            <div key={e.id} className="rounded-[20px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="paylog-item" data-tickrow=""><div className="flex items-center gap-2">
               <span className="flex-1 min-w-0"><b className={"block text-[14px] font-extrabold tabular-nums " + (e.direction === "in" ? "text-[var(--c-pos)]" : "text-[var(--c-ink)]")} dir="ltr">{e.direction === "in" ? "+" : "−"}{e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} {e.currency}</b>
                 <span className={"block text-[12px] truncate " + U.muted} dir="auto">{[e.party, e.app, new Date(e.ts).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")}</span>
                 {alreadyIn(e, ledgerNow) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-already">{tr("Already in Money?")}</span>
                   : doubt[e.id] === "no" ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-doubt">{tr("Attune thinks this isn't a payment — is it yours?")}</span>
                   : doubt[e.id] || !codeSure(e) ? <span className={U.tag("amber") + " mt-1 inline-block"} data-testid="paylog-doubt">{tr("Not sure — is this yours?")}</span> : null}</span>
-              <button onClick={() => add([e])} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
-              <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
+              <button onClick={(ev) => tickOut(ev.currentTarget, () => add([e]))} aria-label={tr("Add")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
+              <button onClick={(ev) => tickOut(ev.currentTarget, () => finish([e]))} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-mut)] grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
             </div><Evidence e={e} />
             </div>))}
           <label className={"flex items-center gap-2 text-[12.5px] min-h-[44px] pt-1 " + U.muted}><input type="checkbox" checked={auto} onChange={toggleAuto} className="w-5 h-5 shrink-0 accent-[var(--c-acc)]" data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank, wallet and InstaPay messages that say the money moved — checked by the AI when a model is loaded)")}</label>

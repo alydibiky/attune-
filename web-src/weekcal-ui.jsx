@@ -165,7 +165,7 @@ export function UnderWeek({ navTo }) {
   const price = (a) => { const o = a.found || a.best || (a.best3 && a.best3[0]) || null; return o && o.price > 0 ? fmt(o.price) + (a.found ? " ✓" : "") : ""; };
   const card = "c-card wk-under text-start";
   return (
-    <div className="grid grid-cols-3 gap-4" data-testid="wk-under">
+    <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))" }} data-testid="wk-under">
       <button className={card} onClick={() => navTo("money")} data-testid="wk-safe">
         {d.safe && d.has ? <><span className="c-sub">{tr("Safe to spend until {d}", { d: dname(d.safe.until, { day: "numeric", month: "short" }) })}</span>
           <b className="block text-[26px] font-black tabular-nums tracking-tight">{d.cur} {fmt(d.safe.today)}</b>
@@ -179,7 +179,7 @@ export function UnderWeek({ navTo }) {
       </button>
       <button className={card} onClick={() => navTo("money")} data-testid="wk-latest">
         <b className="block text-[14px] font-extrabold mb-1">{tr("Latest")}</b>
-        {d.latest.length ? d.latest.map((t, i) => <span key={t.id || i} className="flex justify-between gap-2 py-0.5 text-[13px]"><span className="truncate" dir="auto">{String(t.note || "").replace(" ↻", "") || tr("Payment")}</span><span className={"font-extrabold tabular-nums shrink-0 " + (t.type === "income" ? "c-pos" : "")}>{t.type === "income" ? "+" : "−"}{fmt(t.amount)}</span></span>)
+        {d.latest.length ? d.latest.map((t, i) => <span key={t.id || i} className="flex justify-between gap-2 py-0.5 text-[13px]"><span className="min-w-0 line-clamp-2" dir="auto">{String(t.note || "").replace(" ↻", "") || tr("Payment")}</span><span className={"font-extrabold tabular-nums shrink-0 " + (t.type === "income" ? "c-pos" : "")}>{t.type === "income" ? "+" : "−"}{fmt(t.amount)}</span></span>)
           : <span className="c-sub">{tr("No payments yet")}</span>}
       </button>
     </div>);
