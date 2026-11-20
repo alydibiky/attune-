@@ -85,7 +85,10 @@ with sync_playwright() as p:
     # ---- Writing: no archived tabs; nothing on it lands on Home
     go(page, "write")
     tabs = page.evaluate("[...document.querySelectorAll('button')].filter(b => b.offsetParent).map(b => b.innerText.trim())")
-    check("Copilot" not in tabs and "Prompt lab" not in tabs, "Writing: no Copilot / Prompt lab tabs (they opened nothing and landed on Home)")
+    check("Prompt lab" not in tabs, "Writing: no Prompt lab tab (it opened nothing and landed on Home)")
+    # v10.7 (Ali OK'd OK-WR): Copilot is back as a real tab of the Writing page — it must stay on Writing, never land on Home
+    page.locator("[data-testid=writing-tab-copilot]").click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=writing-copilot-answer]").is_visible() and page.locator("[data-testid=writing-page]").is_visible(), "Writing: the Copilot tab opens its own box on the Writing page (not Home)")
     # ---- Shelf, Tools
     go(page, "shelf")
     check(page.locator("[role=tab]:has-text('Shelf'), button:has-text('Shelf')").count() >= 1 and page.locator("button:text-is('Notes')").count() == 0, "Notes is called Shelf again")

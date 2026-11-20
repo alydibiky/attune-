@@ -165,8 +165,14 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
   button:not(:disabled):active, [role=button]:active { transform: scale(.96); }
   @keyframes att-sheet-up { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes att-dim-in { from { background-color: transparent; } }
-  .fixed.inset-0 > :not(.fixed):not(.absolute):not(script):not(style) { animation: att-sheet-up .28s cubic-bezier(.2,.8,.2,1) both; }
-  html:not(.att-wide) .fixed.inset-0 > :not(.fixed):not(.absolute) { animation-duration: .32s; }
+  .fixed.inset-0:not([data-testid=phone-side]) > :not(.fixed):not(.absolute):not(script):not(style) { animation: att-sheet-up .28s cubic-bezier(.2,.8,.2,1) both; }
+  html:not(.att-wide) .fixed.inset-0:not([data-testid=phone-side]) > :not(.fixed):not(.absolute) { animation-duration: .32s; }
+  /* the phone's side menu comes in from its own side (the right in Arabic), not up */
+  @keyframes att-side-in { from { transform: translateX(-100%); } to { transform: none; } }
+  @keyframes att-side-in-rtl { from { transform: translateX(100%); } to { transform: none; } }
+  [data-testid=phone-side] { animation: att-dim-in .24s ease-out both; }
+  .fixed.inset-0[data-testid=phone-side] > * { animation: att-side-in .26s cubic-bezier(.2,.8,.2,1) both; }
+  [dir=rtl] .fixed.inset-0[data-testid=phone-side] > * { animation-name: att-side-in-rtl; }
 }
 
 /* v10.7 the Writing page: the versions beside the text when there is room (computer, an unfolded foldable) */

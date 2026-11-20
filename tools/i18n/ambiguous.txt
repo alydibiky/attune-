@@ -16,7 +16,7 @@ b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), 
 b5-ui.jsx: <span className="text-[12.5px] font-extrabold shrink-0">{o.inDays === 0 ? tr("Today") : o.inDays === 1 ? tr("Tomorrow") : tr("{n} days", { n
 countdown-ui.jsx: const daysText = (n) => (n === 0 ? tr("Today") : n === 1 ? tr("Tomorrow") : tr("{n} days", { n }));
 timeline-ui.jsx: if (n === 1) return tr("Tomorrow");
-timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={() => did(x)} data-testid="fu-yes">{tr("Done")}</button><button className={B} onClick={(
+timeline-ui.jsx: {act === "done" ? <><button className={BP} onClick={(e) => tickOut(e.currentTarget, () => did(x))} data-testid="fu-yes">{tr("Done")}</button
 
 ## Title
 actions-ui.jsx: <input dir="auto" value={a.title} onChange={(e) => setA({ ...a, title: e.target.value })} className={field} aria-label={tr("Title")} data-te
@@ -691,6 +691,11 @@ attune.jsx: <Brain size={18} /><span className="text-[11px] ms-1">{inThink ? tr(
 chat.jsx: {think ? <button onClick={() => setThink(false)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold flex items-center gap-1 bg-[v
 chat.jsx: <Brain size={14} /> {tr("Think")}</button>
 
+## More…
+attune.jsx: <option value="">{tr("More…")}</option>
+writing-ui.jsx: {more.length ? <select value={more.some(([k]) => k === target) ? target : ""} onChange={(e) => e.target.value && put({ ...st, target: e.targ
+writing-ui.jsx: <option value="">{tr("More…")}</option>{more.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select> : null}</div>;
+
 ## Copy
 attune.jsx: {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} classN
 attune.jsx: <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "
@@ -1038,7 +1043,7 @@ owed-ui.jsx: {r.ask.some((q) => /UK one/.test(q)) ? <div className="flex gap-2">
 
 ## Dismiss
 cmdbox-ui.jsx: {j.status === "done" || j.status === "fail" ? <button onClick={() => jobs.dismiss(j.id)} aria-label={tr("Dismiss")} className="w-8 h-8 grid 
-paylog-ui.jsx: <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full bg-[var(--c-surf)] border border-[
+paylog-ui.jsx: <button onClick={(ev) => tickOut(ev.currentTarget, () => finish([e]))} aria-label={tr("Dismiss")} className="w-11 h-11 shrink-0 rounded-full
 yourday-ui.jsx: <button onClick={() => hide(a.id)} className="w-9 h-9 grid place-items-center c-sub" aria-label={tr("Dismiss")} data-testid="day-ask-no"><X 
 
 ## Preview
@@ -1256,7 +1261,7 @@ home.js: line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toU
 life.js: const title = (who && who[2].trim()) || (ar && ar[1].trim()) || nameBefore(raw, tr("Payment"));
 salary-ui.jsx: .map((c) => ({ id: "l" + c.id, name: c.kind === "rent" ? tr("Rent") : c.title || c.person || tr("Payment"), amount: c.amount }));
 spaces-ui.jsx: <span className="flex-1 min-w-0 truncate" dir="auto">{t.note || tr("Payment")}<span className="text-[var(--c-mut)]"> · {shortDate(Date.parse
-weekcal-ui.jsx: {d.latest.length ? d.latest.map((t, i) => <span key={t.id || i} className="flex justify-between gap-2 py-0.5 text-[13px]"><span className="t
+weekcal-ui.jsx: {d.latest.length ? d.latest.map((t, i) => <span key={t.id || i} className="flex justify-between gap-2 py-0.5 text-[13px]"><span className="m
 
 ## Tip
 guide-ui.jsx: {tip ? <p className="text-[13px] m-0 rounded-[12px] p-3" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("
@@ -1563,6 +1568,13 @@ weekplan-ui.jsx: <label className="flex-1 text-[12px] c-sub">{tr("By")}<input cl
 ## Wrong PIN
 shelf-ui.jsx: if (!S.checkPin(shelf, pin)) { setPinIn(""); return flash(tr("Wrong PIN")); }
 vault-ui.jsx: const tryPin = () => { if (pinOk(cfg, pin)) onOpen(); else { setErr(tr("Wrong PIN")); setPin(""); } };
+
+## Writing…
+skills-ui.jsx: <button onClick={draft} disabled={busy} className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5"} data-testid="skill-dra
+writing-ui.jsx: {tab === "improve" ? <button disabled={!!busy || !text.trim()} onClick={() => run("improve")} className={goBtn} style={goStyle} data-testid=
+writing-ui.jsx: {tab === "shorten" ? <><button disabled={!!busy || !text.trim()} onClick={() => run("shorten")} className={goBtn} style={goStyle} data-testi
+writing-ui.jsx: {tab === "humanize" ? <button disabled={!!busy || !text.trim()} onClick={() => run("humanize")} className={goBtn} style={goStyle} data-testi
+writing-ui.jsx: {tab === "copilot" ? <button disabled={!!busy || !(text.trim() || other.trim())} onClick={() => run("copilot")} className={goBtn} style={goS
 
 ## Earlier
 slides-ui.jsx: <button onClick={() => move(-1)} disabled={index === 0 || !!busy} className="min-h-[44px] rounded-[12px] border border-[var(--c-ln)] bg-[var

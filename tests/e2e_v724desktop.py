@@ -92,9 +92,11 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=side]").count() == 0 and box(page, "[data-testid=composer]")["x"] < 20, "closing the sidebar gives the chat the whole window")
     page.locator("[data-testid=side-open]").click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=side]").count() == 1, "the sidebar button opens it again")
-    # a window made narrow behaves like the phone
+    # v10.7 (Ali picked FO1): 640–899 px (an open foldable, a narrow window) = the computer layout with a slim rail; below 640 = the phone
     page.set_viewport_size({"width": 700, "height": 820}); page.wait_for_timeout(400)
-    check(page.locator("[data-testid=side]").count() == 0 and page.locator("nav").first.is_visible(), "a narrow window has the phone layout")
+    check(page.locator("[data-testid=rail-menu]").is_visible(), "a 700 px window (an open foldable) has the computer layout with the side rail")
+    page.set_viewport_size({"width": 600, "height": 820}); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=side]").count() == 0 and page.locator("[data-testid=rail-menu]").count() == 0 and page.locator("nav").first.is_visible(), "a narrow window (600 px) has the phone layout")
     check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])
     ctx.close()
     # Arabic: the sidebar is on the right

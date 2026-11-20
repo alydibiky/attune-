@@ -42,7 +42,7 @@ with sync_playwright() as p:
     page.evaluate("id => document.querySelector('iframe[title=Money]').contentWindow.openTx(id)", tx[0]["id"]); page.wait_for_timeout(300)
     check("charged EGP 350.00 at CARREFOUR" in (fr.locator("#tx-evidence-text").text_content() or "") and fr.locator("#tx-evidence").evaluate("e => e.style.display") == "block", "opening the payment in Money shows “The message as it arrived” (read-only)")
     page.evaluate("() => document.querySelector('iframe[title=Money]').contentWindow.closeSheets()")
-    page.locator("[data-testid=paylog-dismiss]").first.click(); page.wait_for_timeout(300)
+    page.locator("[data-testid=paylog-dismiss]").first.click(); page.wait_for_timeout(1300)   # v10.7: the row slides away first (OK-AN), then it is saved
     check(page.locator("[data-testid=paylog]").count() == 0, "Dismiss clears the last one; the strip goes away")
     check(sorted(page.evaluate("window.__paymock.forgot")) == ["1", "2"], "handled payments are forgotten on the phone")
     ctx.close()
