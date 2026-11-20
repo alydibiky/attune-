@@ -20,7 +20,7 @@ with sync_playwright() as p:
     t = tools(page)
     check("Studio" not in t and len(t) > 15, "4 GB phone: Studio is not listed, the rest is (%d tools)" % len(t))
     d = page.locator("[data-testid=device-level]").inner_text()
-    check("Level 1" in d and "Light" in d and "no Studio" in d, "Settings says what this phone can do: " + d.replace("\n", " "))
+    check("Level 1" in d and "Light" in d and "Small models" in d and "Studio" not in d, "Settings says what this phone can do (v10.8: no mention of Studio, which is archived): " + d.replace("\n", " "))
     check(page.evaluate("document.documentElement.classList.contains('att-lite')"), "lighter effects on a light phone")
     page.click("[data-testid=device-showall]"); page.wait_for_timeout(200)
     check(not page.evaluate("[...document.querySelectorAll('[data-testid=more-group] button')].some(b => b.innerText.startsWith('Studio'))"), "“Show every tool anyway” shows more — but never the archived Studio (v9.1)")
