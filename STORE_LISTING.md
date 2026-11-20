@@ -1,68 +1,83 @@
-# Attune — Google Play store listing (draft for Ali, 28 Oct 2026)
+# Attune: the Google Play store listing (Ali's pick ST1, English first; OK-ST on 20 Nov 2026)
 
-Persona 3, point 8 (Ali: do it). Arabic first, the word *private / on your phone* in the first line, the three hero jobs, then
-everything else. Paste into Play Console → Grow → Store presence → Main store listing (Arabic as the default language,
-English as a translation).
+Paste into Play Console → Grow → Store presence → Main store listing. **Default language: English (United States).** Then
+add a translation: **Arabic**. Play shows the Arabic page to phones set to Arabic. The brand is the life planner and organiser
+with offline AI (Ali, 4 Nov). Fit & Food, Studio and Business are not in this app any more, so they are not mentioned.
 
 ## App name (30 characters max)
-- AR: **أتيون — مساعدك على موبايلك** (27)
-- EN: **Attune — AI on your phone** (25)
+- EN: **Attune — Life Planner & AI** (26)
+- AR: **Attune — يومك وفلوسك ومواعيدك** (29)
 
 ## Short description (80 characters max)
-- AR: مساعد ذكي خاص على موبايلك: فلوسك، أكلك، ومواعيدك — من غير ما حاجة تطلع برّه. (78)
-- EN: A private AI on your phone for your money, your meals and what you must remember. (80)
+- EN: Your day, money, dates and people in one place, with AI that works offline. (75)
+- AR: يومك وفلوسك ومواعيدك وناسك في مكان واحد — بذكاء اصطناعي شغّال من غير نت. (72)
 
-## Full description — Arabic (default)
-**خاص. على موبايلك. من غير حساب.**
-أتيون مساعد ذكي بيشتغل على موبايلك نفسه — كلامك وفلوسك وصورك ما بيطلعوش برّه.
+## Full description: English (default)
+**Your life, organised. On your phone.**
+Attune plans your day, keeps your money straight and makes sure you never miss a date. It understands what you type the way
+you'd say it, and its AI runs on your phone, so your messages, money and papers never leave it.
+
+**Type it the way you'd say it:**
+• "Spent 250 on lunch" → saved in Money.
+• "Ahmed owes me 500" → kept, and Attune reminds you.
+• "Remind me to pay the electricity on the 10th" → a reminder.
+• "Where is my wife?" → her latest location message, if you allow notifications.
+
+**Your day** — one Home: what's next, what's late, your to-dos and lists, and a week calendar on the computer.
+**Money** — your bank messages become your spending by themselves. What's safe to spend today, bills, subscriptions,
+instalments and savings circles, who owes you and who you owe. Zakāt too.
+**Follow-ups** — every date in one list: payments, renewals, warranties, passports, deliveries and promises.
+**Lists** — shopping lists you tick on the widget, and to-dos you change with one tap.
+**People and papers** — a card for each person, your ID and papers with their expiry dates, and a reminder before each one.
+**Agents** — watch a price, find the best offer or track a delivery. They ask you before anything is bought.
+**Writing and files** — improve a prompt for ChatGPT or Gemini, read and ask a PDF, convert files, translate.
+
+**Private by design.** No account. The AI runs on the phone. Nothing is sent anywhere unless you send it.
+**20 languages, 30 countries** — your currency, holidays, weekend and emergency numbers.
+**Widgets** — tick your list, see your day and your money without opening the app.
+
+**Free:** Home, Money, Follow-ups, Lists and the AI on your phone.
+**Pro:** agents that work while you're away, deeper reports and more. 7-day trial.
+
+## Full description: Arabic (translation)
+**حياتك متنظّمة. على موبايلك.**
+Attune بينظّم يومك، ويظبط فلوسك، ويخليك عمرك ما تنسى ميعاد. بيفهم اللي بتكتبه زي ما بتقوله، والذكاء الاصطناعي بتاعه
+شغّال على موبايلك — فرسايلك وفلوسك وورقك مش بيطلعوا برّه.
 
 **اكتبها زي ما بتقولها:**
 • «صرفت ٢٥٠ على الغدا» ← اتسجلت في الفلوس.
-• «أحمد عليه ٥٠٠» ← اتحفظ، وهيفكرك.
-• «فكرني ادفع الكهربا يوم ١٠» ← تذكير.
-• «طبق فول وعيش بلدي» ← السعرات.
+• «أحمد عليه ٥٠٠» ← اتحفظت، وAttune هيفكرك.
+• «فكرني أدفع الكهربا يوم ١٠» ← تذكير.
+• «مراتي فين؟» ← آخر رسالة موقع ليها، لو سمحت بالإشعارات.
 
-**١. فلوسك والمتابعات** — كام صرفت، كام تقدر تصرف النهارده، مين عليه فلوس، الأقساط والجمعيات والاشتراكات.
-**٢. الأكل واللياقة** — صوّر طبقك أو اكتبه، والسعرات بتتحسب؛ خطوات ساعتك ونومك.
-**٣. وكلاء بيشتغلوا عنك** — دوّر على أرخص سعر، راقب سعر، تابع شحنة — وبيسألك قبل أي شراء.
+**يومك** — رئيسية واحدة: اللي جاي، اللي اتأخر، مهامك وقوايمك، وتقويم الأسبوع على الكمبيوتر.
+**فلوسك** — رسايل البنك بتتحوّل لمصاريفك لوحدها. تقدر تصرف كام النهارده، الفواتير والاشتراكات والأقساط والجمعيات،
+مين عليه فلوس ليك وإنت عليك لمين. والزكاة كمان.
+**المتابعات** — كل المواعيد في ليستة واحدة: دفعات، تجديدات، ضمانات، جوازات، شحنات ووعود.
+**القوايم** — قوايم مشتريات بتعلّم عليها من الويدجت، ومهام بتغيّرها بضغطة.
+**الناس والورق** — كارت لكل واحد، وبطاقتك وورقك بمواعيد انتهائهم، وتذكير قبل كل واحد.
+**الوكلاء** — راقب سعر، لاقي أحسن عرض، أو تابع شحنة. بيسألوك قبل أي شراء.
+**الكتابة والملفات** — حسّن برومبت لـ ChatGPT أو Gemini، اقرا ملف PDF واسأله، حوّل ملفات، ترجم.
 
-**وكمان:** ترجمة (كلام وصور)، شات بالذكاء الاصطناعي، تقارير وعروض، صحة العيلة والأدوية، المترو والسفر، وأكتر.
+**خصوصيتك الأول.** من غير حساب. الذكاء الاصطناعي على الموبايل. مفيش حاجة بتتبعت غير لو إنت بعتها.
+**٢٠ لغة و٣٠ دولة** — عملتك وإجازاتك والويك إند وأرقام الطوارئ.
+**ويدجتس** — علّم على قايمتك وشوف يومك وفلوسك من غير ما تفتح التطبيق.
 
-**مجاني:** إجابات من غير حد، الفلوس، المتابعات.
-**Pro:** وكلاء بيشتروا عنك، صور الوجبات، فحص الصفقات والمحادثات، التقارير والتصدير. ٧ أيام تجربة.
+**مجاني:** الرئيسية والفلوس والمتابعات والقوايم والذكاء الاصطناعي على موبايلك.
+**Pro:** وكلاء بيشتغلوا وإنت مش موجود، تقارير أعمق وحاجات تانية. تجربة ٧ أيام.
 
-## Full description — English
-**Private. On your phone. No account.**
-Attune is an AI assistant that runs on your phone itself — what you say, your money and your photos never leave it.
-
-**Write it the way you'd say it:**
-• "lunch 250" → saved in Money.
-• "Ahmed owes me 500" → kept, with a reminder.
-• "remind me to pay electricity on the 10th" → done.
-• "a plate of ful and baladi bread" → the calories.
-
-**1. Money and follow-ups** — what you spent, what's safe to spend today, who owes you, instalments, savings circles, subscriptions.
-**2. Food and fitness** — snap or type your plate and the calories are worked out; your watch's steps and sleep.
-**3. Agents that work for you** — find the best price, watch a price, track a delivery — and ask you before anything is bought.
-
-**Also:** translation (speech and photos), AI chat, reports and slides, family health and medicines, the Cairo Metro and travel, and more.
-
-**Free:** unlimited answers, Money, Follow-ups.
-**Pro:** agents that buy for you, photo meals, Deal Check, Chat X-Ray, reports and exports. 7-day trial.
-
-## Screenshots (6, phone, Arabic first)
-1. Home with «صرفت ٢٥٠ على الغدا» → "اتضاف مصروف" (caption: «اكتبها زي ما بتقولها»)
-2. Money — Safe to spend today (caption: «اعرف تصرف كام النهارده»)
-3. People & plans — one card per person (caption: «مين عليه فلوس ليك»)
-4. Fit — a photo of a plate read (caption: «صوّر طبقك»)
-5. Agents — the best 3 offers, "I'll ask before buying" (caption: «وكيل بيدوّر ويشتري عنك»)
-6. Privacy — "Nothing has left the phone" (caption: «كل حاجة على موبايلك»)
-
-## 30-second video (script)
-0–5 s: a hand types «أحمد عليه ٥٠٠» → saved. 5–12 s: «صرفت ٢٥٠ على الغدا» → Money; the "Safe to spend" number.
-12–20 s: the camera on a plate of koshari → 785 kcal. 20–27 s: «اطلبلي ايربودز برو ٢ بأقل من ٩٠٠٠» → the agent's best 3.
-27–30 s: «خاص. على موبايلك.» + the logo.
+## Screenshots (SS1: the real screen with one line above it)
+Made by `tests/store/shots.py` from the real app, with Ali-like examples and no real bank numbers, at 1080 × 1920
+(9:16 phone), in `docs/store/en/` and `docs/store/ar/`. A 16:9 computer shot goes in the large-screen slot.
+1. Home — "Your whole day on one screen"
+2. Money — "Money from your bank messages"
+3. Follow-ups — "Every date in one list"
+4. Lists — "Tick your lists, change any to-do"
+5. Writing — "Better prompts for any AI"
+6. People — "A card for everyone in your life"
++ computer: the week calendar — "Your week on the computer"
 
 ## Category, tags, contact
-Category: Productivity. Tags: personal finance, AI assistant, calorie counter, Arabic. Contact e-mail: **Ali's support e-mail
-(the same as `SUPPORT_EMAIL` in `web-src/billing.js`)**. Privacy policy: the hosted `docs/privacy-policy.html`.
+Category: **Productivity**. Tags: planner, personal finance, to-do list, AI assistant, Arabic.
+Contact e-mail: **not chosen yet (Ali, 20 Nov: "I still didn't choose a mail")** — Play needs it before publishing.
+Privacy policy: the hosted `docs/privacy-policy.html`.

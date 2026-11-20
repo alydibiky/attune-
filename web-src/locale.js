@@ -27,6 +27,11 @@ export function homeCurrency(ledger, lang = navLang()) {
   try { const raw = localStorage.getItem("ledger.v3") || "null"; if (raw !== HC.raw) { HC.raw = raw; const L = JSON.parse(raw); HC.cur = L && /^[A-Z]{3}$/.test(L.currency || "") ? L.currency : ""; } if (HC.cur) return HC.cur; } catch (e) {}
   // v6.47: the country the person chose (Settings → Your country) comes before the phone's language region
   try { const c = COUNTRIES[savedCountry()]; if (c) return c.cur; } catch (e) {}
+  // v10.8: then the currency the person's own accounts use (most of them) — an English (US) phone in Egypt with every account in
+  // EGP showed Money's totals as "0 USD"
+  try { const L = ledger || JSON.parse(localStorage.getItem("ledger.v3") || "null"); const n = {};
+    for (const a of (L && L.accounts) || []) if (/^[A-Z]{3}$/.test(a.currency || "")) n[a.currency] = (n[a.currency] || 0) + 1;
+    const top = Object.entries(n).sort((a, b) => b[1] - a[1])[0]; if (top && top[1] > (Object.values(n).length > 1 ? 1 : 0) && top[1] * 2 > Object.values(n).reduce((x, y) => x + y, 0)) return top[0]; } catch (e) {}
   return REGION_CUR[regionOf(lang)] || "USD";
 }
 /** "mdy" for the US and the few others that write the month first, else "dmy". */
