@@ -13087,4 +13087,11 @@ export const FA = {
   "work (the workplace)": "محل کار",
   "school (the place)": "مدرسه",
   "Zakāt certificate": "گواهی زکات",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune دفعهٔ قبل خودبه‌خود بسته شد",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "گزارش بفرستید تا درست شود؟ مقصدش را شما انتخاب می‌کنید — چیزی خودکار فرستاده نمی‌شود.",
+  "Send a report": "فرستادن گزارش",
+  "Thank you — that helps fix it.": "ممنون — به رفعش کمک می‌کند.",
+  "Send a problem report": "فرستادن گزارش مشکل",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "گزارش کپی شد — آن را در ایمیل یا واتساپ بچسبانید.",
 };

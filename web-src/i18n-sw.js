@@ -13088,4 +13088,11 @@ export const SW = {
   "work (the workplace)": "kazini",
   "school (the place)": "shuleni",
   "Zakāt certificate": "Cheti cha zaka",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune ilijifunga yenyewe mara ya mwisho",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "Tuma ripoti ili irekebishwe? Wewe unachagua inakokwenda — hakuna kinachotumwa chenyewe.",
+  "Send a report": "Tuma ripoti",
+  "Thank you — that helps fix it.": "Asante — hilo husaidia kurekebisha.",
+  "Send a problem report": "Tuma ripoti ya tatizo",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "Ripoti imenakiliwa — ibandike kwenye barua pepe au WhatsApp.",
 };

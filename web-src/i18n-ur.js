@@ -13088,4 +13088,11 @@ export const UR = {
   "work (the workplace)": "دفتر",
   "school (the place)": "اسکول",
   "Zakāt certificate": "زکوٰۃ سرٹیفکیٹ",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "پچھلی بار Attune خود بخود بند ہو گیا",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "ٹھیک کروانے کے لیے رپورٹ بھیجیں؟ کہاں جائے گی، آپ چنتے ہیں — کچھ بھی خود نہیں بھیجا جاتا۔",
+  "Send a report": "رپورٹ بھیجیں",
+  "Thank you — that helps fix it.": "شکریہ — اس سے ٹھیک کرنے میں مدد ملتی ہے۔",
+  "Send a problem report": "مسئلے کی رپورٹ بھیجیں",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "رپورٹ کاپی ہو گئی — اسے ای میل یا واٹس ایپ میں پیسٹ کریں۔",
 };

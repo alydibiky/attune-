@@ -13,7 +13,8 @@ import { usePins, recentTools } from "./side-ui.jsx";
 import { BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
 import { LifeAnswer } from "./lifeask-ui.jsx";
 import * as LA from "./lifeask.js";
-import { WeekCalendar, UnderWeek } from "./weekcal-ui.jsx";   // v10.3 K1 + C1 (Ali's picks)
+import { WeekCalendar, UnderWeek } from "./weekcal-ui.jsx";
+import { CrashCard } from "./crash-ui.jsx";   // v10.8 CR3 (the computer too)   // v10.3 K1 + C1 (Ali's picks)
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
 const todayKey = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -78,6 +79,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
   return (
     <div className="calm pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[28px] font-black text-[var(--c-ink)] tracking-tight m-0">{tr(greeting())}{name ? ", " + name : ""}</h1>
+      <CrashCard />
       <div className="grid grid-cols-1 gap-4">
         <div className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">
           <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase text-[var(--c-mut)] mb-2.5 mt-0">{tr("Ask anything")}</p>

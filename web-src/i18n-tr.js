@@ -13088,4 +13088,11 @@ export const TRK = {
   "work (the workplace)": "iş yeri",
   "school (the place)": "okul",
   "Zakāt certificate": "Zekât belgesi",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune geçen sefer kendiliğinden kapandı",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "Düzeltilmesi için rapor gönderilsin mi? Nereye gideceğini sen seçersin — hiçbir şey kendiliğinden gönderilmez.",
+  "Send a report": "Rapor gönder",
+  "Thank you — that helps fix it.": "Teşekkürler — düzeltmeye yardımcı olur.",
+  "Send a problem report": "Sorun raporu gönder",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "Rapor kopyalandı — bir e-postaya ya da WhatsApp'a yapıştır.",
 };

@@ -19,6 +19,8 @@ const { makeReminders } = require("./lib/reminders");
 
 if (process.env.ATTUNE_HOME) app.setPath("userData", process.env.ATTUNE_HOME);
 const DATA = app.getPath("userData");
+const crash = require("./lib/crashlog")(DATA, (() => { try { return require("./package.json").version; } catch (e) { return "?"; } })());   // v10.8 CR3
+process.on("uncaughtException", (e) => { try { crash.add("app error", (e && e.stack) || String(e), true); } catch (x) {} });
 fs.mkdirSync(DATA, { recursive: true });
 const SMOKE = process.env.ATTUNE_SMOKE || "";
 
@@ -92,6 +94,9 @@ const localsync = require("./lib/localsync.js");
 const { makeDrive } = require("./lib/gdrive.js");   // v6.45 Google sync on the computer (the phone's one file in the hidden app folder)
 const drive = makeDrive({ dataDir: DATA, openExternal: (u) => shell.openExternal(u), safe: safeStorage });   // v6.37 Wi-Fi sync with a phone (the same protocol as LocalSync.kt)
 const QUICK = {
+  // v10.8 CR3 problem reports — the page sees only "something to send", never the problem
+  crashState: () => crash.state(), crashNote: (p, t) => crash.note(p, t), crashPage: (p) => crash.page(p), crashDismiss: () => crash.dismiss(),
+  crashSend: () => { clipboard.writeText(crash.report()); crash.dismiss(); return "copied"; },
   driveReady: () => drive.ready(),
   localNetAllowed: () => true,
   syncHostTake: () => localsync.take(),
@@ -350,6 +355,8 @@ app.whenReady().then(() => {
   win.webContents.on("will-navigate", (e, url) => { if (!url.startsWith("app://attune/")) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });
   // Back on a computer: the mouse's back button and the keyboard's Back key arrive as app commands (Windows)
   win.on("app-command", (e, cmd) => { if (cmd === "browser-backward") js("window.dispatchEvent(new Event('attune-back'))"); });
+  // v10.8 CR3: the page's window crashing is kept for a report, and the page comes back
+  win.webContents.on("render-process-gone", (e, d) => { try { crash.add("closed by itself", "the window stopped: " + (d && d.reason) + " (exit " + (d && d.exitCode) + ")", true); } catch (x) {} if (d && d.reason !== "clean-exit") try { win.reload(); } catch (x) {} });
   win.loadURL("app://attune/index.html");
   reminders.rearmAll();
   if (!SMOKE) { const m = activeModel(); if (m) { state.active = m.id; engine.start(m, info(), draftFor(m)); } }

@@ -10195,4 +10195,11 @@ export const AR = {
   "work (the workplace)": "الشغل",
   "school (the place)": "الجامعة",
   "Zakāt certificate": "شهادة الزكاة",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune اتقفل لوحده المرة اللي فاتت",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "تبعت تقرير عشان يتصلح؟ إنت اللي بتختار يروح فين — مفيش حاجة بتتبعت لوحدها.",
+  "Send a report": "ابعت تقرير",
+  "Thank you — that helps fix it.": "شكرًا — ده بيساعد نصلّحه.",
+  "Send a problem report": "ابعت تقرير مشكلة",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "التقرير اتنسخ — الصقه في إيميل أو واتساب.",
 };

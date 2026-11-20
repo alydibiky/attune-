@@ -13087,4 +13087,11 @@ export const JA = {
   "work (the workplace)": "職場",
   "school (the place)": "学校",
   "Zakāt certificate": "ザカート証明書",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "前回 Attune が勝手に終了しました",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "修正のためにレポートを送りますか？送り先はあなたが選びます — 勝手に送られることはありません。",
+  "Send a report": "レポートを送る",
+  "Thank you — that helps fix it.": "ありがとうございます — 修正に役立ちます。",
+  "Send a problem report": "問題を報告する",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "レポートをコピーしました — メールや WhatsApp に貼り付けてください。",
 };

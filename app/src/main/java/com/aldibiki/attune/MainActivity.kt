@@ -239,6 +239,11 @@ class MainActivity : AppCompatActivity() {
                 java.io.File(logDir, "engine.log").appendText("\nBackground error (${java.util.Date()}) on ${thread.name}: $err\n" +
                     err.stackTrace.take(8).joinToString("\n") { "  at $it" } + "\n")
             } catch (e: Exception) {}
+            // v10.8 (CR3): a crash on the screen thread closes the app — kept quietly for "Send a problem report" (never shown)
+            if (thread === android.os.Looper.getMainLooper().thread) try {
+                CrashLog.add(this, "closed by itself", "$err\n" + err.stackTrace.take(25).joinToString("\n") { "  at $it" } +
+                    (err.cause?.let { "\ncaused by $it\n" + it.stackTrace.take(10).joinToString("\n") { x -> "  at $x" } } ?: ""), CrashLog.page(this), pending = true)
+            } catch (e: Exception) {}
             if (thread === android.os.Looper.getMainLooper().thread) previousHandler?.uncaughtException(thread, err)
         }
         Prefs.airGap(this) // prime the lock before anything can reach the network

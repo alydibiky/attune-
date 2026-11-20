@@ -13087,4 +13087,11 @@ export const DE = {
   "work (the workplace)": "Arbeit",
   "school (the place)": "Schule",
   "Zakāt certificate": "Zakat-Bescheinigung",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune hat sich letztes Mal von selbst geschlossen",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "Einen Bericht senden, damit es behoben wird? Du wählst, wohin – nichts wird von selbst gesendet.",
+  "Send a report": "Bericht senden",
+  "Thank you — that helps fix it.": "Danke – das hilft beim Beheben.",
+  "Send a problem report": "Problembericht senden",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "Bericht kopiert – füge ihn in eine E-Mail oder WhatsApp ein.",
 };

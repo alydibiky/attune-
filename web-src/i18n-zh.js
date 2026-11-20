@@ -13087,4 +13087,11 @@ export const ZH = {
   "work (the workplace)": "单位",
   "school (the place)": "学校",
   "Zakāt certificate": "天课证明",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "上次 Attune 自己关闭了",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "发送报告以便修复？由你选择发到哪里——不会自动发送任何内容。",
+  "Send a report": "发送报告",
+  "Thank you — that helps fix it.": "谢谢——这有助于修复。",
+  "Send a problem report": "发送问题报告",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "报告已复制——粘贴到邮件或 WhatsApp 里。",
 };

@@ -525,6 +525,31 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v10.8 (CR3) problem reports: { pending: closed by itself since last asked, count } — the problems themselves are never shown. */
+    @JavascriptInterface
+    fun crashState(): String = try { JSONObject().put("pending", CrashLog.pending(ctx)).put("count", CrashLog.count(ctx)).toString() } catch (e: Throwable) { "{}" }
+    /** An error on a page, kept quietly (page = where it happened). */
+    @JavascriptInterface
+    fun crashNote(page: String, text: String) { try { CrashLog.add(ctx, "page error", text, page) } catch (e: Throwable) {} }
+    /** The page that is open now — written into a crash line if the app closes by itself. */
+    @JavascriptInterface
+    fun crashPage(page: String) { CrashLog.setPage(ctx, page) }
+    @JavascriptInterface
+    fun crashDismiss() { CrashLog.dismiss(ctx) }
+    /** Send: the share sheet with the report (the person picks e-mail, WhatsApp…). Nothing is sent by itself. */
+    @JavascriptInterface
+    fun crashSend(): Boolean {
+        val text = try { CrashLog.report(ctx) } catch (e: Throwable) { return false }
+        web.post {
+            try {
+                val i = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_SUBJECT, "Attune problem report").putExtra(android.content.Intent.EXTRA_TEXT, text)
+                ctx.startActivity(android.content.Intent.createChooser(i, null).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {}
+        }
+        CrashLog.dismiss(ctx); return true
+    }
+
     /** The phone's share sheet: WhatsApp, email, notes… */
     @JavascriptInterface
     fun share(text: String) {

@@ -13079,4 +13079,11 @@ export const ARB = {
   "work (the workplace)": "العمل",
   "school (the place)": "المدرسة",
   "Zakāt certificate": "شهادة الزكاة",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "أُغلق Attune من تلقاء نفسه في المرة الماضية",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "هل ترسل تقريرًا لإصلاح ذلك؟ أنت تختار وجهته — لا يُرسل شيء تلقائيًا.",
+  "Send a report": "أرسل تقريرًا",
+  "Thank you — that helps fix it.": "شكرًا — هذا يساعد على الإصلاح.",
+  "Send a problem report": "أرسل تقرير مشكلة",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "تم نسخ التقرير — الصقه في بريد إلكتروني أو واتساب.",
 };

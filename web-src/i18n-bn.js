@@ -13087,4 +13087,11 @@ export const BN = {
   "work (the workplace)": "অফিস",
   "school (the place)": "স্কুল",
   "Zakāt certificate": "যাকাত সনদ",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "গতবার Attune নিজে থেকে বন্ধ হয়ে গিয়েছিল",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "ঠিক করার জন্য রিপোর্ট পাঠাবেন? কোথায় যাবে আপনি বেছে নেন — কিছুই নিজে থেকে পাঠানো হয় না।",
+  "Send a report": "রিপোর্ট পাঠান",
+  "Thank you — that helps fix it.": "ধন্যবাদ — এতে ঠিক করতে সুবিধা হয়।",
+  "Send a problem report": "সমস্যার রিপোর্ট পাঠান",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "রিপোর্ট কপি হয়েছে — ইমেইল বা WhatsApp-এ পেস্ট করুন।",
 };

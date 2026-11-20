@@ -13087,4 +13087,11 @@ export const KO = {
   "work (the workplace)": "직장",
   "school (the place)": "학교",
   "Zakāt certificate": "자카트 증명서",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "지난번에 Attune이 저절로 종료됐어요",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "고칠 수 있게 보고서를 보낼까요? 어디로 보낼지 직접 고르세요 — 저절로 보내지는 건 없어요.",
+  "Send a report": "보고서 보내기",
+  "Thank you — that helps fix it.": "고마워요 — 고치는 데 도움이 돼요.",
+  "Send a problem report": "문제 보고서 보내기",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "보고서를 복사했어요 — 이메일이나 WhatsApp에 붙여넣으세요.",
 };

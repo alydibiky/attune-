@@ -13088,4 +13088,11 @@ export const IDN = {
   "work (the workplace)": "kantor",
   "school (the place)": "sekolah",
   "Zakāt certificate": "Sertifikat zakat",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Attune tertutup sendiri terakhir kali",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "Kirim laporan agar diperbaiki? Kamu yang pilih tujuannya — tidak ada yang terkirim sendiri.",
+  "Send a report": "Kirim laporan",
+  "Thank you — that helps fix it.": "Terima kasih — ini membantu perbaikan.",
+  "Send a problem report": "Kirim laporan masalah",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "Laporan disalin — tempel ke email atau WhatsApp.",
 };

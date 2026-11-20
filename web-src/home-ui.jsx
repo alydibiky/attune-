@@ -5,6 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import * as FT from "./features.js";   // v10.1 F3
+import { CrashCard } from "./crash-ui.jsx";   // v10.8 CR3
 import { useAfterFirstPaint } from "./motion.js";
 import { SetupHomeCard, quiet as quietTests } from "./setup-ui.jsx";
 import { BrainHome } from "./brain-ui.jsx";
@@ -398,6 +399,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v9.9.40 the new Autopilot (Ali's OK on K1–K6): chats by their role — the list chat's Shopping line, Done for you with the full
           message, "What I understood" for a new group, Kept quietly today */}
       {/* v10.0.1 (Ali: "why there is 2 autopilot done for you"): ONE card — AutopilotCard draws the chats' part and its own together */}
+      {minimal && !rep ? <CrashCard /> : null}
       {minimal && !rep ? <AutopilotCard /> : null}
       {minimal && rep && !freshApp() ? <HeroCards data={data} navTo={navTo} /> : null}
       {minimal && rep ? <><ReportTiles safe={data.safe} spentMonth={data.hasLedger ? data.o.monthOut : null} cur={data.o && data.o.cur} kcal={data.kcal} goal={data.fitOn ? data.goal : 0}

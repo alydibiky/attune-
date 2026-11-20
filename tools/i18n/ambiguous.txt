@@ -126,7 +126,7 @@ agent-ui.jsx: <button onClick={() => setOpen((v) => !v)} className="w-full min-h
 agents-ui.jsx: {others.length ? <button onClick={() => setMore(!more)} className={U.btnS} data-testid="agent-best-more">{more ? tr("Hide") : T("See {n} mor
 chatpilot-ui.jsx: <button onClick={() => setQuietChat(quietChat === c ? "" : c)} aria-expanded={quietChat === c} className="flex-1 min-w-0 min-h-[40px] text-s
 home-ui.jsx: <button onClick={() => { try { localStorage.setItem(key, "1"); } catch (e) {} setHidden(true); }} className="c-sub text-[12px] min-h-[36px] 
-paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
+paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Check")}</span></button>
 paylog-ui.jsx: <button onClick={close} className={"min-h-[44px] px-1 text-[12.5px] font-bold underline " + U.muted}>{tr("Hide")}</button></div>
 setup-ui.jsx: {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] te
 slides-ui.jsx: <span className="text-[var(--c-acc)] shrink-0">{opts ? tr("Hide") : tr("Change")}</span></button>
@@ -204,6 +204,7 @@ attune.jsx: {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricate
 attune.jsx: <button className="h-10 px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13px] font-bold" onClick={start} disabled={bu
 cv-ui.jsx: const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job read
 lesson-ui.jsx: <button className={btnP + " shrink-0"} disabled={!answer} onClick={check} data-testid="lesson-check">{tr("Check")}</button>
+paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Check")}</span></button>
 scamcheck-ui.jsx: <button onClick={() => check()} disabled={!text.trim()} className={U.btnP + " flex-1"} data-testid="scam-go">{tr("Check")}</button>
 setup-ui.jsx: {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] te
 
@@ -1100,10 +1101,6 @@ money-sheets-ui.jsx: <Field label={tr("Note (optional)")}><input value={note} on
 cv-ui.jsx: </> : s.type === "languages" ? <div className="grid grid-cols-2 gap-2 pe-6"><Lbl t={tr("Language")}><In value={it.name} onChange={(v) => upd
 daily-ui.jsx: <label className="block"><span className="c-sub block mb-1">{tr("Level")}</span>
 
-## Certificate
-cv-ui.jsx: : s.type === "certs" ? <div className="grid grid-cols-3 gap-2 pe-6"><Lbl t={tr("Certificate")}><In value={it.name} onChange={(v) => upd(i, {
-money-pages-ui.jsx: <button onClick={() => cert(h)} disabled={!!busy} className={U.btnS + " shrink-0"} data-testid="zakat-cert">{tr("Certificate")}</button></di
-
 ## Year
 cv-ui.jsx: : s.type === "certs" ? <div className="grid grid-cols-3 gap-2 pe-6"><Lbl t={tr("Certificate")}><In value={it.name} onChange={(v) => upd(i, {
 money-sheets-ui.jsx: <Field label={tr("Default period")}><Pills value={ui.period || "month"} onChange={(v) => doIt("prefs", { period: v })} items={[["week", tr("
@@ -1162,10 +1159,6 @@ shelf-ui.jsx: <button className={btn} onClick={() => { save(latest.current); dup
 cv-ui.jsx: <button className={primary + " w-full py-2.5"} disabled={busy} onClick={doImport} data-testid="cv-import-go">{busy ? tr("Reading your CV…") 
 money-calm-ui.jsx: <button className={U.btnS + " h-10! min-h-[40px]! px-3!"} onClick={onImport} data-testid="money-tools"><Upload size={14} />{tr("Import")}</b
 skills-ui.jsx: <button className={ghost + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet
-
-## Review
-daily-ui.jsx: <div className="flex justify-between c-sub c-num"><span>{tr("Review")}</span><span>{rev.i + 1} / {rev.ids.length}</span></div>
-paylog-ui.jsx: <span className="text-[12.5px] font-bold text-[var(--c-acc)]">{open ? tr("Hide") : tr("Review")}</span></button>
 
 ## Not yet
 daily-ui.jsx: <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} da
@@ -1274,6 +1267,7 @@ money-sheets-ui.jsx: <Head title={tr("Goals & debts")} right={<button className=
 ## Home
 home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
 home-ui.jsx: <button onClick={() => setRep(false)} aria-label={tr("Home")} title={tr("Home")} className="w-11 h-11 rounded-full grid place-items-center s
+noteteach.js: // v10.8 (launch, meanings): the place has its own words — tr("Home") is the app's main page («Inicio», «Startseite»…), not a house
 side-ui.jsx: <button onClick={() => navTo("home")} className="flex-1 min-h-[44px] text-start text-[19px] font-black text-[var(--c-ink)] tracking-tight bg
 
 ## Your day

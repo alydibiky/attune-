@@ -64,6 +64,10 @@ object ExitWatch {
             }
             try { File(ctx.filesDir, "engine.log").appendText(sb.toString()) } catch (e: Exception) {}
             last = newest
+            // v10.8 (CR3): an unexpected ending while Attune was on screen is kept for the report (the reason, never shown) — the
+            // screen-thread crash itself is already kept by MainActivity, so only the other kinds add a line here
+            newest?.let { n -> if (n.optBoolean("fg") && n.optInt("reason") != ApplicationExitInfo.REASON_CRASH)
+                CrashLog.add(ctx, "closed by itself", "${n.optString("why")} · ${n.optString("desc")} · memory ${n.optInt("memMB")} MB" + (if (n.isNull("model")) "" else " · model ${n.optString("model")}"), pending = true) }
         } catch (e: Exception) {}
     }
 }

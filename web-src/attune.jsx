@@ -112,6 +112,7 @@ import * as WT from "./webtask.js";
 import * as RELAY from "./relay.js";   // v9.9.8 M2
 import * as MEAN from "./meaning.js";
 import { recallDocs as RDOCS, warmRecall } from "./lookback.js";
+import { ProblemReportRow, crashState } from "./crash-ui.jsx";   // v10.8 CR3
 import { loadBooking as loadBookingProfile } from "./agent-ui.jsx";
 import { saveDir as savePeopleDir, addCard as addPeopleCard, updateCard as updatePeopleCard } from "./entities.js";
 import { loadDir as loadPeopleDir } from "./entities.js";
@@ -8100,6 +8101,7 @@ export default function App() {
   const navDir = useRef("fwd"), pageRef = useRef(null), firstPage = useRef(true);
   // v10.8 (launch, every page < 1 s): once the first screen is up and the app is idle, the kept notifications' meanings are
   // worked out in small pieces, so the Recall page opens at once (it took 8.4 s on a full mid-range phone)
+  useEffect(() => { try { NATIVE && NATIVE.crashPage && NATIVE.crashPage(String(mode || "")); } catch (e) {} }, [mode]);   // v10.8 CR3: the page a crash happened on
   useEffect(() => { const t = setTimeout(() => { try { if (NATIVE && NATIVE.recallNotes) warmRecall(JSON.parse(recallRaw(NATIVE) || "[]")); } catch (e) {} }, 6000); return () => clearTimeout(t); }, []);
   useEffect(() => { if (firstPage.current) { firstPage.current = false; return; } const d = navDir.current; navDir.current = "fwd"; requestAnimationFrame(() => pageIn(pageRef.current, document.documentElement.dir === "rtl" ? (d === "back" ? "fwd" : "back") : d, wide)); }, [mode]);
   const navTo = (m) => { if (m === "voice") { setVoiceOpen(true); return; } /* v10.4 (Ali's screenshot, 18 Nov: "Turn on backup" opened the old prompt page): Backup, Profile and Plan are panels over the page, not pages — any way in opens the panel */ { const pn = String(m || "").replace(/^panel:/, ""); if (PANEL_IDS.has(pn)) { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: pn })); } catch (e) {} return; } } /* v9.9.19 B4: screens that open over the page */ if (m === "braindump") { try { window.dispatchEvent(new CustomEvent("attune-braindump", { detail: { text: "" } })); } catch (e) {} return; } if (m === "weekplan" || m === "focus") { try { window.dispatchEvent(new CustomEvent(m === "weekplan" ? "attune-weekplan" : "attune-focus-pick")); } catch (e) {} return; } if (m === "habits" || m === "countdowns") { const ev = m === "habits" ? "attune-habit-add" : "attune-countdown-add"; setTimeout(() => { try { window.dispatchEvent(new CustomEvent(ev)); } catch (e) {} }, 350); m = "home"; } if (NOT_IN_PLAY.has(m)) m = "tools";   /* v8.7 Play build */ if (RETIRED.includes(m)) m = "chat"; /* v8.2: Instant / Ask (classic) are gone */ if (isRemoved(m)) m = m === "health" ? "care" : "home"; /* v9.1: archived features (removed.js) — Health is Family health now */ if (m === "notes") m = "shelf"; if (m === "lifeask") { try { localStorage.setItem("attune:box:mode", "life"); window.dispatchEvent(new CustomEvent("attune-box-mode", { detail: "life" })); } catch (e) {} m = "home"; } noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); navDir.current = "fwd"; modeRef.current = m; setModeRaw(m); };
@@ -9203,7 +9205,8 @@ export default function App() {
   // short message instead of silently doing nothing — at most one every 4 s
   useEffect(() => {
     let last = 0;
-    const on = (e) => { const now = Date.now(); if (now - last < 4000) return; last = now; const m = String((e.detail && e.detail.msg) || "").split("\n")[0].replace(/^Error:\s*/, "").slice(0, 120); showToast(tr("That didn't work") + (m ? " — " + m : ""), 3500); };
+    const on = (e) => { try { NATIVE && NATIVE.crashNote && NATIVE.crashNote(String(modeRef.current || ""), String((e.detail && (e.detail.stack || e.detail.msg)) || "").slice(0, 3000)); } catch (x) {}   // v10.8 CR3: kept quietly for a report
+      const now = Date.now(); if (now - last < 4000) return; last = now; const m = String((e.detail && e.detail.msg) || "").split("\n")[0].replace(/^Error:\s*/, "").slice(0, 120); showToast(tr("That didn't work") + (m ? " — " + m : ""), 3500); };
     window.addEventListener("attune-error", on); return () => window.removeEventListener("attune-error", on);
   }, []);
   // v6.29 (Ali: "the app still crashes on its own a lot"): Android says why the app ended last time (ExitWatch.kt) — told once
@@ -9217,6 +9220,7 @@ export default function App() {
     // (x.fg: on screen; an app error / engine crash / not responding / out of memory), in one calm line. The full reason stays in the
     // Engine log, and the tester's switch (7 taps on the version) still shows everything.
     if (!devMode()) {
+      if (typeof NATIVE.crashState === "function") return;   // v10.8 CR3: Home's card asks once to send a report (the reason is never shown)
       if (!x.fg || ![3, 4, 5, 6].includes(x.reason)) return;
       const t1 = setTimeout(() => showToast(tr("Sorry — Attune closed by itself last time. Your data is safe.") + tip, 6000), 1500);
       return () => clearTimeout(t1);
@@ -11917,6 +11921,7 @@ export default function App() {
               <div className="mt-2 min-h-[56px] rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 py-2.5 flex items-center gap-2.5 text-[12.5px]" data-testid="device-level">
                 <Gauge size={16} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[var(--c-mut)]">{tr("This device")}: <b className="text-[var(--c-ink)] font-extrabold">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11.5px] text-[var(--c-mut)]">{tr(devLevel.what)}</span></span>
                 {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="min-h-[40px] font-bold text-[var(--c-acc)] underline underline-offset-2 shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
+              <ProblemReportRow />
               {/* v9.3 Your day: prayer times, Ramadan, notifications for the day, Close the day, widget, simple mode — all chosen here */}
               <div className="mt-4 pt-4 border-t border-[var(--c-ln)]"><DaySettings /></div>
               {/* v5.29 UX: tools first (what people open More for); appearance settings below */}

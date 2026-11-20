@@ -13087,4 +13087,11 @@ export const TH = {
   "work (the workplace)": "ที่ทำงาน",
   "school (the place)": "โรงเรียน",
   "Zakāt certificate": "ใบรับรองซะกาต",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "ครั้งที่แล้ว Attune ปิดไปเอง",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "ส่งรายงานเพื่อให้แก้ไขไหม? คุณเลือกเองว่าจะส่งไปที่ไหน — ไม่มีอะไรถูกส่งเอง",
+  "Send a report": "ส่งรายงาน",
+  "Thank you — that helps fix it.": "ขอบคุณ — ช่วยให้แก้ไขได้",
+  "Send a problem report": "ส่งรายงานปัญหา",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "คัดลอกรายงานแล้ว — วางในอีเมลหรือ WhatsApp ได้เลย",
 };

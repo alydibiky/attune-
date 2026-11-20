@@ -9,7 +9,8 @@ const QUICK = ["info", "models", "engine", "log", "remove", "wake", "setAirGap",
   "cancel", "logLine", "netLog", "clearNetLog", "stashPut", "stashGet", "stashDel", "share",
   "unmetered", "knowPacks", "knowRemove", "mapPacks", "mapRemove", "mapRead",
   "schedule", "unschedule", "scheduled", "canExact", "notifyAllowed", "askNotifications", "askExact",
-  "localNetAllowed", "syncHostTake", "syncHostAnswer", "syncHostStop", "driveReady"];
+  "localNetAllowed", "syncHostTake", "syncHostAnswer", "syncHostStop", "driveReady",
+  "crashState", "crashNote", "crashPage", "crashDismiss", "crashSend"];   // v10.8 CR3
 const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile",
   "search", "news", "fetchText", "fetchShare", "dorarSearch", "fxRates",
   "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapRange", "mapAssets", "mapSearch", "mapInstall",

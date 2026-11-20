@@ -13087,4 +13087,11 @@ export const VI = {
   "work (the workplace)": "chỗ làm",
   "school (the place)": "trường",
   "Zakāt certificate": "Giấy chứng nhận zakat",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "Lần trước Attune tự đóng",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "Gửi báo cáo để được sửa? Bạn chọn gửi đi đâu — không có gì tự gửi.",
+  "Send a report": "Gửi báo cáo",
+  "Thank you — that helps fix it.": "Cảm ơn — điều đó giúp sửa lỗi.",
+  "Send a problem report": "Gửi báo cáo sự cố",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "Đã sao chép báo cáo — dán vào email hoặc WhatsApp.",
 };

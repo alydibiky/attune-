@@ -13088,4 +13088,11 @@ export const HI = {
   "work (the workplace)": "दफ़्तर",
   "school (the place)": "स्कूल",
   "Zakāt certificate": "ज़कात प्रमाणपत्र",
+  // v10.8 CR3 problem reports
+  "Attune closed by itself last time": "पिछली बार Attune अपने आप बंद हो गया",
+  "Send a report so it gets fixed? You choose where it goes — nothing is sent by itself.": "इसे ठीक करवाने के लिए रिपोर्ट भेजें? कहाँ जाएगी, आप चुनते हैं — कुछ भी अपने आप नहीं भेजा जाता।",
+  "Send a report": "रिपोर्ट भेजें",
+  "Thank you — that helps fix it.": "धन्यवाद — इससे ठीक करने में मदद मिलती है।",
+  "Send a problem report": "समस्या की रिपोर्ट भेजें",
+  "Report copied \u2014 paste it into an e-mail or WhatsApp.": "रिपोर्ट कॉपी हो गई — इसे ईमेल या WhatsApp में पेस्ट करें।",
 };
