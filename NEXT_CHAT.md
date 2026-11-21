@@ -1,6 +1,17 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
-> ## START HERE (20 Nov 2026, later — v10.8: launch items 1–6, Ali: "Do first 6" + "I won't be able to reach any testers for the other languages")
+> ## START HERE (21 Nov 2026 — v10.8 travel guides, Ali: "translate the travel guides" → "do them now" → "do the main languages first")
+> **Travel guides — what is translated (all on main):** (1) the guide lines every tab shows (apps, arrival, overcharges, emergency, money,
+> power, water, visa, best time, tipping, haggling, SIM, connection) + the 92 phrase meanings — **all 20 languages**; (2) the Know tab's
+> 15 section titles ("Money here", "Getting around"…) — all 20; (3) the Know tab's DEEPER sections (money, etiquette, health, costs,
+> getAround, eat, laws, dangers, holidays, customs, numbers — 1,140 lines) — **the 6 main languages done: ar, arb, es, fr, tr, hi**;
+> **next: the other 14** (pt it de ru id ur fa bn sw th vi zh ja ko), same way: scratchpad deep_miss.json (1,140 lines, order fixed),
+> 6 parts of 190 → dp/<lang>_0..5.json → deepmerge.py <lang> (checks counts + every number; a "2pm" may be 14 on the 24-hour clock),
+> then add the language to DEEP in tests/unit/v1080travel.test.mjs. Also: the "Write my tips in" picker says «Same as the app» instead of
+> a misleading "English" (built-in lines read in the app's language); the guide list takes the app's direction (an Arabic line that starts
+> "M-Pesa …" stays right-to-left); "Everything else about KENYA" → the country's own name. Checked at 320/390/1366 px in 7 languages.
+>
+> ## (20 Nov 2026, later — v10.8: launch items 1–6, Ali: "Do first 6" + "I won't be able to reach any testers for the other languages")
 > **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/DxuJVkUozBd3UHUgvSFNux (docs/mockups/launch-store.html) — store page
 > ST1–ST3, screenshots SS1–SS2, crash reports CR1/CR3, languages on the first install LG1/LG2, the support e-mail MAIL (rec. ST1 SS1 CR3 LG1).
 > Then build: the store listing (STORE_LISTING.md, AR + EN, 6 screenshots) and the crash log + Send a report (BatteryGuard's log goes in it).
