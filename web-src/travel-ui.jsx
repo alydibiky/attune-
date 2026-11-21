@@ -6,7 +6,7 @@
 import { TripBookings, FlightDayCard, TripMoney, TripPapers } from "./trip-ui.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { Plane, Languages, RefreshCw, Loader2, Copy, Volume2, AlertTriangle, Maximize2, X, Search, Camera, ShieldCheck, Bell, MapPin, Check } from "lucide-react";
-import { tr, dateLocale } from "./i18n.js";
+import { tr, dateLocale, getLang } from "./i18n.js";
 import * as T from "./travel.js";
 import * as K from "./ui-kit.jsx";
 import { SplitView } from "./split-ui.jsx";
@@ -56,7 +56,8 @@ export function TravelPage(p) {
   const [radar, setRadar] = useState(() => D.loadRadar());
   const pack = activePack ? CPACKS[activePack] : null;
   const pv = (k) => (packView && packView[k]) || (pack && pack[k]) || [];
-  const dirMine = RTL_LANGS.has(myLang) ? "rtl" : "ltr";
+  // v10.8: "en" = the guide as built in, which reads in the app's own language (all 20 are built in) — so its direction follows that text
+  const dirMine = myLang === "en" ? "auto" : RTL_LANGS.has(myLang) ? "rtl" : "ltr";
   const code = pack ? packCurrency(pack) : "";
   const conv = (a, from, to) => { const c = rates && convert(a, from, to, rates); return c ? c.value : null; };
   const shape = T.tripShape(trip);
@@ -302,7 +303,7 @@ export function TravelPage(p) {
           <div className="flex items-center gap-2 flex-wrap">
             <Languages size={14} className="c-acc" /><span className="c-sub">{tr("Write my tips in")}</span>
             <select value={myLang} onChange={(e) => setMyLang(e.target.value)} className="rounded-[12px] min-h-[44px] px-2.5 text-[12.5px] font-semibold border bg-[var(--c-bg)] focus:outline-none focus:border-[var(--c-acc)]" style={st}>
-              {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}</select>
+              {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{l.k === "en" && getLang() !== "en" ? tr("Same as the app") : tr(l.label)}</option>)}</select>
             {translating ? <span className="c-sub inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" />{tr("translating on your phone…")}</span> : myLang !== "en" ? <span className="c-sub">{tr("saved — this pack now reads in")} {langShown(myLang)}</span> : null}
           </div>
           {/* v6.27 computer layout A: the tips as cards in 2 columns */}
@@ -310,7 +311,7 @@ export function TravelPage(p) {
           {pv("scams").length ? <Section title="How you'll get overcharged"><List items={pv("scams")} dir={dirMine} warn /></Section> : null}
           {[["Money here", "money"], ["What's rude, what's fine", "etiquette"], ["Staying well", "health"]].map(([t, k]) => pv(k).length ? <Section key={k} title={t}><List items={pv(k)} dir={dirMine} /></Section> : null)}
           </div>
-          <p className={K.label + " m-0 pt-1"}>{tr("Everything else about")} {tr(pack.name)} · {tr("all offline")}</p>
+          <p className={K.label + " m-0 pt-1"}>{tr("Everything else about")} {countryShown(activePack, pack.name)} · {tr("all offline")}</p>
           <div className="c-list">{[["💸", "What things cost", "costs", "Rough ranges, for sanity-checking a price — not a price list."], ["🚉", "Getting around", "getAround"], ["🍽", "Eating well", "eat"], ["⚖️", "Laws that surprise people", "laws"],
               ["⚠️", "Real dangers", "dangers"], ["📅", "When things shut", "holidays"], ["🛃", "Customs & what not to bring", "customs"], ["☎️", "Useful numbers", "numbers"]].map(([icon, title, k, note]) => pv(k).length ? (
             <details key={k} className="group">
