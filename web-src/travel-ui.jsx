@@ -56,8 +56,8 @@ export function TravelPage(p) {
   const [radar, setRadar] = useState(() => D.loadRadar());
   const pack = activePack ? CPACKS[activePack] : null;
   const pv = (k) => (packView && packView[k]) || (pack && pack[k]) || [];
-  // v10.8: "en" = the guide as built in, which reads in the app's own language (all 20 are built in) — so its direction follows that text
-  const dirMine = myLang === "en" ? "auto" : RTL_LANGS.has(myLang) ? "rtl" : "ltr";
+  // v10.8: "en" = the guide as built in, which reads in the app's own language (all 20 are built in) — so it takes the app's direction (a line starting "M-Pesa …" stays right-to-left in Arabic)
+  const uiL = getLang(); const dirMine = myLang === "en" ? (RTL_LANGS.has(uiL) || uiL === "arb" ? "rtl" : "ltr") : RTL_LANGS.has(myLang) ? "rtl" : "ltr";
   const code = pack ? packCurrency(pack) : "";
   const conv = (a, from, to) => { const c = rates && convert(a, from, to, rates); return c ? c.value : null; };
   const shape = T.tripShape(trip);
