@@ -357,8 +357,8 @@ function PeriodBar({ rep, setPeriod, cats }) {
       <div className="calm w-full bg-[var(--c-surf)] text-[var(--c-ink)] border-t border-[var(--c-ln)] rounded-t-[20px] p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="money-period-sheet">
         <p className="m-0 text-[16px] font-extrabold">{tr("Pick the dates")}</p>
         <div className="grid grid-cols-2 gap-2">
-          <label className="block space-y-1"><span className={U.label}>{tr("From")}</span><input type="date" value={f} max={t || undefined} onChange={(e) => setF(e.target.value)} className={box} data-testid="money-period-from" /></label>
-          <label className="block space-y-1"><span className={U.label}>{tr("To")}</span><input type="date" value={t} min={f || undefined} onChange={(e) => setT(e.target.value)} className={box} data-testid="money-period-to" /></label>
+          <label className="block space-y-1"><span className={U.label}>{tr("From§range")}</span><input type="date" value={f} max={t || undefined} onChange={(e) => setF(e.target.value)} className={box} data-testid="money-period-from" /></label>
+          <label className="block space-y-1"><span className={U.label}>{tr("To§range")}</span><input type="date" value={t} min={f || undefined} onChange={(e) => setT(e.target.value)} className={box} data-testid="money-period-to" /></label>
         </div>
         <label className="block space-y-1"><span className={U.label}>{tr("Category")}</span>
           <select value={c} onChange={(e) => setC(e.target.value)} className={box} data-testid="money-period-catpick">

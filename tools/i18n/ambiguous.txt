@@ -471,11 +471,11 @@ money-sheets-ui.jsx: {t.type !== "transfer" ? <Field label={tr("Category")}><div
 
 ## Account
 attune.jsx: <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${e
-money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
+money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From§account") : tr("Account")}</p>
 money-pages-ui.jsx: <Head title={tr("Accounts report")} back={() => setRep(false)} right={saveFile ? <button className={U.btnS + " h-10! min-h-[40px]!"} onClick
 money-pages-ui.jsx: <Head title={tr("Accounts")} right={<button className={U.btnS + " h-10! min-h-[40px]!"} onClick={() => openLedger("add-account")} data-testi
 money-sheets-ui.jsx: <Field label={tr("Account")}><Pills value={account} onChange={setAccount} items={accs.map((a) => [a.id, (a.emoji || "") + " " + a.name])} te
-money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
+money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From§account") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L
 money-sheets-ui.jsx: <Field label={tr("Account")}><Pills value={account} onChange={setAccount} items={[...accs.map((a) => [a.id, (a.emoji || "") + " " + a.name])
 
 ## Amount
@@ -1197,14 +1197,6 @@ yearplan.js: groups.push({ id: "income", label: ar ? "الدخل" : tr("Income")
 doit.js: ...pl.pots.map((p) => [(ar ? "تحويش: " : tr("Save: ")) + p.name, f(p.monthly)]), ...pl.flexible.slice(0, 6).map((x) => [ar ? CAT_AR[x.cat] |
 yearplan.js: return row("pot:" + p.id, (ar ? "تحويش: " : tr("Save: ")) + p.name, (mo, k) => {
 
-## To
-email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("To")}
-messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
-money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("To")}</span><input type="date" value={t} min={f || undefined} onChange={(e
-money-pages-ui.jsx: {type === "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("To")}</p>
-owed-ui.jsx: <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("To")}</span><input value={f.to} onChange=
-weekplan-ui.jsx: <label className="flex-1">{tr("To")}<input className={inp} type="time" value={v.to} onChange={(e) => e.target.value && e.target.value > v.fr
-
 ## Subject
 email-ui.jsx: <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("Subject")}
 messages-ui.jsx: <input value={m.subject} onChange={(e) => set("subject", e.target.value)} dir="auto" placeholder={tr("Subject")} className={U.inp} data-test
@@ -1336,12 +1328,7 @@ rulestore.js: : w.type === "money_out" ? tr("You pay") : w.type === "message" ? 
 
 ## From
 lifeask-ui.jsx: <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>
-messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
-money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("From")}</span><input type="date" value={f} max={t || undefined} onChange={
-money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
-money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L).map((a
 sourcelabel.js: return s.length ? tr("From") + ": " + s.map((k) => tr(SOURCE_TEXT[k])).join(" · ") : "";
-weekplan-ui.jsx: <label className="flex-1">{tr("From")}<input className={inp} type="time" value={v.from} onChange={(e) => e.target.value && e.target.value < 
 
 ## a month
 lifeedit.js: const per = intent.every === "week" ? (ar ? " في الأسبوع" : " " + tr("a week")) : intent.every === "month" ? (ar ? " في الشهر" : " " + tr("a
@@ -1366,6 +1353,16 @@ tables-ui.jsx: <button onClick={back} className="inline-flex items-center gap-1 
 ## Screenshot
 lookback-ui.jsx: const rec = remember({ kind: "photo", title: shotTitle(text, f.name ? f.name.replace(/\.\w+$/, "") : tr("Screenshot")), text: text || f.name
 scamcheck-ui.jsx: <button onClick={() => ref.current && ref.current.click()} disabled={busy} className={U.btnS} data-testid="scam-shot"><ImageIcon size={16} /
+
+## From§range
+messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
+money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("From§range")}</span><input type="date" value={f} max={t || undefined} onCh
+weekplan-ui.jsx: <label className="flex-1">{tr("From§range")}<input className={inp} type="time" value={v.from} onChange={(e) => e.target.value && e.target.va
+
+## To§range
+messages-ui.jsx: {r.mode === "hours" ? <div className="flex gap-2 items-center"><input type="time" value={r.from} onChange={(e) => put("from", e.target.value
+money-calm-ui.jsx: <label className="block space-y-1"><span className={U.label}>{tr("To§range")}</span><input type="date" value={t} min={f || undefined} onChan
+weekplan-ui.jsx: <label className="flex-1">{tr("To§range")}<input className={inp} type="time" value={v.to} onChange={(e) => e.target.value && e.target.value 
 
 ## Messages
 messages-ui.jsx: <b className="flex-1 text-[19px] font-black">{tr("Messages")}</b></div>
@@ -1424,6 +1421,10 @@ planner-ui.jsx: <div className="flex items-center justify-between"><button class
 ## Next month
 money-calm-ui.jsx: <button onClick={() => go(1)} disabled={atNow} aria-label={tr("Next month")} className="w-11 h-11 shrink-0 rounded-[12px] grid place-items-c
 planner-ui.jsx: <button className={U.btnS + " h-9! min-h-[36px]!"} onClick={() => move(1)} aria-label={tr("Next month")}>›</button></div>
+
+## From§account
+money-pages-ui.jsx: <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From§account") : tr("Account")}</p>
+money-sheets-ui.jsx: <Field label={t.type === "transfer" ? tr("From§account") : tr("Account")}><Pills value={account} onChange={setAccount} items={cashAccounts(L
 
 ## head
 money-pages-ui.jsx: {a.other.map((x) => <Row key={x.id} icon={x.emoji} title={x.name} sub={x.unit} end={fmt(x.balance) + " " + (x.kind === "herd" ? tr("head") :

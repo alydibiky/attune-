@@ -134,10 +134,10 @@ export function AddSheet({ L, onSave, onDebt, onClose, prefill = null }) {
         <span className="text-[15px] font-bold c-sub">{from ? from.currency || "" : ""}</span></div>
       {type !== "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("Category")}</p>
         <div className="flex flex-wrap gap-1.5" data-testid="add-cats">{cats.map((c) => <button key={c.id} onClick={() => setCat(c.id)} className={pill(cat === c.id)} data-testid={"add-cat-" + c.id}><span className="me-1">{c.emoji}</span>{c.name}</button>)}</div></div> : null}
-      <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From") : tr("Account")}</p>
+      <div><p className={U.label + " m-0 mb-1.5"}>{type === "transfer" ? tr("From§account") : tr("Account")}</p>
         <div className="flex flex-wrap gap-1.5" data-testid="add-accounts">{accs.map((a) => <button key={a.id} onClick={() => { setAccount(a.id); if (toAccount === a.id) setTo(""); }} className={pill(account === a.id)} data-testid="add-account"><span className="me-1">{a.emoji}</span>{a.name}</button>)}
           {!accs.length ? <span className="text-[13px] c-sub">{tr("No account yet — add one in Accounts.")}</span> : null}</div></div>
-      {type === "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("To")}</p>
+      {type === "transfer" ? <div><p className={U.label + " m-0 mb-1.5"}>{tr("To§account")}</p>
         <div className="flex flex-wrap gap-1.5">{tos.map((a) => <button key={a.id} onClick={() => setTo(a.id)} className={pill(toAccount === a.id)} data-testid="add-to-account"><span className="me-1">{a.emoji}</span>{a.name}</button>)}
           {!tos.length ? <span className="text-[13px] c-sub">{tr("You need a second account in the same currency.")}</span> : null}</div></div> : null}
       <div className="grid grid-cols-[auto_1fr] gap-2">

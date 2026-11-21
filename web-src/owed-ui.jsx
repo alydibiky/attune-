@@ -57,7 +57,7 @@ function FlightCheck({ init, flash }) {
   return (<div className="space-y-3" data-testid="owed-flight">
     <div className="grid grid-cols-2 gap-2">
       <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("From (city or code)")}</span><input value={f.from} onChange={(e) => set("from", e.target.value)} className={field} style={st} placeholder="FRA" data-testid="owed-from" /></label>
-      <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("To")}</span><input value={f.to} onChange={(e) => set("to", e.target.value)} className={field} style={st} placeholder="JFK" data-testid="owed-to" /></label>
+      <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("To (city or code)")}</span><input value={f.to} onChange={(e) => set("to", e.target.value)} className={field} style={st} placeholder="JFK" data-testid="owed-to" /></label>
       <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("Flight number")}</span><input value={f.flight} onChange={(e) => set("flight", e.target.value.toUpperCase())} className={field} style={st} placeholder="LH400" data-testid="owed-flightno" /></label>
       <label className="block space-y-1"><span className={"block text-[12px] font-bold " + U.muted}>{tr("Date")}</span><input type="date" value={f.date} onChange={(e) => set("date", e.target.value)} className={field} style={st} /></label>
     </div>

@@ -77,8 +77,8 @@ function WeekPlanPageInner({ onClose, flash }) {
             onClick={() => { const d = new Date(+form.due.slice(0, 4), +form.due.slice(5, 7) - 1, +form.due.slice(8, 10) + 1).getTime();   // by the END of that day
               save({ ...v, tasks: [...v.tasks, { id: "w" + Date.now(), name: form.name.trim(), minutes: Math.round(+form.hours * 60), due: d }] }); setForm({ ...form, name: "" }); }}>{tr("Add task")}</button>
           <div className="flex gap-2 items-end text-[12px] c-sub">
-            <label className="flex-1">{tr("From")}<input className={inp} type="time" value={v.from} onChange={(e) => e.target.value && e.target.value < v.to && save({ ...v, from: e.target.value })} data-testid="weekplan-from" /></label>
-            <label className="flex-1">{tr("To")}<input className={inp} type="time" value={v.to} onChange={(e) => e.target.value && e.target.value > v.from && save({ ...v, to: e.target.value })} data-testid="weekplan-to" /></label></div>
+            <label className="flex-1">{tr("From§range")}<input className={inp} type="time" value={v.from} onChange={(e) => e.target.value && e.target.value < v.to && save({ ...v, from: e.target.value })} data-testid="weekplan-from" /></label>
+            <label className="flex-1">{tr("To§range")}<input className={inp} type="time" value={v.to} onChange={(e) => e.target.value && e.target.value > v.from && save({ ...v, to: e.target.value })} data-testid="weekplan-to" /></label></div>
         </div>
         {plan.late.length ? <div className="c-card p-3 text-[13px]" style={{ borderColor: "var(--c-neg)" }} data-testid="weekplan-late">
           {plan.late.map((id) => <p key={id} className="m-0" dir="auto">⚠ {tr("{t} doesn't fit before its deadline — free some time or move the date.", { t: name(id) })}</p>)}</div> : null}

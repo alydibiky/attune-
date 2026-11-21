@@ -14,6 +14,8 @@ import fs from "fs";
 const ROOT = new URL("../../", import.meta.url).pathname;
 const LANGS = ["arb", "es", "fr", "de", "pt", "it", "ru", "tr", "id", "hi", "ur", "fa", "bn", "sw", "th", "vi", "zh", "ja", "ko"];
 const load = async (l) => { const m = await import(`${ROOT}web-src/i18n-${l}.js`); return Object.values(m).find((v) => v && typeof v === "object" && Object.keys(v).length > 50) || {}; };
+const ph = (x) => (String(x).match(/\{\w+\}/g) || []).sort().join(",");
+const PARTNER = { ar: "arb", ja: "zh", zh: "ja", es: "pt", pt: "es", it: "es", fr: "es", fa: "ur", ur: "fa", arb: "ar" };
 const LATIN = new Set(["es", "fr", "de", "pt", "it", "tr", "id", "sw", "vi"]);
 // letters that never belong in that language's lines (names in Latin letters are fine everywhere)
 const FOREIGN = {
@@ -54,7 +56,9 @@ export async function deep(only, kindOnly) {
       if (a.length && !same(a, b) && !same(a2, b)) {
         const miss = a.filter((n) => !b.includes(n) && !a2.filter((m) => !b.includes(m)).length === false);
         // allowed: written-out numbers ("one", "two") vs digits, or a number of the English dropped because the language has a word for it
-        if (a.some((n) => !b.includes(n)) || b.some((n) => !a.includes(n) && !a2.includes(n))) add("numbers", en, t, `en ${a2.join(" ")} · ${l} ${b.join(" ")}`);
+        // 1 and 2 are often words («صفحتان», "un jour", «يومين», "一天"); a 12-hour time may be written on the 24-hour clock (5 → 17)
+        const word = (n) => n <= 2 || (Number.isInteger(n) && n <= 12 && b.includes(n + 12));
+        if (a.some((n) => !b.includes(n) && !word(n)) || b.some((n) => !a.includes(n) && !a2.includes(n) && !(n >= 13 && n <= 24 && a.includes(n - 12)))) add("numbers", en, t, `en ${a2.join(" ")} · ${l} ${b.join(" ")}`);
         void miss;
       }
       // English words in the middle of a translation
@@ -77,6 +81,24 @@ export async function deep(only, kindOnly) {
       if (LATIN.has(l) && l !== "fr" && / [,.;:!?](?=\s|$)/.test(t) && !/ [,.;:!?]/.test(en)) add("broken", en, t, "space before punctuation");
       if ((en.match(/\n/g) || []).length !== (t.match(/\n/g) || []).length) add("lines", en, t, `${(en.match(/\n/g) || []).length} → ${(t.match(/\n/g) || []).length}`);
     }
+    // shifted: a run of lines whose translation fits the NEXT (or previous) English line better than its own — a batch that slipped by one
+    // (Japanese 1708–1725 did: "Cancel" read «言い方が違いますか？ 修正する →»). Judged by length, end mark (? → … : —), numbers, placeholders.
+    const E = Object.keys(d).filter((k) => typeof d[k] === "string"), V = E.map((k) => d[k]);
+    const ratios = E.map((k, i) => V[i].length / Math.max(1, k.length)).filter((r) => isFinite(r) && r > 0).sort((a, b) => a - b), rho = ratios[ratios.length >> 1] || 1;
+    const endOf = (x) => { const m = /([?？؟→…:：—–-]|\.\.\.)\s*$/u.exec(String(x).trim()); return m ? m[1].replace(/[？؟]/, "?").replace(/[：]/, ":").replace(/\.\.\./, "…").replace(/[–-]/, "—") : ""; };
+    const sig = (x) => ph(x) + "|" + nums(x).join(",");
+    // a related language's translation of the same English line shares characters / words (ja↔zh kanji, es↔pt↔it, fa↔ur, arb↔ar)
+    const P = PARTNER[l] ? await load(PARTNER[l]) : null;
+    const grams = (x) => { const t = String(x).toLowerCase().replace(/\{\w+\}/g, ""); const g = new Set(); if (/[\u3040-\u9fff\uac00-\ud7af]/.test(t)) { for (const c of t) if (/[\u4e00-\u9fff]/.test(c)) g.add(c); } else for (const w of t.match(/[\p{L}]{3,}/gu) || []) g.add(w.slice(0, 5)); return g; };
+    const jac = (a, b) => { if (!a.size || !b.size) return 0; let n = 0; for (const x of a) if (b.has(x)) n++; return n / Math.min(a.size, b.size); };
+    const latinIn = (t) => new Set((quoted(t).match(/[A-Za-z][A-Za-z0-9]{2,}/g) || []).map((w) => w.toLowerCase()));
+    const fit = (j, t) => { const en = E[j]; let f = -Math.abs(Math.log(Math.max(1, t.length) / (rho * Math.max(1, en.length)))); if (endOf(en) === endOf(t)) f += 0.6; if (sig(en) === sig(t)) f += 0.6; else f -= 0.6;
+      if (P && typeof P[en] === "string" && P[en] !== en) f += 2 * jac(grams(t), grams(P[en]));
+      const lt = latinIn(t); if (lt.size) f += 1.2 * jac(lt, latinIn(en)); return f; };
+    const better = E.map((k, i) => { if (V[i] === k) return 0; const own = fit(i, V[i]); const nx = i + 1 < E.length ? fit(i + 1, V[i]) : -9, pv = i ? fit(i - 1, V[i]) : -9; return nx > own + 0.7 ? 1 : pv > own + 0.7 ? -1 : 0; });
+    // a swap: this line fits the next one and the next one fits this one (Bengali "Save the correction" ↔ "Cancel")
+    for (let i = 0; i + 1 < E.length; i++) if (better[i] === 1 && better[i + 1] === -1) { add("shifted", E[i], V[i], "swapped with the next line"); add("shifted", E[i + 1], V[i + 1], "swapped with the line before"); better[i] = better[i + 1] = 0; i++; }
+    for (let i = 0; i < E.length; i++) { if (!better[i]) continue; let j = i; while (j + 1 < E.length && better[j + 1] === better[i]) j++; if (j > i) for (let q = i; q <= j; q++) add("shifted", E[q], V[q], `${better[i] > 0 ? "fits the next line" : "fits the line before"} (run of ${j - i + 1})`); i = j; }
     out[l] = probs;
   }
   return out;

@@ -44,7 +44,7 @@ export function EmailCard({ text, write, me = "", onClose, onSent }) {
   return <div className={U.cardPad + " space-y-2"} data-testid="email-card">
     <div className="flex items-center gap-2"><p className="m-0 flex-1 text-[14px] font-extrabold">{tr("Your email — check it, then send")}</p>
       <button onClick={onClose} aria-label={tr("Close")} className="w-11 h-11 grid place-items-center text-[var(--c-mut)]"><X size={16} /></button></div>
-    <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("To")}
+    <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("To§email")}
       <input value={to} onChange={(e) => setTo(e.target.value)} placeholder={ask.toName ? tr("{n}'s email address", { n: ask.toName }) : "name@example.com"} dir="ltr" className={field + " mt-1"} data-testid="email-to" /></label>
     {bad.length ? <p className="m-0 text-[12px] text-[var(--c-neg)]">{tr("Not an email address: {a}", { a: bad.join(", ") })}</p> : null}
     <label className="block text-[12px] font-bold text-[var(--c-mut)]">{tr("Subject")}

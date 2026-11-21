@@ -29,7 +29,8 @@ for (const l of langs) {
     const sentence = (en.replace(/\{\w+\}/g, "").match(/\b[a-z]{3,}\b/g) || []).length >= 2;
     if (SCRIPT[l] && sentence && !SCRIPT[l].test(t) && !KEEP.test(en.trim())) probs.push(["not in the script", en, t]);
     if (!SCRIPT[l] && t === en && !(SAME[l] && SAME[l].has(en)) && letters.length >= 14 && /\s\w+\s/.test(en)) probs.push(["left in English", en, t]);
-    if (l === "ar" && FUSHA.test(t)) probs.push(["formal Arabic in Egyptian", en, t]);
+    // v10.8: words inside «…» are quoted as the phone / a person shows them (Android's own «استخدام هذا المجلد» button) — not Attune's voice
+    if (l === "ar" && FUSHA.test(t.replace(/«[^»]*»/g, " "))) probs.push(["formal Arabic in Egyptian", en, t]);
     if (l === "arb" && EGY.test(t)) probs.push(["Egyptian in formal Arabic", en, t]);
     if ((l === "ar" || l === "arb") && /\bEGP\b/.test(t) && !/\bEGP\b/.test(en)) probs.push(["EGP added", en, t]);
   }

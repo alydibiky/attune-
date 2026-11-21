@@ -79,6 +79,9 @@ export function tr(s, vars) {
     // Tests collect any English still shown in another language (a line already translated, passed again, is not one).
     else if (typeof window !== "undefined" && window.__trMiss && /[A-Za-z]{2}/.test(s) && !(window.__trVals || (window.__trVals = new Set(Object.values(d)))).has(s)) window.__trMiss.add(s);
   }
+  // v10.8: one English word, two meanings — "From§range" (a date / time range) vs "From" (where something came from): the part after "§"
+  // only tells the translations apart; English shows "From"
+  if (out === s && s.includes("§")) out = s.slice(0, s.indexOf("§"));
   if (vars) out = out.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
   if (ON_DESKTOP) out = forDesktop(out);
   return out;
