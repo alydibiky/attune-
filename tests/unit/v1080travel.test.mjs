@@ -26,14 +26,16 @@ for (const [id, ex] of Object.entries(DONE)) {
 }
 // v10.8 later: the guide's deeper sections on the Know tab (money, manners, health, costs, getting around, food, laws, dangers,
 // holidays, customs, numbers) — 1,140 more lines; DEEP grows as each language is finished (main languages first, Ali 21 Nov)
-const DEEP = { ar: "AR", arb: "ARB", es: "ES" };
+const DEEP = { ar: "AR", arb: "ARB", es: "ES", fr: "FR" };
 const F2 = ["money", "etiquette", "health", "costs", "getAround", "eat", "laws", "dangers", "holidays", "customs", "numbers"];
 const deep = new Set(); for (const p of Object.values(P)) for (const f of F2) (p[f] || []).forEach((x) => deep.add(x));
 ok(deep.size > 1100, "the deeper sections: " + deep.size + " lines");
 for (const [id, ex] of Object.entries(DEEP)) {
   const L = (await import("../../web-src/i18n-" + id + ".js"))[ex];
   const m = [...deep].filter((x) => !L[x]); ok(!m.length, id + ": every deeper line translated — missing " + m.length + ": " + m.slice(0, 2).join(" | "));
-  const bad = [...deep].filter((x) => L[x] && (digits(x).match(/\d+/g) || []).some((d) => !digits(L[x]).includes(d)));
+  // an hour written "2pm" / "9–10pm" may be on the 24-hour clock in other languages (14 h, 21–22 h)
+  const pmH = (x) => new Set([...x.matchAll(/(\d{1,2})(?:–(\d{1,2}))?\s*pm/g)].flatMap((m) => [m[1], m[2]].filter(Boolean)));
+  const bad = [...deep].filter((x) => L[x] && (digits(x).match(/\d+/g) || []).some((d) => !digits(L[x]).includes(d) && !(pmH(x).has(d) && digits(L[x]).includes(String(+d + 12)))));
   ok(!bad.length, id + ": every number kept in the deeper lines: " + bad.slice(0, 2).map((x) => x + " → " + L[x]).join(" | "));
 }
 const ui = fs.readFileSync(new URL("../../web-src/travel-ui.jsx", import.meta.url), "utf8");
