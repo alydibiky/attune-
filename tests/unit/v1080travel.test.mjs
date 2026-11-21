@@ -4,7 +4,7 @@
 // v10.8 later (Ali: "do the 5 main languages now and the others"): the same for every language that is finished (DONE grows to all 19).
 import fs from "fs";
 const AR = (await import("../../web-src/i18n-ar.js")).AR;
-const DONE = { arb: "ARB", es: "ES", fr: "FR", tr: "TRK", hi: "HI", de: "DE", pt: "PT", it: "IT", ru: "RU", id: "IDN", ur: "UR", fa: "FA", bn: "BN", sw: "SW" };
+const DONE = { arb: "ARB", es: "ES", fr: "FR", tr: "TRK", hi: "HI", de: "DE", pt: "PT", it: "IT", ru: "RU", id: "IDN", ur: "UR", fa: "FA", bn: "BN", sw: "SW", th: "TH" };
 let fail = 0, n = 0; const ok = (c, m) => { n++; if (!c) { console.log("FAIL " + m); fail++; } };
 const s = fs.readFileSync(new URL("../../web-src/attune.jsx", import.meta.url), "utf8"), a = s.indexOf("const COUNTRY_PACKS = {"), b = s.indexOf("\n};\n", a);
 const P = new Function("return " + s.slice(a + "const COUNTRY_PACKS = ".length, b + 2))();
