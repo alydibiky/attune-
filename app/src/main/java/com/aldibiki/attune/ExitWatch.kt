@@ -18,6 +18,12 @@ import java.util.Date
 object ExitWatch {
     @Volatile var last: JSONObject? = null
         private set
+    /** v10.8: when the newest UNEXPECTED ending happened (on screen or in the background) and Android's words for it — FastEngine
+     *  checks it against its "answering now" mark. */
+    @Volatile var unexpectedAt: Long = 0L
+        private set
+    @Volatile var unexpectedWhy: String = ""
+        private set
 
     private fun why(r: Int, status: Int): Pair<String, Boolean> = when (r) {
         ApplicationExitInfo.REASON_CRASH -> "an app error" to true
@@ -58,6 +64,7 @@ object ExitWatch {
                     .append(" · ${e.description ?: ""} · memory ${e.pss / 1024} MB (pss) / ${e.rss / 1024} MB (rss)")
                     .append(if (model != null) " · model: $model" else "").append("\n")
                 if (e.reason == ApplicationExitInfo.REASON_ANR) try { e.traceInputStream?.use { sb.append(it.bufferedReader().readText().take(4000)).append("\n") } } catch (x: Exception) {}
+                if (unexpected) { unexpectedAt = e.timestamp; unexpectedWhy = text + (if (background) " (in the background)" else "") }
                 if (unexpected && !background) newest = JSONObject().put("at", e.timestamp).put("why", text).put("reason", e.reason)
                     .put("fg", e.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE)   // v9.9.15: it was on screen
                     .put("memMB", e.pss / 1024).put("model", model ?: JSONObject.NULL).put("desc", e.description ?: "")

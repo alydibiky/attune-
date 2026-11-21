@@ -15066,4 +15066,5 @@ export const HI = {
   "Declare all food; fines for undeclared items": "सारा खाना घोषित करें; बिना घोषित पर जुर्माना",
   "911 emergencies": "911 इमरजेंसी",
   "988 mental-health crisis line": "988 मानसिक स्वास्थ्य संकट लाइन",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "इस हफ़्ते दो बार फ़ोन की ग्राफ़िक्स चिप ने ऐप बंद कर दिया जब तेज़ इंजन जवाब दे रहा था। अब यह CPU पर है (धीमा, स्थिर); आप इंजन → स्पीड में GPU फिर से आज़मा सकते हैं।",
 };

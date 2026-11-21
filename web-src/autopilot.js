@@ -48,9 +48,10 @@ const ASKS = { test: (x) => ASKS0.test(x) && !NOT_ASK.test(x) };
 // v9.9.39 (Ali's phone, 14 Nov: "the to-do list has many things added that should have not been added at all"): «ممكن» alone is
 // "maybe" («وكده كده ممكن بكرة اجرب…» = maybe tomorrow I'll try) — a request only as «ممكن تـ…» / «ممكن لو سمحت»
 const MAYBE_ONLY = /ممكن/;
-const MUMKIN_ASK = /ممكن\s+(?:ت[ء-ي]{2,}|حضرتك|لو سمحت|نتكلم)/;
+// v10.8 (Ali, 21 Nov): «ممكن تحتاجه» = "you might NEED it" (a shop's advert), «ممكن تكون / تلاقي / تعجبك / تستفيد» = might be / find / like
+const MUMKIN_ASK = /ممكن\s+(?:(?!تحتاج|تكون|تكوني|تلاقي|تلاقيه|تلاقيها|تعجب|تستفيد|تستمتع|تحب|تتخيل|تقدر تستفيد|تبقى|تبقي)ت[ء-ي]{2,}|حضرتك|لو سمحت|نتكلم)/;
 // «لا حول ولا قوة إلا بالله» is a saying, not «حوّل» (transfer)
-export const asksYou = (x) => { const t = String(x || "").replace(/لا\s*حول\s*و\s*(?:لا)?\s*قو[ةه]?\s*(?:إلا|الا)?\s*(?:بالله)?/g, " "); if (!ASKS.test(t)) return false;
+export const asksYou = (x) => { const t = String(x || "").replace(/\s+/g, " ").replace(/لا\s*حول\s*و\s*(?:لا)?\s*قو[ةه]?\s*(?:إلا|الا)?\s*(?:بالله)?/g, " "); if (!ASKS.test(t)) return false;
   return !(MAYBE_ONLY.test(t) && !MUMKIN_ASK.test(t) && !ASKS0.test(t.replace(/ممكن/g, " "))); };
 /** A message in a GROUP chat ("ADDRESS EAST MARKETPLACE: ~Rowan Soliman", «صيانة الاوناش: M. Mohamed», text "~Rowan: …") was
  *  written to everyone, not to you — never a to-do (unless it @-mentions someone). */

@@ -15065,4 +15065,5 @@ export const FA = {
   "Declare all food; fines for undeclared items": "همه غذاها را اظهار کنید؛ برای اقلام اظهارنشده جریمه هست",
   "911 emergencies": "911 اورژانس",
   "988 mental-health crisis line": "988 خط بحران سلامت روان",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "این هفته دو بار تراشه گرافیکی گوشی برنامه را هنگام پاسخ موتور سریع بست. اکنون روی CPU است (کندتر، پایدار)؛ می‌توانید GPU را دوباره در موتور ← سرعت امتحان کنید.",
 };

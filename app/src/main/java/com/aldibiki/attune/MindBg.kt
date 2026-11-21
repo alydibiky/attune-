@@ -85,6 +85,7 @@ object MindBg {
             .take(minOf(12, left))
         if (todo.isEmpty()) return
         if (GenService.busy()) return
+        BatteryGuard.log(ctx, "AI reading ${todo.size} notifications")   // v10.8: in the battery log (and the problem report)
         val wasReady = Engine.state == Engine.State.READY
         if (!wasReady) {
             val m = ModelStore.active(ctx) ?: return

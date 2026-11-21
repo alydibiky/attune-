@@ -15066,4 +15066,5 @@ export const SW = {
   "Declare all food; fines for undeclared items": "Tangaza vyakula vyote; faini kwa vitu visivyotangazwa",
   "911 emergencies": "911 dharura",
   "988 mental-health crisis line": "988 simu ya dharura ya afya ya akili",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Mara mbili wiki hii chipu ya michoro ya simu ilifunga programu injini ya haraka ilipokuwa ikijibu. Sasa iko kwenye CPU (polepole, imara); unaweza kujaribu GPU tena katika Injini → Kasi.",
 };

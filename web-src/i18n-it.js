@@ -15066,4 +15066,5 @@ export const IT = {
   "Declare all food; fines for undeclared items": "Dichiara tutto il cibo; multe per ciò che non è dichiarato",
   "911 emergencies": "911 emergenze",
   "988 mental-health crisis line": "988 linea per crisi di salute mentale",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Due volte questa settimana il chip grafico del telefono ha chiuso l'app mentre il motore veloce rispondeva. Ora è sulla CPU (più lento, stabile); puoi riprovare la GPU in Motore → Velocità.",
 };

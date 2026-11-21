@@ -15065,4 +15065,5 @@ export const RU = {
   "Declare all food; fines for undeclared items": "Декларируйте всю еду; за незадекларированное — штрафы",
   "911 emergencies": "911 экстренные службы",
   "988 mental-health crisis line": "988 линия кризисной психологической помощи",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Дважды за эту неделю графический чип телефона закрыл приложение, пока быстрый движок отвечал. Сейчас он работает на CPU (медленнее, но стабильно); GPU можно попробовать снова в Движок → Скорость.",
 };

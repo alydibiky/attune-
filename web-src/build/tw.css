@@ -171,8 +171,10 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
   @keyframes att-side-in { from { transform: translateX(-100%); } to { transform: none; } }
   @keyframes att-side-in-rtl { from { transform: translateX(100%); } to { transform: none; } }
   [data-testid=phone-side] { animation: att-dim-in .24s ease-out both; }
-  .fixed.inset-0[data-testid=phone-side] > * { animation: att-side-in .26s cubic-bezier(.2,.8,.2,1) both; }
-  [dir=rtl] .fixed.inset-0[data-testid=phone-side] > * { animation-name: att-side-in-rtl; }
+  /* v10.8 (Ali's phone, 21 Nov: the side menu showed see-through over Home): the slide is on the menu panel ITSELF and keeps nothing after
+     it ends — a transform left on its wrapper (fill "both") made the fixed panel measure itself against a 0-px-tall box: no background */
+  [data-testid=phone-side] [data-testid=side] { animation: att-side-in .26s cubic-bezier(.2,.8,.2,1) backwards; }
+  [dir=rtl] [data-testid=phone-side] [data-testid=side] { animation-name: att-side-in-rtl; }
 }
 
 /* v10.7 the Writing page: the versions beside the text when there is room (computer, an unfolded foldable) */

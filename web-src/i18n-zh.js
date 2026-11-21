@@ -15065,4 +15065,5 @@ export const ZH = {
   "Declare all food; fines for undeclared items": "申报所有食品；未申报会被罚款",
   "911 emergencies": "911 紧急电话",
   "988 mental-health crisis line": "988 心理危机热线",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "本周手机的图形芯片两次在快速引擎回答时关闭了应用。现在它改用 CPU（较慢但稳定）；你可以在 引擎 → 速度 中再次尝试 GPU。",
 };

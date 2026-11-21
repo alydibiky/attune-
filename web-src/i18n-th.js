@@ -15065,4 +15065,5 @@ export const TH = {
   "Declare all food; fines for undeclared items": "แจ้งอาหารทั้งหมด มีค่าปรับสำหรับของที่ไม่แจ้ง",
   "911 emergencies": "911 เหตุฉุกเฉิน",
   "988 mental-health crisis line": "988 สายด่วนวิกฤตสุขภาพจิต",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "สัปดาห์นี้ชิปกราฟิกของโทรศัพท์ปิดแอปไปสองครั้งขณะที่เอนจินเร็วกำลังตอบ ตอนนี้ใช้ CPU แทน (ช้ากว่าแต่เสถียร) คุณลองใช้ GPU อีกครั้งได้ที่ เอนจิน → ความเร็ว",
 };

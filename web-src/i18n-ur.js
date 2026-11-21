@@ -15066,4 +15066,5 @@ export const UR = {
   "Declare all food; fines for undeclared items": "سارا کھانا ظاہر کریں؛ غیر ظاہر شدہ چیزوں پر جرمانہ",
   "911 emergencies": "911 ایمرجنسی",
   "988 mental-health crisis line": "988 ذہنی صحت بحران لائن",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "اس ہفتے دو بار فون کی گرافکس چپ نے ایپ بند کر دی جب تیز انجن جواب دے رہا تھا۔ اب یہ CPU پر ہے (سست مگر مستحکم)؛ آپ انجن ← اسپیڈ میں GPU دوبارہ آزما سکتے ہیں۔",
 };

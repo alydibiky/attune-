@@ -57,7 +57,25 @@ const EMOJI_ONLY = /^[\s\p{Extended_Pictographic}‍️\u{1F3FB}-\u{1F3FF}]+$/u;
 const FORWARD = /^(?:forwarded|forwarded many times|تمت إعادة التوجيه|تمت إعادة توجيهها كثيرًا)\b/i;
 const SUMMARY = /^\d+ (?:new )?messages? from \d+ chats?$|^\d+ رسائل? (?:جديدة )?من \d+ (?:محادثات|دردشات)$/i;
 
-/** null for a real message; else the kind of noise: "media", "link", "reaction", "deleted", "greeting", "ack", "emoji", "forward", "summary". */
+// v10.8 (Ali, 21 Nov: "any notification is to do even if it's not that important" — a shop's WhatsApp advert «تخيل بوكس فيه كل اللي ممكن
+// تحتاجه … عليه خصم ٥٠٪» became a late to-do): an ADVERT is noise. Scored — a percent next to a discount word, a promo code / coupon,
+// "limited time" count 2; "order now", "free delivery", «عروض», 🔥🎁 count 1; 2 or more = an advert. A message that asks YOU
+// something ("they have 30% off — should I get it?", «أجيبلك؟») is never an advert.
+const PCT = "[\\d٠-٩]{1,3}(?:[.,][\\d٠-٩]+)?\\s*(?:%|٪|percent|في المية|في الميه)";
+const DISC = "(?:off|discount|sale|save|savings|خصم|الخصم|تخفيض|تخفيضات|توفير|وفر|اوفر|أوفر|عرض|عروض|offer|deal|promo|khasm|5asm|takhfeed|ta5fee?d)";
+const OFFER_STRONG = [new RegExp(PCT + "[^\\n]{0,30}?" + DISC + "|" + DISC + "[^\\n]{0,30}?" + PCT, "i"),
+  /\b(?:promo|discount|coupon|voucher)\s*code\b|\buse (?:the )?code\b|كود (?:ال)?خصم|كوبون|بروموكود|برومو كود/i,
+  /\blimited[- ]time\b|\boffer (?:ends|valid)\b|\bwhile stocks? last\b|لفترة محدودة|لمدة محدودة|العرض (?:ساري|متاح|لحد|حتى)|حتى نفاد الكمية|لحد ما الكمية تخلص/i,
+  /\b(?:buy \d+ get \d+|bogo)\b|اشتري [\d٠-٩]+ (?:و ?)?(?:خد|واحصل)|\bunsubscribe\b|لإلغاء الاشتراك|للالغاء ارسل/i];
+const OFFER_WEAK = [/\b(?:order|shop|book|buy|grab|get) (?:yours? )?now\b|اطلب (?:الآن|الان|دلوقتي|حالا)|اطلبه (?:الآن|الان|دلوقتي)|احجز (?:الآن|الان|دلوقتي)|اشتري (?:الآن|الان|دلوقتي)/i,
+  /\bfree (?:delivery|shipping|gift)\b|توصيل مجاني|شحن مجاني|هدية مجانية|هدية مع كل/i, /\b(?:new collection|new arrivals?|now available|available now|in stock|best ?seller)\b|تشكيلة جديدة|وصل حديثا|متوفر (?:الآن|الان|دلوقتي)|الأكثر مبيعا/i,
+  /عرض|عروض|\b(?:sale|offer|deal|discount)s?\b|خصم|تخفيض/i, /[🔥🎁🛍️💥🏷️⚡]{1}/u, /\b(?:only|just)\s+(?:EGP|LE|\$|€)?\s*[\d٠-٩]+|بس ب ?[\d٠-٩]+|بـ ?[\d٠-٩]+ (?:جنيه|ج)\b|\bper (?:box|piece|month)\b/i,
+  /\b(?:dm|inbox) (?:us|for)\b|ابعتلنا|كلمنا (?:على|ع) ال|للطلب|للحجز|للاستفسار/i];
+const ASKS_ME = /\b(?:should i|shall i|want me to|do you want|d'?you want|can you|could you|would you|please (?:get|buy|pick|bring|send)|pick (?:one |it |them )?up)\b|ممكن\s+(?:تعدي|تجيب|تبعت|تشتري|تاخد|تمر|تفوت)|(?:جيبلي|هاتلي|ابعتلي|اشتريلي|هاتهولي)|\b(?:momken t(?:egeb|eb3at|eshtery)|hatly|gebly|eb3atly)\b|(?:^|\s)(?:تحب|تحبي|عايز|عايزة|عاوز|اجيب|أجيب|اجيبلك|أجيبلك|نجيب|نشتري|اشتريلك|ناخد|آخد|اخد)(?=\s|$|[؟?،,])/i;
+export function isOffer(text) { const t = String(text || "").replace(/\s+/g, " "); if (ASKS_ME.test(t)) return false;
+  let sc = 0; for (const r of OFFER_STRONG) if (r.test(t)) sc += 2; for (const r of OFFER_WEAK) if (r.test(t)) sc += 1; return sc >= 2; }
+
+/** null for a real message; else the kind of noise: "media", "link", "reaction", "deleted", "greeting", "ack", "emoji", "forward", "summary", "offer" (an advert). */
 export function noiseOf(text0) {
   const text = String(text0 || "").replace(/[‎‏]/g, "").trim();
   if (!text) return "media";
@@ -69,6 +87,7 @@ export function noiseOf(text0) {
   if (EMOJI_ONLY.test(text)) return "emoji";
   if (GREET.test(text)) return "greeting";
   if (ACK.test(text)) return "ack";
+  if (isOffer(text)) return "offer";
   // a link with (almost) nothing else: a meme / a Facebook post / a video — "check this https://…" too
   const rest = text.replace(URL_RE, " ").replace(/\b(?:check (?:this|it) out|look|see this|watch|شوف|بص|شوفوا|بصوا|lol|haha|😂+)\b/gi, " ").replace(/[\s\p{P}\p{Extended_Pictographic}]+/gu, " ").trim();
   if (URL_RE.test(text) && rest.split(/\s+/).filter(Boolean).length <= 2) { URL_RE.lastIndex = 0; return "link"; }

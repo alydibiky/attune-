@@ -15065,4 +15065,5 @@ export const JA = {
   "Declare all food; fines for undeclared items": "食品はすべて申告；未申告は罰金",
   "911 emergencies": "911 緊急通報",
   "988 mental-health crisis line": "988 メンタルヘルス危機ライン",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "今週、高速エンジンが回答中にスマホのグラフィックチップがアプリを2回閉じました。現在はCPUで動作しています（遅めですが安定）。エンジン → 速度 でGPUを再度試せます。",
 };

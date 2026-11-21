@@ -12178,4 +12178,5 @@ export const AR = {
   "Declare all food; fines for undeclared items": "صرّح بكل الأكل؛ في غرامات على اللي مش مصرّح بيه",
   "911 emergencies": "911 للطوارئ",
   "988 mental-health crisis line": "988 خط أزمات الصحة النفسية",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "مرتين الأسبوع ده معالج الرسوميات في الموبايل قفل التطبيق والمحرك السريع بيرد. هو دلوقتي على الـCPU (أبطأ بس ثابت)؛ تقدر تجرب الـGPU تاني من المحرك ← السرعة.",
 };

@@ -43,9 +43,12 @@ object CrashLog {
             sb.append("— ${f.format(Date(o.optLong("t")))} · ${o.optString("kind")}").append(if (o.optString("page").isNotEmpty()) " · on ${o.optString("page")}" else "").append("\n")
             sb.append(o.optString("text")).append("\n\n") }
         try { val b = JSONArray(BatteryGuard.json(ctx)); val since = System.currentTimeMillis() - 24 * 3600_000L
-            sb.append("Battery, last 24 h:\n")
-            for (i in 0 until b.length()) { val o = b.optJSONObject(i) ?: continue; if (o.optLong("t") < since) continue
+            // v10.8 (Ali's report came with an empty battery part): the level now, and a line when nothing ran in the background
+            sb.append("Battery, last 24 h (now ${BatteryGuard.level(ctx)} %" + (if (BatteryGuard.charging(ctx)) ", charging" else "") + (if (BatteryGuard.saver(ctx)) ", battery saver" else "") + "):\n")
+            var lines = 0
+            for (i in 0 until b.length()) { val o = b.optJSONObject(i) ?: continue; if (o.optLong("t") < since) continue; lines++
                 sb.append("  ${f.format(Date(o.optLong("t")))} ${o.optString("what")} · ${o.optInt("pct")} %").append(if (o.optBoolean("chg")) " charging" else "").append(if (o.optBoolean("saver")) " · saver" else "").append("\n") }
+            if (lines == 0) sb.append("  nothing of Attune's ran in the background\n")
         } catch (e: Exception) {}
         return sb.toString().take(60_000)
     }

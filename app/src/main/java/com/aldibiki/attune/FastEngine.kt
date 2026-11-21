@@ -191,6 +191,7 @@ object FastEngine {
         val eng = engine ?: throw java.io.IOException("The fast engine is not running — open Engine")
         if (!turn.tryAcquire(120, TimeUnit.SECONDS)) throw java.io.IOException("The model is busy — try again")
         var conv: Conversation? = null
+        markTurn(ctx, id)
         try {
             if (cancelled.get()) throw java.io.IOException("Stopped")
             val msgs = body.optJSONArray("messages") ?: JSONArray()
@@ -317,12 +318,49 @@ object FastEngine {
         } finally {
             current = null; currentId = null
             try { conv?.close() } catch (e: Throwable) {}
+            clearTurn(ctx)
             turn.release()
         }
     }
 
+    /* v10.8 (Ali's problem report, 21 Nov 2026: "closed by itself · the system stopped it (signal 11) · model Blaze"): a crash INSIDE the
+       GPU driver while the fast engine answers leaves no Java trace, and only a crash while the GPU was STARTING was caught. Now each
+       answer is marked just before it starts (who asked, on which chip) and cleared when it ends; if the app dies in between, the next
+       start knows (checkCrash). */
+    private fun markTurn(ctx: Context, id: String) {
+        try {
+            val who = when { id.startsWith("mindbg") -> "reading notifications in the background"; id.startsWith("night") -> "a night job"
+                id.startsWith("kb-") -> "the keyboard"; else -> "an answer on the screen" }
+            ctx.getSharedPreferences("attune", Context.MODE_PRIVATE).edit()
+                .putString("fast_turn", JSONObject().put("t", System.currentTimeMillis()).put("who", who).put("backend", backend).toString()).commit()
+        } catch (e: Throwable) {}
+    }
+    private fun clearTurn(ctx: Context) { try { ctx.getSharedPreferences("attune", Context.MODE_PRIVATE).edit().remove("fast_turn").apply() } catch (e: Throwable) {} }
+
     /** At launch: a fast-engine GPU start that never finished means the driver crashed the app. */
     fun checkCrash(ctx: Context) {
+        // v10.8: the app ended (unexpectedly — Android said so, ExitWatch) while the fast engine was answering → kept for the problem
+        // report; on the GPU a second time within 7 days → the CPU, with a note (the same rule as a crash while the GPU starts)
+        try {
+            val sp = ctx.getSharedPreferences("attune", Context.MODE_PRIVATE)
+            val mark = sp.getString("fast_turn", null)
+            if (mark != null) {
+                sp.edit().remove("fast_turn").commit()
+                val o = try { JSONObject(mark) } catch (e: Exception) { JSONObject() }
+                val at = o.optLong("t"); val onGpu = o.optString("backend") == "GPU"
+                if (ExitWatch.unexpectedAt >= at && at > 0) {
+                    CrashLog.add(ctx, "closed while the fast engine was answering", "${o.optString("who")} · on the ${o.optString("backend").ifEmpty { "?" }} · Android: ${ExitWatch.unexpectedWhy}")
+                    if (onGpu) {
+                        val now = System.currentTimeMillis(); val prev = sp.getLong("fast_turn_crash", 0L)
+                        sp.edit().putLong("fast_turn_crash", now).apply()
+                        if (now - prev < 7 * 24 * 3600_000L) {
+                            Prefs.setFastCpu(ctx, true)
+                            Prefs.setFastNote(ctx, "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.")
+                        }
+                    }
+                }
+            }
+        } catch (e: Throwable) {}
         if (Prefs.fastTrial(ctx)) {
             Prefs.setFastTrial(ctx, false)
             Prefs.setFastCpu(ctx, true)

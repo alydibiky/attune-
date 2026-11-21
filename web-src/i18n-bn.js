@@ -15065,4 +15065,5 @@ export const BN = {
   "Declare all food; fines for undeclared items": "সব খাবার ঘোষণা করুন; অঘোষিত জিনিসে জরিমানা",
   "911 emergencies": "911 জরুরি",
   "988 mental-health crisis line": "988 মানসিক স্বাস্থ্য সংকট লাইন",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "এই সপ্তাহে দুবার দ্রুত ইঞ্জিন উত্তর দেওয়ার সময় ফোনের গ্রাফিক্স চিপ অ্যাপ বন্ধ করে দিয়েছে। এখন এটি CPU-তে চলছে (ধীর, স্থির); ইঞ্জিন → গতি থেকে আবার GPU চেষ্টা করতে পারেন।",
 };

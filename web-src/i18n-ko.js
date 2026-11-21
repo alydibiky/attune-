@@ -15065,4 +15065,5 @@ export const KO = {
   "Declare all food; fines for undeclared items": "모든 음식을 신고; 미신고 품목은 벌금",
   "911 emergencies": "911 응급",
   "988 mental-health crisis line": "988 정신건강 위기 상담 전화",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "이번 주에 빠른 엔진이 답하는 중에 휴대폰 그래픽 칩이 앱을 두 번 닫았습니다. 지금은 CPU에서 실행 중입니다(느리지만 안정적). 엔진 → 속도에서 GPU를 다시 시도할 수 있습니다.",
 };

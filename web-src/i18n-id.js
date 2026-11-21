@@ -15066,4 +15066,5 @@ export const IDN = {
   "Declare all food; fines for undeclared items": "Laporkan semua makanan; denda untuk barang yang tidak dilaporkan",
   "911 emergencies": "911 darurat",
   "988 mental-health crisis line": "988 layanan krisis kesehatan mental",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Dua kali minggu ini chip grafis ponsel menutup aplikasi saat mesin cepat sedang menjawab. Sekarang berjalan di CPU (lebih lambat, stabil); kamu bisa mencoba GPU lagi di Mesin → Kecepatan.",
 };

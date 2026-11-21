@@ -15065,4 +15065,5 @@ export const VI = {
   "Declare all food; fines for undeclared items": "Khai báo mọi đồ ăn; phạt nếu không khai báo",
   "911 emergencies": "911 khẩn cấp",
   "988 mental-health crisis line": "988 đường dây khủng hoảng sức khỏe tâm thần",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Tuần này chip đồ họa của điện thoại đã hai lần đóng ứng dụng khi công cụ nhanh đang trả lời. Giờ nó chạy trên CPU (chậm hơn, ổn định); bạn có thể thử lại GPU trong Công cụ → Tốc độ.",
 };

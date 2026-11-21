@@ -1,6 +1,25 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
-> ## START HERE (21 Nov 2026, later — v10.8 travel guides DONE in all 20 languages, Ali: "Continue the other 14 languages")
+> ## START HERE (21 Nov 2026, evening — v10.8: Ali's phone screenshots + problem report)
+> 1. **"Any notification is to do even if it's not that important"** — Mr.Beard's WhatsApp advert «📷 تخيل بوكس فيه كل اللي ممكن تحتاجه …
+>    عليه خصم ٥٠٪» became a late to-do. Two bugs: «ممكن تحتاجه» ("you might need it") read as «ممكن تـ…» = "could you" (autopilot.js
+>    MUMKIN_ASK now skips تحتاج/تكون/تلاقي/تعجب/تستفيد…), and the chat reader had no "advert" kind — chats.js `isOffer` (scored: a percent
+>    next to a discount word, promo code, "limited time" = 2; "order now", "free delivery", «عروض», 🔥🎁 = 1; ≥ 2; never when the message
+>    asks YOU — "should I get it?", «أجيبلك؟», «ممكن تعدي تجيب») → noise "offer", kept quietly. Also "can  you" (two spaces) is still a
+>    request. Generator `tests/chats/offers.mjs` (10,000 composed + hardened, 61.7 % shapes): 92.97 % → 100 %; held-out 100 % (62.2 %);
+>    unit `tests/unit/v1080offers.test.mjs` (2,500). Hardener fix (said so): Arabic-Indic digits never replace a Franco letter inside a
+>    Latin word ("eb3atly" stays). Chats 10,000 and Autopilot2 10,000 unchanged at 100 %, 0 actions on noise.
+> 2. **The side menu showed see-through over Home** (his "Left sidebar" screenshot): v10.7's slide-in animated the menu's WRAPPER with
+>    fill "both", leaving a transform → the fixed menu measured itself against a 0-px-tall box (no background). build/tw.css now slides the
+>    menu panel itself (fill backwards). `tests/e2e_v1080side.py` (phone, Arabic RTL, fold cover): 7 checks failed before, all pass now.
+> 3. **"Attune closed by itself · signal 11 · model Blaze"** (no stack — a crash inside the GPU driver while the fast engine works).
+>    FastEngine marks every answer (who: screen / background notification reader / night job / keyboard; GPU or CPU) and clears it; at
+>    the next start a left-over mark + Android's "unexpected" (ExitWatch.unexpectedAt) → a line in the problem report; on the GPU twice in
+>    7 days → the CPU with a note (20 languages). The report's battery part now says the level and "nothing ran" instead of being empty;
+>    MindBg writes its runs to the battery log. `tests/unit/v1080crashmark.test.mjs`. **Ali: send the next report after it happens again —
+>    it will now say what Blaze was doing.**
+>
+> ## (21 Nov 2026, later — v10.8 travel guides DONE in all 20 languages, Ali: "Continue the other 14 languages")
 > **The Know tab's deeper sections (1,125 lines that were missing) are now in the other 14 languages too: pt it de ru id ur fa bn sw th vi zh
 > ja ko** — so every line a travel guide shows is in all 20 languages. Every number kept (checked line by line; "2pm" may read 14:00).
 > `tests/unit/v1080travel.test.mjs` now checks DEEP for all 20. Checked in the app at 320/390/1366 px in ja ur de th ru sw ko (no sideways

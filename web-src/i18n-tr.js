@@ -15066,4 +15066,5 @@ export const TRK = {
   "Declare all food; fines for undeclared items": "Tüm yiyecekleri beyan et; beyan edilmeyenlere ceza",
   "911 emergencies": "911 acil",
   "988 mental-health crisis line": "988 ruh sağlığı kriz hattı",
+  "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Bu hafta iki kez, hızlı motor yanıt verirken telefonun grafik çipi uygulamayı kapattı. Şimdi CPU'da çalışıyor (daha yavaş, kararlı); GPU'yu Motor → Hız bölümünden yeniden deneyebilirsin.",
 };
