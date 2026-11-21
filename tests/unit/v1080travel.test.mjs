@@ -25,8 +25,8 @@ for (const [id, ex] of Object.entries(DONE)) {
   const same = [...lines].filter((x) => L[x] === x && /[a-z]{4,} [a-z]{4,} [a-z]{4,}/.test(x)); ok(same.length < 25, id + ": sentences really translated, not copied (" + same.length + " copied)");
 }
 // v10.8 later: the guide's deeper sections on the Know tab (money, manners, health, costs, getting around, food, laws, dangers,
-// holidays, customs, numbers) — 1,140 more lines; DEEP grows as each language is finished (main languages first, Ali 21 Nov)
-const DEEP = { ar: "AR", arb: "ARB", es: "ES", fr: "FR", tr: "TRK", hi: "HI" };
+// holidays, customs, numbers) — 1,140 more lines; all 20 languages (main languages first, then the other 14, Ali 21 Nov)
+const DEEP = { ar: "AR", arb: "ARB", es: "ES", fr: "FR", tr: "TRK", hi: "HI", pt: "PT", it: "IT", de: "DE", ru: "RU", id: "IDN", ur: "UR", fa: "FA", bn: "BN", sw: "SW", th: "TH", vi: "VI", zh: "ZH", ja: "JA", ko: "KO" };
 const F2 = ["money", "etiquette", "health", "costs", "getAround", "eat", "laws", "dangers", "holidays", "customs", "numbers"];
 const deep = new Set(); for (const p of Object.values(P)) for (const f of F2) (p[f] || []).forEach((x) => deep.add(x));
 ok(deep.size > 1100, "the deeper sections: " + deep.size + " lines");

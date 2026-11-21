@@ -14123,7 +14123,7 @@ export const HI = {
   "Shops close in the afternoon in smaller towns": "छोटे कस्बों में दोपहर में दुकानें बंद रहती हैं",
   "Farmacia network is excellent": "Farmacia नेटवर्क बेहतरीन है",
   "Emergency care is good; insurance for the rest": "इमरजेंसी इलाज अच्छा; बाकी के लिए बीमा",
-  "Café con leche: €1.50–2.50": "Café con leche: €1.50–2.50",
+  "Café con leche: €1.50–2.50": "दूध वाली कॉफ़ी (Café con leche): €1.50–2.50",
   "Menú del día: €12–18": "Menú del día: €12–18",
   "Metro ride: €1.50–2.50": "मेट्रो सफ़र: €1.50–2.50",
   "Taxi 5km: €8–12": "5 km टैक्सी: €8–12",

@@ -11235,7 +11235,7 @@ export const AR = {
   "Shops close in the afternoon in smaller towns": "المحلات بتقفل بعد الضهر في البلاد الصغيرة",
   "Farmacia network is excellent": "شبكة الـ Farmacia ممتازة",
   "Emergency care is good; insurance for the rest": "علاج الطوارئ كويس؛ تأمين لباقي الحاجات",
-  "Café con leche: €1.50–2.50": "Café con leche: €1.50–2.50",
+  "Café con leche: €1.50–2.50": "قهوة بالحليب (Café con leche): €1.50–2.50",
   "Menú del día: €12–18": "Menú del día: €12–18",
   "Metro ride: €1.50–2.50": "ركوب مترو: €1.50–2.50",
   "Taxi 5km: €8–12": "تاكسي 5 كم: €8–12",

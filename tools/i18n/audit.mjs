@@ -12,7 +12,12 @@ const KEEP = /^(Attune|Pro|PDF|Word|Excel|WhatsApp|Gmail|Google|Android|AI|SMS|O
 const FUSHA = /(?:^|\s)(سوف|لقد|الذي|التي|هذا|هذه|ذلك|ليس|لماذا|كيف|ماذا|أيضًا|الآن|لدي|لديك|يجب)(?=\s|$|[،.؟!])/;
 const EGY = /(?:^|\s)(ده|دي|عشان|إزاي|ازاي|بتاع|بتاعك|عايز|عاوز|دلوقتي|كده|مش|إيه|ايه|ليه|فين|امتى|بقى|خلاص|اوي|أوي)(?=\s|$|[،.؟!])/;
 // names, file names and English lessons that rightly stay as written
-const IGNORE = new Set(["owner/repo:QUANT", "WhatsApp Chat with Design ideas.zip", "Excel & Power Automate", "Hourani p. 84 · Lapidus p. 291", "contract.pdf · 12 pages", "paris saint-germain", "Present simple vs continuous"]);
+// v10.8: travel-guide lines that are only names (apps, dishes, a train) — right as written in every language
+const IGNORE = new Set(["M-Pesa / Airtel Money", "Japan Travel by Navitime", "Deliveroo / Just Eat", "Cabify / Uber / Free Now", "Nasi lemak, char kway teow, roti canai",
+  "KLIA Ekspres: 55 MYR", "Citymapper / Bonjour RATP (Paris)", "CNY · yuan / renminbi", "owner/repo:QUANT", "WhatsApp Chat with Design ideas.zip", "Excel & Power Automate", "Hourani p. 84 · Lapidus p. 291", "contract.pdf · 12 pages", "paris saint-germain", "Present simple vs continuous"]);
+// lines spelled exactly like the English in that language (French "trains", "police", "ambulance"; German "Taxi … in Istanbul")
+const SAME = { fr: new Set(["SNCF Connect (trains)", "Trenitalia / Italo (trains)", "DB Navigator (trains)", "191 police · 1669 ambulance", "112 · 110 police · 118 ambulance", "112 · 129 police · 127 ambulance"]),
+  de: new Set(["Taxi 5km in Istanbul: 150–250 TRY"]), id: new Set(["GBP · pound sterling"]) };
 let bad = 0;
 for (const l of langs) {
   let d; try { d = await load(l); } catch (e) { console.log(`${l}: cannot read — ${e.message}`); bad++; continue; }
@@ -23,7 +28,7 @@ for (const l of langs) {
     if (ph(en) !== ph(t)) probs.push(["placeholders differ", en, t]);
     const sentence = (en.replace(/\{\w+\}/g, "").match(/\b[a-z]{3,}\b/g) || []).length >= 2;
     if (SCRIPT[l] && sentence && !SCRIPT[l].test(t) && !KEEP.test(en.trim())) probs.push(["not in the script", en, t]);
-    if (!SCRIPT[l] && t === en && letters.length >= 14 && /\s\w+\s/.test(en)) probs.push(["left in English", en, t]);
+    if (!SCRIPT[l] && t === en && !(SAME[l] && SAME[l].has(en)) && letters.length >= 14 && /\s\w+\s/.test(en)) probs.push(["left in English", en, t]);
     if (l === "ar" && FUSHA.test(t)) probs.push(["formal Arabic in Egyptian", en, t]);
     if (l === "arb" && EGY.test(t)) probs.push(["Egyptian in formal Arabic", en, t]);
     if ((l === "ar" || l === "arb") && /\bEGP\b/.test(t) && !/\bEGP\b/.test(en)) probs.push(["EGP added", en, t]);

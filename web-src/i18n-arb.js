@@ -14114,7 +14114,7 @@ export const ARB = {
   "Shops close in the afternoon in smaller towns": "المحلات تُغلق بعد الظهر في البلدات الصغيرة",
   "Farmacia network is excellent": "شبكة الـ Farmacia ممتازة",
   "Emergency care is good; insurance for the rest": "علاج الطوارئ جيد؛ والتأمين لما سواه",
-  "Café con leche: €1.50–2.50": "Café con leche: €1.50–2.50",
+  "Café con leche: €1.50–2.50": "قهوة بالحليب (Café con leche): €1.50–2.50",
   "Menú del día: €12–18": "Menú del día: €12–18",
   "Metro ride: €1.50–2.50": "رحلة مترو: €1.50–2.50",
   "Taxi 5km: €8–12": "سيارة أجرة 5 كم: €8–12",
