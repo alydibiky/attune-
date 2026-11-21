@@ -18,6 +18,10 @@
 >    7 days → the CPU with a note (20 languages). The report's battery part now says the level and "nothing ran" instead of being empty;
 >    MindBg writes its runs to the battery log. `tests/unit/v1080crashmark.test.mjs`. **Ali: send the next report after it happens again —
 >    it will now say what Blaze was doing.**
+> 4. **Desktop build (Windows · Vulkan) failed its smoke test since v10.7** — not the app: v10.7 moved the computer layout's line from
+>    1024 px to 640 px (WIDE_Q in side-ui.jsx, for the unfolded foldable) but `desktop/test/smoke-run.js` still expected the phone layout
+>    under 1024, and the Windows CI screen is 1008 px wide (it HAS the sidebar now, correctly). The check now uses 640 px; checked on the
+>    built page at 1008 px (sidebar, no bar) and 390 px (☰, no sidebar).
 >
 > ## (21 Nov 2026, later — v10.8 travel guides DONE in all 20 languages, Ali: "Continue the other 14 languages")
 > **The Know tab's deeper sections (1,125 lines that were missing) are now in the other 14 languages too: pt it de ru id ur fa bn sw th vi zh

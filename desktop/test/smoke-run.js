@@ -25,10 +25,11 @@ module.exports = function smokeRun(win, modelPath, app) {
           max_tokens: 48, temperature: 0, stream: true, stream_options: { include_usage: true }, chat_template_kwargs: { enable_thinking: false } });
         const models = JSON.parse(window.AttuneNative.models());
         // v6.24: the computer layout and the bridge added for the desktop
-        // a window 1024 px and wider has the Claude/ChatGPT sidebar; a smaller one (the Windows CI screen is 1008 px) the phone's
-        // layout — since v6.30 that has no bottom bar, only the ☰ menu (this check expected the old bar and failed from v6.31 on)
+        // a window 640 px and wider has the Claude/ChatGPT sidebar (since v10.7: WIDE_Q in side-ui.jsx — an unfolded foldable gets
+        // the computer layout; this check still said 1024, so the 1008 px Windows CI screen failed from v10.7 on); a smaller one the
+        // phone's layout — since v6.30 that has no bottom bar, only the ☰ menu
         const winW = window.innerWidth;
-        const sidebar = winW >= 1024 ? (!!document.querySelector("[data-testid=side]") && !document.querySelector("nav:not(.hidden)"))
+        const sidebar = winW >= 640 ? (!!document.querySelector("[data-testid=side]") && !document.querySelector("nav:not(.hidden)"))
           : (!document.querySelector("[data-testid=side]") && !!(document.querySelector("[data-testid=header-menu]") || document.querySelector("[data-testid=home-menu]") || document.querySelector("nav:not(.hidden)")));
         const knowOk = Array.isArray(JSON.parse(window.AttuneNative.knowPacks()).packs);
         const mapOk = Array.isArray(JSON.parse(window.AttuneNative.mapPacks()).packs) && window.AttuneNative.mapRead(JSON.stringify({ path: "../x" })) === "";
