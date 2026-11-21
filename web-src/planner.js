@@ -8,6 +8,7 @@
      − flexible: food, transport, groceries… — the last 3 months' average, scaled down when the money doesn't reach
      = free to spend
    Pure: stores in, the plan out. The screen prints it; Safe to spend keeps the pots aside.                                     */
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { scheduleOf } from "./life.js";
 import { catName, looksLikeId } from "./money-report.js";
 
@@ -144,6 +145,7 @@ const KINDS = [["emergency", /emergency|طوارئ|الطوارئ|للزمن|ل�
 const NAMES = { emergency: ["Emergency", "الطوارئ"], travel: ["Travel", "السفر"], car: ["Car", "العربية"], eid: ["Eid", "العيد"], school: ["School", "المدارس"], wedding: ["Wedding", "الجواز"], other: ["Savings", "تحويش"] };
 /** → { name, kind, target, by } or null */
 export function potIntent(text, now = Date.now()) {
+  text = ungroup(text);
   const t = String(text || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
   if (!/\b(save|saving|savings|set aside|put aside|fund|pot)\b|حوّش|حوش|احوش|أحوش|وفر|اوفر|أوفر|تحويش|ادخر|أدخر|ادخار/i.test(t)) return null;
   if (/[?؟]\s*$/.test(t) || /\b(how|should|can i|tips?|advice)\b|ازاي|إزاي|ليه|نصيحة/i.test(t)) return null;

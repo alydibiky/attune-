@@ -1,3 +1,4 @@
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 /* ---- v9.9.21 T1 Brain dump (Ali picked A + his note "NOT voice only: a typed / pasted brainstorm paragraph is organised the same way";
    combined screen OK'd 12 Nov — https://claude.ai/artifact/HeHrRSrz3BNcDa9vwZhGNU). Pure: organise(text, { now, lang }) → items:
      { type: "todo" | "reminder" | "list" | "payment" | "spent" | "note", text, date: "YYYY-MM-DD" | null, time: "HH:MM" | null,
@@ -135,15 +136,19 @@ export function timeIn(s) {
   if (!ap && !m[2] && h >= 1 && h <= 6) h += 12;
   return { time: String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0"), rest: s.replace(new RegExp(m[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\d/g, "[\\d٠-٩۰-۹०-९০-৯๐-๙]")), " ") };
 }
-const MULT = [[/(\d)\s*(?:k|thousand|ألف|الف|آلاف|mil|mille|tausend|тыс\.?|тысяч|bin|ribu|हज़ार|हजार|ہزار|هزار|হাজার|elfu|พัน|nghìn|ngàn|千|천)(?![\p{L}])/iu, 1e3], [/(\d)\s*(?:万|만)/u, 1e4], [/(\d)\s*(?:m|million|مليون|millón|millions?|millionen|млн|juta|लाख)(?![\p{L}])/iu, 1e6]];
+const MULT = [[/(\d)\s*(?:k|thousand|ألف|الف|إلف|آلاف|mil|mille|tausend|тыс\.?|тысяч|bin|ribu|rb|mila|हज़ार|हजार|ہزار|هزار|হাজার|elfu|พัน|nghìn|ngàn|千|천)(?![\p{L}])/iu, 1e3], [/(\d)\s*(?:万|만)/u, 1e4], [/(\d)\s*(?:m|million|مليون|millón|millones|millions?|millionen|milioni|milyon|млн|juta)(?![\p{L}'’])/iu, 1e6], [/(\d)\s*(?:लाख|لاکھ|লাখ)(?![\p{L}])/iu, 1e5]]   // v10.8: a lakh is 100,000 (it was a million); «8 000 m'a prêté» is not 8 billion;
 /** The money in a clause (the first amount that isn't a time, a date or a count of days). */
 export function amountIn(s) {
-  const t = latinDigits(s);
-  const re = /(?<![\d:/A-Za-z])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,3}))?(?![\d:/]|[A-Za-z][A-Za-z\d])/gu; let m;
+  const t = ungroup(latinDigits(s)).replace(/[ \t]{2,}/g, " ");   // v10.8: "a  las 5" (two spaces) is still a time
+  // v10.8: Indian grouping too — 1,20,000 (a lakh and twenty thousand), as Hindi, Urdu and Bengali write it
+  const re = /(?<![\d:/A-Za-z])(\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,3}))?(?![\d:/]|[A-Za-z][A-Za-z\d])/gu; let m;
   while ((m = re.exec(t))) {
     const after = t.slice(m.index + m[0].length, m.index + m[0].length + 12), before = t.slice(Math.max(0, m.index - 12), m.index);
-    if (/^\s*(?:st|nd|rd|th|am|pm|:|h\b|uhr|بجے|बजे|時|点|시|โมง|giờ|号|日|일|तारीख|تاریخ|তারিখ|nights?|ليالي|days?|أيام|ايام|pages?|صفحة|min|minutes?|دقيقة|hours?|ساعات|kg|كيلو|km|كم|%)/iu.test(after)) continue;
-    if (/(?<![\p{L}])(?:at|@|الساعة|الساعه|sa3a|à|um|alle|às|a las|в|saat|jam|pukul|lúc|saa|เวลา|يوم|yom|on the|the|le|am|dia|il|tanggal|tarehe|ngày|วันที่)\s*$/iu.test(before)) continue;
+    // v10.8: "5 pm" is a time; German «9000 am Freitag» (on Friday) is money — am / pm only after an hour (1–12)
+    if (/^\s*(?:am|pm|a\.m\.|p\.m\.)(?![\p{L}])/iu.test(after) && +m[1] <= 12) continue;
+    // v10.8: st / nd / rd / th are whole words — "200 thousand", "15,000 thanks", Vietnamese «thứ Sáu» are not "200th"
+    if (/^\s*(?:(?:st|nd|rd|th)(?![\p{L}])|:|h\b|uhr|টায়|টা(?![\p{L}])|بجے|बजे|時|点|시|โมง|giờ|号|日|일|तारीख|تاریخ|তারিখ|nights?|ليالي|days?|أيام|ايام|pages?|صفحة|min|minutes?|دقيقة|hours?|ساعات|kg|كيلو|km|كم|%)/iu.test(after)) continue;
+    if (/(?<![\p{L}])(?:at|@|الساعة|الساعه|ساعت|sa3a|à|um|alle|às|a las|в|saat|jam|pukul|lúc|saa|เวลา|يوم|yom|on the|the|le|am|dia|il|tanggal|tarehe|ngày|วันที่)\s*$/iu.test(before)) continue;
     let v = parseFloat(m[1].replace(/[,\s]/g, "") + (m[2] ? "." + m[2] : ""));
     for (const [mr, k] of MULT) { const mm = new RegExp("^" + mr.source.replace("(\\d)", ""), mr.flags).exec(after.replace(/^\s*/, "")); if (mm) { v *= k; break; } }
     if (v > 0 && v < 1e10) return v;

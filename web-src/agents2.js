@@ -10,6 +10,7 @@
      G6 trip    — "my flight MS 753 tomorrow at 10:40 to Madrid" (check-in opens, leave by, gate changes from the airline's notifications)
      G7 how much an agent may do by itself — a rule like any other: "only tell me", "ask me first", "do it by itself under 7,500"
    Pure; tests: tests/unit/v940agents.test.mjs. Nothing here sends, books or pays. */
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { appIn, repeatIn } from "./msgsched.js";
 import { parseTime } from "./actions.js";
 import { airportOf, cityName } from "./agent.js";
@@ -154,7 +155,7 @@ export function returnDays(site = "", country = "EG") {
 }
 /** "I bought AirPods Pro 2 for 9,450 on Amazon" · «اشتريت سماعات بـ 9450 من أمازون» → { kind: "protect", what, paid, site, days } | null */
 export function parseProtect(text, { country = "EG", now = Date.now() } = {}) {
-  const t0 = latin(String(text || "")), t = fold(t0);
+  const t0 = ungroup(latin(String(text || ""))), t = fold(t0);
   let m = /\b(?:i\s+)?(?:bought|purchased|ordered|got)\s+(?:a\s+|an\s+|the\s+)?(.{2,60}?)\s+(?:for|at)\s+(?:egp|le|usd|\$|€|£|sar|aed)?\s*([\d][\d,.]*)\s*(k)?\s*(?:egp|le|usd|sar|aed|pounds?)?\s*(?:(?:on|from|at)\s+([\w.\- ]{2,20}))?/i.exec(t0)
     || /(?:اشتريت|جبت|طلبت)\s+(.{2,60}?)\s+(?:ب|بـ|بسعر)\s*([\d][\d,.]*)\s*(الف|ألف)?\s*(?:جنيه)?\s*(?:(?:من|على)\s+(\S{2,20}))?/.exec(t0);
   // "protect the price of the iPhone I bought from Amazon for 45000" — the thing first, then where and how much
@@ -210,7 +211,7 @@ export function clinicSites(spec, city, country = "EG") {
 }
 /** "a dermatologist in Nasr City under 500 this week" · «دكتور جلدية في مدينة نصر أقل من 500» → { kind: "clinic", spec, city, below, tries } | null */
 export function parseClinic(text, { country = "EG" } = {}) {
-  const t0 = latin(String(text || "")), t = fold(t0);
+  const t0 = ungroup(latin(String(text || ""))), t = fold(t0);
   const s = SPEC.find(([, re]) => new RegExp(re, "i").test(t));
   if (!s || !/\b(doctor|dr|clinic|appointment|book|find|need)\b|دكتور|دكتوره|عياده|عيادة|كشف|ميعاد/.test(t + " " + s[0])) return null;
   const cm = /\b(?:in|near|around)\s+([\p{L}][\p{L}\s.'-]{1,40}?)(?=\s+(?:under|below|less|this|next|tomorrow|today|for|with)\b|[,.]|$)/iu.exec(t0) || /(?:في|جنب|قريب من)\s+([\p{L}][\p{L}\s]{1,30}?)(?=\s+(?:اقل|أقل|تحت|بكره|بكرة|الاسبوع|النهارده)|[,.،]|$)/u.exec(t0);
@@ -253,7 +254,7 @@ export function tripPlan(a, notes = [], { now = Date.now(), drive = 60 } = {}) {
 // ---- G7 How much an agent may do by itself -----------------------------------------------------------------------------------------------
 /** "only tell me" → "notify" · "ask me first" → "ask" · "do it by itself under 7,500" / «اشتري لوحدك لو أقل من 7500» → { auto: 7500 } | null */
 export function autonomyIn(text) {
-  const t = fold(text);
+  const t = fold(ungroup(text));
   if (/\bonly (?:tell|notify|alert) me\b|\bjust (?:tell|notify) me\b|قولي بس|نبهني بس|بلغني بس/.test(t)) return "notify";
   if (/\bask me (?:first|before)\b|\balways ask\b|اسالني الاول|اسألني الأول|اسالني قبل/.test(t)) return "ask";
   const m = /\b(?:by (?:it|your)self|on (?:its|your) own|automatically|without asking)\b.*?\b(?:under|below|less than|up to)\s*([\d][\d,]*)\s*(k)?/.exec(t) || /\b(?:under|below|less than|up to)\s*([\d][\d,]*)\s*(k)?\b.*?\b(?:by (?:it|your)self|on (?:its|your) own|automatically|without asking)\b/.exec(t)

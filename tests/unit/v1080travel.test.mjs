@@ -16,7 +16,8 @@ const nums = [...lines].filter((x) => AR[x] && (x.match(/\d+(?:[.,]\d+)?/g) || [
 ok(!nums.length, "every number kept exactly (Western digits, like the rest of the app): " + nums.slice(0, 2).join(" | "));
 ok(!Object.values(AR).some((v) => /[٠-٩]/.test(v) && /[0-9]/.test(v)), "no line mixes Eastern and Western digits");
 // in other languages a decimal comma (3,75) or a thousands dot is fine — the digits must be the same
-const digits = (t) => t.replace(/(\d)[.,](?=\d)/g, "$1");
+// v10.8: French / Russian group thousands with a (narrow) no-break space — "500 000" is 500,000
+const digits = (t) => t.replace(/(\d)[.,\u00a0\u202f](?=\d)/g, "$1");
 for (const [id, ex] of Object.entries(DONE)) {
   const L = (await import("../../web-src/i18n-" + id + ".js"))[ex];
   const m = [...lines].filter((x) => !L[x]); ok(!m.length, id + ": every shown line translated — missing " + m.length + ": " + m.slice(0, 2).join(" | "));

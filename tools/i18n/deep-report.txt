@@ -1,0 +1,2122 @@
+
+== arb · numbers (161)
+"Free includes 1 chat X-ray a day — Pro is unlimited"
+   → "تتيح الخطة المجانية فحص محادثة واحدة يوميًا — وPro بلا حدود"   [en 1 · arb ]
+"Highest resolution — sharpen every picture ×4 (2048 px; about 1–3 minutes more without a graphics chip)"
+   → "أعلى دقة — حسّن وضوح كل صورة ×4 (2048 بكسل؛ تستغرق من دقيقة إلى 3 دقائق إضافية بلا شريحة رسومات)"   [en 1 3 4 2048 · arb 3 4 2048]
+"Received 2 records from Mahmoud's device"
+   → "وصل سجلان من جهاز محمود"   [en 2 · arb ]
+"1 page"
+   → "صفحة واحدة"   [en 1 · arb ]
+"2 pages"
+   → "صفحتان"   [en 2 · arb ]
+"Type what you want, or paste anything.\n\n“Summarise this in Arabic: …”  ·  “لخصلي الرسالة دي”\n“I got my period 2 hours ago, it was heavy”"
+   → "اكتب ما تريد، أو الصق أي شيء.\n\n«لخّص هذا بالعربية: …»  ·  «لخصلي الرسالة دي»\n«جاءتني الدورة قبل ساعتين وكانت غزيرة»"   [en 2 · arb ]
+"Deliverable (e.g. a 1-page PDF report)"
+   → "المُخرَج المطلوب (مثل تقرير PDF من صفحة واحدة)"   [en 1 · arb ]
+"3- and 4-leg slings are rated as if only 2 legs carry the load — they rarely share it evenly."
+   → "تُقيَّم الحمالات ذات 3 و4 فروع كأن فرعين فقط يحملان الحمل — فنادرًا ما تتقاسمه بالتساوي."   [en 2 3 4 · arb 3 4]
+"{c} facts confirmed by 2+ sites"
+   → "{c} حقائق أكّدها موقعان أو أكثر"   [en 2 · arb ]
+"Turbo · about 1 min"
+   → "Turbo · نحو دقيقة واحدة"   [en 1 · arb ]
+"1 day late"
+   → "متأخرة يومًا واحدًا"   [en 1 · arb ]
+"Next period in 1 day"
+   → "الدورة التالية بعد يوم واحد"   [en 1 · arb ]
+"Free includes 2 presentations or reports a day — Pro is unlimited"
+   → "الخطة المجانية تشمل عرضين تقديميين أو تقريرين يوميًا — Pro بلا حدود"   [en 2 · arb ]
+"Best of 2"
+   → "الأفضل من اثنتين"   [en 2 · arb ]
+"Best of 2 — two drafts, you pick one (a little slower)"
+   → "الأفضل من اثنتين — مسودتان وتختار إحداهما (أبطأ قليلًا)"   [en 2 · arb ]
+"{p} is 1 day late"
+   → "{p} متأخر يومًا واحدًا"   [en 1 · arb ]
+"Country (2 letters, e.g. EG)"
+   → "الدولة (حرفان، مثلًا EG)"   [en 2 · arb ]
+"e.g. Amoxicillin 500 mg — 1 cap 3 times daily for 7 days"
+   → "مثال: أموكسيسيلين 500 مجم — كبسولة واحدة 3 مرات يوميًا لمدة 7 أيام"   [en 1 3 7 500 · arb 3 7 500]
+"Each time (e.g. 1 tablet)"
+   → "في كل مرة (مثل قرص واحد)"   [en 1 · arb ]
+"Told 7–13 days ahead: not owed if they offered a flight leaving at most 2 h earlier and arriving at most 4 h later than yours."
+   → "أُبلغت قبل 7–13 يومًا: لا يستحق تعويض إذا عرضوا رحلة تغادر قبل ساعتين كحد أقصى وتصل بعد 4 ساعات كحد أقصى من موعدك."   [en 2 4 7 13 · arb 4 7 13]
+"Told under 7 days ahead: not owed only if they offered a flight leaving at most 1 h earlier and arriving at most 2 h later than yours."
+   → "أُبلغت قبل أقل من 7 أيام: لا يستحق تعويض فقط إذا عرضوا رحلة تغادر قبل ساعة كحد أقصى وتصل بعد ساعتين كحد أقصى من موعدك."   [en 1 2 7 · arb 7]
+"Owed when the delay was within the airline's control and not for safety. Claim within 1 year."
+   → "يستحق عندما يكون التأخير ضمن سيطرة شركة الطيران وليس لأسباب تتعلق بالسلامة. طالِب به خلال عام واحد."   [en 1 · arb ]
+"1 way to save {a}"
+   → "طريقة واحدة لتوفير {a}"   [en 1 · arb ]
+"1 more way to save {a}"
+   → "طريقة إضافية لتوفير {a}"   [en 1 · arb ]
+"about 1 day left"
+   → "متبقٍ نحو يوم واحد"   [en 1 · arb ]
+"1 card"
+   → "بطاقة واحدة"   [en 1 · arb ]
+"1 card to review"
+   → "بطاقة واحدة للمراجعة"   [en 1 · arb ]
+"{m}: about 1 day left"
+   → "{m}: متبقٍ نحو يوم واحد"   [en 1 · arb ]
+"1 new find"
+   → "نتيجة جديدة واحدة"   [en 1 · arb ]
+"Review 1 card"
+   → "مراجعة بطاقة واحدة"   [en 1 · arb ]
+"1 goal watched"
+   → "تتم متابعة هدف واحد"   [en 1 · arb ]
+"1 day"
+   → "يوم واحد"   [en 1 · arb ]
+"1 subscription"
+   → "اشتراك واحد"   [en 1 · arb ]
+"1 more finding"
+   → "ملاحظة أخرى"   [en 1 · arb ]
+"Checks on the 1st of every month"
+   → "يفحص في اليوم الأول من كل شهر"   [en 1 · arb ]
+"Check on the 1st of every month"
+   → "الفحص في اليوم الأول من كل شهر"   [en 1 · arb ]
+"Enter the rate (how much 1 unit is in your currency)"
+   → "أدخل سعر الصرف (كم تساوي الوحدة الواحدة بعملتك)"   [en 1 · arb ]
+"Write what you want to do, e.g. “study 2 hours, gym 1h, call mum 15 min”"
+   → "اكتب ما تريد القيام به، مثل: «مذاكرة ساعتين، صالة رياضية ساعة، الاتصال بأمي 15 دقيقة»"   [en 1 2 15 · arb 15]
+"What do you want to do today? “study 2 hours, gym 1h, call mum 15 min”"
+   → "ماذا تريد أن تفعل اليوم؟ «مذاكرة ساعتين، صالة رياضية ساعة، الاتصال بأمي 15 دقيقة»"   [en 1 2 15 · arb 15]
+"1 thing"
+   → "أمر واحد"   [en 1 · arb ]
+"Fleet: 1 thing needs you"
+   → "الأسطول: أمر واحد يتطلب انتباهك"   [en 1 · arb ]
+"The first 20 questions were solved."
+   → "تم حل الأسئلة العشرين الأولى."   [en 20 · arb ]
+"Weigh yourself 2–3 times a week for two weeks and your target will follow what your body really does."
+   → "زن نفسك مرتين إلى 3 مرات أسبوعيًا لمدة أسبوعين وسيتتبع هدفك ما يفعله جسمك حقًا."   [en 2 3 · arb 3]
+"Cash in 1 year"
+   → "النقد بعد سنة"   [en 1 · arb ]
+"Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+   → "تنبيه: مع كل خيار، ينفد نقدك في أكثر من سيناريو واحد من كل 10. الأكثر أمانًا هو {best} ({ok}% من السيناريوهات تظل فوق الصفر)."   [en 1 10 · arb 10]
+"(14 days after ovulation until 2 cycles are measured)"
+   → "(14 يومًا بعد التبويض حتى يتم قياس دورتين)"   [en 2 14 · arb 14]
+"1 stop"
+   → "محطة واحدة"   [en 1 · arb ]
+"1 crane working"
+   → "رافعة واحدة تعمل"   [en 1 · arb ]
+"1 point for every"
+   → "نقطة واحدة لكل"   [en 1 · arb ]
+"Cheque {no} from {who} is 1 day late — {a}"
+   → "الشيك {no} من {who} متأخر بمقدار يوم واحد — {a}"   [en 1 · arb ]
+"In 2 days: {h}"
+   → "بعد يومين: {h}"   [en 2 · arb ]
+"Right now · 1 thing needs your eye"
+   → "الآن · أمر واحد يتطلب انتباهك"   [en 1 · arb ]
+"1 dose today"
+   → "جرعة واحدة اليوم"   [en 1 · arb ]
+"1 item at reorder"
+   → "صنف واحد بلغ حد إعادة الطلب"   [en 1 · arb ]
+"1 bill"
+   → "فاتورة واحدة"   [en 1 · arb ]
+"1 card due"
+   → "بطاقة واحدة مستحقة"   [en 1 · arb ]
+"When you ask Attune to book a flight or a hotel (“book me a flight to Dubai on the 5th”), it opens the booking site and fills your name, passport and phone for
+   → "عندما تطلب من Attune حجز رحلة طيران أو فندق («احجز لي رحلة إلى دبي في اليوم الخامس»)، فإنه يفتح موقع الحجز ويملأ اسمك ورقم جواز سفرك ورقم هاتفك نيابة عنك بضغطة واحدة على «تعبئة بياناتي». تظل محفوظة ع   [en 5 · arb ]
+"Today's price of 1 g of 24k gold"
+   → "سعر جرام الذهب عيار 24 اليوم"   [en 1 24 · arb 24]
+"Free includes 1 agent — Pro runs as many as you need"
+   → "تشمل الباقة المجانية وكيلاً واحدًا — وتتيح باقة Pro تشغيل أي عدد تريده"   [en 1 · arb ]
+"1 agent"
+   → "وكيل واحد"   [en 1 · arb ]
+"1 day of Pro left"
+   → "متبقٍ يوم واحد على انتهاء باقة Pro"   [en 1 · arb ]
+"2 days of Pro left"
+   → "متبقٍ يومان على انتهاء باقة Pro"   [en 2 · arb ]
+"Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside."
+   → "اكتبه بأسلوبك اليومي — «راتب 25,000 في اليوم الأول». وسيوضح Attune المبلغ المتاح لإنفاقه يوميًا مع حجز الفواتير جانبًا."   [en 1 25000 · arb 25000]
+"A photo, a barcode or “2 eggs and foul”"
+   → "صورة، أو باركود، أو جملة مثل «بيضتان وفول»"   [en 2 · arb ]
+"Currencies (EGP for 1 unit)"
+   → "العملات (الجنيه المصري لكل وحدة واحدة)"   [en 1 · arb ]
+"my HbA1c"
+   → "السكر التراكمي لدي"   [en 1 · arb ]
+"Ask for a fixed number of years (2–5 is common)."
+   → "اطلب تحديد مدة زمنية واضحة (المدة الشائعة بين سنتين و5 سنوات)."   [en 2 5 · arb 5]
+"A 2–3 line summary at the top helps a recruiter decide quickly"
+   → "ملخص في سطرين أو 3 أسطر بأعلى السيرة يساعد مسؤول التوظيف على اتخاذ قراره سريعًا"   [en 2 3 · arb 3]
+"Conditionals 0, 1 and 2"
+   → "الجمل الشرطية: الحالة الصفرية والأولى والثانية"   [en 0 1 2 · arb ]
+"Conditionals 3 and mixed"
+   → "الجمل الشرطية: الحالة الثالثة والشرط المختلط"   [en 3 · arb ]
+"2 years"
+   → "سنتان"   [en 2 · arb ]
+"had foul and 2 eggs for breakfast"
+   → "تناولت فولاً وبيضتين على الإفطار"   [en 2 · arb ]
+"drank 2 glasses of water"
+   → "شربت كوبين من الماء"   [en 2 · arb ]
+"\n✓ = the same figure on 2 or more sites.\n"
+   → "\n✓ = الرقم نفسه في موقعين أو أكثر.\n"   [en 2 · arb ]
+"\\n✓ = the same figure on 2 or more sites. \\\"Better\\\" is by the number only (lower for price, 0–100 and fuel use)."
+   → "\\n✓ = الرقم نفسه في موقعين أو أكثر. \\\"الأفضل\\\" بحسب الرقم فقط (أقل للسعر والتسارع 0–100 واستهلاك الوقود)."   [en 0 2 100 · arb 0 100]
+"Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+   → "تعذرت قراءة ذلك — جرب تسمية الأطعمة، مثل «بيضتان ورغيف خبز بلدي»"   [en 2 · arb ]
+"Reading the photo took too long — name the food instead (e.g. “2 fried eggs and baladi bread”) and I'll log it at once"
+   → "استغرقت قراءة الصورة وقتًا طويلاً — اذكر اسم الطعام بدلاً من ذلك (مثل «بيضتان مقليتان وخبز بلدي») وسأسجله فورًا"   [en 2 · arb ]
+"Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below"
+   → "تعذر التعرف على الطعام في الوقت المناسب — حدد اسمه (مثل «بيضتان مقليتان وخبز بلدي») أو ابحث عنه أدناه"   [en 2 · arb ]
+"Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”"
+   → "تعذر التعرف على هذه الصورة — حدد اسم الطعام بدلاً من ذلك، مثل «بيضتان مقليتان وخبز بلدي»"   [en 2 · arb ]
+"This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”"
+   → "لا يمكن لهذا النموذج قراءة الصور حاليًا — حدد اسم الطعام، مثل «بيضتان مقليتان وخبز بلدي»"   [en 2 · arb ]
+"This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”"
+   → "لا يمكن لهذا النموذج قراءة الصور — احصل على «التعرف السريع على الصور» في خطتي، أو حدد اسم الطعام، مثل «بيضتان مقليتان وخبز بلدي»"   [en 2 · arb ]
+"What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+   → "ماذا أكلت؟ مثل: بيضتان، رغيف خبز بلدي وطبق فول"   [en 2 · arb ]
+"Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+   → "احسب ما تأكله دون مشقة: صور طبقك أو قائمة الطعام، امسح الباركود، أو اكتب ببساطة «بيضتان ورغيف خبز»."   [en 2 · arb ]
+"2 handfuls"
+   → "حفنتان"   [en 2 · arb ]
+"Break the fast with water and 2–3 dates, then pray before the main meal — the stomach settles."
+   → "اكسر الصيام بالماء وتمرات، ثم صلِّ قبل تناول الوجبة الرئيسية — لترتاح المعدة وتتهيأ للهضم."   [en 2 3 · arb ]
+"“A week in Istanbul in March, 2 people”"
+   → "«أسبوع في إسطنبول في مارس، لشخصين»"   [en 2 · arb ]
+"“Invoice Nile Bakery: 2 deliveries, 500 each”"
+   → "«فاتورة لمخبز النيل: توصيلتان، بقيمة 500 لكل منهما»"   [en 2 500 · arb 500]
+"1 hour before"
+   → "قبل الموعد بساعة واحدة"   [en 1 · arb ]
+"2 problems this month"
+   → "مشكلتان تم رصدهما هذا الشهر"   [en 2 · arb ]
+"✓ 4th"
+   → "✓ الدور الرابع"   [en 4 · arb ]
+"Job order · LTM 1100 · 2 days"
+   → "أمر عمل · رافعة LTM 1100 · مدة يومين"   [en 2 1100 · arb 1100]
+"6th of October"
+   → "مدينة السادس من أكتوبر"   [en 6 · arb ]
+"2 machines need attention"
+   → "معدتان تتطلبان متابعة وصيانة"   [en 2 · arb ]
+"Type or say what happened in the Home box: “had foul and 2 eggs”, “spent 150 on lunch”, “took my insulin”."
+   → "اكتب أو قل ما حدث في مربع الرئيسية: «تناولت فولاً وبيضتين»، «أنفقت 150 على الغداء»، «أخذت جرعة الإنسولين»."   [en 2 150 · arb 150]
+"Tap + on a meal: type “2 eggs and foul”, say it, scan a barcode, or take a photo of the plate — every food on it is found."
+   → "اضغط على + عند أي وجبة: اكتب «بيضتان وفول»، أو قلها بصوتك، أو امسح الباركود، أو التقط صورة للطبق — وسيتم استخراج كل طعام عليه."   [en 2 · arb ]
+"Put the book's name in the question when you have saved several: “in The Bakery on Shubra Street, chapter 2”."
+   → "اذكر اسم الكتاب في السؤال عند حفظ عدة كتب: «في كتاب مخبز شارع شبرا، الفصل الثاني»."   [en 2 · arb ]
+"on the 5th"
+   → "في اليوم الخامس من الشهر"   [en 5 · arb ]
+"Is my HbA1c getting better?"
+   → "هل تشير قراءات السكر التراكمي لدي إلى تحسن؟"   [en 1 · arb ]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "بنت مخاض (ناقة أتمت سنتها الأولى ودخلت في الثانية)"   [en 2 · arb ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "بنت لبون (ناقة أتمت سنتين ودخلت في الثالثة)"   [en 3 · arb ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "حقة (ناقة أتمت ثلاث سنين ودخلت في الرابعة)"   [en 4 · arb ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "جذعة (ناقة أتمت أربع سنين ودخلت في الخامسة)"   [en 5 · arb ]
+"under 8,000"
+   → "أقل من ٨٬٠٠٠"   [en 8000 · arb 0 8]
+"1 bag"
+   → "حقيبة واحدة"   [en 1 · arb ]
+"2 h"
+   → "ساعتان"   [en 2 · arb ]
+"Less than 2 weeks to go — prices usually rise from here"
+   → "بقي أقل من أسبوعين — عادةً ترتفع الأسعار من هنا"   [en 2 · arb ]
+"The year: goals and the 12-month sheet"
+   → "السنة: الأهداف وجدول الاثني عشر شهرًا"   [en 12 · arb ]
+"Paste the ad (with the seller's phone) — from Hatla2ee, Dubizzle, Facebook…"
+   → "الصق الإعلان (مع رقم البائع) — من هتلاقي أو دوبيزل أو فيسبوك…"   [en 2 · arb ]
+"2 photos"
+   → "صورتان"   [en 2 · arb ]
+"1 item"
+   → "عنصر واحد"   [en 1 · arb ]
+"1 item · {a}"
+   → "بند واحد · {a}"   [en 1 · arb ]
+"What you kept this week by kind (1 item)"
+   → "ما حفظته هذا الأسبوع حسب النوع (عنصر واحد)"   [en 1 · arb ]
+"Saved your list “{n}” — 1 item"
+   → "حُفظت قائمتك «{n}» — عنصر واحد"   [en 1 · arb ]
+"In 1 hour"
+   → "بعد ساعة"   [en 1 · arb ]
+"1st session today"
+   → "الجلسة الأولى اليوم"   [en 1 · arb ]
+"streak 1 day"
+   → "سلسلة يوم واحد"   [en 1 · arb ]
+"To settle up · 1 payment"
+   → "للتسوية · دفعة واحدة"   [en 1 · arb ]
+"1 payment to settle"
+   → "دفعة واحدة للتسوية"   [en 1 · arb ]
+"1 part to pay · {a} left to spend"
+   → "جزء واحد للدفع · يتبقى {a} للإنفاق"   [en 1 · arb ]
+"1 older {s} payment will change too."
+   → "وستتغير أيضًا دفعة سابقة واحدة لـ{s}."   [en 1 · arb ]
+"Plan kept — 1 reminder"
+   → "اعتُمدت الخطة — تذكير واحد"   [en 1 · arb ]
+"Focus on thesis chapter 3 for 25 minutes"
+   → "ركّز على الفصل الثالث من الرسالة 25 دقيقة"   [en 3 25 · arb 25]
+"Thesis · chapter 3 · 15:32 left"
+   → "الرسالة · الفصل الثالث · يتبقى 15:32"   [en 3 15 32 · arb 15 32]
+"1 offer"
+   → "عرض واحد"   [en 1 · arb ]
+"I found 1 thing"
+   → "وجدت شيئًا واحدًا"   [en 1 · arb ]
+"Saved 1 thing"
+   → "حُفظ شيء واحد"   [en 1 · arb ]
+"It reads all 20 languages and Franco, and never saves anything you didn't tick."
+   → "يفهم اللغات العشرين والفرانكو، ولا يحفظ أبدًا ما لم تحدده."   [en 20 · arb ]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "قائمة: مشتريات (حليب، خبز)، تذكير غدًا الساعة 10، الإيجار 6,000 يوم 1 — حدّد واحفظ"   [en 0 1 10 6000 · arb 1 10 6000]
+"every 2 weeks"
+   → "كل أسبوعين"   [en 2 · arb ]
+"In 1 hour: {t} · {h}"
+   → "بعد ساعة: {t} · {h}"   [en 1 · arb ]
+"Added 1 — with a reminder on its day"
+   → "أُضيف واحد — مع تذكير في يومه"   [en 1 · arb ]
+"Found 1 thing"
+   → "وُجد شيء واحد"   [en 1 · arb ]
+"Its name in WhatsApp, e.g. Grade 5 B parents"
+   → "اسمها في واتساب، مثلًا أولياء أمور الخامس ب"   [en 5 · arb ]
+"1 rule"
+   → "قاعدة واحدة"   [en 1 · arb ]
+"Free includes 1 rule — Pro runs as many as you need"
+   → "المجاني يشمل قاعدة واحدة — Pro يشغّل بقدر ما تحتاج"   [en 1 · arb ]
+"1 agent · 1 rule"
+   → "وكيل واحد · قاعدة واحدة"   [en 1 1 · arb ]
+"1 every {w} weeks keeps you on time"
+   → "واحد كل {w} أسابيع يبقيك في الموعد"   [en 1 · arb ]
+"1 every {d} days keeps you on time"
+   → "واحد كل {d} أيام يبقيك في الموعد"   [en 1 · arb ]
+"You paid {a} for “{x}” {p} — 1 payment, on {d}."
+   → "دفعت {a} مقابل «{x}» {p} — دفعة واحدة، في {d}."   [en 1 · arb ]
+"“{x}”: 1 record in your data, on {b}."
+   → "«{x}»: سجل واحد في بياناتك، في {b}."   [en 1 · arb ]
+"1 subscription · about {m} a month ({y} a year). Biggest: {b}."
+   → "اشتراك واحد · نحو {m} شهريًا ({y} سنويًا). الأكبر: {b}."   [en 1 · arb ]
+"{w} still owes you {a} (1 payment received so far)."
+   → "ما زال على {w} لك {a} (استلمت دفعة واحدة حتى الآن)."   [en 1 · arb ]
+"1 person owes you {a} in all."
+   → "شخص واحد مدين لك بـ {a}."   [en 1 · arb ]
+"You still have {a} to pay on 1 commitment; the next is {b} on {d}."
+   → "ما زال عليك {a} في التزام واحد؛ التالي {b} في {d}."   [en 1 · arb ]
+"You still have {a} to pay on 1 commitment."
+   → "ما زال عليك {a} في التزام واحد."   [en 1 · arb ]
+"1 thing in the next {s} days, already late. First: {w} on {d}."
+   → "أمر واحد خلال الأيام الـ {s} القادمة، وهو متأخر. أولها: {w} في {d}."   [en 1 · arb ]
+"1 thing in the next {s} days. First: {w} on {d}."
+   → "أمر واحد خلال الأيام الـ {s} القادمة. أولها: {w} في {d}."   [en 1 · arb ]
+"Found 1 thing about this in your data: {w}{d}."
+   → "وجدت شيئًا واحدًا عن هذا في بياناتك: {w}{d}."   [en 1 · arb ]
+"You spent {a} on “{x}” {p} — 1 payment."
+   → "أنفقت {a} على «{x}» {p} — دفعة واحدة."   [en 1 · arb ]
+"**You received {a}** {p} · 1 entry."
+   → "**دخلك {a}** {p} · عملية واحدة."   [en 1 · arb ]
+"**You spent {a}** on {c} {p} · 1 entry."
+   → "**أنفقت {a}** على {c} {p} · عملية واحدة."   [en 1 · arb ]
+"**You spent {a}** {p} · 1 entry."
+   → "**أنفقت {a}** {p} · عملية واحدة."   [en 1 · arb ]
+"**You received {a}** {p} ({f} → {t}) · 1 entry"
+   → "**دخلك {a}** {p} ({f} ← {t}) · عملية واحدة"   [en 1 · arb ]
+"**You spent {a}** {p} ({f} → {t}) · 1 entry"
+   → "**أنفقت {a}** {p} ({f} ← {t}) · عملية واحدة"   [en 1 · arb ]
+"1 payment in your notes isn't in Money yet — one tap each."
+   → "دفعة واحدة في ملاحظاتك ليست في المال بعد — بلمسة واحدة."   [en 1 · arb ]
+"Shopping · 1 item"
+   → "المشتريات · عنصر واحد"   [en 1 · arb ]
+"{c} · 1 item still to buy:"
+   → "{c} · لا يزال عنصر واحد للشراء:"   [en 1 · arb ]
+"{t} came up in {c} on 1 day:"
+   → "ورد ذكر {t} في {c} في يوم واحد:"   [en 1 · arb ]
+"{c} · the 1 message kept:"
+   → "{c} · الرسالة الوحيدة المحفوظة:"   [en 1 · arb ]
+"Your SMS app hides the words in its notifications (“1 new message”), so Attune can't read them."
+   → "تطبيق الرسائل لديك يخفي النص في إشعاراته («رسالة جديدة»)، لذا لا يستطيع Attune قراءته."   [en 1 · arb ]
+"+1h"
+   → "+ساعة"   [en 1 · arb ]
+
+== arb · symbols (8)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "تعمل المعالجة الأولية حيث تكون المعالجة أسرع، ويعمل التوليد حيث يكون النطاق الترددي أعلى. واستخدام الاثنين يرفع النطاق المتاح من نحو 43 إلى 59 GB/s."   [1 → 0]
+"Chain-of-thought: +~40% avg on hard reasoning (Wei et al.); MultiArith 18%→79%. Skip on reasoning models — minimal gain, more latency."
+   → "سلسلة التفكير: نحو +40% في المتوسط على الاستدلال الصعب (Wei et al.)؛ MultiArith من 18% إلى 79%. تجاوزها مع نماذج التفكير — مكسب ضئيل وتأخير أكبر."   [1 → 0]
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "ما الذي تحصل عليه: النماذج الصغيرة تجيب عن الحقائق من مصادرك بدقة (في اختبارنا، من 31 إلى 99 من 104 لأصغر نموذج). يستغرق البحث أقل من عُشر ثانية ولا شيء يغادر الهاتف."   [1 → 0]
+"Edit a PDF · PDF → Word · Photos → PDF · Merge"
+   → "تعديل PDF · تحويل PDF إلى Word · تحويل الصور إلى PDF · دمج"   [2 → 0]
+"{a} a month · {f} → {l}"
+   → "{a} شهريًا · من {f} إلى {l}"   [1 → 0]
+"Pick what you want: PDF → Word, photos → PDF, Edit a PDF (change a line, sign, reorder pages)… 80+ choices."
+   → "اختر العملية المطلوبة: تحويل PDF إلى Word، الصور إلى PDF، تعديل ملف PDF (تغيير نص، توقيع، إعادة ترتيب صفحات)… أكثر من 80 خيارًا متاحًا."   [2 → 0]
+"PDF → Word keeps tables and columns; a photo of a printed English page keeps its tables too, read on the phone."
+   → "تحويل PDF إلى Word يحافظ على الجداول والأعمدة؛ وصورة الصفحة المطبوعة تحتفظ بجداولها وتنسيقها أيضًا، بعد قراءتها على الهاتف محليًا."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "البحث في {site} من {a} إلى {b}"   [1 → 0]
+
+== arb · english (5)
+"Future forms: will, going to, present continuous"
+   → "صيغ المستقبل: will وgoing to والمضارع المستمر"   [will]
+"Articles: a, an, the, no article"
+   → "أدوات التعريف والتنكير: a, an, the واستخدام الاسم دون أداة"   [the]
+"Modal verbs: can, must, should, might"
+   → "الأفعال الناقصة: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "ضمائر الوصل: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "أكثر من مليون منتج معبأ من Open Food Facts — المنتجات المصرية والعربية تظهر أولاً. ابحث بالاسم أو بالباركود دون تغطية شبكة."   [Open]
+
+== arb · length (1)
+"Maqluba (upside-down rice)"
+   → "مقلوبة"   [26 → 6]
+
+== es · symbols (4)
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "Lo que ganas: los modelos pequeños responden bien los datos de tus fuentes (en nuestra prueba, de 31 a 99 de 104 con el modelo más pequeño). La búsqueda tarda menos de una décima de segundo y nada sa   [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "El prefill se ejecuta donde el cómputo es más rápido y el decode donde hay más ancho de banda. Usar ambos eleva el ancho de banda útil de ~43 a 59 GB/s."   [1 → 0]
+"Chain-of-thought: +~40% avg on hard reasoning (Wei et al.); MultiArith 18%→79%. Skip on reasoning models — minimal gain, more latency."
+   → "Cadena de pensamiento: +~40 % de media en razonamiento difícil (Wei et al.); MultiArith del 18 % al 79 %. No la uses con modelos de razonamiento: poca mejora y más espera."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "Buscar en {site} del {a} al {b}"   [1 → 0]
+
+== es · numbers (4)
+"No offers. A discount, buy 2 get 1, a happy hour — the counter applies them by itself."
+   → "No hay ofertas. Un descuento, un 3x2, una happy hour: la caja las aplica sola."   [en 1 2 · es 2 3]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "Una lista: compras (leche, pan), un recordatorio mañana a las 10, el alquiler 6.000 el día 1: marca y Guardar"   [en 0 1 10 6000 · es 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} salió en {c} un día:"   [en 1 · es ]
+"{c} · the 1 message kept:"
+   → "{c} · el único mensaje guardado:"   [en 1 · es ]
+
+== es · english (1)
+"Relative clauses: who, which, that"
+   → "Oraciones de relativo: who, which, that"   [which that]
+
+== es · broken (1)
+" — open Huawei Health / Health Sync so it sends the newest steps"
+   → " : abre Huawei Health / Health Sync para que envíe los pasos más recientes"   [space before punctuation]
+
+== fr · numbers (16)
+"Deliverable (e.g. a 1-page PDF report)"
+   → "Livrable (p. ex. un rapport PDF d'une page)"   [en 1 · fr ]
+"Owed when the delay was within the airline's control and not for safety. Claim within 1 year."
+   → "Dû quand le retard dépendait de la compagnie et n'était pas lié à la sécurité. Réclamez dans un délai d'un an."   [en 1 · fr ]
+"Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+   → "Attention : avec chaque option, vous manquez de liquidités dans plus d'un avenir sur 10. Le plus sûr est {best} ({ok}% des avenirs restent au-dessus de zéro)."   [en 1 10 · fr 10]
+"I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"
+   → "Je n'ai pas compris — essayez : « Ahmed me doit 12 000, 1 000 par mois » ou « rappelle-moi dimanche à 17 h d'appeler le client »"   [en 5 1000 12000 · fr 17 1000 12000]
+"“Remind me at 5 to pay the electricity”"
+   → "« Rappelle-moi à 17 h de payer l'électricité »"   [en 5 · fr 17]
+"A reminder at 5 — on the phone, no internet needed"
+   → "Un rappel à 17 h — sur le téléphone, sans internet"   [en 5 · fr 17]
+"remind me at 5 to call mum"
+   → "rappelle-moi à 17 h d'appeler maman"   [en 5 · fr 17]
+"his WhatsApp: “coming Saturday 6”"
+   → "son WhatsApp : « je passe samedi à 18 h »"   [en 6 · fr 18]
+"Type or say anything in the box — “remind me at 5 to call mum”, “spent 200 on petrol”, “find me a used Corolla”."
+   → "Écrivez ou dites n'importe quoi dans le champ — « rappelle-moi à 17 h d'appeler maman », « dépensé 200 en essence », « trouve-moi une Corolla d'occasion »."   [en 5 200 · fr 17 200]
+"Promised something? “Remind me at 5 to pay the electricity”."
+   → "Une promesse ? « Rappelle-moi à 17 h de payer l'électricité »."   [en 5 · fr 17]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Je n'ai pas compris — essaie : “la femme de ménage prend 700 maintenant” ou “rappelle-moi dimanche à 17h d'appeler le client”"   [en 5 700 · fr 17 700]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "Une liste : courses (lait, pain), un rappel demain 10h, le loyer 6 000 le 1er — cochez et Enregistrer"   [en 0 1 10 6000 · fr 1 10 6000]
+"Its name in WhatsApp, e.g. Grade 5 B parents"
+   → "Son nom dans WhatsApp, ex. Parents CM2 B"   [en 5 · fr 2]
+"{t} came up in {c} on 1 day:"
+   → "{t} a été évoqué dans {c} un jour :"   [en 1 · fr ]
+"{c} · the 1 message kept:"
+   → "{c} · le seul message gardé :"   [en 1 · fr ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Le déjeuner est à 14 h, le dîner à 21–22 h — mange aux heures espagnoles ou mange touristique"   [en 2 9 10 · fr 14 21 22]
+
+== fr · symbols (2)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Le préremplissage s'exécute là où le calcul est le plus rapide, le décodage là où la bande passante l'est. Utiliser les deux fait passer la bande passante exploitable d'environ 43 à 59 Go/s."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "Chercher sur {site} du {a} au {b}"   [1 → 0]
+
+== fr · english (1)
+"Relative clauses: who, which, that"
+   → "Propositions relatives : who, which, that"   [which that]
+
+== de · numbers (13)
+"Deliverable (e.g. a 1-page PDF report)"
+   → "Ergebnis (z. B. ein einseitiger PDF-Bericht)"   [en 1 · de ]
+"No offers. A discount, buy 2 get 1, a happy hour — the counter applies them by itself."
+   → "Keine Angebote. Ein Rabatt, 3 für 2, eine Happy Hour – die Kasse wendet sie selbst an."   [en 1 2 · de 2 3]
+"I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"
+   → "Das konnte ich nicht lesen — versuch z. B.: „Ahmed schuldet mir 12,000, 1,000 im Monat“ oder „erinnere mich am Sonntag um 17 Uhr daran, den Kunden anzurufen“"   [en 5 1000 12000 · de 17 1000 12000]
+"“Remind me at 5 to pay the electricity”"
+   → "„Erinnere mich um 17 Uhr daran, den Strom zu bezahlen“"   [en 5 · de 17]
+"A reminder at 5 — on the phone, no internet needed"
+   → "Eine Erinnerung um 17 Uhr — direkt auf dem Telefon, ohne Internet"   [en 5 · de 17]
+"remind me at 5 to call mum"
+   → "erinnere mich um 17 Uhr daran Mama anzurufen"   [en 5 · de 17]
+"Type or say anything in the box — “remind me at 5 to call mum”, “spent 200 on petrol”, “find me a used Corolla”."
+   → "Tippe oder sag alles im Eingabefeld — „erinnere mich um 17 Uhr daran Mama anzurufen“, „200 für Benzin ausgegeben“, „finde einen gebrauchten Corolla für mich“."   [en 5 200 · de 17 200]
+"Promised something? “Remind me at 5 to pay the electricity”."
+   → "Etwas versprochen? „Erinnere mich um 17 Uhr daran, den Strom zu bezahlen“."   [en 5 · de 17]
+"Inflation at 35% for five years"
+   → "5 Jahre lang 35% Inflation"   [en 35 · de 5 35]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "Tippe ein Ziel mit einer Zahl und einem Datum: „عايز أوفر 60 ألف قبل يونيو“, „6 kg abnehmen bis 20. Januar“, ein Corolla 2022 unter 900.000 bis 1. Dezember. Tippe auf Mission starten. Weitere Arten:    [en 1 6 20 60 200 2022 3000 900000 · de 1 6 20 60 2022 3000 200000 900000]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Nicht verstanden — versuch: „die Haushaltshilfe nimmt jetzt 700“ oder „erinnere mich Sonntag um 17 Uhr, den Kunden anzurufen“"   [en 5 700 · de 17 700]
+"{t} came up in {c} on 1 day:"
+   → "{t} kam in {c} an einem Tag vor:"   [en 1 · de ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Mittagessen um 14 Uhr, Abendessen um 21–22 Uhr — zu spanischen Zeiten essen oder Touristenessen bekommen"   [en 2 9 10 · de 14 21 22]
+
+== de · symbols (3)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Prefill läuft dort, wo die Rechenleistung am höchsten ist, Decode dort, wo die Bandbreite am höchsten ist. Beides zusammen erhöht die nutzbare Bandbreite von ~43 auf 59 GB/s."   [1 → 0]
+"That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"
+   → "Diese Sprache ist nicht für Offline-Sprache installiert – füge sie in den Handy-Einstellungen hinzu: Google → Sprache → Offline-Sprachen"   [3 → 2]
+"Look on {site} for {a} → {b}"
+   → "Auf {site} vom {a} bis {b} suchen"   [1 → 0]
+
+== de · english (1)
+"Relative clauses: who, which, that"
+   → "Relativsätze: who, which, that"   [which that]
+
+== de · brand (1)
+"At the very bottom: How to use Attune, Privacy, Engine, Backup and Settings. Back always takes you to the page before."
+   → "Ganz unten: Anleitung, Datenschutz, Engine, Backup und Einstellungen. Zurück bringt dich immer zur vorherigen Seite."
+
+== pt · symbols (2)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "O prefill roda onde o processamento é mais rápido; o decode, onde a largura de banda é maior. Usar os dois eleva a largura de banda útil de ~43 para 59 GB/s."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "Procurar no {site} de {a} a {b}"   [1 → 0]
+
+== pt · numbers (16)
+"No offers. A discount, buy 2 get 1, a happy hour — the counter applies them by itself."
+   → "Nenhuma oferta. Um desconto, leve 3 pague 2, um happy hour — o caixa aplica sozinho."   [en 1 2 · pt 2 3]
+"I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"
+   → "Não consegui entender — tente: “Ahmed me deve 12,000, 1,000 por mês” ou “lembre-me domingo às 17h de ligar para o cliente”"   [en 5 1000 12000 · pt 17 1000 12000]
+"Invite friends — a month free for each who subscribes (up to 3)"
+   → "Convide amigos — ganhe 1 mês grátis para cada amigo que assinar (até 3)"   [en 3 · pt 1 3]
+"Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account."
+   → "Seu amigo ganha 1 mês de Pro. Quando ele assina, você também ganha 1 mês grátis — até 3 amigos. Vinculado à sua conta Google."   [en 3 · pt 1 1 3]
+"“Remind me at 5 to pay the electricity”"
+   → "“Lembre-me às 17h de pagar a conta de luz”"   [en 5 · pt 17]
+"A reminder at 5 — on the phone, no internet needed"
+   → "Um lembrete às 17h — no próprio celular, sem precisar de internet"   [en 5 · pt 17]
+"remind me at 5 to call mum"
+   → "lembre-me às 17h de ligar para a mãe"   [en 5 · pt 17]
+"his WhatsApp: “coming Saturday 6”"
+   → "no WhatsApp dele: “passo aí sábado às 18h”"   [en 6 · pt 18]
+"Type or say anything in the box — “remind me at 5 to call mum”, “spent 200 on petrol”, “find me a used Corolla”."
+   → "Digite ou fale qualquer coisa na caixa — “lembre-me às 17h de ligar para a mãe”, “gastei 200 de gasolina”, “encontre um Corolla usado para mim”."   [en 5 200 · pt 17 200]
+"Before a phone or a fridge on installments, check here: “0% interest” is not always cheaper."
+   → "Antes de parcelar um celular ou uma geladeira, confira aqui: “parcelamento sem juros” nem sempre é o mais barato."   [en 0 · pt ]
+"Promised something? “Remind me at 5 to pay the electricity”."
+   → "Combinou algo? “Lembre-me às 17h de pagar a conta de luz”."   [en 5 · pt 17]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Não entendi — tente: “a diarista agora cobra 700” ou “me lembre domingo às 17h de ligar para o cliente”"   [en 5 700 · pt 17 700]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "Uma lista: compras (leite, pão), um lembrete amanhã às 10, o aluguel 6.000 dia 1 — marque e Salvar"   [en 0 1 10 6000 · pt 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} apareceu em {c} em um dia:"   [en 1 · pt ]
+"{c} · the 1 message kept:"
+   → "{c} · a única mensagem guardada:"   [en 1 · pt ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Almoço às 14h, jantar às 21–22h — coma no horário espanhol ou coma comida de turista"   [en 2 9 10 · pt 14 21 22]
+
+== pt · english (1)
+"Relative clauses: who, which, that"
+   → "Orações relativas: who, which, that"   [which that]
+
+== pt · broken (1)
+"Naver Map or KakaoMap — Google Maps does NOT work properly in Korea"
+   → "Naver Map ou KakaoMap — o Google Maps NÃO funciona direito na Coreia"   [broken characters]
+
+== it · numbers (12)
+"e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor"
+   → "es. un trilocale in affitto a Maadi sotto i 15.000, non al piano terra"   [en 3 15000 · it 15000]
+"1 more way to save {a}"
+   → "Un altro modo per risparmiare {a}"   [en 1 · it ]
+"Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside."
+   → "Scrivilo come lo diresti — “stipendio 25.000 il primo del mese”. Attune poi mostra quanto puoi spendere ogni giorno e mette da parte le bollette."   [en 1 25000 · it 25000]
+"9 pm"
+   → "21:00"   [en 9 · it 0 21]
+"3-bed flat in Maadi under 15,000, not ground floor"
+   → "Trilocale a Maadi sotto 15.000, non al piano terra"   [en 3 15000 · it 15000]
+"Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+   → "Di' una volta cosa vuoi: “trilocale in affitto a Maadi sotto 15.000, non al piano terra”, un'auto, un telefono, oro, un lavoro."   [en 3 15000 · it 15000]
+"3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+   → "Trilocale in affitto a Maadi sotto 15.000, non al piano terra, vicino alla metro"   [en 3 15000 · it 15000]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Non ho capito — prova: “la colf ora prende 700” o “ricordami domenica alle 17 di chiamare il cliente”"   [en 5 700 · it 17 700]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "Una lista: spesa (latte, pane), un promemoria domani alle 10, l'affitto 6.000 il 1 — spunta e Salva"   [en 0 1 10 6000 · it 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} è uscito in {c} in un giorno:"   [en 1 · it ]
+"{c} · the 1 message kept:"
+   → "{c} · l'unico messaggio conservato:"   [en 1 · it ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Pranzo alle 14, cena alle 21–22 — mangia agli orari spagnoli o mangerai cibo per turisti"   [en 2 9 10 · it 14 21 22]
+
+== it · symbols (4)
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "Cosa ci guadagni: i modelli piccoli rispondono correttamente ai dati delle tue fonti (nel nostro test, da 31 a 99 su 104 per il modello più piccolo). La ricerca richiede meno di un decimo di secondo    [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Il prefill gira dove il calcolo è più veloce, la decodifica dove conta la banda. Usando entrambi la banda utile sale da ~43 a 59 GB/s."   [1 → 0]
+"Chain-of-thought: +~40% avg on hard reasoning (Wei et al.); MultiArith 18%→79%. Skip on reasoning models — minimal gain, more latency."
+   → "Catena di pensiero: +~40% in media sul ragionamento difficile (Wei et al.); MultiArith dal 18% al 79%. Da saltare sui modelli di ragionamento: guadagno minimo, più latenza."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "Cercare su {site} dal {a} al {b}"   [1 → 0]
+
+== it · length (1)
+"'s reply back:"
+   → ":"   [14 → 1]
+
+== it · english (1)
+"Relative clauses: who, which, that"
+   → "Frasi relative: who, which, that"   [which that]
+
+== ru · numbers (11)
+"Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'"
+   → "Скажите или напишите как получится, на любом языке. напр. «кран 3 течь гидравлики у северных ворот около 14:00, работы остановлены, вызвали ремонт, пострадавших нет»"   [en 2 3 · ru 0 3 14]
+"Say it your way — “every Sun, Tue and Thu at 7 pm: train”"
+   → "Скажите по-своему — «каждые вс, вт и чт в 19:00: тренировка»"   [en 7 · ru 0 19]
+"9 pm"
+   → "21:00"   [en 9 · ru 0 21]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Не понял — попробуйте: «домработница теперь берёт 700» или «напомни в воскресенье в 17:00 позвонить клиенту»"   [en 5 700 · ru 0 17 700]
+"In 1 hour: {t} · {h}"
+   → "Через час: {t} · {h}"   [en 1 · ru ]
+"When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”"
+   → "Когда? напр. «каждое воскресенье в 21:00», «25-го», «каждый день в 7»"   [en 7 9 25 · ru 0 7 21 25]
+"e.g. every Sunday 9 pm plan my week"
+   → "напр. каждое воскресенье в 21:00 спланируй мою неделю"   [en 9 · ru 0 21]
+"{t} came up in {c} on 1 day:"
+   → "{t} обсуждали в {c} в один день:"   [en 1 · ru ]
+"{c} · the 1 message kept:"
+   → "{c} · единственное сохранённое сообщение:"   [en 1 · ru ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Обед в 14:00, ужин в 21–22 — ешьте по испанскому времени или получите туристическую еду"   [en 2 9 10 · ru 0 14 21 22]
+"Lunch 1pm, dinner 8pm"
+   → "Обед в 13:00, ужин в 20:00"   [en 1 8 · ru 0 0 13 20]
+
+== ru · symbols (2)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Prefill идёт там, где вычисления быстрее всего, decode — там, где выше пропускная способность. Вместе они поднимают доступную пропускную способность с ~43 до 59 ГБ/с."   [1 → 0]
+"Look on {site} for {a} → {b}"
+   → "Искать на {site} с {a} по {b}"   [1 → 0]
+
+== ru · length (2)
+"Tax registration no."
+   → "ИНН"   [20 → 3]
+"home (the house)"
+   → "дом"   [16 → 3]
+
+== ru · english (6)
+"Future forms: will, going to, present continuous"
+   → "Формы будущего: will, going to, present continuous"   [will]
+"Articles: a, an, the, no article"
+   → "Артикли: a, an, the, без артикля"   [the]
+"Modal verbs: can, must, should, might"
+   → "Модальные глаголы: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "Придаточные определительные: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Более миллиона упакованных продуктов из Open Food Facts — сначала египетские и арабские. Поиск по названию или штрихкоду без связи."   [Open]
+"The Bakery on Shubra Street.pdf → Remember"
+   → "The Bakery on Shubra Street.pdf → Запомнить"   [The]
+
+== tr · symbols (2)
+"File converters, including scanned paper → editable Word"
+   → "Dosya dönüştürücüler, taranmış kâğıttan düzenlenebilir Word'e dönüştürme dahil"   [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Prefill hesaplamanın en hızlı olduğu yerde, decode bant genişliğinin en yüksek olduğu yerde çalışır. İkisini birlikte kullanmak kullanılabilir bant genişliğini ~43'ten 59 GB/sn'ye çıkarır."   [1 → 0]
+
+== tr · numbers (13)
+"Current photo quality in 4 steps: people, places, products and text in pictures. Also edits a photo you give it (“make it night”, “remove the car”)."
+   → "Dört adımda güncel fotoğraf kalitesi: resimlerdeki insanlar, yerler, ürünler ve metin. Verdiğin bir fotoğrafı da düzenler (“geceye çevir”, “arabayı kaldır”)."   [en 4 · tr ]
+"Invite friends — a month free for each who subscribes (up to 3)"
+   → "Arkadaşlarını davet et — abone olan her arkadaşın için 1 ay ücretsiz (en fazla 3)"   [en 3 · tr 1 3]
+"Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account."
+   → "Arkadaşın 1 aylık Pro kazanır. Abone olduğunda sen de 1 ay ücretsiz kazanırsın — en fazla 3 arkadaşa kadar. Google hesabına bağlıdır."   [en 3 · tr 1 1 3]
+"Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+   → "Okunamadı — yemeklerin adını yazmayı dene, örn. “2 yumurta ve 1 baladi ekmeği”"   [en 2 · tr 1 2]
+"What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+   → "Ne yedin? örn. 2 yumurta, 1 baladi ekmeği ve bir tabak ful"   [en 2 · tr 1 2]
+"Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+   → "Uğraşmadan yediklerini takip et: tabağının veya menünün fotoğrafını çek, barkod tara ya da yalnızca “2 yumurta ve 1 dilim ekmek” yaz."   [en 2 · tr 1 2]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Anlamadım — şunu dene: “temizlikçi artık 700 alıyor” ya da “pazar saat 17'de müşteriyi aramamı hatırlat”"   [en 5 700 · tr 17 700]
+"When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”"
+   → "Ne zaman? örn. “her pazar 21:00”, “ayın 25'i”, “her gün 7'de”"   [en 7 9 25 · tr 0 7 21 25]
+"e.g. every Sunday 9 pm plan my week"
+   → "örn. her pazar 21:00 haftamı planla"   [en 9 · tr 0 21]
+"{t} came up in {c} on 1 day:"
+   → "{t}, {c} içinde bir gün konuşuldu:"   [en 1 · tr ]
+"{c} · the 1 message kept:"
+   → "{c} · saklanan tek mesaj:"   [en 1 · tr ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Öğle yemeği 14:00'te, akşam yemeği 21–22'de — İspanyol saatlerinde ye ya da turist yemeği ye"   [en 2 9 10 · tr 0 14 21 22]
+"Lunch 1pm, dinner 8pm"
+   → "Öğle yemeği 13:00, akşam yemeği 20:00"   [en 1 8 · tr 0 0 13 20]
+
+== tr · english (1)
+"Relative clauses: who, which, that"
+   → "İlgi cümlecikleri: who, which, that"   [which that]
+
+== tr · length (2)
+"home (the house)"
+   → "ev"   [16 → 2]
+"school (the place)"
+   → "okul"   [18 → 4]
+
+== id · length (1)
+"Driving licence"
+   → "SIM"   [15 → 3]
+
+== id · numbers (5)
+"Invite friends — a month free for each who subscribes (up to 3)"
+   → "Undang teman — gratis 1 bulan untuk setiap teman yang berlangganan (hingga 3 orang)"   [en 3 · id 1 3]
+"Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account."
+   → "Teman Anda mendapat 1 bulan Pro. Saat ia berlangganan, Anda mendapat 1 bulan gratis — maksimal 3 teman. Terhubung ke akun Google Anda."   [en 3 · id 1 1 3]
+"{t} came up in {c} on 1 day:"
+   → "{t} dibahas di {c} pada satu hari:"   [en 1 · id ]
+"{c} · the 1 message kept:"
+   → "{c} · satu pesan yang disimpan:"   [en 1 · id ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Makan siang jam 14.00, makan malam jam 21–22 — makan di jam Spanyol atau dapat makanan turis"   [en 2 9 10 · id 14 21 22]
+
+== id · english (1)
+"Relative clauses: who, which, that"
+   → "Klausa relatif: who, which, that"   [which that]
+
+== hi · symbols (1)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "प्रीफ़िल वहाँ चलता है जहाँ कंप्यूट सबसे तेज़ है, डीकोड वहाँ जहाँ बैंडविड्थ। दोनों के इस्तेमाल से काम की बैंडविड्थ ~43 से ~59 GB/s हो जाती है।"   [1 → 0]
+
+== hi · english (7)
+"For Google Drive: in the picker tap ☰ → Drive → a folder (make one called Attune) → Use this folder."
+   → "Google Drive के लिए: पिकर में ☰ → Drive → कोई फ़ोल्डर (Attune नाम का एक बना लें) → Use this folder टैप करें।"   [this]
+"Future forms: will, going to, present continuous"
+   → "भविष्य काल के रूप: will, going to, अपूर्ण वर्तमान"   [will]
+"Articles: a, an, the, no article"
+   → "आर्टिकल: a, an, the, और बिना आर्टिकल"   [the]
+"Modal verbs: can, must, should, might"
+   → "सहायक क्रियाएँ: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "संबंधवाचक उपवाक्य: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Open Food Facts से दस लाख से ज़्यादा पैकेज्ड खाद्य पदार्थ — मिस्री और अरब प्रोडक्ट सबसे पहले। बिना नेटवर्क के नाम या बारकोड से खोजें।"   [Open]
+"The Bakery on Shubra Street.pdf → Remember"
+   → "The Bakery on Shubra Street.pdf → याद रखें"   [The]
+
+== hi · length (2)
+"Maqluba (upside-down rice)"
+   → "मकलूबा"   [26 → 6]
+"home (the house)"
+   → "घर"   [16 → 2]
+
+== hi · script (1)
+"Assiut"
+   → "अسيूत"   [س]
+
+== hi · numbers (9)
+"✓ 4th"
+   → "✓ चौथी मंज़िल"   [en 4 · hi ]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "दूसरे साल में लगी एक ऊँटनी (बिन्त मख़ाज़)"   [en 2 · hi ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "तीसरे साल में लगी एक ऊँटनी (बिन्त लबून)"   [en 3 · hi ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "चौथे साल में लगी एक ऊँटनी (हिक़्क़ा)"   [en 4 · hi ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "पाँचवें साल में लगी एक ऊँटनी (जज़आ)"   [en 5 · hi ]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "संख्या और तारीख़ के साथ लक्ष्य लिखें: «عايز أوفر 60 ألف قبل يونيو», «20 जनवरी से पहले 6 किलो घटाना», 1 दिसंबर से पहले 9,00,000 से कम में Corolla 2022। मिशन शुरू करें दबाएँ। और प्रकार: ख़र्च की सीमा (   [en 1 6 20 60 200 2022 3000 900000 · hi 1 2 6 9 20 60 2022 3000]
+"1st session today"
+   → "आज का पहला सत्र"   [en 1 · hi ]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "एक सूची: खरीदारी (दूध, ब्रेड), कल 10 बजे रिमाइंडर, 1 तारीख को किराया 6,000 — निशान लगाएँ और सहेजें"   [en 0 1 10 6000 · hi 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} की बात {c} में एक दिन हुई:"   [en 1 · hi ]
+
+== hi · brand (1)
+"At the very bottom: How to use Attune, Privacy, Engine, Backup and Settings. Back always takes you to the page before."
+   → "सबसे नीचे: कैसे इस्तेमाल करें, प्राइवेसी, इंजन, बैकअप और सेटिंग्स। वापस आपको हमेशा पिछले पेज पर ले जाता है।"
+
+== ur · numbers (13)
+"Deliverable (e.g. a 1-page PDF report)"
+   → "مطلوبہ نتیجہ (مثلاً ایک صفحے کی PDF رپورٹ)"   [en 1 · ur ]
+"More on #1"
+   → "پہلے والے پر مزید"   [en 1 · ur ]
+"{p} is 1 day late"
+   → "{p} ایک دن لیٹ ہے"   [en 1 · ur ]
+"Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside."
+   → "ویسے لکھیں جیسے کہتے ہیں — «تنخواہ 25,000 یکم کو»۔ پھر Attune دکھاتا ہے آپ ہر دن کتنا خرچ کر سکتے ہیں اور بل الگ رکھتا ہے۔"   [en 1 25000 · ur 25000]
+"2 handfuls"
+   → "دو مٹھیاں"   [en 2 · ur ]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "دوسرے سال کی اونٹنی (بنت مخاض)"   [en 2 · ur ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "تیسرے سال کی اونٹنی (بنت لبون)"   [en 3 · ur ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "چوتھے سال کی اونٹنی (حقہ)"   [en 4 · ur ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "پانچویں سال کی اونٹنی (جذعہ)"   [en 5 · ur ]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "عدد اور تاریخ کے ساتھ ہدف لکھیں: «عايز أوفر 60 ألف قبل يونيو»، «20 جنوری سے پہلے 6 کلو کم کرنا»، 1 دسمبر سے پہلے 900,000 سے کم میں Corolla 2022۔ مشن شروع کریں دبائیں۔ مزید اقسام: خرچ کی حد («مش عايز    [en 1 6 20 60 200 2022 3000 900000 · ur 1 2 6 20 60 2022 3000 900000]
+"1st session today"
+   → "آج کا پہلا سیشن"   [en 1 · ur ]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "ایک فہرست: خریداری (دودھ، ڈبل روٹی)، کل 10 بجے یاد دہانی، 1 تاریخ کو کرایہ 6,000 — نشان لگائیں اور محفوظ کریں"   [en 0 1 10 6000 · ur 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} کی بات {c} میں ایک دن ہوئی:"   [en 1 · ur ]
+
+== ur · symbols (1)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "پری فل وہاں چلتا ہے جہاں کمپیوٹ سب سے تیز ہے، ڈی کوڈ وہاں جہاں بینڈوتھ۔ دونوں استعمال کرنے سے قابلِ استعمال بینڈوتھ ~43 سے ~59 GB/s ہو جاتی ہے۔"   [1 → 0]
+
+== ur · length (5)
+"Multiplication"
+   → "ضرب"   [14 → 3]
+"The stranded traveller"
+   → "مسافر"   [22 → 5]
+"The total of"
+   → "کل"   [12 → 2]
+"home (the house)"
+   → "گھر"   [16 → 3]
+"work (the workplace)"
+   → "دفتر"   [20 → 4]
+
+== ur · english (5)
+"Future forms: will, going to, present continuous"
+   → "مستقبل کی شکلیں: will، going to، حال جاری"   [will]
+"Articles: a, an, the, no article"
+   → "آرٹیکلز: a، an، the، بغیر آرٹیکل"   [the]
+"Modal verbs: can, must, should, might"
+   → "امدادی افعال: can، must، should، might"   [should]
+"Relative clauses: who, which, that"
+   → "موصولہ جملے: who، which، that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Open Food Facts سے دس لاکھ سے زیادہ پیکٹ والے کھانے — پہلے مصری اور عرب مصنوعات۔ سگنل کے بغیر نام یا بارکوڈ سے تلاش کریں۔"   [Open]
+
+== fa · symbols (4)
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "چه به دست می‌آوری: مدل‌های کوچک به سؤال‌های واقعیت از منبع‌هایت درست جواب می‌دهند (در آزمایش ما، از 31 به 99 از 104 برای کوچک‌ترین مدل). جستجو کمتر از یک دهم ثانیه طول می‌کشد و چیزی از گوشی بیرون نمی   [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "پیش‌پر کردن (prefill) جایی اجرا می‌شود که محاسبه سریع‌تر است و رمزگشایی (decode) جایی که پهنای باند بیشتر است. استفاده از هر دو پهنای باند قابل‌استفاده را از حدود ۴۳ به ۵۹ گیگابایت بر ثانیه می‌رساند.   [1 → 0]
+"Chain-of-thought: +~40% avg on hard reasoning (Wei et al.); MultiArith 18%→79%. Skip on reasoning models — minimal gain, more latency."
+   → "زنجیرهٔ فکر: به‌طور میانگین حدود ‎+40% در استدلال سخت (Wei و همکاران)؛ MultiArith از 18% به 79%. روی مدل‌های استدلالی لازم نیست — سود کم، تأخیر بیشتر."   [1 → 0]
+"Word → PDF"
+   → "Word به PDF"   [1 → 0]
+
+== fa · numbers (46)
+"Check on the 1st of every month"
+   → "روز اول هر ماه بررسی کن"   [en 1 · fa ]
+"Deliverable (e.g. a 1-page PDF report)"
+   → "خروجی (مثلاً یک گزارش PDF یک‌صفحه‌ای)"   [en 1 · fa ]
+"Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”"
+   → "در یک جمله بگویید — مثلاً «LTM 1100 برای Orascom در پایتخت جدید از ۱ تا ۵ اکتبر، روزی ۲۵٬۰۰۰»"   [en 1 5 1100 25000 · fa 0 1 5 25 1100]
+"More on #1"
+   → "بیشتر دربارهٔ اولی"   [en 1 · fa ]
+"e.g. unpaid invoices over 50,000 · jobs this month by customer · top 5 cranes by revenue"
+   → "مثلاً فاکتورهای پرداخت‌نشدهٔ بالای ۵۰٬۰۰۰ · کارهای این ماه به تفکیک مشتری · ۵ جرثقیل برتر از نظر درآمد"   [en 5 50000 · fa 0 5 50]
+"I couldn't read an amount and who — try: “Ahmed owes me 12,000, 1,000 a month for a year”"
+   → "مبلغ و طرف را نتوانستم بفهمم — این‌طور بنویسید: «احمد ۱۲٬۰۰۰ به من بدهکار است، ماهی ۱٬۰۰۰ به مدت یک سال»"   [en 1000 12000 · fa 0 0 1 12]
+"{p} is 1 day late"
+   → "{p} یک روز دیر کرده"   [en 1 · fa ]
+"Checks on the 1st of every month"
+   → "اول هر ماه بررسی می‌کند"   [en 1 · fa ]
+"A currency is 3 letters, like USD"
+   → "ارز سه حرف است، مثل USD"   [en 3 · fa ]
+"Enter the rate (how much 1 unit is in your currency)"
+   → "نرخ را وارد کنید (یک واحد چقدر به ارز شما می‌شود)"   [en 1 · fa ]
+"Say «يا أتيون» 3 times so it wakes for you, not the TV or people around you."
+   → "سه بار بگویید «يا أتيون» تا با صدای شما بیدار شود، نه تلویزیون یا اطرافیان."   [en 3 · fa ]
+"Write it like you'd say it — “salary 25,000 on the 1st”. Attune then shows how much you can spend each day and keeps your bills aside."
+   → "همان‌طور که می‌گویید بنویسید — «حقوق 25,000 روز اول ماه». سپس Attune نشان می‌دهد هر روز چقدر می‌توانید خرج کنید و قبض‌ها را کنار می‌گذارد."   [en 1 25000 · fa 25000]
+"Asks for a 4–6 digit PIN when the books are opened. It keeps casual eyes out on a shared phone; it is not encryption."
+   → "هنگام باز شدن دفاتر یک PIN چهار تا شش رقمی می‌خواهد. چشم‌های کنجکاو را روی گوشی مشترک دور نگه می‌دارد؛ رمزگذاری نیست."   [en 4 6 · fa ]
+"2 handfuls"
+   → "دو مشت"   [en 2 · fa ]
+"3-bed flat in Maadi under 15,000, not ground floor"
+   → "آپارتمان سه‌خوابه در معادی زیر 15,000، نه طبقهٔ همکف"   [en 3 15000 · fa 15000]
+"El Ezaby · 450 m · open 24 h"
+   → "El Ezaby · 450 متر · شبانه‌روزی"   [en 24 450 · fa 450]
+"Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+   → "یک بار بگویید چه می‌خواهید: «آپارتمان سه‌خوابه برای اجاره در معادی زیر 15,000، نه طبقهٔ همکف»، یک ماشین، یک گوشی، طلا، یک شغل."   [en 3 15000 · fa 15000]
+"3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+   → "آپارتمان سه‌خوابه برای اجاره در معادی زیر 15,000، نه طبقهٔ همکف، نزدیک مترو"   [en 3 15000 · fa 15000]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "یک شتر مادهٔ سال دوم (بنت مخاض)"   [en 2 · fa ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "یک شتر مادهٔ سال سوم (بنت لبون)"   [en 3 · fa ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "یک شتر مادهٔ سال چهارم (حقه)"   [en 4 · fa ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "یک شتر مادهٔ سال پنجم (جذعه)"   [en 5 · fa ]
+"under 8,000"
+   → "کمتر از ۸٬۰۰۰"   [en 8000 · fa 0 8]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "هدفی با عدد و تاریخ بنویسید: «عايز أوفر 60 ألف قبل يونيو»، «تا ۲۰ ژانویه ۶ کیلو کم کنم»، یک Corolla 2022 زیر ۹۰۰٬۰۰۰ تا ۱ دسامبر. «شروع مأموریت» را بزنید. انواع دیگر: سقف خرج («مش عايز أصرف أكتر من 3   [en 1 6 20 60 200 2022 3000 900000 · fa 0 1 6 20 60 200 900 2022 3000]
+"e.g. “You won 5,000 EGP from InstaPay — send the code you'll receive…”"
+   → "مثلاً «۵٬۰۰۰ پوند از InstaPay برنده شدید — کدی را که می‌رسد بفرستید…»"   [en 5000 · fa 0 5]
+"Tell the agent: “only 5 stars”, “under 40,000”…"
+   → "به عامل بگویید: «فقط ۵ ستاره»، «زیر ۴۰٬۰۰۰»…"   [en 5 40000 · fa 0 5 40]
+"One sentence does a lot: “Ahmed owes me 12,000, 1,000 a month” becomes 12 payments with a reminder before each one."
+   → "یک جمله کار زیادی می‌کند: «احمد ۱۲٬۰۰۰ به من بدهکار است، ماهی ۱٬۰۰۰» می‌شود ۱۲ قسط با یادآوری پیش از هر کدام."   [en 12 1000 12000 · fa 0 0 1 12 12]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "هدفی با عدد و تاریخ بنویسید: «عايز أوفر 60 ألف قبل يونيو»، «تا ۲۰ ژانویه ۶ کیلو کم کنم»، کرولای ۲۰۲۲ زیر ۹۰۰٬۰۰۰ تا ۱ دسامبر. «شروع مأموریت» را بزنید. انواع دیگر: سقف خرج («مش عايز أصرف أكتر من 3000    [en 1 6 20 60 2022 3000 900000 · fa 0 1 6 20 60 900 2022 3000]
+"1st session today"
+   → "جلسهٔ اول امروز"   [en 1 · fa ]
+"Tomorrow: buy milk and bread, call the bank at 10, pay the rent 6,000 on the 1st"
+   → "فردا: شیر و نان بخر، ساعت ۱۰ به بانک زنگ بزن، اجاره ۶٬۰۰۰ را روز ۱ بده"   [en 1 10 6000 · fa 0 1 6 10]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "یک فهرست: خرید (شیر، نان)، یادآور فردا ساعت ۱۰، اجاره ۶٬۰۰۰ روز ۱ — تیک بزنید و ذخیره"   [en 0 1 10 6000 · fa 0 1 6 10]
+"In 1 hour: {t} · {h}"
+   → "یک ساعت دیگر: {t} · {h}"   [en 1 · fa ]
+"Car services appear here once you log one in Follow-ups — e.g. “oil change 1,500 at 45,000 km”. Add home things too — the water filter, the gas cylinder."
+   → "سرویس‌های ماشین وقتی یکی را در پیگیری‌ها ثبت کنید اینجا می‌آید — مثلاً «تعویض روغن ۱٬۵۰۰ در ۴۵٬۰۰۰ کیلومتر». چیزهای خانه را هم اضافه کنید — فیلتر آب، کپسول گاز."   [en 1500 45000 · fa 0 1 45 500]
+"Its name in WhatsApp, e.g. Grade 5 B parents"
+   → "نامش در واتساپ، مثلاً اولیای کلاس پنجم ب"   [en 5 · fa ]
+"On the 25th, 18,500"
+   → "روز ۲۵، ۱۸٬۵۰۰"   [en 25 18500 · fa 18 25 500]
+"Sheikh owes me 19,500, 2,500 a month"
+   → "شیخ ۱۹٬۵۰۰ به من بدهکار است، ماهی ۲٬۵۰۰"   [en 2500 19500 · fa 2 19 500 500]
+"Tell me when the PS5 goes under 20,000"
+   → "وقتی PS5 زیر ۲۰٬۰۰۰ رفت خبرم کن"   [en 5 20000 · fa 0 5 20]
+"Chat does things, not only answers: “remind me…”, “open Money”, “watch the PS5 under 20,000”. Something wrong? Tap Undo."
+   → "گفتگو فقط جواب نمی‌دهد، کار هم می‌کند: «یادم بینداز…»، «پول را باز کن»، «PS5 زیر ۲۰٬۰۰۰ را دنبال کن». اشتباه شد؟ واگرد را بزنید."   [en 5 20000 · fa 0 5 20]
+"Tell an agent your rules in words — “only 5 stars”, “under 40,000”, “near the Haram” — and it follows them."
+   → "قانون‌هایتان را با کلمات به عامل بگویید — «فقط ۵ ستاره»، «زیر ۴۰٬۰۰۰»، «نزدیک حرم» — و آن‌ها را رعایت می‌کند."   [en 5 40000 · fa 0 5 40]
+"“Sheikh owes me 19,500, 2,500 a month” becomes 8 payments with a reminder before each one."
+   → "«شیخ ۱۹٬۵۰۰ بدهکار است، ماهی ۲٬۵۰۰» به ۸ پرداخت با یادآور پیش از هرکدام تبدیل می‌شود."   [en 8 2500 19500 · fa 2 8 19 500 500]
+"Really finish 6 of 8 and your Pro trial grows by 7 days."
+   → "واقعاً ۶ از ۸ را تمام کنید تا دورهٔ آزمایشی Pro هفت روز بیشتر شود."   [en 6 7 8 · fa 6 8]
+"1 every {w} weeks keeps you on time"
+   → "هر {w} هفته یکی شما را سر وقت نگه می‌دارد"   [en 1 · fa ]
+"1 every {d} days keeps you on time"
+   → "هر {d} روز یکی شما را سر وقت نگه می‌دارد"   [en 1 · fa ]
+"{t} came up in {c} on 1 day:"
+   → "{t} در {c} یک روز مطرح شد:"   [en 1 · fa ]
+"{c} · the 1 message kept:"
+   → "{c} · تنها پیام نگه‌داشته‌شده:"   [en 1 · fa ]
+"2,500 from Sheikh"
+   → "۲٬۵۰۰ از شیخ"   [en 2500 · fa 2 500]
+
+== fa · length (3)
+"Multiplication"
+   → "ضرب"   [14 → 3]
+"That didn't work"
+   → "نشد"   [16 → 3]
+"Machine model"
+   → "مدل"   [13 → 3]
+
+== fa · english (5)
+"Future forms: will, going to, present continuous"
+   → "شکل‌های آینده: will، going to، حال استمراری"   [will]
+"Articles: a, an, the, no article"
+   → "حروف تعریف: a، an، the، بدون حرف تعریف"   [the]
+"Modal verbs: can, must, should, might"
+   → "افعال کمکی: can، must، should، might"   [should]
+"Relative clauses: who, which, that"
+   → "جمله‌واره‌های موصولی: who، which، that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "بیش از یک میلیون غذای بسته‌بندی‌شده از Open Food Facts — اول محصولات مصری و عربی. بدون آنتن با نام یا بارکد جستجو کنید."   [Open]
+
+== fa · script (1)
+"Hearts to be reconciled"
+   → "مؤلفة القلوب"   [ة]
+
+== bn · length (3)
+"Multiplication"
+   → "গুণ"   [14 → 3]
+"The average of"
+   → "গড়"   [14 → 3]
+"work (the workplace)"
+   → "অফিস"   [20 → 4]
+
+== bn · numbers (10)
+"Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay
+   → "একটি সংখ্যা আর তারিখ বলুন: জুনের মধ্যে ৬০,০০০ সঞ্চয় · ২০ জানুয়ারির আগে ৬ kg কমানো · ১ ডিসেম্বরের মধ্যে ৯ লাখের নিচে … কেনা · এই মাসে খাবারে ৩,০০০-এর বেশি খরচ নয় · ডিসেম্বরের মধ্যে আহমেদের ঋণ শোধ ·   [en 1 6 20 900 3000 60000 · bn 1 6 9 20 3000 60000]
+"2 handfuls"
+   → "দুই মুঠো"   [en 2 · bn ]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "দ্বিতীয় বছরের উটনী (বিনতে মাখাদ)"   [en 2 · bn ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "তৃতীয় বছরের উটনী (বিনতে লাবুন)"   [en 3 · bn ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "চতুর্থ বছরের উটনী (হিক্কা)"   [en 4 · bn ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "পঞ্চম বছরের উটনী (জাযআ)"   [en 5 · bn ]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "সংখ্যা আর তারিখসহ একটি লক্ষ্য লিখুন: «عايز أوفر 60 ألف قبل يونيو», «২০ জানুয়ারির আগে ৬ কেজি কমানো», ১ ডিসেম্বরের আগে ৯,০০,০০০-এর নিচে একটি Corolla 2022। মিশন শুরু করুন চাপুন। আরও ধরন: খরচের সীমা («م   [en 1 6 20 60 200 2022 3000 900000 · bn 1 2 6 9 20 60 2022 3000]
+"1st session today"
+   → "আজকের প্রথম সেশন"   [en 1 · bn ]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "একটি তালিকা: কেনাকাটা (দুধ, রুটি), আগামীকাল 10টায় রিমাইন্ডার, 1 তারিখে ভাড়া 6,000 — টিক দিন ও সংরক্ষণ"   [en 0 1 10 6000 · bn 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} নিয়ে {c}-এ এক দিন কথা হয়েছে:"   [en 1 · bn ]
+
+== bn · english (5)
+"Future forms: will, going to, present continuous"
+   → "ভবিষ্যতের রূপ: will, going to, ঘটমান বর্তমান"   [will]
+"Articles: a, an, the, no article"
+   → "আর্টিকেল: a, an, the, আর্টিকেল ছাড়া"   [the]
+"Modal verbs: can, must, should, might"
+   → "মোডাল ক্রিয়া: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "সম্বন্ধবাচক উপবাক্য: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Open Food Facts থেকে দশ লক্ষাধিক প্যাকেটজাত খাবার — মিশরীয় ও আরব পণ্য আগে। সিগন্যাল ছাড়াই নাম বা বারকোডে খুঁজুন।"   [Open]
+
+== sw · numbers (30)
+"Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'"
+   → "Sema au andika kwa haraka, kwa lugha yoyote. mf. 'kreni 3 inavuja mafuta ya haidroliki geti la kaskazini karibu saa 8 mchana, kazi imesimamishwa, tumeita matengenezo, hakuna majeruhi'"   [en 2 3 · sw 3 8]
+"Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»"
+   → "Sema chochote — «koshari mchana, nimelipa 85», «nikumbushe saa 3», «tafuta Tucson 2022»"   [en 9 85 2022 · sw 3 85 2022]
+"I couldn't read that — try: “Ahmed owes me 12,000, 1,000 a month” or “remind me Sunday at 5 to call the client”"
+   → "Sikuweza kusoma hilo — jaribu: “Ahmed ananidai 12,000, 1,000 kwa mwezi” au “nikumbushe Jumapili saa 11 jioni nimpigie mteja”"   [en 5 1000 12000 · sw 11 1000 12000]
+"Say it your way — “every Sun, Tue and Thu at 7 pm: train”"
+   → "Sema kwa njia yako — “kila Jumapili, Jumanne na Alhamisi saa 1 usiku: mazoezi”"   [en 7 · sw 1]
+"Remind me tomorrow at 9 to call Ahmed"
+   → "Nikumbushe kesho saa 3 asubuhi nimpigie Ahmed"   [en 9 · sw 3]
+"9 pm"
+   → "saa 3 usiku"   [en 9 · sw 3]
+"tomorrow at 9"
+   → "kesho saa 3 asubuhi"   [en 9 · sw 3]
+"remind me tomorrow at 9 to call Hassan"
+   → "nikumbushe kesho saa 3 asubuhi nimpigie Hassan"   [en 9 · sw 3]
+"“Remind me at 5 to pay the electricity”"
+   → "“Nikumbushe saa 11 jioni kulipa umeme”"   [en 5 · sw 11]
+"A reminder at 5 — on the phone, no internet needed"
+   → "Kikumbusho saa 11 jioni — kwenye simu, bila intaneti"   [en 5 · sw 11]
+"remind me at 5 to call mum"
+   → "nikumbushe saa 11 jioni nimpigie mama"   [en 5 · sw 11]
+"Shared from WhatsApp: “meeting Sunday 11 at the Maadi office”"
+   → "Imeshirikiwa kutoka WhatsApp: “mkutano Jumapili saa 5 asubuhi ofisi ya Maadi”"   [en 11 · sw 5]
+"Dad: pills at 9"
+   → "Baba: vidonge saa 3 asubuhi"   [en 9 · sw 3]
+"his WhatsApp: “coming Saturday 6”"
+   → "WhatsApp yake: “nakuja Jumamosi saa 12 jioni”"   [en 6 · sw 12]
+"Type or say anything in the box — “remind me at 5 to call mum”, “spent 200 on petrol”, “find me a used Corolla”."
+   → "Andika au sema chochote kwenye kisanduku — “nikumbushe saa 11 jioni nimpigie mama”, “nimetumia 200 kwa petroli”, “nitafutie Corolla iliyotumika”."   [en 5 200 · sw 11 200]
+"Money → Follow-ups → Reminders. Say or type it: “remind me tomorrow at 9 to call Hassan”."
+   → "Pesa → Mambo ya kufuatilia → Vikumbusho. Sema au andika: “nikumbushe kesho saa 3 asubuhi nimpigie Hassan”."   [en 9 · sw 3]
+"Promised something? “Remind me at 5 to pay the electricity”."
+   → "Umeahidi kitu? “Nikumbushe saa 11 jioni kulipa umeme”."   [en 5 · sw 11]
+"remind me tomorrow at 9"
+   → "nikumbushe kesho saa 3 asubuhi"   [en 9 · sw 3]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "Andika lengo lenye namba na tarehe: «عايز أوفر 60 ألف قبل يونيو», «kupunguza kilo 6 kabla ya 20 Januari», Corolla 2022 chini ya 900,000 kabla ya 1 Desemba. Gusa Anza misheni. Aina zaidi: kikomo cha m   [en 1 6 20 60 200 2022 3000 900000 · sw 1 6 20 60 2022 3000 200000 900000]
+"remind me tomorrow at 9 to call the bank"
+   → "nikumbushe kesho saa 3 asubuhi nipigie benki"   [en 9 · sw 3]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "Sijaelewa — jaribu: “mfanyakazi wa ndani sasa anachukua 700” au “nikumbushe Jumapili saa 11 jioni nimpigie mteja”"   [en 5 700 · sw 11 700]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "Orodha: ununuzi (maziwa, mkate), kikumbusho kesho saa 10, kodi 6,000 tarehe 1 — weka alama na Hifadhi"   [en 0 1 10 6000 · sw 1 10 6000]
+"When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”"
+   → "Lini? mf. “kila Jumapili saa 3 usiku”, “tarehe 25”, “kila siku saa 1”"   [en 7 9 25 · sw 1 3 25]
+"e.g. every Sunday 9 pm plan my week"
+   → "mf. kila Jumapili saa 3 usiku panga wiki yangu"   [en 9 · sw 3]
+"Remind me every Saturday at 10 am the maid comes"
+   → "Nikumbushe kila Jumamosi saa 4 asubuhi mfanyakazi anakuja"   [en 10 · sw 4]
+"Type or say what happened in the box — “lunch 150”, “remind me tomorrow at 9”, “Ahmed owes me 500”. Attune puts it in the right place."
+   → "Andika au sema kilichotokea kwenye kisanduku — “chakula cha mchana 150”, “nikumbushe kesho saa 3”, “Ahmed ananidai 500”. Attune huiweka mahali pake."   [en 9 150 500 · sw 3 150 500]
+"Say the repeat in words: “every Saturday at 10”, “every weekday at 8”, “on the last day of the month”."
+   → "Sema marudio kwa maneno: “kila Jumamosi saa 4”, “kila siku ya kazi saa 2”, “siku ya mwisho ya mwezi”."   [en 8 10 · sw 2 4]
+"{t} came up in {c} on 1 day:"
+   → "{t} kilizungumzwa katika {c} siku moja:"   [en 1 · sw ]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Chakula cha mchana saa 2 mchana (14:00), cha jioni saa 9–10 usiku (21–22) — kula kwa saa za Kihispania au ule chakula cha watalii"   [en 2 9 10 · sw 0 2 9 10 14 21 22]
+"Lunch 1pm, dinner 8pm"
+   → "Chakula cha mchana saa 7 mchana (13:00), cha jioni saa 2 usiku (20:00)"   [en 1 8 · sw 0 0 2 7 13 20]
+
+== sw · english (1)
+"Relative clauses: who, which, that"
+   → "Vishazi rejeshi: who, which, that"   [which that]
+
+== th · symbols (2)
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "สิ่งที่ได้: โมเดลเล็กตอบข้อเท็จจริงจากแหล่งของคุณได้ถูกต้อง (ในการทดสอบของเรา จาก 31 เป็น 99 จาก 104 ข้อสำหรับโมเดลที่เล็กที่สุด) การค้นใช้เวลาไม่ถึงหนึ่งในสิบวินาที และไม่มีอะไรออกจากโทรศัพท์"   [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Prefill ทำงานบนส่วนที่ประมวลผลเร็วที่สุด ส่วน decode ทำงานบนส่วนที่แบนด์วิดท์สูงที่สุด การใช้ทั้งสองช่วยเพิ่มแบนด์วิดท์ที่ใช้ได้จริงจาก ~43 เป็น 59 GB/s"   [1 → 0]
+
+== th · numbers (13)
+"Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'"
+   → "พูดหรือพิมพ์คร่าวๆ ภาษาใดก็ได้ เช่น 'เครน 3 ไฮดรอลิกรั่วที่ประตูทิศเหนือราวบ่ายสอง หยุดงาน เรียกช่างซ่อมแล้ว ไม่มีผู้บาดเจ็บ'"   [en 2 3 · th 3]
+"Say it your way — “every Sun, Tue and Thu at 7 pm: train”"
+   → "พูดแบบของคุณ — “ทุกวันอาทิตย์ อังคาร และพฤหัส 1 ทุ่ม: ออกกำลังกาย”"   [en 7 · th 1]
+"9 pm"
+   → "3 ทุ่ม"   [en 9 · th 3]
+"Class 5B"
+   → "ชั้น ป.5/2"   [en 5 · th 2 5]
+"Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+   → "อ่านไม่ออก — ลองบอกชื่ออาหาร เช่น “ไข่ 2 ฟองกับขนมปังบาลาดี 1 แผ่น”"   [en 2 · th 1 2]
+"What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+   → "คุณกินอะไร? เช่น ไข่ 2 ฟอง ขนมปังบาลาดี 1 แผ่น และถั่วฟูล 1 จาน"   [en 2 · th 1 1 2]
+"Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+   → "นับสิ่งที่กินโดยไม่ยุ่งยาก: ถ่ายจานหรือเมนู สแกนบาร์โค้ด หรือแค่พิมพ์ “ไข่ 2 ฟองกับขนมปัง 1 แผ่น”"   [en 2 · th 1 2]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "พิมพ์เป้าหมายพร้อมตัวเลขและวันที่: «عايز أوفر 60 ألف قبل يونيو», «ลด 6 กก. ก่อน 20 มกราคม», Corolla 2022 ไม่เกิน 900,000 ก่อน 1 ธันวาคม แตะ เริ่มภารกิจ ประเภทอื่น: วงเงินใช้จ่าย («مش عايز أصرف أكتر م   [en 1 6 20 60 200 2022 3000 900000 · th 1 6 20 60 2022 3000 200000 900000]
+"Its name in WhatsApp, e.g. Grade 5 B parents"
+   → "ชื่อในวอตส์แอป เช่น ผู้ปกครอง ป.5/2"   [en 5 · th 2 5]
+"When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”"
+   → "เมื่อไร? เช่น “ทุกวันอาทิตย์ 21:00” “วันที่ 25” “ทุกวัน 7 โมง”"   [en 7 9 25 · th 0 7 21 25]
+"e.g. every Sunday 9 pm plan my week"
+   → "เช่น ทุกวันอาทิตย์ 21:00 วางแผนสัปดาห์ของฉัน"   [en 9 · th 0 21]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "มื้อกลางวันบ่าย 2 (14:00) มื้อเย็น 3–4 ทุ่ม (21–22 น.) — กินตามเวลาสเปน ไม่งั้นได้อาหารนักท่องเที่ยว"   [en 2 9 10 · th 0 2 3 4 14 21 22]
+"Lunch 1pm, dinner 8pm"
+   → "มื้อกลางวันบ่ายโมง (13:00) มื้อเย็นสองทุ่ม (20:00)"   [en 1 8 · th 0 0 13 20]
+
+== th · english (6)
+"Future forms: will, going to, present continuous"
+   → "รูปอนาคต: will, going to, present continuous"   [will]
+"Articles: a, an, the, no article"
+   → "คำนำหน้านาม: a, an, the, ไม่มีคำนำหน้า"   [the]
+"Modal verbs: can, must, should, might"
+   → "กริยาช่วย: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "อนุประโยคขยาย: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "อาหารบรรจุหีบห่อกว่าล้านรายการจาก Open Food Facts — สินค้าอียิปต์และอาหรับก่อน ค้นด้วยชื่อหรือบาร์โค้ดโดยไม่มีสัญญาณ"   [Open]
+"The Bakery on Shubra Street.pdf → Remember"
+   → "The Bakery on Shubra Street.pdf → จดจำ"   [The]
+
+== vi · symbols (1)
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "Prefill chạy ở nơi tính toán nhanh nhất, decode chạy ở nơi băng thông cao nhất. Dùng cả hai nâng băng thông khả dụng từ ~43 lên 59 GB/s."   [1 → 0]
+
+== vi · numbers (65)
+"Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”"
+   → "Hãy nói thành một câu — ví dụ “LTM 1100 cho Orascom tại Thủ đô Mới từ 1 đến 5 tháng 10, 25.000 mỗi ngày”"   [en 1 5 1100 25000 · vi 1 5 10 1100 25000]
+"Paste an email or message, or type: “my Netflix trial ends on 20 November”"
+   → "Dán email hoặc tin nhắn, hoặc gõ: “bản dùng thử Netflix của tôi hết vào 20 tháng 11”"   [en 20 · vi 11 20]
+"Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+   → "Cẩn thận: với mọi lựa chọn, tiền mặt của bạn cạn trong hơn 1 trên 10 tương lai. An toàn nhất là {best} ({ok}% tương lai vẫn trên 0)."   [en 1 10 · vi 0 1 10]
+"Revolution Day (25 January)"
+   → "Ngày Cách mạng (25 tháng 1)"   [en 25 · vi 1 25]
+"30 June Revolution"
+   → "Cách mạng 30 tháng 6"   [en 30 · vi 6 30]
+"Revolution Day (23 July)"
+   → "Ngày Cách mạng (23 tháng 7)"   [en 23 · vi 7 23]
+"From which day? (e.g. from 10 December)"
+   → "Từ ngày nào? (ví dụ từ 10 tháng 12)"   [en 10 · vi 10 12]
+"Say it your way — “every Sun, Tue and Thu at 7 pm: train”"
+   → "Nói theo cách của bạn — “mỗi CN, T3 và T5 lúc 7 giờ tối: tập luyện”"   [en 7 · vi 3 5 7]
+"Saved by 31 December"
+   → "Tiết kiệm được đến 31 tháng 12"   [en 31 · vi 12 31]
+"{a} saved · {y} a year · {e} by 31 Dec"
+   → "Đã tiết kiệm {a} · {y} một năm · {e} đến 31/12"   [en 31 · vi 12 31]
+"Tell me when hotels near the Haram are under 45k for 4 nights from 10 December"
+   → "Báo tôi khi khách sạn gần Haram dưới 45k cho 4 đêm từ 10 tháng 12"   [en 4 10 45 · vi 4 10 12 45]
+"“Lose 6 kg before 20 January”"
+   → "“Giảm 6 kg trước 20 tháng 1”"   [en 6 20 · vi 1 6 20]
+"“Tell me when hotels near the Haram are under 45k for 4 nights from 10 December”"
+   → "“Báo tôi khi khách sạn gần Haram dưới 45k cho 4 đêm từ 10 tháng 12”"   [en 4 10 45 · vi 4 10 12 45]
+"Sun 25 Oct · 11:00"
+   → "CN 25/10 · 11:00"   [en 0 11 25 · vi 0 10 11 25]
+"Found in a screenshot · 3 Oct"
+   → "Tìm thấy trong ảnh chụp màn hình · 3/10"   [en 3 · vi 3 10]
+"Wed 21 Oct · 09:00"
+   → "T4 21/10 · 09:00"   [en 0 9 21 · vi 0 4 9 10 21]
+"Warranty until 12 Mar 2028"
+   → "Bảo hành đến 12/3/2028"   [en 12 2028 · vi 3 12 2028]
+"14 days — ends 2 Nov"
+   → "14 ngày — hết ngày 2/11"   [en 2 14 · vi 2 11 14]
+"1 Nov · 2,000"
+   → "1/11 · 2.000"   [en 1 2000 · vi 1 11 2000]
+"Vodafone 199 · 14 Oct"
+   → "Vodafone 199 · 14/10"   [en 14 199 · vi 10 14 199]
+"First day: 8 Oct"
+   → "Ngày đầu: 8/10"   [en 8 · vi 8 10]
+"Next period ≈ 5 Nov"
+   → "Kỳ kinh tới ≈ 5/11"   [en 5 · vi 5 11]
+"12 Oct · the sink"
+   → "12/10 · bồn rửa"   [en 12 · vi 10 12]
+"Turkey · 3–10 Nov · Egyptian passport"
+   → "Thổ Nhĩ Kỳ · 3–10/11 · hộ chiếu Ai Cập"   [en 3 10 · vi 3 10 11]
+"Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual f
+   → "Viết một câu: “báo tôi khi khách sạn gần Haram dưới 45k cho 4 đêm từ 10 tháng 12”, “báo tôi khi đơn Amazon đến”, “đặt món quen từ Talabat”, hoặc “mở Uber”."   [en 4 10 45 · vi 4 10 12 45]
+"Lose 6 kg before 20 January"
+   → "Giảm 6 kg trước 20 tháng 1"   [en 6 20 · vi 1 6 20]
+"Buy a Corolla 2022 under 900k by 1 December"
+   → "Mua Corolla 2022 dưới 900k trước 1 tháng 12"   [en 1 900 2022 · vi 1 12 900 2022]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "Gõ một mục tiêu có con số và ngày: «عايز أوفر 60 ألف قبل يونيو», «giảm 6 kg trước 20 tháng 1», một chiếc Corolla 2022 dưới 900.000 trước 1 tháng 12. Chạm Bắt đầu nhiệm vụ. Các loại khác: hạn mức chi    [en 1 6 20 60 200 2022 3000 900000 · vi 1 1 6 12 12 20 60 200 2022 3000 900000]
+"Say it in the Home box too: «خطة الشهر», “save 20000 for travel by June”."
+   → "Nói luôn trong ô ở Trang chủ: «خطة الشهر», «tiết kiệm 20000 để đi du lịch trước tháng 6»."   [en 20000 · vi 6 20000]
+"Say what it is and its date — “car licence expires 3 Feb 2027, plate أ ب ج 1234”"
+   → "Nói đó là gì và ngày — «đăng ký xe hết hạn 3 thg 2 2027, biển ABC 1234»"   [en 3 1234 2027 · vi 2 3 1234 2027]
+"When is it due? Add the date — “… expires 3 Feb 2027”"
+   → "Khi nào đến hạn? Thêm ngày — «… hết hạn 3 thg 2 2027»"   [en 3 2027 · vi 2 3 2027]
+"e.g. car licence expires 3 Feb 2027, plate أ ب ج 1234"
+   → "vd. đăng ký xe hết hạn 3 thg 2 2027, biển ABC 1234"   [en 3 1234 2027 · vi 2 3 1234 2027]
+"Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”."
+   → "Theo dõi → ⋯ → Việc giấy tờ. Gõ một lần: «đăng ký xe hết hạn 3 thg 2 2027, biển أ ب ج 1234»."   [en 3 1234 2027 · vi 2 3 1234 2027]
+"driving licence expires 20 Nov 2026"
+   → "bằng lái hết hạn 20 thg 11 2026"   [en 20 2026 · vi 11 20 2026]
+"“Car licence expires 3 Feb 2027”"
+   → "«Đăng ký xe hết hạn 3 thg 2 2027»"   [en 3 2027 · vi 2 3 2027]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "Gõ một mục tiêu có số và ngày: «عايز أوفر 60 ألف قبل يونيو», «giảm 6 kg trước 20 tháng 1», một chiếc Corolla 2022 dưới 900.000 trước 1 tháng 12. Chạm Bắt đầu nhiệm vụ. Loại khác: giới hạn chi tiêu («   [en 1 6 20 60 2022 3000 900000 · vi 1 1 6 12 20 60 2022 3000 900000]
+"or say it: “visa number H123, valid until 1 Dec 2027”"
+   → "hoặc nói: “số thị thực H123, có hiệu lực đến 1/12/2027”"   [en 1 123 2027 · vi 1 12 123 2027]
+"Say a row: “Grove GMK, 100 tons, inspection 4 Dec”"
+   → "Nói một dòng: “Grove GMK, 100 tấn, kiểm định 4/12”"   [en 4 100 · vi 4 12 100]
+"Wedding on 20 December"
+   → "Đám cưới ngày 20 tháng 12"   [en 20 · vi 12 20]
+"When should it run? e.g. “every Sunday 9 pm”, “on the 25th”, “every day at 7”"
+   → "Khi nào? vd: “mỗi Chủ nhật 21:00”, “ngày 25”, “mỗi ngày lúc 7 giờ”"   [en 7 9 25 · vi 0 7 21 25]
+"e.g. every Sunday 9 pm plan my week"
+   → "vd: mỗi Chủ nhật 21:00 lên kế hoạch tuần"   [en 9 · vi 0 21]
+"{t} came up in {c} on 1 day:"
+   → "{t} được nhắc trong {c} vào một ngày:"   [en 1 · vi ]
+"Oct–Apr. May–Sep in Upper Egypt is 40°C+."
+   → "Th10–Th4. Th5–Th9 Thượng Ai Cập trên 40°C."   [en 40 · vi 4 5 9 10 40]
+"Nov–Mar. Summer is 45°C+."
+   → "Th11–Th3. Mùa hè trên 45°C."   [en 45 · vi 3 11 45]
+"Nov–Mar. Jun–Sep is 45°C and humid."
+   → "Th11–Th3. Th6–Th9 45°C và ẩm."   [en 45 · vi 3 6 9 11 45]
+"Apr–Jun, Sep–Oct. Inland summer is 40°C+."
+   → "Th4–Th6, Th9–Th10. Mùa hè nội địa trên 40°C."   [en 40 · vi 4 6 9 10 40]
+"Nov–Mar. Summer is 45°C+ with high humidity."
+   → "Th11–Th3. Mùa hè trên 45°C, độ ẩm rất cao."   [en 45 · vi 3 11 45]
+"Nov–Mar. Summer regularly exceeds 50°C."
+   → "Th11–Th3. Mùa hè thường xuyên trên 50°C."   [en 50 · vi 3 11 50]
+"29 October (Republic Day) — transport is busy"
+   → "29 tháng 10 (Ngày Cộng hòa) — giao thông đông đúc"   [en 29 · vi 10 29]
+"1 May: almost everything closes"
+   → "1 tháng 5: gần như mọi thứ đóng cửa"   [en 1 · vi 1 5]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "Ăn trưa lúc 2 giờ chiều (14:00), ăn tối lúc 9–10 giờ tối (21–22 giờ) — ăn theo giờ Tây Ban Nha hoặc ăn đồ cho khách du lịch"   [en 2 9 10 · vi 0 2 9 10 14 21 22]
+"15 August: everything full and expensive"
+   → "15 tháng 8: mọi thứ kín chỗ và đắt"   [en 15 · vi 8 15]
+"Watch the zeros — 100,000 IDR is a small note"
+   → "Để ý số 0 — 100,000 IDR là tờ tiền nhỏ"   [en 100000 · vi 0 100000]
+"Nyepi (Bali, March): the entire island shuts for 24 hours, including the airport"
+   → "Nyepi (Bali, tháng 3): cả đảo ngừng 24 giờ, kể cả sân bay"   [en 24 · vi 3 24]
+"Orthodox Christmas (7 Jan) and Easter — quiet, family-focused"
+   → "Giáng sinh Chính thống giáo (7 tháng 1) và Phục sinh — yên tĩnh, dành cho gia đình"   [en 7 · vi 1 7]
+"Ramadan and Eid; National Day 18 December"
+   → "Ramadan và Eid; Quốc khánh 18 tháng 12"   [en 18 · vi 12 18]
+"National and Liberation Days (25–26 Feb) — large celebrations"
+   → "Quốc khánh và Ngày Giải phóng (25–26 tháng 2) — lễ hội lớn"   [en 25 26 · vi 2 25 26]
+"Lunch 1pm, dinner 8pm"
+   → "Ăn trưa lúc 1 giờ chiều (13:00), ăn tối lúc 8 giờ tối (20:00)"   [en 1 8 · vi 0 0 1 8 13 20]
+"June: Santos Populares street festivals, especially Lisbon on 12–13 June"
+   → "Tháng 6: lễ hội đường phố Santos Populares, nhất là Lisbon ngày 12–13 tháng 6"   [en 12 13 · vi 6 6 12 13]
+"King's Day (27 April): the whole country turns orange and nothing runs normally"
+   → "Ngày của Vua (27 tháng 4): cả nước nhuộm cam và không gì vận hành bình thường"   [en 27 · vi 4 27]
+"Notes have many zeros and similar colours — 20,000 and 500,000 are confused constantly"
+   → "Tiền có nhiều số 0 và màu giống nhau — 20,000 và 500,000 bị nhầm liên tục"   [en 20000 500000 · vi 0 20000 500000]
+"Novruz (around 20–21 March) — a big spring festival; hotels fill up"
+   → "Novruz (khoảng 20–21 tháng 3) — lễ hội mùa xuân lớn; khách sạn kín chỗ"   [en 20 21 · vi 3 20 21]
+"Navruz (21 March) — celebrations everywhere"
+   → "Navruz (21 tháng 3) — lễ hội khắp nơi"   [en 21 · vi 3 21]
+"1 August (National Day)"
+   → "1 tháng 8 (Quốc khánh)"   [en 1 · vi 1 8]
+"Thanksgiving (late Nov) and 4 July — travel is busy and expensive"
+   → "Lễ Tạ ơn (cuối tháng 11) và 4 tháng 7 — đi lại đông và đắt"   [en 4 · vi 4 7 11]
+
+== vi · length (3)
+"Savings circle"
+   → "Hụi"   [14 → 3]
+"Savings circles"
+   → "Hụi"   [15 → 3]
+"home (the house)"
+   → "nhà"   [16 → 3]
+
+== vi · english (1)
+"Relative clauses: who, which, that"
+   → "Mệnh đề quan hệ: who, which, that"   [which that]
+
+== zh · numbers (94)
+"e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor"
+   → "例如 Maadi 三居室出租，15,000 以内，不要一楼"   [en 3 15000 · zh 15000]
+"Read a CSV of fuel fill-ups (date, litres, km) and print litres per 100 km for each fill-up and the average"
+   → "读取加油记录 CSV（日期、升数、公里数），输出每次加油的百公里油耗和平均值"   [en 100 · zh ]
+"Deliverable (e.g. a 1-page PDF report)"
+   → "交付物（例如一页 PDF 报告）"   [en 1 · zh ]
+"Printed on the load chart (often 9.8 m/s)."
+   → "幅度"   [en 9.8 · zh ]
+"Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”"
+   → "用一句话说出来——例如“10 月 1 日至 5 日，LTM 1100 在新首都为 Orascom 工作，每天 25,000”"   [en 1 5 1100 25000 · zh 1 5 10 1100 25000]
+"Best of 2"
+   → "2 选 1"   [en 2 · zh 1 2]
+"Best of 2 — two drafts, you pick one (a little slower)"
+   → "2 选 1——两张草稿，由你挑一张（稍慢一点）"   [en 2 · zh 1 2]
+"Paste an email or message, or type: “my Netflix trial ends on 20 November”"
+   → "粘贴一封邮件或消息，或输入：“我的 Netflix 试用 11 月 20 日结束”"   [en 20 · zh 11 20]
+"Litres per 100 km"
+   → "百公里油耗（升）"   [en 100 · zh ]
+"Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay
+   → "说出一个数字和一个日期：6 月前存下 60,000 · 1 月 20 日前减重 6 公斤 · 12 月 1 日前以 90 万以下买到… · 本月饮食花费不超过 3,000 · 12 月前还清 Ahmed 的欠款 · 12 月前学完土耳其语课程。"   [en 1 6 20 900 3000 60000 · zh 1 1 6 6 12 12 12 20 90 3000 60000]
+"Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+   → "注意：无论选哪个，都有超过十分之一的未来会让你的现金用完。最稳妥的是 {best}（{ok}% 的未来保持在零以上）。"   [en 1 10 · zh ]
+"No offers. A discount, buy 2 get 1, a happy hour — the counter applies them by itself."
+   → "没有优惠。折扣、买二送一、欢乐时光 — 收银台会自动应用。"   [en 1 2 · zh ]
+"1 point for every"
+   → "每消费"   [en 1 · zh ]
+"Revolution Day (25 January)"
+   → "革命日（1 月 25 日）"   [en 25 · zh 1 25]
+"30 June Revolution"
+   → "6 月 30 日革命"   [en 30 · zh 6 30]
+"Revolution Day (23 July)"
+   → "革命日（7 月 23 日）"   [en 23 · zh 7 23]
+"From which day? (e.g. from 10 December)"
+   → "从哪天开始？（例如从 12 月 10 日起）"   [en 10 · zh 10 12]
+"e.g. “Save 60,000 by June”"
+   → "例如“6 月前存 60,000”"   [en 60000 · zh 6 60000]
+"Saved by 31 December"
+   → "到 12 月 31 日可存"   [en 31 · zh 12 31]
+"{a} saved · {y} a year · {e} by 31 Dec"
+   → "已存 {a} · 每年 {y} · 到 12 月 31 日 {e}"   [en 31 · zh 12 31]
+"Write the amount too, e.g. “save 30k for a sofa by June”"
+   → "同时写上金额，例如“6 月前存 3 万买沙发”"   [en 30 · zh 3 6]
+"“save 30k for a sofa by June”"
+   → "“6 月前存 3 万买沙发”"   [en 30 · zh 3 6]
+"Tell me when hotels near the Haram are under 45k for 4 nights from 10 December"
+   → "禁寺（哈拉姆）附近的酒店 12 月 10 日起 4 晚低于 45k 时告诉我"   [en 4 10 45 · zh 4 10 12 45]
+"Class 5B"
+   → "五年级 2 班"   [en 5 · zh 2]
+"2 handfuls"
+   → "两把"   [en 2 · zh ]
+"“Lose 6 kg before 20 January”"
+   → "“1 月 20 日前减掉 6 公斤”"   [en 6 20 · zh 1 6 20]
+"“Tell me when hotels near the Haram are under 45k for 4 nights from 10 December”"
+   → "“哈拉姆附近的酒店 12 月 10 日起住 4 晚低于 45k 时告诉我”"   [en 4 10 45 · zh 4 10 12 45]
+"“Hyundai Tucson 2022 used under 1.5M”"
+   → "“2022 款现代途胜二手 150 万以下”"   [en 1.5 2022 · zh 150 2022]
+"“A week in Istanbul in March, 2 people”"
+   → "“3 月伊斯坦布尔一周，2 人”"   [en 2 · zh 2 3]
+"“Save 20000 for travel by June”"
+   → "“6 月前为旅行存 20000”"   [en 20000 · zh 6 20000]
+"Sun 25 Oct · 11:00"
+   → "10 月 25 日 周日 · 11:00"   [en 0 11 25 · zh 0 10 11 25]
+"Found in a screenshot · 3 Oct"
+   → "在截图中找到 · 10 月 3 日"   [en 3 · zh 3 10]
+"I want to save 50,000 before June"
+   → "我想在 6 月前存 50,000"   [en 50000 · zh 6 50000]
+"Wed 21 Oct · 09:00"
+   → "10 月 21 日 周三 · 09:00"   [en 0 9 21 · zh 0 9 10 21]
+"Warranty until 12 Mar 2028"
+   → "保修至 2028 年 3 月 12 日"   [en 12 2028 · zh 3 12 2028]
+"14 days — ends 2 Nov"
+   → "14 天 — 11 月 2 日结束"   [en 2 14 · zh 2 11 14]
+"1 Nov · 2,000"
+   → "11 月 1 日 · 2,000"   [en 1 2000 · zh 1 11 2000]
+"Vodafone 199 · 14 Oct"
+   → "Vodafone 199 · 10 月 14 日"   [en 14 199 · zh 10 14 199]
+"save 20000 for travel by June"
+   → "6 月前为旅行存 20000"   [en 20000 · zh 6 20000]
+"First day: 8 Oct"
+   → "第一天：10 月 8 日"   [en 8 · zh 8 10]
+"Next period ≈ 5 Nov"
+   → "下次月经 ≈ 11 月 5 日"   [en 5 · zh 5 11]
+"3-bed flat in Maadi under 15,000, not ground floor"
+   → "马阿迪 15,000 以下的三居室，不要一楼"   [en 3 15000 · zh 15000]
+"12 Oct · the sink"
+   → "10 月 12 日 · 水槽"   [en 12 · zh 10 12]
+"Turkey · 3–10 Nov · Egyptian passport"
+   → "土耳其 · 11 月 3–10 日 · 埃及护照"   [en 3 10 · zh 3 10 11]
+"6th of October"
+   → "十月六日城"   [en 6 · zh ]
+"10 % off the next order"
+   → "下单再打 9 折"   [en 10 · zh 9]
+"Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual f
+   → "写一句话：“哈拉姆附近的酒店 12 月 10 日起住 4 晚低于 45k 时告诉我”、“我的 Amazon 订单到了告诉我”、“在 Talabat 点我常点的”，或“打开 Uber”。"   [en 4 10 45 · zh 4 10 12 45]
+"Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+   → "说一次你想要什么：“马阿迪 15,000 以下出租的三居室，不要一楼”、一辆车、一部手机、黄金、一份工作。"   [en 3 15000 · zh 15000]
+"Save 60,000 by June"
+   → "6 月前存 60,000"   [en 60000 · zh 6 60000]
+"Lose 6 kg before 20 January"
+   → "1 月 20 日前减掉 6 公斤"   [en 6 20 · zh 1 6 20]
+"Buy a Corolla 2022 under 900k by 1 December"
+   → "12 月 1 日前以 90 万以下买一辆 2022 款卡罗拉"   [en 1 900 2022 · zh 1 12 90 2022]
+"3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+   → "马阿迪 15,000 以下出租的三居室，不要一楼，靠近地铁"   [en 3 15000 · zh 15000]
+"Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic"
+   → "2019 到 2021 款现代途胜 90 万以下，一手车主，无事故，自动挡"   [en 900 2019 2021 · zh 90 2019 2021]
+"a she-camel in her 2nd year (bint makhāḍ)"
+   → "一头满一岁进入第二年的母驼（bint makhāḍ）"   [en 2 · zh ]
+"a she-camel in her 3rd year (bint labūn)"
+   → "一头进入第三年的母驼（bint labūn）"   [en 3 · zh ]
+"a she-camel in her 4th year (ḥiqqah)"
+   → "一头进入第四年的母驼（ḥiqqah）"   [en 4 · zh ]
+"a she-camel in her 5th year (jadhaʿah)"
+   → "一头进入第五年的母驼（jadhaʿah）"   [en 5 · zh ]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "输入一个带数字和日期的目标：«عايز أوفر 60 ألف قبل يونيو»，«1 月 20 日前减重 6 公斤»，12 月 1 日前以 900,000 以内买一辆 2022 款卡罗拉。点“开始任务”。更多类型：支出上限（«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»）、来自 钱 → 人 的一笔欠款（«عايز أخلص دين أحمد ق   [en 1 6 20 60 200 2022 3000 900000 · zh 1 1 6 12 12 20 20 60 2022 3000 900000]
+"Say it in the Home box too: «خطة الشهر», “save 20000 for travel by June”."
+   → "也可以在首页的输入框里说：«خطة الشهر»，«6 月前存 20000 用来旅行»。"   [en 20000 · zh 6 20000]
+"Say what it is and its date — “car licence expires 3 Feb 2027, plate أ ب ج 1234”"
+   → "说明是什么和日期 —「行驶证 2027年2月3日到期，车牌 ABC 1234」"   [en 3 1234 2027 · zh 2 3 1234 2027]
+"When is it due? Add the date — “… expires 3 Feb 2027”"
+   → "什么时候到期？加上日期 —「… 2027年2月3日到期」"   [en 3 2027 · zh 2 3 2027]
+"e.g. car licence expires 3 Feb 2027, plate أ ب ج 1234"
+   → "例：行驶证 2027年2月3日到期，车牌 ABC 1234"   [en 3 1234 2027 · zh 2 3 1234 2027]
+"Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”."
+   → "跟进 → ⋯ → 事务。输入一次：「行驶证 2027年2月3日到期，车牌 أ ب ج 1234」。"   [en 3 1234 2027 · zh 2 3 1234 2027]
+"driving licence expires 20 Nov 2026"
+   → "驾照 2026年11月20日到期"   [en 20 2026 · zh 11 20 2026]
+"“Car licence expires 3 Feb 2027”"
+   → "「行驶证 2027年2月3日到期」"   [en 3 2027 · zh 2 3 2027]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "输入带数字和日期的目标：«عايز أوفر 60 ألف قبل يونيو»、「1月20日前减6公斤」、12月1日前90万以下买一辆2022款卡罗拉。点「开始任务」。其他类型：消费上限（«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»）和来自 钱 → 人 的欠款（«عايز أخلص دين أحمد قبل ديسمبر»）。"   [en 1 6 20 60 2022 3000 900000 · zh 1 1 6 12 20 60 90 2022 3000]
+"or say it: “visa number H123, valid until 1 Dec 2027”"
+   → "或者说：“签证号H123，有效期至2027年12月1日”"   [en 1 123 2027 · zh 1 12 123 2027]
+"Say a row: “Grove GMK, 100 tons, inspection 4 Dec”"
+   → "说一行：“Grove GMK，100吨，检查12月4日”"   [en 4 100 · zh 4 12 100]
+"Wedding on 20 December"
+   → "12 月 20 日婚礼"   [en 20 · zh 12 20]
+"every 2 weeks"
+   → "每两周"   [en 2 · zh ]
+"Its name in WhatsApp, e.g. Grade 5 B parents"
+   → "WhatsApp 里的群名，例如“五年级B班家长”"   [en 5 · zh ]
+"Oct–Apr. May–Sep in Upper Egypt is 40°C+."
+   → "10–4月。5–9月上埃及超过 40°C。"   [en 40 · zh 4 5 9 10 40]
+"Nov–Mar. Summer is 45°C+."
+   → "11–3月。夏天超过 45°C。"   [en 45 · zh 3 11 45]
+"Nov–Mar. Jun–Sep is 45°C and humid."
+   → "11–3月。6–9月 45°C 且潮湿。"   [en 45 · zh 3 6 9 11 45]
+"Apr–Jun, Sep–Oct. Inland summer is 40°C+."
+   → "4–6月、9–10月。内陆夏天超过 40°C。"   [en 40 · zh 4 6 9 10 40]
+"Nov–Mar. Summer is 45°C+ with high humidity."
+   → "11–3月。夏天超过 45°C，湿度很大。"   [en 45 · zh 3 11 45]
+"Nov–Mar. Summer regularly exceeds 50°C."
+   → "11–3月。夏天常常超过 50°C。"   [en 50 · zh 3 11 50]
+"29 October (Republic Day) — transport is busy"
+   → "10月29日（共和国日）——交通拥挤"   [en 29 · zh 10 29]
+"1 May: almost everything closes"
+   → "5月1日：几乎全部关门"   [en 1 · zh 1 5]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "午餐14点，晚餐21–22点——按西班牙时间吃，否则只能吃游客餐"   [en 2 9 10 · zh 14 21 22]
+"15 August: everything full and expensive"
+   → "8月15日：处处爆满且贵"   [en 15 · zh 8 15]
+"Nyepi (Bali, March): the entire island shuts for 24 hours, including the airport"
+   → "静居日（巴厘岛，3月）：全岛停摆 24 小时，机场也关"   [en 24 · zh 3 24]
+"Orthodox Christmas (7 Jan) and Easter — quiet, family-focused"
+   → "东正教圣诞节（1月7日）和复活节——安静，以家庭为主"   [en 7 · zh 1 7]
+"Ramadan and Eid; National Day 18 December"
+   → "斋月和开斋节；国庆日 12月18日"   [en 18 · zh 12 18]
+"One dinar is ~3.3 USD — a '5' price tag is ~17 dollars"
+   → "1 第纳尔约3.3 USD——标价 '5' 就是约17 美元"   [en 3.3 5 17 · zh 1 3.3 5 17]
+"National and Liberation Days (25–26 Feb) — large celebrations"
+   → "国庆日和解放日（2月25–26日）——大型庆典"   [en 25 26 · zh 2 25 26]
+"The rial is ~2.6 USD — read prices carefully"
+   → "1 里亚尔约 2.6 USD——仔细看价格"   [en 2.6 · zh 1 2.6]
+"The dinar is ~2.65 USD, divided into 1,000 fils"
+   → "1 第纳尔约 2.65 USD，分为 1,000 费尔"   [en 2.65 1000 · zh 1 2.65 1000]
+"June: Santos Populares street festivals, especially Lisbon on 12–13 June"
+   → "6月：圣人节（Santos Populares）街头庆典，尤其是里斯本 6月12–13日"   [en 12 13 · zh 6 6 12 13]
+"King's Day (27 April): the whole country turns orange and nothing runs normally"
+   → "国王节（4月27日）：全国变成橙色，什么都不正常运转"   [en 27 · zh 4 27]
+"Novruz (around 20–21 March) — a big spring festival; hotels fill up"
+   → "诺鲁孜节（3月20–21日左右）——盛大的春节庆；酒店爆满"   [en 20 21 · zh 3 20 21]
+"Navruz (21 March) — celebrations everywhere"
+   → "诺鲁孜节（3月21日）——处处庆祝"   [en 21 · zh 3 21]
+"1 August (National Day)"
+   → "8月1日（国庆日）"   [en 1 · zh 1 8]
+"Thanksgiving (late Nov) and 4 July — travel is busy and expensive"
+   → "感恩节（11月底）和 7月4日——出行拥挤又昂贵"   [en 4 · zh 4 7 11]
+
+== zh · symbols (5)
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "效果：小模型也能根据你的资料正确回答事实（在我们的测试中，最小的模型从 104 题答对 31 题提升到 99 题）。查找用时不到十分之一秒，什么都不会离开手机。"   [1 → 0]
+"Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s."
+   → "预填充在算力最快的地方运行，解码在带宽最大的地方运行。两者并用，可用带宽从约 43 提升到 59 GB/s。"   [1 → 0]
+"Numbers → what to actually do"
+   → "从数字到该做的事"   [1 → 0]
+"Specificity → fewer misinterpretations"
+   → "越具体，误解越少"   [1 → 0]
+"Chain-of-thought: +~40% avg on hard reasoning (Wei et al.); MultiArith 18%→79%. Skip on reasoning models — minimal gain, more latency."
+   → "思维链：难推理题平均提升约 40%（Wei 等人）；MultiArith 从 18% 提升到 79%。推理模型上请跳过——收益很小，延迟更高。"   [1 → 0]
+
+== zh · length (6)
+"Fill in the blanks"
+   → "填空"   [18 → 2]
+"Printed on the load chart (often 9.8 m/s)."
+   → "幅度"   [42 → 2]
+"Potato chips (crisps)"
+   → "薯片"   [21 → 2]
+"home (the house)"
+   → "家"   [16 → 1]
+"work (the workplace)"
+   → "单位"   [20 → 2]
+"school (the place)"
+   → "学校"   [18 → 2]
+
+== zh · english (5)
+"Future forms: will, going to, present continuous"
+   → "将来时形式：will、going to、现在进行时"   [will]
+"Articles: a, an, the, no article"
+   → "冠词：a、an、the、零冠词"   [the]
+"Modal verbs: can, must, should, might"
+   → "情态动词：can、must、should、might"   [should]
+"Relative clauses: who, which, that"
+   → "关系从句：who、which、that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "来自 Open Food Facts 的一百多万种包装食品 — 埃及和阿拉伯产品优先。没有信号也能按名称或条形码搜索。"   [Open]
+
+== ja · numbers (177)
+"Type it as you'd say it — “Ahmed owes me 12,000, 1,000 a month for a year”"
+   → "話すように入力してください — 「アフメドに12,000貸している、月1,000で1年」"   [en 1000 12000 · ja 1 1000 12000]
+"e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor"
+   → "例：マアディで3LDKの賃貸、15,000以下、1階以外"   [en 3 15000 · ja 1 3 15000]
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "効果：小さなモデルでも、資料にある事実を正しく答えます（テストでは、最小モデルで104問中31 → 99問）。調べるのは0.1秒未満で、何もスマホの外に出ません。"   [en 31 99 104 · ja 0.1 31 99 104]
+"The same short task every time (read a site report, write five bullets), so CPU, GPU and draft can be compared on this phone. Takes 10–40 s."
+   → "毎回同じ短いタスク（現場レポートを読み、5つの箇条書きを書く）で、このスマホのCPU、GPU、ドラフトを比較できます。10〜40秒かかります。"   [en 10 40 · ja 5 10 40]
+"Enter a daily target between 800 and 6000 kcal"
+   → "1日の目標は800〜6000 kcalの間で入力してください"   [en 800 6000 · ja 1 800 6000]
+"That's a live-stream link (.m3u8) — it's streamed in pieces and can't be saved as one file."
+   → "それはライブ配信のリンク（.m3u8）です — 分割して配信されるため、1つのファイルとして保存できません。"   [en 3 8 · ja 1 3 8]
+"Free includes 3 video downloads a day — Pro is unlimited"
+   → "無料プランは1日3本まで動画をダウンロードできます — Proは無制限"   [en 3 · ja 1 3]
+"Free includes 5 conversions a day — Pro is unlimited"
+   → "無料プランは1日5回まで変換できます — Proは無制限"   [en 5 · ja 1 5]
+"Free includes 3 deal checks a day — Pro is unlimited"
+   → "無料プランは1日3回までお得度チェックできます — Proは無制限"   [en 3 · ja 1 3]
+"15 a day"
+   → "1日15回"   [en 15 · ja 1 15]
+"3 a day"
+   → "1日3回"   [en 3 · ja 1 3]
+"5 a day"
+   → "1日5回"   [en 5 · ja 1 5]
+"2 a day"
+   → "1日2回"   [en 2 · ja 1 2]
+"Everything runs on your device, so nothing here is metered by a server. Free gives you 15 runs a day; Pro removes the limit and adds memory, commitments and yo
+   → "すべてあなたの端末で動くので、サーバーによる従量制限はありません。Freeは1日15回まで。Proは制限をなくし、メモリー、約束の管理、あなた専用の語彙を追加します。価格は地域別で、決済時に表示されます（EGPや各国通貨）。"   [en 15 · ja 1 15]
+"5 points + one recommendation"
+   → "5つのポイントと1つの提案"   [en 5 · ja 1 5]
+"15 questions a day"
+   → "1日15回まで質問可"   [en 15 · ja 1 15]
+"The same model as below, given the memory to hold a whole book of context at once. On a 48 GB machine the spare RAM is better spent on context than on precisio
+   → "下のモデルと同じものに、本1冊分のコンテキストを一度に保持できるメモリを割り当てています。48 GBのマシンなら、余ったRAMは精度よりコンテキストに使うほうが有効で、契約書全体や1年分のメモを渡しても、すべてを視野に入れたままにできます。"   [en 48 · ja 1 1 48]
+"Estimated as 75% of crane + counterweight + load on one corner — cautious; use the real figure when you have it."
+   → "クレーン、カウンターウェイト、荷重が1つの角にかかるとして75%で推定しています。安全側の値です。実際の数値があればそれを使ってください。"   [en 75 · ja 1 75]
+"Reduced from the chart's {c} m/s: this load catches {p} m² of wind per tonne (charts assume 1.2)."
+   → "荷重表の{c} m/sから低減: この荷は1トンあたり{p} m²の風を受けます（荷重表は1.2を想定）。"   [en 1.2 · ja 1 1.2]
+"The fast one. Runs on the phone's graphics chip: the first words appear in under a second and it writes faster than you can read. Reads photos, English and Ara
+   → "高速タイプ。スマホのグラフィックチップで動き、最初の言葉が1秒未満で表示され、読むより速く書きます。写真を読め、英語とアラビア語に対応します。難しい推論には、下のE4Bのほうが強力です。"   [en 4 · ja 1 4]
+"The stronger fast one: noticeably better answers than the E2B, still on the graphics chip — first words in about a second, then roughly 20–45 words a second on
+   → "より強力な高速タイプ。E2Bより明らかに良い回答が得られ、グラフィックチップで動きます。最初の言葉は約1秒で、フラッグシップなら毎秒およそ20〜45語を書きます。"   [en 2 20 45 · ja 1 2 20 45]
+"This model is large for this phone. It works, but answers come slowly and the phone gets warm. For quick answers use Gemma 4 E2B on the fast engine — reads pho
+   → "このモデルはスマホには大きめです。動作はしますが、回答が遅く、スマホが熱くなります。素早い回答なら、高速エンジンのGemma 4 E2Bをお使いください。写真を読め、最初の言葉は約1秒で出ます。"   [en 2 4 · ja 1 2 4]
+"Gemma 4 E2B on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once."
+   → "グラフィックチップ上のGemma 4 E2B: 最初の言葉が約1秒で、このエンジンの何倍も高速です。{s} GB、一度のみ。"   [en 2 4 · ja 1 2 4]
+"The biggest speed-up on this phone is the fast engine: Gemma 4 E2B on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above.
+   → "このスマホで最も速くなるのは高速エンジンです。グラフィックチップ上のGemma 4 E2Bで、最初の言葉が約1秒で出ます。上の「高速エンジンに切り替える」をタップしてください。"   [en 2 4 · ja 1 2 4]
+"Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”"
+   → "文で言ってください。例: 「Orascomの新首都現場にLTM 1100を10月1日から5日まで、1日25,000」"   [en 1 5 1100 25000 · ja 1 1 5 10 1100 25000]
+"Still working — nothing is stuck. On the CPU a picture takes about 3–10 minutes (edits are slower than new pictures). Keep Attune open; Stop cancels it."
+   → "処理中です。止まってはいません。CPUでは画像1枚に約3〜10分かかります（編集は新規作成より遅くなります）。Attuneを開いたままにしてください。停止でキャンセルできます。"   [en 3 10 · ja 1 3 10]
+"e.g. unpaid invoices over 50,000 · jobs this month by customer · top 5 cranes by revenue"
+   → "例: 5万を超える未払いの請求書 · 今月の顧客別の案件 · 収益上位5台のクレーン"   [en 5 50000 · ja 5 5]
+"The most capable model: text inside pictures, busy scenes, people. Slow on a phone (about 10 minutes a picture), fast on a computer with a graphics card. Needs
+   → "最も高性能なモデル: 画像内の文字、複雑な場面、人物に強い。スマホでは遅く（画像1枚に約10分）、グラフィックカードのあるパソコンでは高速です。12 GBのRAMが必要です。"   [en 10 12 · ja 1 10 12]
+"8 GB or more and fast cores: the sharper XL model in one step"
+   → "8 GB以上と高速コア: シャープなXLモデルを1ステップで"   [en 8 · ja 1 8]
+"Faster and sharper than Turbo, with a better match to what you ask for: about 20 seconds a picture on the CPU. 512 px. For phones with 8 GB RAM or more."
+   → "ターボより高速でシャープ、指示への一致度も向上: CPUで画像1枚約20秒。512 px。RAM 8 GB以上のスマホ向けです。"   [en 8 20 512 · ja 1 8 20 512]
+"Pro on this phone's CPU: 10–20 min a picture"
+   → "このスマホのCPUでプロ: 画像1枚に10〜20分"   [en 10 20 · ja 1 10 20]
+"This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a m
+   → "このスマホのグラフィックチップはスタジオで動作しないため、プロモデルはCPUで画像1枚に10〜20分かかります。スタジオ ターボなら約1分で画像を作れます。"   [en 10 20 · ja 1 1 10 20]
+"Fast pictures on any phone: about a minute without a graphics chip, seconds with one. 512 px — great for ideas, drafts and posts."
+   → "どのスマホでも速い画像: グラフィックチップなしで約1分、あれば数秒。512 px。アイデア、下書き、投稿に最適です。"   [en 512 · ja 1 512]
+"The best photo quality: people, places, products and text in pictures, 1024 px. Also edits a photo you give it (“make it night”, “remove the car”). Needs a wor
+   → "最高の写真品質: 人物、場所、商品、画像内の文字、1024 px。渡した写真の編集も可能です（「夜にして」「車を消して」）。動作するグラフィックチップが必要です。CPUでは画像1枚に10〜20分かかります。"   [en 10 20 1024 · ja 1 10 20 1024]
+"Free includes 2 presentations or reports a day — Pro is unlimited"
+   → "無料プランではプレゼンまたはレポートを1日2件まで作成できます。Proは無制限です"   [en 2 · ja 1 2]
+"Without the graphics chip, the ×4 AI sharpen takes about {m} minutes on this phone. “×2 sharper” takes a second. Start the ×4?"
+   → "グラフィックチップがない場合、このスマホでは×4 AI鮮明化に約{m}分かかります。「×2鮮明化」なら1秒です。×4を開始しますか？"   [en 2 4 4 · ja 1 2 4 4]
+"Free: 2 a day · Pro: unlimited"
+   → "無料：1日2件 · Pro：無制限"   [en 2 · ja 1 2]
+"Best of 2 — two drafts, you pick one (a little slower)"
+   → "2枚から選ぶ：下書きを2枚作り、1枚を選びます（少し遅くなります）"   [en 2 · ja 1 2 2]
+"I couldn't read an amount and who — try: “Ahmed owes me 12,000, 1,000 a month for a year”"
+   → "金額と相手を読み取れませんでした。「アハメドに12,000貸してる、月1,000で1年」のように試してください"   [en 1000 12000 · ja 1 1000 12000]
+"Paste an email or message, or type: “my Netflix trial ends on 20 November”"
+   → "メールやメッセージを貼り付けるか、「Netflixのトライアルは11月20日に終わる」のように入力してください"   [en 20 · ja 11 20]
+"3 times a day"
+   → "1日3回"   [en 3 · ja 1 3]
+"4 times a day"
+   → "1日4回"   [en 4 · ja 1 4]
+"e-VOA or visa on arrival, 30 days, extendable once."
+   → "e-VOAまたはアライバルビザ、30日間、1回延長可。"   [en 30 · ja 1 30]
+"Worked out from the published rules (EU 261, UK 261, Canada's APPR). Airlines sometimes refuse at first — a polite second letter or the national enforcement bo
+   → "公表されている規則（EU 261、UK 261、カナダのAPPR）をもとに計算しました。航空会社は最初は断ることがあります — 丁寧な2通目の手紙か、各国の監督機関に申し立てれば、たいてい解決します。"   [en 261 261 · ja 2 261 261]
+"One file with all of Fleet, locked with your passphrase (AES-256). Without the passphrase nobody can open it — not even us."
+   → "Fleetのすべてを1つのファイルにまとめ、パスフレーズでロックします（AES-256）。パスフレーズがなければ誰も開けません — 私たちでさえも。"   [en 256 · ja 1 256]
+"Gold 24k, a gram"
+   → "金 24K、1 グラム"   [en 24 · ja 1 24]
+"Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay
+   → "数字と日付を言ってください：6 月までに 60,000 貯める · 1 月 20 日までに 6 kg 減らす · 12 月 1 日までに 90 万以下で … を買う · 今月の食費は 3,000 以内 · 12 月までに Ahmed への借金を返す · 12 月までにトルコ語コースを終える。"   [en 1 6 20 900 3000 60000 · ja 1 1 6 6 12 12 12 20 90 3000 60000]
+"Download the eraser first (28 MB, once)."
+   → "先に消しゴムをダウンロードしてください（28 MB、1 回だけ）。"   [en 28 · ja 1 28]
+"Cash or installments, a new flat, a second car — see 2,000 futures from your own money before you decide."
+   → "現金か分割か、新しいマンション、2 台目の車 — 決める前に、あなた自身のお金から 2,000 通りの未来を見てみましょう。"   [en 2000 · ja 2 2000]
+"Best-quality fill — download Eraser HD (208 MB, once)"
+   → "最高品質の補完 — 消しゴム HD をダウンロード（208 MB、1 回だけ）"   [en 208 · ja 1 208]
+"Revolution Day (25 January)"
+   → "革命記念日（1 月 25 日）"   [en 25 · ja 1 25]
+"30 June Revolution"
+   → "6 月 30 日革命記念日"   [en 30 · ja 6 30]
+"Revolution Day (23 July)"
+   → "革命記念日（7 月 23 日）"   [en 23 · ja 7 23]
+"2.5% after a lunar year"
+   → "太陰暦 1 年後に 2.5%"   [en 2.5 · ja 1 2.5]
+"From which day? (e.g. from 10 December)"
+   → "何日から？（例：12 月 10 日から）"   [en 10 · ja 10 12]
+"e.g. “Save 60,000 by June”"
+   → "例：「6 月までに 60,000 貯める」"   [en 60000 · ja 6 60000]
+"Saved by 31 December"
+   → "12 月 31 日までに貯まる額"   [en 31 · ja 12 31]
+"{a} saved · {y} a year · {e} by 31 Dec"
+   → "{a} 貯金済み · 年 {y} · 12 月 31 日までに {e}"   [en 31 · ja 12 31]
+"Invite friends — a month free for each who subscribes (up to 3)"
+   → "友達を招待 — 登録した友達 1 人につき 1 か月無料（最大 3 人）"   [en 3 · ja 1 1 3]
+"Your friend gets a month of Pro. When they subscribe, you get a month free — up to 3 friends. Linked to your Google account."
+   → "友達は Pro を 1 か月もらえます。友達が登録すると、あなたも 1 か月無料 — 最大 3 人まで。Google アカウントに紐づきます。"   [en 3 · ja 1 1 3]
+"Today's price: {p} {c} a gram (24k) — updates by itself twice a day"
+   → "今日の価格：1 グラム {p} {c}（24K）— 1 日 2 回自動更新"   [en 24 · ja 1 1 2 24]
+"Write the amount too, e.g. “save 30k for a sofa by June”"
+   → "金額も書いてください。例：「6 月までにソファ用に 30k 貯める」"   [en 30 · ja 6 30]
+"“save 30k for a sofa by June”"
+   → "「6 月までにソファ用に 30k 貯める」"   [en 30 · ja 6 30]
+"Tell me when hotels near the Haram are under 45k for 4 nights from 10 December"
+   → "12 月 10 日から 4 泊、ハラム近くのホテルが 45k 未満になったら教えて"   [en 4 10 45 · ja 4 10 12 45]
+"Every time the books are opened with a PIN and something changed, an encrypted copy is kept on this phone (last 7 + one per month). It opens only with the PIN 
+   → "PIN で帳簿を開いて何かが変わるたびに、暗号化したコピーをこのスマホに保存します（直近 7 件 + 月 1 件）。その日に使った PIN でのみ開けます。"   [en 7 · ja 1 7]
+"3 times daily"
+   → "1 日 3 回"   [en 3 · ja 1 3]
+"Ask for 6–12 months at most, one city or field, and pay for the time it applies."
+   → "最長 6～12 か月、1 つの都市か分野に限り、その期間の報酬を求めてください。"   [en 6 12 · ja 1 6 12]
+"Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+   → "読み取れませんでした — 食べ物の名前を書いてみてください（例：「卵 2 個とバラディパン 1 枚」）"   [en 2 · ja 1 2]
+"I didn't get that change — try “remove the cola”, “rice 200 g”, “add a spoon of oil”"
+   → "その変更がわかりませんでした — 「コーラを削除」「ライス 200 g」「油をスプーン 1 杯追加」のように試してください"   [en 200 · ja 1 200]
+"What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+   → "何を食べましたか？例：卵 2 個、バラディパン 1 枚、フール 1 皿"   [en 2 · ja 1 1 2]
+"Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds."
+   → "チャットモデルでは写真に 20～30 秒かかります。「高速写真認識」（約 200 MB、1 回だけ）を入手すれば数秒で読み取れます。"   [en 20 30 200 · ja 1 20 30 200]
+"Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+   → "手間なく食事を記録：お皿やメニューを撮る、バーコードをスキャンする、または「卵 2 個とパン 1 枚」と入力するだけ。"   [en 2 · ja 1 2]
+"Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same."
+   → "300 kcal 多く食べる日を選びましょう（週末、家族の夕食）。ほかの日に少し調整するので、1 週間の合計 — と体重プラン — は変わりません。"   [en 300 · ja 1 300]
+"2 handfuls"
+   → "ふたつかみ"   [en 2 · ja ]
+"US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number."
+   → "米海軍方式：ウエストはへその位置（女性は最も細い位置）、首はのど仏の下 — ±3 %。1 回の数値より傾向が大切です。"   [en 3 · ja 1 3]
+"Two picture models (~200 MB, once) that name the food in a photo in a few seconds — your country's dishes first — offline. They learn from the photo meals you 
+   → "2 つの画像モデル（約 200 MB、1 回だけ）が写真の食べ物を数秒で特定します — あなたの国の料理を優先 — オフラインで。保存した写真の食事から学習します。"   [en 200 · ja 1 2 200]
+"Log at least 5 days — a week's picture needs them."
+   → "最低 5 日記録してください — 1 週間の全体像にはそれが必要です。"   [en 5 · ja 1 5]
+"“Lose 6 kg before 20 January”"
+   → "「1 月 20 日までに 6 kg 減らす」"   [en 6 20 · ja 1 6 20]
+"“Tell me when hotels near the Haram are under 45k for 4 nights from 10 December”"
+   → "「12 月 10 日から 4 泊、ハラム近くのホテルが 45k 未満になったら教えて」"   [en 4 10 45 · ja 4 10 12 45]
+"“Hyundai Tucson 2022 used under 1.5M”"
+   → "「中古のヒュンダイ ツーソン 2022、150 万以下」"   [en 1.5 2022 · ja 150 2022]
+"“A week in Istanbul in March, 2 people”"
+   → "「3 月にイスタンブールで 1 週間、2 人」"   [en 2 · ja 1 2 3]
+"“Save 20000 for travel by June”"
+   → "「6 月までに旅行用に 20000 貯める」"   [en 20000 · ja 6 20000]
+"Compare a Corolla 2022 and an Elantra 2022 for a family of five"
+   → "5 人家族向けにカローラ 2022 とエラントラ 2022 を比較して"   [en 2022 2022 · ja 5 2022 2022]
+"Sun 25 Oct · 11:00"
+   → "10 月 25 日（日）· 11:00"   [en 0 11 25 · ja 0 10 11 25]
+"100–120 a minute"
+   → "1 分間に 100～120 回"   [en 100 120 · ja 1 100 120]
+"Found in a screenshot · 3 Oct"
+   → "スクリーンショットで発見 · 10 月 3 日"   [en 3 · ja 3 10]
+"I want to save 50,000 before June"
+   → "6 月までに 50,000 貯めたい"   [en 50000 · ja 6 50000]
+"Wed 21 Oct · 09:00"
+   → "10 月 21 日（水）· 09:00"   [en 0 9 21 · ja 0 9 10 21]
+"Warranty until 12 Mar 2028"
+   → "保証期限 2028 年 3 月 12 日まで"   [en 12 2028 · ja 3 12 2028]
+"14 days — ends 2 Nov"
+   → "14 日間 — 11 月 2 日まで"   [en 2 14 · ja 2 11 14]
+"1 Nov · 2,000"
+   → "11 月 1 日 · 2,000"   [en 1 2000 · ja 1 11 2000]
+"Vodafone 199 · 14 Oct"
+   → "Vodafone 199 · 10 月 14 日"   [en 14 199 · ja 10 14 199]
+"save 20000 for travel by June"
+   → "6 月までに旅行用に 20000 貯める"   [en 20000 · ja 6 20000]
+"First day: 8 Oct"
+   → "初日：10 月 8 日"   [en 8 · ja 8 10]
+"Next period ≈ 5 Nov"
+   → "次の生理 ≈ 11 月 5 日"   [en 5 · ja 5 11]
+"3-bed flat in Maadi under 15,000, not ground floor"
+   → "マアディで 15,000 以下の 3 ベッドルーム、1 階以外"   [en 3 15000 · ja 1 3 15000]
+"12 Oct · the sink"
+   → "10 月 12 日 · シンク"   [en 12 · ja 10 12]
+"Turkey · 3–10 Nov · Egyptian passport"
+   → "トルコ · 11 月 3～10 日 · エジプトのパスポート"   [en 3 10 · ja 3 10 11]
+"6th of October"
+   → "10 月 6 日市"   [en 6 · ja 6 10]
+"One sentence can do two things: “koshary for lunch, 80 pounds” goes to Fit & Food AND Money."
+   → "1 文で 2 つのことができます：「昼にコシャリ、80 ポンド」はフィット＆フードとお金の両方に入ります。"   [en 80 · ja 1 2 80]
+"You get ONE step for today — “spend 2,925 less a month on food → 68%”, or move the date when it is out of reach. Why shows the proof."
+   → "今日の一歩は 1 つだけ —「食費を月 2,925 減らす → 68 %」、届かないときは日付をずらす提案。「なぜ」で根拠を表示。"   [en 68 2925 · ja 1 68 2925]
+"Before a big decision — cash or installments, a new flat, a second car — open “Test a big decision”: 2,000 futures from your own money, with stress tests."
+   → "大きな決断の前に — 現金か分割か、新しいマンション、2 台目の車 —「大きな決断を試す」を開く：あなた自身のお金から 2,000 通りの未来とストレステスト。"   [en 2000 · ja 2 2000]
+"Write one sentence: “a 10-slide pitch for my bakery”."
+   → "1 文で書く：「私のパン屋の 10 枚のピッチ資料」。"   [en 10 · ja 1 10]
+"Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual f
+   → "1 文で書く：「12 月 10 日から 4 泊、ハラム近くのホテルが 45k 未満になったら教えて」「Amazon の注文が届いたら教えて」「Talabat でいつものを注文して」「Uber を開いて」。"   [en 4 10 45 · ja 1 4 10 12 45]
+"Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+   → "欲しいものを一度伝える：「マアディで 15,000 以下の賃貸 3 ベッドルーム、1 階以外」、車、スマホ、金、仕事。"   [en 3 15000 · ja 1 3 15000]
+"Spent something? One sentence on Home: “koshary 80”, “InstaPay 500 to Sara”."
+   → "お金を使った？ホームに 1 文：「コシャリ 80」「InstaPay で Sara に 500」。"   [en 80 500 · ja 1 80 500]
+"Keep a steady pace: 110–170 words a minute."
+   → "一定のペースを保つ：1 分間に 110～170 語。"   [en 110 170 · ja 1 110 170]
+"Inflation at 35% for five years"
+   → "5 年間インフレ 35 %"   [en 35 · ja 5 35]
+"Save 60,000 by June"
+   → "6 月までに 60,000 貯める"   [en 60000 · ja 6 60000]
+"Lose 6 kg before 20 January"
+   → "1 月 20 日までに 6 kg 減らす"   [en 6 20 · ja 1 6 20]
+"Buy a Corolla 2022 under 900k by 1 December"
+   → "12 月 1 日までに 90 万以下でカローラ 2022 を買う"   [en 1 900 2022 · ja 1 12 90 2022]
+"3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+   → "マアディで 15,000 以下の賃貸 3 ベッドルーム、1 階以外、駅の近く"   [en 3 15000 · ja 1 3 15000]
+"Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic"
+   → "ヒュンダイ ツーソン 2019～2021、90 万以下、ワンオーナー、無事故、オートマ"   [en 900 2019 2021 · ja 90 2019 2021]
+"Pre-Islamic buried treasure (rikāz): 20%, with no niṣāb and no waiting year."
+   → "イスラム以前の埋蔵財宝（rikāz）：20%、ニサーブも 1 年の待機も不要。"   [en 20 · ja 1 20]
+"One ṣāʿ (about 2.5–3 kg) of staple food per person, paid before the Eid prayer, for yourself and those you support."
+   → "1 人につき主食 1 サーア（約 2.5～3 kg）を、イードの礼拝前に、自分と扶養する人の分を支払います。"   [en 2.5 3 · ja 1 1 2.5 3]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "数字と日付のある目標を入力：«عايز أوفر 60 ألف قبل يونيو»、«1 月 20 日までに 6 kg 減量»、12 月 1 日までに 900,000 以下の 2022 年式カローラ。「ミッション開始」をタップ。ほかの種類：支出の上限（«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»）、お金 → 人 の借金（«عايز أخلص دي   [en 1 6 20 60 200 2022 3000 900000 · ja 1 1 6 12 12 20 20 60 2022 3000 900000]
+"Say it in the Home box too: «خطة الشهر», “save 20000 for travel by June”."
+   → "ホームの入力欄でも言えます：«خطة الشهر»、«6 月までに旅行用に 20000 貯める»。"   [en 20000 · ja 6 20000]
+"Fleet & rentals → From a message: paste or share a client's WhatsApp («محتاج ونش 50 طن السبت في 6 أكتوبر يومين»). It reads the tons, the day, days or hours and
+   → "車両とレンタル → メッセージから：顧客の WhatsApp を貼り付けるか共有（«محتاج ونش 50 طن السبت في 6 أكتوبر يومين»）。トン数、日にち、日数や時間、現場（10 月 6 日市は都市名）を読み取り、その日に空いているクレーンを一覧に — 合う中で最小のものから。予約済みのものはその仕事を表示します。"   [en 6 6 50 · ja 6 6 10 50]
+"Say what it is and its date — “car licence expires 3 Feb 2027, plate أ ب ج 1234”"
+   → "何かと日付を — 「車検証 2027年2月3日まで、ナンバー ABC 1234」"   [en 3 1234 2027 · ja 2 3 1234 2027]
+"When is it due? Add the date — “… expires 3 Feb 2027”"
+   → "期限はいつ？日付を追加 — 「… 2027年2月3日まで」"   [en 3 2027 · ja 2 3 2027]
+"e.g. car licence expires 3 Feb 2027, plate أ ب ج 1234"
+   → "例：車検証 2027年2月3日まで、ナンバー ABC 1234"   [en 3 1234 2027 · ja 2 3 1234 2027]
+"Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”."
+   → "フォローアップ → ⋯ → 手続き。一度入力：「車検証 2027年2月3日まで、ナンバー أ ب ج 1234」。"   [en 3 1234 2027 · ja 2 3 1234 2027]
+"driving licence expires 20 Nov 2026"
+   → "運転免許 2026年11月20日まで"   [en 20 2026 · ja 11 20 2026]
+"“Car licence expires 3 Feb 2027”"
+   → "「車検証 2027年2月3日まで」"   [en 3 2027 · ja 2 3 2027]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "数字と日付を入れて目標を書く：«عايز أوفر 60 ألف قبل يونيو»、「1月20日までに6キロ減量」、12月1日までに90万以下のカローラ2022。ミッション開始をタップ。ほかの種類：支出の上限（«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»）と お金 → 人 の借金（«عايز أخلص دين أحمد قبل ديسمبر»）   [en 1 6 20 60 2022 3000 900000 · ja 1 1 6 12 20 60 90 2022 3000]
+"I couldn't read that — try: “the maid is now taking 700” or “remind me Sunday at 5 to call the client”"
+   → "わかりませんでした — 例：「家政婦は今700」や「日曜17時に顧客へ電話とリマインド」"   [en 5 700 · ja 17 700]
+"or say it: “visa number H123, valid until 1 Dec 2027”"
+   → "または話す：「ビザ番号H123、2027年12月1日まで有効」"   [en 1 123 2027 · ja 1 12 123 2027]
+"Say a row: “Grove GMK, 100 tons, inspection 4 Dec”"
+   → "1行を話す：「Grove GMK、100トン、点検12月4日」"   [en 4 100 · ja 1 4 12 100]
+"Wedding on 20 December"
+   → "12月20日に結婚式"   [en 20 · ja 12 20]
+"3 a day each"
+   → "それぞれ 1 日 3 回"   [en 3 · ja 1 3]
+"Free includes 3 photo reads a day — Pro is unlimited"
+   → "無料版は写真の読み取りが 1 日 3 回まで — Pro は無制限"   [en 3 · ja 1 3]
+"Free includes 3 chat X-rays a day — Pro is unlimited"
+   → "無料版はチャット X 線が 1 日 3 回まで — Pro は無制限"   [en 3 · ja 1 3]
+"Free includes 3 conversions a day — Pro is unlimited"
+   → "無料版は変換が 1 日 3 回まで — Pro は無制限"   [en 3 · ja 1 3]
+"Free includes 3 presentations or reports a day — Pro is unlimited"
+   → "無料版はプレゼンやレポートが 1 日 3 件まで — Pro は無制限"   [en 3 · ja 1 3]
+"Free: 3 a day · Pro: unlimited"
+   → "無料：1 日 3 回 · Pro：無制限"   [en 3 · ja 1 3]
+"Oct–Apr. May–Sep in Upper Egypt is 40°C+."
+   → "10–4月。5–9月の上エジプトは 40°C 超。"   [en 40 · ja 4 5 9 10 40]
+"Nov–Mar. Summer is 45°C+."
+   → "11–3月。夏は 45°C 超。"   [en 45 · ja 3 11 45]
+"Nov–Mar. Jun–Sep is 45°C and humid."
+   → "11–3月。6–9月は 45°C で湿度が高い。"   [en 45 · ja 3 6 9 11 45]
+"Apr–Jun, Sep–Oct. Inland summer is 40°C+."
+   → "4–6月、9–10月。内陸の夏は 40°C 超。"   [en 40 · ja 4 6 9 10 40]
+"Tuk-tuk 20-baht tour that ends in three gem shops"
+   → "20 バーツのトゥクトゥク観光が宝石店 3 軒で終わる"   [en 20 · ja 3 20]
+"Nov–Mar. Summer is 45°C+ with high humidity."
+   → "11–3月。夏は 45°C 超で湿度が高い。"   [en 45 · ja 3 11 45]
+"Remember the dinar is worth more than 3 dollars — read prices carefully"
+   → "1 ディナールは 3 ドル以上——値段をよく見る"   [en 3 · ja 1 3]
+"Nov–Mar. Summer regularly exceeds 50°C."
+   → "11–3月。夏は 50°C 超がよくある。"   [en 50 · ja 3 11 50]
+"M / D / N · 230V (the big three-pin is unusual — bring an adapter)"
+   → "M / D / N · 230V（大きな 3 ピンのプラグは珍しい——変換プラグを）"   [en 230 · ja 3 230]
+"G (UK three-pin) mostly, some D · 230V"
+   → "主に G（英国式 3 ピン）、時々 D · 230V"   [en 230 · ja 3 230]
+"G (UK three-pin) · 240V"
+   → "G（英国式 3 ピン）· 240V"   [en 240 · ja 3 240]
+"G (UK three-pin) · 230V"
+   → "G（英国式 3 ピン）· 230V"   [en 230 · ja 3 230]
+"29 October (Republic Day) — transport is busy"
+   → "10月29日（共和国記念日）——交通機関が混む"   [en 29 · ja 10 29]
+"Prayer times close shops for ~30 minutes, five times a day"
+   → "礼拝時間には1日5回、店が~30分閉まる"   [en 30 · ja 1 5 30]
+"1 May: almost everything closes"
+   → "5月1日：ほぼすべてが休み"   [en 1 · ja 1 5]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "昼食は14時、夕食は21–22時——スペイン時間で食べないと観光客向けの料理になる"   [en 2 9 10 · ja 14 21 22]
+"15 August: everything full and expensive"
+   → "8月15日：どこも満員で高い"   [en 15 · ja 8 15]
+"Scooter rental per day: 70,000–100,000 IDR"
+   → "スクーターのレンタル1日：70,000–100,000 IDR"   [en 70000 100000 · ja 1 70000 100000]
+"Nyepi (Bali, March): the entire island shuts for 24 hours, including the airport"
+   → "ニュピ（バリ、3月）：空港も含め島全体が24時間止まる"   [en 24 · ja 3 24]
+"Orthodox Christmas (7 Jan) and Easter — quiet, family-focused"
+   → "正教会のクリスマス（1月7日）と復活祭——静かで家族中心"   [en 7 · ja 1 7]
+"Petra one-day ticket: 50 JOD (free with Jordan Pass)"
+   → "ペトラ1日券：50 JOD（Jordan Passで無料）"   [en 50 · ja 1 50]
+"Public transport day ticket: €7–9"
+   → "公共交通の1日券：€7–9"   [en 7 9 · ja 1 7 9]
+"Ramadan and Eid; National Day 18 December"
+   → "ラマダンとイード；建国記念日は12月18日"   [en 18 · ja 12 18]
+"One dinar is ~3.3 USD — a '5' price tag is ~17 dollars"
+   → "1ディナールは~3.3 USD——「5」の値札は~17ドル"   [en 3.3 5 17 · ja 1 3.3 5 17]
+"National and Liberation Days (25–26 Feb) — large celebrations"
+   → "建国記念日と解放記念日（2月25–26日）——大規模な祝賀"   [en 25 26 · ja 2 25 26]
+"Car rental per day: 12–25 OMR"
+   → "レンタカー1日：12–25 OMR"   [en 12 25 · ja 1 12 25]
+"June: Santos Populares street festivals, especially Lisbon on 12–13 June"
+   → "6月：サントス・ポプラーレスの街頭祭り、特にリスボンの6月12–13日"   [en 12 13 · ja 6 6 12 13]
+"King's Day (27 April): the whole country turns orange and nothing runs normally"
+   → "国王の日（4月27日）：国中がオレンジ色になり、何も通常通りには動かない"   [en 27 · ja 4 27]
+"Kruger daily conservation fee: ~R500 for foreign visitors"
+   → "クルーガーの1日自然保護料：外国人は~R500"   [en 500 · ja 1 500]
+"Seaplane transfer: approx. $500–900 per person return"
+   → "水上飛行機の送迎：往復1人約$500–900"   [en 500 900 · ja 1 500 900]
+"Guesthouse on a local island: approx. $60–150 a night"
+   → "ローカル島のゲストハウス：1泊約$60–150"   [en 60 150 · ja 1 60 150]
+"Resort water villa: from approx. $500 a night"
+   → "リゾートの水上ヴィラ：1泊約$500から"   [en 500 · ja 1 500]
+"Masai Mara park fee: approx. $100–200 per day depending on season"
+   → "マサイマラの入園料：季節により1日約$100–200"   [en 100 200 · ja 1 100 200]
+"Mid-range safari: approx. $250–450 per person per day"
+   → "中級サファリ：1人1日約$250–450"   [en 250 450 · ja 1 1 250 450]
+"Serengeti/Ngorongoro fees: approx. $70–100+ per day plus crater fees"
+   → "セレンゲティ/ンゴロンゴロの入園料：1日約$70–100+、さらにクレーター料金"   [en 70 100 · ja 1 70 100]
+"Novruz (around 20–21 March) — a big spring festival; hotels fill up"
+   → "ノウルーズ（3月20–21日ごろ）——春の大きな祭り；ホテルは満室"   [en 20 21 · ja 3 20 21]
+"Navruz (21 March) — celebrations everywhere"
+   → "ナウルーズ（3月21日）——あちこちで祝賀"   [en 21 · ja 3 21]
+"Ćevapi portion: approx. $4–7"
+   → "チェヴァピ1人前：約$4–7"   [en 4 7 · ja 1 4 7]
+"Meze dinner: approx. €20–30 per person"
+   → "メゼのディナー：1人約€20–30"   [en 20 30 · ja 1 20 30]
+"Hire car: approx. €25–45 a day"
+   → "レンタカー：1日約€25–45"   [en 25 45 · ja 1 25 45]
+"1 August (National Day)"
+   → "8月1日（建国記念日）"   [en 1 · ja 1 8]
+"Thanksgiving (late Nov) and 4 July — travel is busy and expensive"
+   → "感謝祭（11月下旬）と7月4日——移動は混雑して高い"   [en 4 · ja 4 7 11]
+
+== ja · symbols (2)
+"Not how you'd put it? Correct it →"
+   → "あなたの履歴から:"   [1 → 0]
+"Specificity → fewer misinterpretations"
+   → "具体的に書くほど誤解が減る"   [1 → 0]
+
+== ja · length (8)
+"Wikipedia · the question leaves the device, the answer is still written here"
+   → "クリア"   [76 → 3]
+"Memory is part of Pro"
+   → "Attuneで実行したものはすべてこの端末にすでに保存されています。"   [21 → 34]
+"Everything you run through Attune is already kept on this device —"
+   → "件"   [66 → 1]
+"Zakāt al-Fiṭr"
+   → "断食明けのザカート（Zakāt al-Fiṭr）"   [13 → 24]
+"Technical inspection"
+   → "車検"   [20 → 2]
+"home (the house)"
+   → "家"   [16 → 1]
+"work (the workplace)"
+   → "職場"   [20 → 2]
+"school (the place)"
+   → "学校"   [18 → 2]
+
+== ja · brand (1)
+"Everything you run through Attune is already kept on this device —"
+   → "件"
+
+== ja · english (5)
+"Future forms: will, going to, present continuous"
+   → "未来の表現：will、going to、現在進行形"   [will]
+"Articles: a, an, the, no article"
+   → "冠詞：a、an、the、冠詞なし"   [the]
+"Modal verbs: can, must, should, might"
+   → "助動詞：can、must、should、might"   [should]
+"Relative clauses: who, which, that"
+   → "関係節：who、which、that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Open Food Facts の 100 万以上の包装食品 — エジプトとアラブの商品を優先。電波がなくても名前やバーコードで検索できます。"   [Open]
+
+== ko · numbers (125)
+"Type it as you'd say it — “Ahmed owes me 12,000, 1,000 a month for a year”"
+   → "말하듯이 입력하세요 — “아흐메드가 나한테 12,000 빚졌고, 1년 동안 매달 1,000씩”"   [en 1000 12000 · ko 1 1000 12000]
+"e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor"
+   → "예: 마아디에서 월세 15,000 이하, 1층 제외, 방 3개 아파트"   [en 3 15000 · ko 1 3 15000]
+"What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a s
+   → "효과: 작은 모델도 내 자료로 사실을 정확히 답해요 (테스트에서 가장 작은 모델이 104개 중 31개 → 99개). 찾는 데 0.1초도 안 걸리고 아무것도 휴대폰 밖으로 나가지 않아요."   [en 31 99 104 · ko 0.1 31 99 104]
+"The same short task every time (read a site report, write five bullets), so CPU, GPU and draft can be compared on this phone. Takes 10–40 s."
+   → "매번 같은 짧은 작업(현장 보고서 읽고 요점 5개 쓰기)으로 이 휴대폰에서 CPU, GPU, 드래프트를 비교해요. 10–40초 걸려요."   [en 10 40 · ko 5 10 40]
+"The same model as below, given the memory to hold a whole book of context at once. On a 48 GB machine the spare RAM is better spent on context than on precisio
+   → "아래와 같은 모델이지만 책 한 권 분량의 맥락을 한 번에 담을 메모리를 줬어요. 48GB 기기에서는 남는 RAM을 정밀도보다 맥락에 쓰는 편이 나아요. 계약서 전체나 1년치 메모를 통째로 주어도 모두 놓치지 않아요."   [en 48 · ko 1 48]
+"The fast one. Runs on the phone's graphics chip: the first words appear in under a second and it writes faster than you can read. Reads photos, English and Ara
+   → "빠른 모델이에요. 휴대폰 그래픽 칩에서 실행돼서 첫 단어가 1초 안에 나오고 읽는 속도보다 빨리 써요. 사진, 영어, 아랍어를 읽어요. 어려운 추론에는 아래 E4B가 더 강해요."   [en 4 · ko 1 4]
+"The stronger fast one: noticeably better answers than the E2B, still on the graphics chip — first words in about a second, then roughly 20–45 words a second on
+   → "더 강한 빠른 모델이에요. E2B보다 답변이 확실히 좋고 여전히 그래픽 칩에서 실행돼요. 첫 단어는 약 1초, 플래그십에서는 초당 약 20~45단어예요."   [en 2 20 45 · ko 1 2 20 45]
+"This model is large for this phone. It works, but answers come slowly and the phone gets warm. For quick answers use Gemma 4 E2B on the fast engine — reads pho
+   → "이 모델은 이 휴대폰에는 커요. 작동은 하지만 답변이 느리고 휴대폰이 따뜻해져요. 빠른 답변에는 빠른 엔진의 Gemma 4 E2B를 쓰세요. 사진을 읽고 첫 단어가 약 1초 안에 나와요."   [en 2 4 · ko 1 2 4]
+"Gemma 4 E2B on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once."
+   → "그래픽 칩의 Gemma 4 E2B: 첫 단어 약 1초, 이 엔진보다 몇 배 빨라요. {s}GB, 한 번만."   [en 2 4 · ko 1 2 4]
+"The biggest speed-up on this phone is the fast engine: Gemma 4 E2B on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above.
+   → "이 휴대폰에서 가장 큰 속도 향상은 빠른 엔진이에요: 그래픽 칩의 Gemma 4 E2B로 첫 단어가 약 1초예요. 위의 “빠른 엔진으로 전환”을 누르세요."   [en 2 4 · ko 1 2 4]
+"Say it in a sentence — e.g. “LTM 1100 for Orascom at New Capital from 1 to 5 October, 25,000 a day”"
+   → "한 문장으로 말하세요 — 예: “Orascom에 New Capital에서 10월 1일부터 5일까지 LTM 1100, 하루 25,000”"   [en 1 5 1100 25000 · ko 1 5 10 1100 25000]
+"This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a m
+   → "이 휴대폰의 그래픽 칩이 Studio와 작동하지 않아서 Pro 모델은 CPU에서 그림당 10~20분이 걸려요. Studio Turbo는 약 1분이면 그려요."   [en 10 20 · ko 1 10 20]
+"Fast pictures on any phone: about a minute without a graphics chip, seconds with one. 512 px — great for ideas, drafts and posts."
+   → "어떤 휴대폰에서도 빠른 그림: 그래픽 칩 없이 약 1분, 있으면 몇 초. 512px — 아이디어, 초안, 게시물에 좋아요."   [en 512 · ko 1 512]
+"Without the graphics chip, the ×4 AI sharpen takes about {m} minutes on this phone. “×2 sharper” takes a second. Start the ×4?"
+   → "그래픽 칩이 없으면 이 휴대폰에서 ×4 AI 선명화에 약 {m}분이 걸려요. “×2 선명하게”는 1초면 돼요. ×4를 시작할까요?"   [en 2 4 4 · ko 1 2 4 4]
+"I couldn't read an amount and who — try: “Ahmed owes me 12,000, 1,000 a month for a year”"
+   → "금액과 사람을 읽지 못했어요 — 이렇게 해 보세요: “아흐메드가 나에게 12,000을 빚졌고, 1년 동안 매달 1,000씩”"   [en 1000 12000 · ko 1 1000 12000]
+"Paste an email or message, or type: “my Netflix trial ends on 20 November”"
+   → "이메일이나 메시지를 붙여 넣거나 이렇게 입력하세요: “내 Netflix 체험이 11월 20일에 끝나”"   [en 20 · ko 11 20]
+"Gold 24k, a gram"
+   → "금 24K, 1그램"   [en 24 · ko 1 24]
+"Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay
+   → "숫자와 날짜를 말하세요: 6월까지 60,000 모으기 · 1월 20일 전에 6kg 감량 · 12월 1일까지 90만 이하로 … 사기 · 이번 달 식비 3,000 이하 · 12월까지 Ahmed 빚 갚기 · 12월까지 튀르키예어 코스 끝내기."   [en 1 6 20 900 3000 60000 · ko 1 1 6 6 12 12 12 20 90 3000 60000]
+"Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero)."
+   → "주의: 모든 선택지에서 10가지 미래 중 1가지 이상 현금이 바닥나요. 가장 안전한 것은 {best}예요(미래의 {ok}%가 0 위에 머물러요)."   [en 1 10 · ko 0 1 10]
+"Revolution Day (25 January)"
+   → "혁명 기념일(1월 25일)"   [en 25 · ko 1 25]
+"30 June Revolution"
+   → "6월 30일 혁명 기념일"   [en 30 · ko 6 30]
+"Revolution Day (23 July)"
+   → "혁명 기념일(7월 23일)"   [en 23 · ko 7 23]
+"2.5% after a lunar year"
+   → "태음력 1년 후 2.5%"   [en 2.5 · ko 1 2.5]
+"From which day? (e.g. from 10 December)"
+   → "며칠부터? (예: 12월 10일부터)"   [en 10 · ko 10 12]
+"e.g. “Save 60,000 by June”"
+   → "예: “6월까지 60,000 모으기”"   [en 60000 · ko 6 60000]
+"Saved by 31 December"
+   → "12월 31일까지 모을 금액"   [en 31 · ko 12 31]
+"{a} saved · {y} a year · {e} by 31 Dec"
+   → "{a} 저축 · 연 {y} · 12월 31일까지 {e}"   [en 31 · ko 12 31]
+"Today's price: {p} {c} a gram (24k) — updates by itself twice a day"
+   → "오늘 시세: 1그램 {p} {c}(24K) — 하루 두 번 자동 업데이트"   [en 24 · ko 1 24]
+"Write the amount too, e.g. “save 30k for a sofa by June”"
+   → "금액도 쓰세요. 예: “6월까지 소파용으로 30k 모으기”"   [en 30 · ko 6 30]
+"“save 30k for a sofa by June”"
+   → "“6월까지 소파용으로 30k 모으기”"   [en 30 · ko 6 30]
+"Tell me when hotels near the Haram are under 45k for 4 nights from 10 December"
+   → "12월 10일부터 4박, 하람 근처 호텔이 45k 미만이 되면 알려 줘"   [en 4 10 45 · ko 4 10 12 45]
+"Every time the books are opened with a PIN and something changed, an encrypted copy is kept on this phone (last 7 + one per month). It opens only with the PIN 
+   → "PIN으로 장부를 열고 무언가가 바뀔 때마다 암호화된 사본을 이 휴대폰에 보관해요(최근 7개 + 월 1개). 그날 사용한 PIN으로만 열려요."   [en 7 · ko 1 7]
+"Says 0% interest — the real cost is checked below."
+   → "무이자라고 하지만 — 실제 비용은 아래에서 확인해요."   [en 0 · ko ]
+"The installments add nothing over the cash price — a real 0%."
+   → "할부 총액이 현금 가격과 같아요 — 진짜 무이자예요."   [en 0 · ko ]
+"Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”"
+   → "읽지 못했어요 — 음식 이름을 써 보세요. 예: “달걀 2개와 발라디 빵 1개”"   [en 2 · ko 1 2]
+"What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful"
+   → "무엇을 드셨나요? 예: 달걀 2개, 발라디 빵 1개, 풀 한 접시"   [en 2 · ko 1 2]
+"Count what you eat without the work: snap your plate or a menu, scan a barcode, or just type “2 eggs and a loaf of bread”."
+   → "힘들이지 않고 식사 기록: 접시나 메뉴를 찍거나, 바코드를 스캔하거나, “달걀 2개와 빵 1개”라고 입력하세요."   [en 2 · ko 1 2]
+"2 handfuls"
+   → "두 줌"   [en 2 · ko ]
+"“Lose 6 kg before 20 January”"
+   → "“1월 20일까지 6kg 감량”"   [en 6 20 · ko 1 6 20]
+"“Tell me when hotels near the Haram are under 45k for 4 nights from 10 December”"
+   → "“12월 10일부터 4박, 하람 근처 호텔이 45k 미만이 되면 알려 줘”"   [en 4 10 45 · ko 4 10 12 45]
+"“Hyundai Tucson 2022 used under 1.5M”"
+   → "“현대 투싼 2022 중고 150만 이하”"   [en 1.5 2022 · ko 150 2022]
+"“A week in Istanbul in March, 2 people”"
+   → "“3월에 이스탄불 일주일, 2명”"   [en 2 · ko 2 3]
+"“Save 20000 for travel by June”"
+   → "“6월까지 여행 자금 20000 모으기”"   [en 20000 · ko 6 20000]
+"Compare a Corolla 2022 and an Elantra 2022 for a family of five"
+   → "5인 가족에게 코롤라 2022와 엘란트라 2022 비교해 줘"   [en 2022 2022 · ko 5 2022 2022]
+"Sun 25 Oct · 11:00"
+   → "10월 25일(일) · 11:00"   [en 0 11 25 · ko 0 10 11 25]
+"Found in a screenshot · 3 Oct"
+   → "스크린샷에서 찾음 · 10월 3일"   [en 3 · ko 3 10]
+"I want to save 50,000 before June"
+   → "6월 전에 50,000 모으고 싶어"   [en 50000 · ko 6 50000]
+"Wed 21 Oct · 09:00"
+   → "10월 21일(수) · 09:00"   [en 0 9 21 · ko 0 9 10 21]
+"Warranty until 12 Mar 2028"
+   → "2028년 3월 12일까지 보증"   [en 12 2028 · ko 3 12 2028]
+"14 days — ends 2 Nov"
+   → "14일 — 11월 2일 종료"   [en 2 14 · ko 2 11 14]
+"1 Nov · 2,000"
+   → "11월 1일 · 2,000"   [en 1 2000 · ko 1 11 2000]
+"Vodafone 199 · 14 Oct"
+   → "Vodafone 199 · 10월 14일"   [en 14 199 · ko 10 14 199]
+"save 20000 for travel by June"
+   → "6월까지 여행 자금 20000 모으기"   [en 20000 · ko 6 20000]
+"First day: 8 Oct"
+   → "첫날: 10월 8일"   [en 8 · ko 8 10]
+"Next period ≈ 5 Nov"
+   → "다음 생리 ≈ 11월 5일"   [en 5 · ko 5 11]
+"3-bed flat in Maadi under 15,000, not ground floor"
+   → "마아디 15,000 이하 방 3개, 1층 제외"   [en 3 15000 · ko 1 3 15000]
+"12 Oct · the sink"
+   → "10월 12일 · 싱크대"   [en 12 · ko 10 12]
+"Turkey · 3–10 Nov · Egyptian passport"
+   → "튀르키예 · 11월 3–10일 · 이집트 여권"   [en 3 10 · ko 3 10 11]
+"6th of October"
+   → "10월 6일 시"   [en 6 · ko 6 10]
+"Before a phone or a fridge on installments, check here: “0% interest” is not always cheaper."
+   → "할부로 휴대폰이나 냉장고를 사기 전에 여기서 확인하세요: “무이자”가 항상 싼 건 아니에요."   [en 0 · ko ]
+"Write one sentence: “tell me when hotels near the Haram are under 45k for 4 nights from 10 December”, “tell me when my Amazon order arrives”, “order my usual f
+   → "한 문장을 쓰세요: “12월 10일부터 4박, 하람 근처 호텔이 45k 미만이 되면 알려 줘”, “아마존 주문 도착하면 알려 줘”, “탈라바트에서 평소 주문해 줘”, “우버 열어 줘”."   [en 4 10 45 · ko 4 10 12 45]
+"Say once what you want: “3-bedroom flat for rent in Maadi under 15,000, not ground floor”, a car, a phone, gold, a job."
+   → "원하는 것을 한 번 말하세요: “마아디 15,000 이하 방 3개 월세, 1층 제외”, 자동차, 휴대폰, 금, 일자리."   [en 3 15000 · ko 1 3 15000]
+"Inflation at 35% for five years"
+   → "5년간 인플레이션 35%"   [en 35 · ko 5 35]
+"Save 60,000 by June"
+   → "6월까지 60,000 모으기"   [en 60000 · ko 6 60000]
+"Lose 6 kg before 20 January"
+   → "1월 20일까지 6kg 감량"   [en 6 20 · ko 1 6 20]
+"Buy a Corolla 2022 under 900k by 1 December"
+   → "12월 1일까지 90만 이하로 코롤라 2022 사기"   [en 1 900 2022 · ko 1 12 90 2022]
+"3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro"
+   → "마아디 15,000 이하 방 3개 월세, 1층 제외, 지하철 근처"   [en 3 15000 · ko 1 3 15000]
+"Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic"
+   → "현대 투싼 2019~2021, 90만 이하, 1인 소유, 무사고, 자동"   [en 900 2019 2021 · ko 1 90 2019 2021]
+"Pre-Islamic buried treasure (rikāz): 20%, with no niṣāb and no waiting year."
+   → "이슬람 이전의 매장물(rikāz): 20%, 니삽도 1년 대기도 없어요."   [en 20 · ko 1 20]
+"One ṣāʿ (about 2.5–3 kg) of staple food per person, paid before the Eid prayer, for yourself and those you support."
+   → "1인당 주식 1사아(약 2.5–3kg)를 이드 예배 전에, 자신과 부양하는 사람 몫으로 내요."   [en 2.5 3 · ko 1 1 2.5 3]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "숫자와 날짜가 있는 목표를 입력하세요: «عايز أوفر 60 ألف قبل يونيو», «1월 20일 전까지 6kg 감량», 12월 1일 전까지 900,000 이하의 2022년식 코롤라. 미션 시작을 누르세요. 다른 종류: 지출 한도(«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»), 돈 → 사람의 빚(«عايز    [en 1 6 20 60 200 2022 3000 900000 · ko 1 1 6 12 12 20 20 60 2022 3000 900000]
+"Say it in the Home box too: «خطة الشهر», “save 20000 for travel by June”."
+   → "홈 입력창에서도 말할 수 있어요: «خطة الشهر», «6월까지 여행 자금 20000 모으기»."   [en 20000 · ko 6 20000]
+"Fleet & rentals → From a message: paste or share a client's WhatsApp («محتاج ونش 50 طن السبت في 6 أكتوبر يومين»). It reads the tons, the day, days or hours and
+   → "차량 및 렌탈 → 메시지에서: 고객의 WhatsApp을 붙여 넣거나 공유하세요(«محتاج ونش 50 طن السبت في 6 أكتوبر يومين»). 톤수, 날짜, 일수나 시간, 현장(10월 6일시는 도시 이름)을 읽고 그날 비어 있는 크레인을 보여 줍니다. 맞는 것 중 가장 작은 것부터, 예약된 것은 해당 작업을 표시합니다."   [en 6 6 50 · ko 6 6 10 50]
+"The year: goals and the 12-month sheet"
+   → "1년: 목표와 12개월 표"   [en 12 · ko 1 12]
+"Say what it is and its date — “car licence expires 3 Feb 2027, plate أ ب ج 1234”"
+   → "무엇인지와 날짜를 말해 주세요 — «자동차 등록증 2027년 2월 3일 만료, 번호판 ABC 1234»"   [en 3 1234 2027 · ko 2 3 1234 2027]
+"When is it due? Add the date — “… expires 3 Feb 2027”"
+   → "기한이 언제예요? 날짜를 추가하세요 — «… 2027년 2월 3일 만료»"   [en 3 2027 · ko 2 3 2027]
+"e.g. car licence expires 3 Feb 2027, plate أ ب ج 1234"
+   → "예: 자동차 등록증 2027년 2월 3일 만료, 번호판 ABC 1234"   [en 3 1234 2027 · ko 2 3 1234 2027]
+"Follow-ups → ⋯ → Errands. Type it once: “car licence expires 3 Feb 2027, plate أ ب ج 1234”."
+   → "후속 조치 → ⋯ → 업무. 한 번만 입력하세요: «자동차 등록증 2027년 2월 3일 만료, 번호판 أ ب ج 1234»."   [en 3 1234 2027 · ko 2 3 1234 2027]
+"driving licence expires 20 Nov 2026"
+   → "운전면허 2026년 11월 20일 만료"   [en 20 2026 · ko 11 20 2026]
+"“Car licence expires 3 Feb 2027”"
+   → "«자동차 등록증 2027년 2월 3일 만료»"   [en 3 2027 · ko 2 3 2027]
+"Type a goal with a number and a date: «عايز أوفر 60 ألف قبل يونيو», “lose 6 kg before 20 January”, a Corolla 2022 under 900,000 before 1 December. Tap Start th
+   → "숫자와 날짜가 있는 목표를 입력하세요: «عايز أوفر 60 ألف قبل يونيو», «1월 20일 전까지 6kg 감량», 12월 1일 전까지 90만 이하 2022 코롤라. 미션 시작을 누르세요. 다른 종류: 지출 한도(«مش عايز أصرف أكتر من 3000 على الأكل الشهر ده»)와 돈 → 사람의 빚(«عايز أخلص دي   [en 1 6 20 60 2022 3000 900000 · ko 1 1 6 12 20 60 90 2022 3000]
+"or say it: “visa number H123, valid until 1 Dec 2027”"
+   → "또는 말하기: “비자 번호 H123, 2027년 12월 1일까지 유효”"   [en 1 123 2027 · ko 1 12 123 2027]
+"Say a row: “Grove GMK, 100 tons, inspection 4 Dec”"
+   → "한 행 말하기: “Grove GMK, 100톤, 점검 12월 4일”"   [en 4 100 · ko 4 12 100]
+"1st session today"
+   → "오늘 첫 번째 세션"   [en 1 · ko ]
+"Wedding on 20 December"
+   → "12월 20일 결혼식"   [en 20 · ko 12 20]
+"A list: shopping (milk, bread), a reminder tomorrow 10:00, the rent 6,000 on the 1st — tick and Save"
+   → "목록: 장보기(우유, 빵), 내일 10시 알림, 1일 월세 6,000 — 체크하고 저장"   [en 0 1 10 6000 · ko 1 10 6000]
+"{t} came up in {c} on 1 day:"
+   → "{t} 이야기가 {c}에서 하루 나왔어요:"   [en 1 · ko ]
+"Oct–Apr. May–Sep in Upper Egypt is 40°C+."
+   → "10–4월. 5–9월 상이집트는 40°C 넘음."   [en 40 · ko 4 5 9 10 40]
+"Nov–Mar. Summer is 45°C+."
+   → "11–3월. 여름은 45°C 넘음."   [en 45 · ko 3 11 45]
+"Nov–Mar. Jun–Sep is 45°C and humid."
+   → "11–3월. 6–9월 45°C에 습함."   [en 45 · ko 3 6 9 11 45]
+"Apr–Jun, Sep–Oct. Inland summer is 40°C+."
+   → "4–6월, 9–10월. 내륙 여름은 40°C 넘음."   [en 40 · ko 4 6 9 10 40]
+"Nov–Mar. Summer is 45°C+ with high humidity."
+   → "11–3월. 여름은 45°C 넘고 매우 습함."   [en 45 · ko 3 11 45]
+"Remember the dinar is worth more than 3 dollars — read prices carefully"
+   → "1디나르가 3달러 넘는다는 걸 기억 — 가격을 잘 보세요"   [en 3 · ko 1 3]
+"Nov–Mar. Summer regularly exceeds 50°C."
+   → "11–3월. 여름은 자주 50°C 넘음."   [en 50 · ko 3 11 50]
+"Count the zeros: 500,000 dong is about 20 dollars"
+   → "0을 세세요: 500,000동은 약 20달러"   [en 20 500000 · ko 0 20 500000]
+"M / D / N · 230V (the big three-pin is unusual — bring an adapter)"
+   → "M / D / N · 230V (큰 3핀 플러그는 흔치 않음 — 어댑터를)"   [en 230 · ko 3 230]
+"G (UK three-pin) mostly, some D · 230V"
+   → "주로 G (영국식 3핀), 가끔 D · 230V"   [en 230 · ko 3 230]
+"G (UK three-pin) · 240V"
+   → "G (영국식 3핀) · 240V"   [en 240 · ko 3 240]
+"G (UK three-pin) · 230V"
+   → "G (영국식 3핀) · 230V"   [en 230 · ko 3 230]
+"29 October (Republic Day) — transport is busy"
+   → "10월 29일(공화국 기념일) — 교통 혼잡"   [en 29 · ko 10 29]
+"1 May: almost everything closes"
+   → "5월 1일: 거의 모든 곳이 문을 닫음"   [en 1 · ko 1 5]
+"Lunch is 2pm, dinner is 9–10pm — eat at Spanish hours or eat tourist food"
+   → "점심은 오후 2시(14시), 저녁은 9–10시(21–22시) — 스페인 시간에 먹지 않으면 관광객 음식"   [en 2 9 10 · ko 2 9 10 14 21 22]
+"15 August: everything full and expensive"
+   → "8월 15일: 모든 곳이 만원이고 비쌈"   [en 15 · ko 8 15]
+"Watch the zeros — 100,000 IDR is a small note"
+   → "0의 개수에 주의 — 100,000 IDR은 소액권"   [en 100000 · ko 0 100000]
+"Nyepi (Bali, March): the entire island shuts for 24 hours, including the airport"
+   → "녜피(발리, 3월): 공항을 포함해 섬 전체가 24시간 멈춤"   [en 24 · ko 3 24]
+"Orthodox Christmas (7 Jan) and Easter — quiet, family-focused"
+   → "정교회 성탄절(1월 7일)과 부활절 — 조용하고 가족 중심"   [en 7 · ko 1 7]
+"Petra one-day ticket: 50 JOD (free with Jordan Pass)"
+   → "페트라 1일권: 50 JOD (Jordan Pass로 무료)"   [en 50 · ko 1 50]
+"Public transport day ticket: €7–9"
+   → "대중교통 1일권: €7–9"   [en 7 9 · ko 1 7 9]
+"Ramadan and Eid; National Day 18 December"
+   → "라마단과 이드; 국경일 12월 18일"   [en 18 · ko 12 18]
+"One dinar is ~3.3 USD — a '5' price tag is ~17 dollars"
+   → "1디나르는 ~3.3 USD — '5' 가격표는 ~17달러"   [en 3.3 5 17 · ko 1 3.3 5 17]
+"National and Liberation Days (25–26 Feb) — large celebrations"
+   → "국경일과 해방기념일(2월 25–26일) — 대규모 축제"   [en 25 26 · ko 2 25 26]
+"June: Santos Populares street festivals, especially Lisbon on 12–13 June"
+   → "6월: 산투스 포풀라레스 거리 축제, 특히 리스본 6월 12–13일"   [en 12 13 · ko 6 6 12 13]
+"King's Day (27 April): the whole country turns orange and nothing runs normally"
+   → "국왕의 날(4월 27일): 전국이 주황색으로 물들고 아무것도 평소대로 돌아가지 않음"   [en 27 · ko 4 27]
+"Notes have many zeros and similar colours — 20,000 and 500,000 are confused constantly"
+   → "지폐에 0이 많고 색이 비슷 — 20,000과 500,000을 늘 헷갈림"   [en 20000 500000 · ko 0 20000 500000]
+"Kruger daily conservation fee: ~R500 for foreign visitors"
+   → "크루거 1일 보존료: 외국인 ~R500"   [en 500 · ko 1 500]
+"Seaplane transfer: approx. $500–900 per person return"
+   → "수상비행기 이동: 1인 왕복 약 $500–900"   [en 500 900 · ko 1 500 900]
+"Guesthouse on a local island: approx. $60–150 a night"
+   → "로컬 섬 게스트하우스: 1박 약 $60–150"   [en 60 150 · ko 1 60 150]
+"Resort water villa: from approx. $500 a night"
+   → "리조트 수상 빌라: 1박 약 $500부터"   [en 500 · ko 1 500]
+"Mid-range safari: approx. $250–450 per person per day"
+   → "중급 사파리: 1인 하루 약 $250–450"   [en 250 450 · ko 1 250 450]
+"Novruz (around 20–21 March) — a big spring festival; hotels fill up"
+   → "노브루즈(3월 20–21일경) — 큰 봄 축제; 호텔 만실"   [en 20 21 · ko 3 20 21]
+"Navruz (21 March) — celebrations everywhere"
+   → "나브루즈(3월 21일) — 곳곳에서 축제"   [en 21 · ko 3 21]
+"Ćevapi portion: approx. $4–7"
+   → "체바피 1인분: 약 $4–7"   [en 4 7 · ko 1 4 7]
+"Meze dinner: approx. €20–30 per person"
+   → "메제 저녁: 1인 약 €20–30"   [en 20 30 · ko 1 20 30]
+"1 August (National Day)"
+   → "8월 1일(건국 기념일)"   [en 1 · ko 1 8]
+"Thanksgiving (late Nov) and 4 July — travel is busy and expensive"
+   → "추수감사절(11월 말)과 7월 4일 — 이동이 붐비고 비쌈"   [en 4 · ko 4 7 11]
+
+== ko · english (5)
+"Future forms: will, going to, present continuous"
+   → "미래 표현: will, going to, 현재 진행형"   [will]
+"Articles: a, an, the, no article"
+   → "관사: a, an, the, 무관사"   [the]
+"Modal verbs: can, must, should, might"
+   → "조동사: can, must, should, might"   [should]
+"Relative clauses: who, which, that"
+   → "관계절: who, which, that"   [which that]
+"Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal."
+   → "Open Food Facts의 100만 개 이상 포장 식품 — 이집트와 아랍 제품 우선. 신호가 없어도 이름이나 바코드로 검색."   [Open]
+
+== ko · length (5)
+"Zakāt al-Fiṭr"
+   → "자카트 알피트르(Zakāt al-Fiṭr)"   [13 → 23]
+"your daughter"
+   → "딸"   [13 → 1]
+"home (the house)"
+   → "집"   [16 → 1]
+"work (the workplace)"
+   → "직장"   [20 → 2]
+"school (the place)"
+   → "학교"   [18 → 2]

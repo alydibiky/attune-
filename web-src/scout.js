@@ -1,3 +1,4 @@
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { tr } from "./i18n.js";
 /* ---- v6.28 Scout — goals that hunt for days (Ali: "I like Scout if it is made correctly, very strong, very accurate and works with
    everything"). You say once what you are looking for — a flat, a car, a product, a job, a supplier, a tender — and Scout searches the
@@ -25,7 +26,7 @@ const KIND_WORDS = [
 ];
 /** "3-bedroom flat in Maadi under 15,000" / «شقة ٣ غرف في المعادي أقل من ١٥ ألف» → the goal: what, where, how much, every wish. */
 export function parseGoal(text) {
-  const raw = String(text || "").trim(), t = fold(raw);
+  const raw = ungroup(String(text || "")).trim(), t = fold(raw);
   let kind = (KIND_WORDS.find(([, re]) => re.test(t)) || ["product"])[0];
   if (kind === "rent" && !KIND_WORDS[4][1].test(t) && !/(flat|apartment|villa|studio|chalet|شقه|فيلا|ستوديو|شاليه|room|غرفه|اوضه)/.test(t)) {
     // "rent a crane", "car rental" → a service / a car, not a home

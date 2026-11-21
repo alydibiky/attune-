@@ -9,6 +9,7 @@
    apply(action, stores, ctx) → { stores: { key: newValue }, done: { en, ar }, open }   (pure; the page writes the keys, keeps the old
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { numWords, notSpent, splitOrders, tidy } from "./sense.js";   // v9.9.17
 import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
@@ -150,6 +151,7 @@ const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|mak
 export const FIT_ARCHIVED = true;
 const FIT_KINDS = new Set(["food", "water", "weight", "workout", "sleep", "period"]);
 export function understand(text0, opts = {}) {
+  text0 = ungroup(text0);
   // v9.9.17 (the 10,000 hard sentences): number words are read as numbers («دفعت ميتين جنيه تاكسي», "spent three hundred on lunch");
   // two orders in one sentence are both done ("paid 300 for lunch and remind me to call Ahmed at 5" was ONE reminder titled "paid
   // 300 for lunch and call Ahmed"); and a sentence that says nothing was paid ("I didn't pay the 300 yet", "the driver wanted 200
@@ -217,7 +219,7 @@ function understand1(text, opts = {}) {
 }
 /** The full reader (meals, water, weight… too) — what Chat used before Fit was archived; Attune Fit can use it as is. */
 export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
-  const t = fixTypos(String(text || "").trim());   // persona 1: "spnt 200 on lunh"
+  const t = fixTypos(ungroup(String(text || "")).trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
   // v9.9 (Ali, with FU6: "edit anything by talking — the maid is now taking 700 and it gets done"): a change to something already in
   // People & plans, from today on (lifeedit.js) — before anything reads it as a new expense or a new plan

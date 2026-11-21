@@ -15,10 +15,11 @@ const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const latin = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/٫/g, ".").replace(/،/g, ",");
 const fold = (s) => latin(s).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه").toLowerCase();
 /** "40,000" / "40k" / "40 الف" / "1.5 مليون" → 40000 */
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { autonomyIn } from "./agents2.js";
 import { tr } from "./i18n.js";   // v9.4 G7
 export function amountIn(s) {
-  const m = /(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|الف|ألف|آلاف|الاف|m|million|مليون)?/i.exec(latin(s)); if (!m) return null;
+  const m = /(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|الف|ألف|آلاف|الاف|m|million|مليون)?/i.exec(ungroup(latin(s))); if (!m) return null;
   let v = parseFloat(m[1].replace(/,/g, "")); const u = (m[2] || "").toLowerCase();
   if (/^(k|thousand|الف|ألف|آلاف|الاف)$/.test(u)) v *= 1000; if (/^(m|million|مليون)$/.test(u)) v *= 1e6;
   return isFinite(v) && v > 0 ? Math.round(v) : null;
@@ -60,7 +61,7 @@ export const dropRule = (rules, key, val) => { const o = { ...rules }; if (val !
 
 /** A sentence → { rules } (what it sets) or null when code can't read it. */
 export function parseRule(text) {
-  const raw = String(text || "").trim(), t = fold(raw);
+  const raw = ungroup(String(text || "")).trim(), t = fold(raw);
   if (!t) return null;
   const r = {};
   // v9.4 G7: how much the agent may do by itself — "only tell me" · "ask me first" · "buy by itself under 7,500"

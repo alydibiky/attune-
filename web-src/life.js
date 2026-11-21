@@ -10,6 +10,7 @@
      every "month" | "week" | "year" | null (once)
    Pure logic; stored in localStorage "attune:life:v1" by the UI. Tests: tests/unit/v727life.test.mjs.                          */
 
+import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
 import { easeDebt } from "./sense.js";
 import { tr } from "./i18n.js";
 import { payCurrency, payNumber } from "./yusr/paytext.js";
@@ -25,19 +26,24 @@ const WORDS_AR = { "واحد": 1, "اتنين": 2, "اثنين": 2, "تلات": 
   "تمن": 8, "تمانيه": 8, "ثماني": 8, "ثمانيه": 8, "تسع": 9, "تسعه": 9, "عشر": 10, "عشره": 10, "حداشر": 11, "اتناشر": 12, "اثنا عشر": 12, "اثني عشر": 12, "عشرين": 20, "تلاتين": 30, "ثلاثين": 30, "خمسين": 50, "مية": 100, "ميه": 100, "مائه": 100 };
 /** Every amount in a text, in order: "12 ألف" → 12000, "1.5k" → 1500, "ألفين" → 2000, "١٢٠٠٠" → 12000. → [{ value, at }] */
 export function amountsIn(text, cur) {
-  const t = fold(text), out = [];
+  const t = fold(ungroup(text, cur)), out = [];
   // v6.27: any number format (1,500.00 · 1.500,00 · 12,50) — payNumber reads it as the payment reader does
-  const re = /(\d[\d,.]*\d|\d)\s*(k|(?:الف|الاف|آلاف|ألف|مليون)(?![ء-ي])|thousand|mil\b|mille|tausend|bin\b|ribu|rb\b|million|millones|millions|millionen|milioni|milyon|juta|m\b)?|(?:^|\s)(الفين|ألفين|الف|ألف)(?=\s|$|[،,.])/gi;
+  // v10.8 (reading every language's lines): a unit is a whole word — "3,500 km", "2,100 kcal", Turkish «1.500 kenara», Indonesian «12.000
+  // kepada», Spanish «61,000 más» were multiplied by a thousand / a million (the k or m of the next word; \b failed before an accented letter)
+  const re = /(\d[\d,.]*\d|\d)\s*((?:k|thousand|mil|mille|tausend|bin|ribu|rb|million|millones|millions|millionen|milioni|milyon|juta|m)(?![\p{L}\d])|(?:الف|الاف|آلاف|ألف|مليون)(?![ء-ي]))?|(?:^|\s)(الفين|ألفين|الف|ألف)(?=\s|$|[،,.])/giu;
   let m;
   while ((m = re.exec(t))) {
     // not money: a count ("12 installments", "36 شهر"), a day ("on the 5th", "يوم 5") or a turn ("my turn is 4", "month 4")
     const after = t.slice(m.index + m[0].length, m.index + m[0].length + 22), before = t.slice(Math.max(0, m.index - 14), m.index);
-    if (!m[3] && !m[2] && (new RegExp("^\\s*(?:st|nd|rd|th|er|º|ª|\\.)?\\s*(?:monthly\\s+|weekly\\s+)?(?:" + UNITS + "|weeks?|years?|days?|اسابيع|سنين|سنوات|ايام|semanas?|semaines?|wochen|settimane|hafta|minggu|años?|ans?|anos?|jahre?|anni|yıl|tahun|días?|jours?|dias?|tage?|giorni|gün|hari)(?![\\p{L}])", "iu").test(after)
-      || /(?:on the|\bday|يوم|turn is|\bturn|\bmonth|دوري|الشهر رقم|\bis)\s*$/i.test(before)   /* v7.9: a whole word — "Saturday 600" is money */ || /^(?:st|nd|rd|th)\b/.test(after)
+    // «salário 25.000 dia 1», "rent 6,000 day 1" — "day" followed by a number is the date, not a count of days
+    const dateNext = /^\s*(?:dia|día|day|jour|tag|giorno|gün|hari)\s+\d/iu.test(after) || /^\s*(?:hari|bulan|minggu|tahun)\s+(?:ini|depan|lalu|senin|selasa|rabu|kamis|jumat|sabtu|minggu)\b/iu.test(after);   // «… bulan ini» = this month   // «1.500 hari ini» = 1,500 today
+    if (!m[3] && !m[2] && !dateNext && (new RegExp("^\\s*(?:st|nd|rd|th|er|º|ª|\\.)?\\s*(?:monthly\\s+|weekly\\s+)?(?:" + UNITS + "|weeks?|years?|days?|اسابيع|سنين|سنوات|ايام|semanas?|semaines?|wochen|settimane|hafta|minggu|años?|ans?|anos?|jahre?|anni|yıl|tahun|días?|jours?|dias?|tage?|giorni|gün|hari)(?![\\p{L}])", "iu").test(after)
+      || /(?:on the|\bday|يوم|turn is|\bturn|\bmonth|دوري|الشهر رقم)\s*$/i.test(before) || (/\bis\s*$/i.test(before) && payNumber(m[1], cur) <= 31)   /* v10.8: "my turn is 4" — but "rent is 20,000" is money */   /* v7.9: a whole word — "Saturday 600" is money */ || /^(?:st|nd|rd|th)(?![\p{L}])/u.test(after)   /* v10.8: Vietnamese «20000 thứ Sáu» is not "20000th" */
       || nextToMonth(before, after))) continue;
     if (m[3]) { out.push({ value: /الفين|ألفين/.test(m[3]) ? 2000 : 1000, at: m.index }); continue; }
     let v = payNumber(m[1], cur); if (!isFinite(v)) continue;
-    const u = (m[2] || "").toLowerCase();
+    let u = (m[2] || "").toLowerCase();
+    if (u === "m" && /\s/.test(m[0].slice(m[1].length, m[0].length - 1))) u = "";   // "2,500 m" is metres; a million is written "2.5m"
     // v9.0 (the plans bank: «أحمد عليه 12000 ألف كل شهر» became 12 million): an Arabic "thousand" after a number of 1,000 or more is
     // a second amount — "12,000, a thousand a month" — nobody writes 12000 ألف for 12 million (that is «12 مليون»)
     if (/^(الف|الاف|آلاف|ألف)$/.test(u) && v >= 1000) { out.push({ value: v, at: m.index }); out.push({ value: 1000, at: m.index + m[0].length - u.length }); continue; }
@@ -233,6 +239,7 @@ function nameBefore(raw, fallback) {
  */
 const BANKS = "bank|cib|nbe|banque misr|qnb|hsbc|aaib|alex bank|adib|emirates nbd|banque du caire|البنك|بنك|بنك مصر|البنك الأهلي|البنك الاهلي";
 function bankLoan(t0) {
+  t0 = ungroup(t0);
   const t = String(t0 || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
   if (!/\bloan\b|قرض|سلفة من البنك/i.test(t)) return t0;
   const bank = new RegExp("(?:from|with|at|من)\\s+((?:the\\s+)?(?:" + BANKS + ")(?:\\s+[A-Z][\\w]*)?)", "i").exec(t);
