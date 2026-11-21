@@ -26,7 +26,7 @@ for (const [id, ex] of Object.entries(DONE)) {
 }
 // v10.8 later: the guide's deeper sections on the Know tab (money, manners, health, costs, getting around, food, laws, dangers,
 // holidays, customs, numbers) — 1,140 more lines; DEEP grows as each language is finished (main languages first, Ali 21 Nov)
-const DEEP = { ar: "AR", arb: "ARB" };
+const DEEP = { ar: "AR", arb: "ARB", es: "ES" };
 const F2 = ["money", "etiquette", "health", "costs", "getAround", "eat", "laws", "dangers", "holidays", "customs", "numbers"];
 const deep = new Set(); for (const p of Object.values(P)) for (const f of F2) (p[f] || []).forEach((x) => deep.add(x));
 ok(deep.size > 1100, "the deeper sections: " + deep.size + " lines");
