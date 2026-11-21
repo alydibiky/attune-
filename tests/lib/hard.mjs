@@ -20,7 +20,7 @@ export function harden(text0, rnd, { keep = null, lang = "", allowCut = true, al
     () => t.replace(/ /g, () => (rnd() < 0.08 ? "  " : " ")),                                 // double spaces
     () => t.replace(/([.،,!؟?]) /, "$1\n"),                                                     // a line break
     () => "‏" + t.replace(/ (\d)/, " ‎$1"),                                           // invisible direction marks
-    () => (/[\u0600-\u06FF]/.test(t) ? t.replace(/\d/g, (d) => AR_DIG[+d]) : t),                // Arabic-Indic digits (the whole message, as phones do — only in Arabic text)
+    () => (/[\u0600-\u06FF]/.test(t) ? t.replace(/(?<![A-Za-z\d])\d+(?![A-Za-z])/g, (m) => m.replace(/\d/g, (d) => AR_DIG[+d])) : t),   // Arabic-Indic digits (the whole message, as phones do — only in Arabic text; v10.8: never a Franco letter inside a Latin word, "eb3atly" stays)
     () => t.replace(/\b(EGP|LE|L\.E)\b/, () => pick(["EGP", "LE", "L.E", "EGP"])).replace(/(جنيه|جم|ج\.م)(?=\s|$)/, () => pick(["جنيه", "جم", "ج.م"])),   // the currency written another way (in the same script)
     () => (/EGP|L\.?E|جنيه|جم|ج\.م|\$|USD|SAR|AED/.test(t) ? t.replace(/(\d),(\d{3})(?!\d)/, "$1$2") : t),   // 1,160 → 1160 (a bank that writes no comma; not 3-decimal money)
     () => t.replace(/(\d)\.00\b/, (m, a) => pick([a, a + ".00", a + ".0"])),                   // .00 or not
