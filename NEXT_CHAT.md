@@ -1,6 +1,17 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
-> ## START HERE (21 Nov 2026 — v10.8 travel guides, Ali: "translate the travel guides" → "do them now" → "do the main languages first")
+> ## START HERE (21 Nov 2026, later — v10.8 travel guides DONE in all 20 languages, Ali: "Continue the other 14 languages")
+> **The Know tab's deeper sections (1,125 lines that were missing) are now in the other 14 languages too: pt it de ru id ur fa bn sw th vi zh
+> ja ko** — so every line a travel guide shows is in all 20 languages. Every number kept (checked line by line; "2pm" may read 14:00).
+> `tests/unit/v1080travel.test.mjs` now checks DEEP for all 20. Checked in the app at 320/390/1366 px in ja ur de th ru sw ko (no sideways
+> scroll, no English deeper line left). Also fixed: the language audit (`tests/unit/v907i18naudit.test.mjs`) had been failing since the
+> first travel batch (65 flags) — "Café con leche" now has a native gloss in the 11 non-Latin-script languages; names that rightly stay as
+> written (Deliveroo / Just Eat, nasi lemak…) and words spelled the same in French/German/Indonesian are listed in `tools/i18n/audit.mjs`
+> (IGNORE / SAME) → "no problems". `tests/setup.sh` now builds the test llama-server without its web UI (`-DLLAMA_BUILD_HTML=OFF
+> -DLLAMA_USE_PREBUILT_UI=OFF`; the tests run it with --no-ui and the prebuilt UI download failed in a fresh cloud session).
+> **Next:** Ali's phone test of a guide in a few languages; then the launch plan's remaining items (LAUNCH_PLAN_2026-12.md).
+>
+> ## (21 Nov 2026 — v10.8 travel guides, Ali: "translate the travel guides" → "do them now" → "do the main languages first")
 > **Travel guides — what is translated (all on main):** (1) the guide lines every tab shows (apps, arrival, overcharges, emergency, money,
 > power, water, visa, best time, tipping, haggling, SIM, connection) + the 92 phrase meanings — **all 20 languages**; (2) the Know tab's
 > 15 section titles ("Money here", "Getting around"…) — all 20; (3) the Know tab's DEEPER sections (money, etiquette, health, costs,
