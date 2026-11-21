@@ -27,7 +27,7 @@ with sync_playwright() as p:
         # a to-do from the box shows on Home and ticks off there
         say(page, "add buy batteries to my to-do list"); go(page, "home")
         check("buy batteries" in page.inner_text("[data-testid=home-todo-card]"), tag + "a to-do added in the box is on Home until it is done")
-        page.locator("[data-testid=home-todo-row]", has_text="buy batteries").click(); page.wait_for_timeout(400)
+        page.locator("[data-tickrow]", has_text="buy batteries").locator("[data-testid=home-todo-row]").click(); page.wait_for_timeout(1100)   # v10.7: the box ticks (the row slides away), the words edit
         check("buy batteries" not in page.inner_text("[data-testid=home-todo]"), tag + "…ticked → gone")
         # a travel list from the box; "I'm travelling tomorrow" brings it to Home
         say(page, "make my travel checklist: passport, charger, Umrah clothes")
@@ -37,7 +37,7 @@ with sync_playwright() as p:
         say(page, "I'm travelling tomorrow"); go(page, "home")
         hl = page.locator("[data-testid=home-list]")
         check(hl.count() == 1 and "0 of 3" in hl.inner_text(), tag + "“I'm travelling tomorrow” → the travel list is on Home: " + (hl.inner_text().replace("\n", " · ") if hl.count() else ""))
-        hl.locator("[data-testid=list-item]").first.click(); page.wait_for_timeout(300)
+        hl.locator("[data-testid=list-item]").first.click(); page.wait_for_timeout(1100)   # v10.7: the row slides away (0.8 s) before the tick is saved
         check("1 of 3" in page.inner_text("[data-testid=home-list]"), tag + "tick on Home → 1 of 3")
         # the page: clear "New list" with "Does it repeat?"
         go(page, "lists")

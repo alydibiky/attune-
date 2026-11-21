@@ -93,13 +93,14 @@ function Tile({ label, mark, value, tone, sub, testid }) {
 
 function TxRow({ t, cur, onClick }) {
   return (
-    <button onClick={onClick} className="w-full text-start flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-[12px] bg-[var(--c-surf-2)] border border-transparent hover:border-[var(--c-ln)] min-h-[56px]" data-testid="money-tx">
-      <span className="flex items-center gap-2.5 min-w-0">
+    <button onClick={onClick} className="w-full text-start flex flex-wrap items-center justify-between gap-x-2.5 gap-y-1 px-3 py-2.5 rounded-[12px] bg-[var(--c-surf-2)] border border-transparent hover:border-[var(--c-ln)] min-h-[56px]" data-testid="money-tx">
+      {/* v10.8: on a very narrow phone the amount drops under the words (flex-wrap) — words are never broken */}
+      <span className="flex items-center gap-2.5 min-w-[190px] flex-1">
         <span className="w-[38px] h-[38px] shrink-0 rounded-[12px] grid place-items-center bg-[var(--c-surf)] border border-[var(--c-ln)] text-[16px]" aria-hidden="true">{t.emoji}</span>
         <span className="min-w-0"><span className="block line-clamp-2 break-words font-bold text-[13.5px]" dir="auto">{t.note || t.catName}</span>   {/* v10.8: two lines on a narrow phone, never cut */}
           <span className={"block line-clamp-2 break-words text-[11.5px] font-semibold " + U.muted} dir="auto">{dayLabel(t.date)}{t.account ? " · " + t.account : ""} · {t.catName}</span></span>
       </span>
-      <span className={"shrink-0 tabular-nums font-extrabold text-[14px] " + (t.type === "income" ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")} dir="ltr">
+      <span className={"shrink-0 ms-auto tabular-nums font-extrabold text-[14px] " + (t.type === "income" ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")} dir="ltr">
         {fmt(t.type === "income" ? t.amount : -t.amount, { sign: true })} {t.currency !== cur ? t.currency : cur}</span>
     </button>);
 }
