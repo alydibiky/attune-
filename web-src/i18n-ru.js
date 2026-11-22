@@ -1726,6 +1726,8 @@ export const RU = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "на сегодня. Pro позволяет по ним искать и находит в них то, что вы обещали сделать. Всё остаётся на телефоне, поэтому прочитать это можете только вы — даже не мы.",
   "See Pro": "Подробнее о Pro",
   "Saved": "Сохранено",
+  "The AI is checking the category…": "ИИ проверяет категорию…",
+  "Checked by the AI: «{c}» — {n}": "Проверено ИИ: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Какого числа? Скажите ещё раз с числом — например, «каждый месяц 5-го оплатить интернет».",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Слишком коротко (слов: {n}) — цель 60–150: что произошло, что сделали вы и результат.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Длинно (слов: {n}) — уложитесь в 2 минуты; сократите предысторию.",

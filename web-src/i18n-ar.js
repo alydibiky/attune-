@@ -912,6 +912,8 @@ export const AR = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "لحد دلوقتي. Pro بيخليك تدوّر فيه، وبيقراه عشان يطلّع الحاجات اللي قلت إنك هتعملها. عمره ما بيخرج من الموبايل، فمحدش غيرك يقدر يقراه — ولا حتى إحنا.",
   "See Pro": "شوف Pro",
   "Saved": "اتحفظ",
+  "The AI is checking the category…": "الذكاء الاصطناعي بيراجع التصنيف…",
+  "Checked by the AI: «{c}» — {n}": "راجعه الذكاء الاصطناعي: «{c}» — {n}",
   "Drop plain text or a .txt/.md/.csv file": "سيب نص عادي أو ملف ‎.txt/.md/.csv",
   "Keep anything": "احفظ أي حاجة",
   "no feature needed — it just goes in": "مش محتاج أي إعداد — بيتضاف على طول",

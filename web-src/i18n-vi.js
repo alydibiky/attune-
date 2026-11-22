@@ -1726,6 +1726,8 @@ export const VI = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "cho đến nay. Pro biến nó thành thứ bạn có thể tìm kiếm, và đọc để tìm những việc bạn đã nói sẽ làm. Nó không bao giờ rời khỏi điện thoại, nên không ai ngoài bạn đọc được — kể cả chúng tôi.",
   "See Pro": "Xem Pro",
   "Saved": "Đã lưu",
+  "The AI is checking the category…": "AI đang kiểm tra danh mục…",
+  "Checked by the AI: «{c}» — {n}": "AI đã kiểm tra: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Ngày nào trong tháng? Nói lại kèm ngày — ví dụ “mỗi tháng vào ngày 5 trả tiền mạng”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Quá ngắn ({n} từ) — nhắm 60–150: chuyện gì đã xảy ra, BẠN đã làm gì và kết quả.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Dài ({n} từ) — giữ dưới 2 phút; cắt bớt phần bối cảnh.",

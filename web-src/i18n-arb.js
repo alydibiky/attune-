@@ -902,6 +902,8 @@ export const ARB = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "حتى الآن. يحوّل Pro ذلك إلى شيء يمكنك البحث فيه، ويقرؤه بحثًا عن أشياء قلت إنك ستفعلها. ولا يغادر الهاتف أبدًا، فلا يستطيع أحد غيرك قراءته — ولا حتى نحن.",
   "See Pro": "اطّلع على Pro",
   "Saved": "تم الحفظ",
+  "The AI is checking the category…": "الذكاء الاصطناعي يراجع التصنيف…",
+  "Checked by the AI: «{c}» — {n}": "راجعه الذكاء الاصطناعي: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "أي يوم من الشهر؟ اكتبها مرة أخرى مع اليوم — مثلًا «كل شهر يوم 5 لدفع الإنترنت».",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "قصيرة جدًا ({n} كلمة) — استهدف 60–150: ماذا حدث، وماذا فعلت، وما النتيجة.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "طويلة ({n} كلمة) — اجعلها أقل من دقيقتين واختصر المقدمة.",

@@ -1726,6 +1726,8 @@ export const ZH = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "项，截至目前。Pro 让它们可以搜索，并从中找出你说过要做的事。它从不离开手机，所以除了你没人能读到 — 包括我们。",
   "See Pro": "了解 Pro",
   "Saved": "已保存",
+  "The AI is checking the category…": "AI 正在核对类别…",
+  "Checked by the AI: «{c}» — {n}": "AI 已核对：«{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "每月几号？请带上日期再说一次——例如“每月 5 号交网费”。",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "太短（{n} 个词）——目标 60–150：发生了什么、你做了什么、结果如何。",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "偏长（{n} 个词）——控制在 2 分钟内；删减背景。",

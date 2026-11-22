@@ -26,6 +26,8 @@ import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { lazyPage, preloadPages } from "./lazy.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale, LANGS as UI_LANGS } from "./i18n.js";
+import * as MAI from "./moneyai.js";
+import * as MCAT from "./moneycat.js";   // v10.8: the model checks money the code wasn't sure of
 import * as UND from "./understand.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -64,7 +66,7 @@ import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { markTried } from "./guide-areas.js";
 import { MoneyCalm, MoneyReport, MoneyBox, MoneyPhoneHead, RightNow } from "./money-calm-ui.jsx";   // v7.2 Money in two levels (Gemini Area 1)
-import { moneyReport, zakatFromSnapshot, ledgerCsv, usedCats } from "./money-report.js";
+import { moneyReport, zakatFromSnapshot, ledgerCsv, usedCats, catName } from "./money-report.js";
 import { findings as guardianFindings, loadGuardian } from "./guardian.js";
 import { sharePdf } from "./share-pdf.js";
 import { fmt as fmtMoneyPlain } from "./money-calm.js";
@@ -8768,6 +8770,7 @@ export default function App() {
   // v9.9.10 the money-notification check by the small model — only while one is loaded (paylog.js judged; never loads one for it)
   useEffect(() => { try { window.__attunePayJudge = modelState === "ready" ? (q) => callClaude(q, { prefix: "payjudge", background: true, maxTokens: 60, temperature: 0, think: false }) : null;
     // v9.9.11: the same small check for "what did the person mean?" when the words alone don't say it (notelabels.js aiPrompt)
+    window.__attuneMoneyAi = modelState === "ready" ? (q) => callClaude(q, { prefix: "moneyfix", background: true, maxTokens: 220, temperature: 0, think: false, json: true }) : null;   // v10.8 (moneyai.js)
     window.__attuneQuickAi = modelState === "ready" ? (q) => callClaude(q, { prefix: "teach", background: true, maxTokens: 40, temperature: 0, think: false }) : null; } catch (e) {} }, [modelState]);
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   // v10.2 (Ali: "a fix for good"): the Autopilot card's "Change" asks the phone's model when the words alone don't say what a chat is
@@ -10315,7 +10318,11 @@ export default function App() {
       return { lines: [{ text: (ar ? "هتفاصل عن: " : tr("Negotiating for you: ")) + hp.what, open: "agents" }], undo: () => { const c = loadAgents(); saveAgents({ ...c, agents: c.agents.filter((x) => x.id !== h.id) }); } }; } }
     // v8.0 Agents: "tell me when hotels near the Haram are under 45k…", "tell me when my Amazon order arrives", "order my usual from
     // Talabat: …" → an agent on the Agents page (asked there if something is missing); "open Uber" opens the app
-    { const ag = teachFirst ? null : parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
+    // v10.8 (Ali's «25000 egp expense under masroof nada for shopping winter clothes» became "New agent: 25000 egp expense · Amazon, noon…"):
+    // money the sentence says was SPENT, or put under one of his categories, is a record — never an order for an agent
+    let spentDone = false; try { const u0 = doUnderstand(text, { now, stores: loadLifeStores() }); const L0 = loadLedger();
+      spentDone = u0.actions.some((a) => a.kind === "money") && (MCAT.SPENT.test(text) || !!(L0 && (MCAT.catNamed(text, L0) || {}).own)); } catch (e) {}
+    { const ag = teachFirst || spentDone ? null : parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() });
       if (ag && ["watch", "track", "order", "buy"].includes(ag.kind)) {
         if (ag.ask || ag.kind === "buy") { try { localStorage.setItem("attune:agents:draft", text); } catch (e) {} navTo("agents"); if (ag.kind === "buy" && !ag.ask) return { lines: [{ text: (ar ? "وكيل شراء: " : tr("Buy agent: ")) + ag.what + (ar ? " — هسألك قبل ما أشتري" : tr(" — I'll ask you before buying")), open: "agents" }], undo: null }; return { lines: [{ text: ar ? "كمّل في صفحة الوكلاء" : tr("Finish it on the Agents page"), open: "agents" }], undo: null }; }
         const a = makeAgent(ag, now), st0 = loadAgents();
@@ -10363,7 +10370,30 @@ export default function App() {
         act: r.followUp ? { label: ar ? r.followUp.ar : tr(r.followUp.en), run: () => r.followUp.actions.map((fa) => { const fr = doApply(fa, loadLifeStores(), { now: Date.now() }); for (const [k, v] of Object.entries(fr.stores || {})) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } return ar ? fr.done.ar : tr(fr.done.en); }).join(" ") } : null });
     }
     const undo = () => { for (const [k, v] of Object.entries(before)) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } extra.forEach((f) => { try { f(); } catch (e) {} }); };
-    return { lines, undo };
+    // v10.8 (Ali: "what's the use of AI if it didn't do anything"): money the code wasn't sure of (Others, the whole sentence as the note,
+    // one of his own categories maybe named) is read again by the model with HIS categories, in the background; code checks its answer
+    // (moneyai.js: his categories only, his amount, words from his sentence) and the result card shows the change with "Put back"
+    const key = now + ":" + Math.random().toString(36).slice(2, 7);
+    try {
+      const L1 = JSON.parse(localStorage.getItem("ledger.v3") || "null");
+      const old = new Set((((before["ledger.v3"] ? JSON.parse(before["ledger.v3"]) : null) || {}).txns || []).map((x) => x.id));
+      const fresh = ((L1 && L1.txns) || []).filter((x) => !old.has(x.id) && "ledger.v3" in before);
+      const askAi = window.__attuneMoneyAi;
+      if (askAi && fresh.length && fresh.length <= 6 && fresh.some((x) => MAI.needsCheck(x, text, L1))) setTimeout(async () => {
+        const say = (d) => { try { window.__attuneMoneyFix = { key, ...d }; window.dispatchEvent(new CustomEvent("attune-moneyfix", { detail: { key, ...d } })); } catch (e) {} };
+        say({ state: "checking" });
+        let raw = ""; try { raw = await askAi(MAI.prompt(text, L1, fresh)); } catch (e) { say({ state: "same" }); return; }
+        const L2 = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (!L2 || !Array.isArray(L2.txns)) { say({ state: "same" }); return; }
+        const fixes = MAI.verify(raw, text, L2, fresh).filter((f) => L2.txns.some((t) => t.id === fresh[f.i].id));
+        if (!fixes.length) { say({ state: "same" }); return; }
+        const was = fixes.map((f) => { const t = L2.txns.find((y) => y.id === fresh[f.i].id); const w = { id: t.id, cat: t.cat, note: t.note }; t.cat = f.cat; t.note = f.note; return w; });
+        try { localStorage.setItem("ledger.v3", JSON.stringify(L2)); } catch (e) {}
+        const f0 = fixes[0];
+        say({ state: "done", cat: catName(L2, f0.cat, ar), note: f0.note, back: () => { try { const L3 = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (!L3) return;
+          for (const w of was) { const t = (L3.txns || []).find((y) => y.id === w.id); if (t) { t.cat = w.cat; t.note = w.note; } } localStorage.setItem("ledger.v3", JSON.stringify(L3)); } catch (e) {} } });
+      }, 50);
+    } catch (e) {}
+    return { lines, undo, key };
   };
   // ---- v6.48 Chat runs the app (CHAT_RUNS_APP.md; Home option A): what the Home box reaches, and the jobs it starts --------------
   const cmdRef = useRef({});
@@ -10477,12 +10507,16 @@ export default function App() {
       detect: (text) => {
         const now = Date.now(); let doActions = 0;
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
-        try { doActions = doUnderstand(text, { now, stores: loadLifeStores() }).actions.filter((a) => a.kind !== "note").length; } catch (e) {}
+        let spentDone = false;
+        try { const u0 = doUnderstand(text, { now, stores: loadLifeStores() }); doActions = u0.actions.filter((a) => a.kind !== "note").length;
+          // v10.8 (Ali's «25000 egp expense under masroof nada for shopping winter clothes» asked "Give it to an agent?"): money the sentence
+          // says was SPENT, or put under one of his categories, is a record — never an order for an agent
+          spentDone = u0.actions.some((a) => a.kind === "money") && (MCAT.SPENT.test(text) || (() => { const L = loadLedger(); const h = L && MCAT.catNamed(text, L); return !!(h && h.own); })()); } catch (e) {}
         try { if (readCountDone(text)) doActions = Math.max(doActions, 1); } catch (e) {}   // v9.9.38 CG-3: "finished another book" is done here
         try { if (boughtFromLists(text)) doActions = Math.max(doActions, 1); } catch (e) {}   // v9.9.40 K3: "I bought the shopping list" is done here
         let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
         // v8.6: an order for an agent ("buy me …", "order my usual …", "tell me when … is under …", "track my Amazon order")
-        let agent = ""; try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
+        let agent = ""; if (!spentDone) try { const ag = parseAgent(text, { now, country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); if (ag && ["buy", "order", "watch", "track"].includes(ag.kind)) agent = ag.kind; } catch (e) {}
         // v9.9.3 L1/L2: teaching Attune ("Nada is my wife", "tell me when my wife gets home") is done in the app, never a Scout search
         let teach = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teach = !!(tx && (tx.kind === "rule" || (tx.kind === "who" && text.split(/\s+/).length <= 7))); } catch (e) {}
         try { if (!teach && AL.readOpen(text)) teach = true; } catch (e) {}

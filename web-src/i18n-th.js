@@ -1726,6 +1726,8 @@ export const TH = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "รายการจนถึงตอนนี้ Pro ทำให้ค้นหาได้ และอ่านหาสิ่งที่คุณบอกว่าจะทำ ข้อมูลไม่ออกจากโทรศัพท์ จึงไม่มีใครอ่านได้นอกจากคุณ — แม้แต่เรา",
   "See Pro": "ดู Pro",
   "Saved": "บันทึกแล้ว",
+  "The AI is checking the category…": "AI กำลังตรวจหมวดหมู่…",
+  "Checked by the AI: «{c}» — {n}": "AI ตรวจแล้ว: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "วันที่เท่าไรของเดือน? พูดอีกครั้งพร้อมวันที่ — เช่น “ทุกเดือนวันที่ 5 จ่ายค่าเน็ต”",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "สั้นเกินไป ({n} คำ) — ตั้งเป้า 60–150: เกิดอะไรขึ้น คุณทำอะไร และผลลัพธ์",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "ยาว ({n} คำ) — ให้ไม่เกิน 2 นาที ตัดเรื่องเบื้องหลังลง",

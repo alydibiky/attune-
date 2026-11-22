@@ -1727,6 +1727,8 @@ export const PT = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "até agora. O Pro transforma isso em algo que você pode pesquisar e procura nele coisas que você disse que faria. Nunca sai do celular, então ninguém além de você pode ler — nem nós.",
   "See Pro": "Ver o Pro",
   "Saved": "Salvo",
+  "The AI is checking the category…": "A IA está conferindo a categoria…",
+  "Checked by the AI: «{c}» — {n}": "Conferido pela IA: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Qual dia do mês? Diga de novo com o dia — ex.: “todo mês no dia 5 pagar a internet”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Curta demais ({n} palavras) — mire em 60–150: o que aconteceu, o que você fez e o resultado.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Longa ({n} palavras) — fique abaixo de 2 minutos; corte o contexto.",

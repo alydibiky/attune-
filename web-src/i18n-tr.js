@@ -1732,6 +1732,8 @@ export const TRK = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "şu ana kadar. Pro bunu aranabilir hâle getirir ve yapacağını söylediğin şeyleri okuyup bulur. Telefondan asla çıkmaz, yani senden başkası okuyamaz, biz bile.",
   "See Pro": "Pro'yu gör",
   "Saved": "Kaydedildi",
+  "The AI is checking the category…": "Yapay zekâ kategoriyi kontrol ediyor…",
+  "Checked by the AI: «{c}» — {n}": "Yapay zekâ kontrol etti: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Ayın hangi günü? Günüyle birlikte tekrar söyle — örn. “her ayın 5'inde interneti öde”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Çok kısa ({n} kelime) — 60–150 hedefle: ne oldu, sen ne yaptın ve sonuç.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Uzun ({n} kelime) — 2 dakikanın altında tut; arka planı kısalt.",

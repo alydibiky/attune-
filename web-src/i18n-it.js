@@ -1727,6 +1727,8 @@ export const IT = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "finora. Pro lo trasforma in qualcosa in cui puoi cercare e ci trova le cose che hai detto che avresti fatto. Non lascia mai il telefono, quindi nessuno tranne te può leggerlo, nemmeno noi.",
   "See Pro": "Scopri Pro",
   "Saved": "Salvato",
+  "The AI is checking the category…": "L'IA sta controllando la categoria…",
+  "Checked by the AI: «{c}» — {n}": "Controllato dall'IA: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Quale giorno del mese? Ridillo con il giorno — es. “ogni mese il 5 pagare internet”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Troppo breve ({n} parole) — punta a 60–150: cosa è successo, cosa hai fatto e il risultato.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Lunga ({n} parole) — resta sotto i 2 minuti; taglia il contesto.",

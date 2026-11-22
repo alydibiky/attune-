@@ -1726,6 +1726,8 @@ export const BN = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "এখন পর্যন্ত। Pro সেগুলোকে খোঁজার মতো করে দেয় আর আপনি যা করবেন বলেছেন তা খুঁজে বের করে। কিছুই ফোন ছেড়ে যায় না, তাই আপনি ছাড়া কেউ পড়তে পারে না — আমরাও না।",
   "See Pro": "Pro দেখুন",
   "Saved": "সেভ হয়েছে",
+  "The AI is checking the category…": "AI বিভাগটি যাচাই করছে…",
+  "Checked by the AI: «{c}» — {n}": "AI যাচাই করেছে: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "মাসের কোন দিন? দিনসহ আবার বলুন — যেমন “প্রতি মাসের ৫ তারিখে ইন্টারনেট বিল দিতে”।",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "খুব ছোট ({n} শব্দ) — ৬০–১৫০ লক্ষ্য রাখুন: কী হয়েছিল, আপনি কী করেছিলেন আর ফল।",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "লম্বা ({n} শব্দ) — ২ মিনিটের কম রাখুন; পটভূমি ছেঁটে দিন।",

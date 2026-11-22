@@ -1727,6 +1727,8 @@ export const UR = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "اب تک۔ Pro اسے ایسی چیز بنا دیتا ہے جس میں آپ تلاش کر سکیں، اور اسے پڑھ کر وہ باتیں نکالتا ہے جو آپ نے کرنے کا کہا تھا۔ یہ فون سے باہر نہیں جاتا، اس لیے آپ کے سوا کوئی نہیں پڑھ سکتا — ہم بھی نہیں۔",
   "See Pro": "Pro دیکھیں",
   "Saved": "محفوظ ہو گیا",
+  "The AI is checking the category…": "AI زمرہ جانچ رہا ہے…",
+  "Checked by the AI: «{c}» — {n}": "AI نے جانچا: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "مہینے کا کون سا دن؟ دن کے ساتھ دوبارہ کہیں — مثلاً “ہر مہینے 5 تاریخ کو انٹرنیٹ کا بل دینا”۔",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "بہت مختصر ({n} الفاظ) — 60–150 کا ہدف رکھیں: کیا ہوا، آپ نے کیا کیا اور نتیجہ۔",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "لمبا ({n} الفاظ) — 2 منٹ سے کم رکھیں؛ پس منظر مختصر کریں۔",

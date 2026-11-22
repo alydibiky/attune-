@@ -1726,6 +1726,8 @@ export const FA = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "تا اینجا. Pro آن را به چیزی قابل جستجو تبدیل می‌کند و آن را برای کارهایی که گفته‌اید انجام می‌دهید می‌خواند. هرگز از گوشی بیرون نمی‌رود، پس جز شما کسی نمی‌تواند بخواند — حتی ما.",
   "See Pro": "دیدن Pro",
   "Saved": "ذخیره شد",
+  "The AI is checking the category…": "هوش مصنوعی دسته را بررسی می‌کند…",
+  "Checked by the AI: «{c}» — {n}": "بررسی‌شده با هوش مصنوعی: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "کدام روز ماه؟ دوباره با روزش بگویید — مثلاً «هر ماه روز ۵ قبض اینترنت را بپرداز».",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "خیلی کوتاه ({n} کلمه) — ۶۰ تا ۱۵۰ را هدف بگیرید: چه شد، شما چه کردید و نتیجه.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "طولانی ({n} کلمه) — زیر ۲ دقیقه نگه دارید؛ پیش‌زمینه را کوتاه کنید.",

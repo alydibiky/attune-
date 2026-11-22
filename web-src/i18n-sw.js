@@ -1727,6 +1727,8 @@ export const SW = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "hadi sasa. Pro hukigeuza kuwa kitu unachoweza kutafuta, na hukisoma kupata mambo uliyosema utafanya. Hakitoki kwenye simu kamwe, kwa hiyo hakuna anayeweza kukisoma isipokuwa wewe — hata sisi.",
   "See Pro": "Angalia Pro",
   "Saved": "Imehifadhiwa",
+  "The AI is checking the category…": "AI inakagua aina…",
+  "Checked by the AI: «{c}» — {n}": "Imekaguliwa na AI: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Siku gani ya mwezi? Sema tena pamoja na siku — mf. “kila mwezi tarehe 5 kulipa intaneti”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Fupi mno (maneno {n}) — lenga 60–150: kilichotokea, ulichofanya wewe, na matokeo.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Ndefu (maneno {n}) — iwe chini ya dakika 2; punguza maelezo ya awali.",

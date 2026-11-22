@@ -1727,6 +1727,8 @@ export const HI = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "चीज़ें अब तक। Pro इसे खोजने लायक बनाता है, और इसमें से वे काम ढूँढता है जो आपने करने को कहे थे। यह कभी फ़ोन से बाहर नहीं जाता, इसलिए आपके सिवा कोई इसे नहीं पढ़ सकता — हम भी नहीं।",
   "See Pro": "Pro देखें",
   "Saved": "सेव हुआ",
+  "The AI is checking the category…": "AI श्रेणी जाँच रहा है…",
+  "Checked by the AI: «{c}» — {n}": "AI ने जाँचा: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "महीने का कौन-सा दिन? दिन के साथ फिर से कहें — जैसे “हर महीने 5 तारीख को इंटरनेट का बिल भरना”।",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "बहुत छोटा ({n} शब्द) — 60–150 रखें: क्या हुआ, आपने क्या किया और नतीजा।",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "लंबा ({n} शब्द) — 2 मिनट से कम रखें; पृष्ठभूमि छोटी करें।",

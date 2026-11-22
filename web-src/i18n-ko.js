@@ -1726,6 +1726,8 @@ export const KO = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "지금까지. Pro는 이를 검색할 수 있게 하고, 하겠다고 말한 일을 찾아줘요. 휴대폰 밖으로 나가지 않아서 나 말고는 아무도 읽을 수 없어요. 저희도요.",
   "See Pro": "Pro 보기",
   "Saved": "저장됨",
+  "The AI is checking the category…": "AI가 카테고리를 확인하는 중…",
+  "Checked by the AI: «{c}» — {n}": "AI가 확인함: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "매달 며칠인가요? 날짜를 넣어 다시 말해 주세요 — 예: “매달 5일에 인터넷 요금 내기”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "너무 짧아요({n}단어) — 60–150단어를 목표로: 무슨 일이 있었고, 내가 무엇을 했고, 결과가 어땠는지.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "길어요({n}단어) — 2분 이내로; 배경 설명을 줄이세요.",

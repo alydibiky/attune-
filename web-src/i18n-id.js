@@ -1727,6 +1727,8 @@ export const IDN = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "sejauh ini. Pro membuatnya bisa dicari, dan membacanya untuk menemukan hal yang Anda janjikan. Semuanya tidak pernah keluar dari ponsel, jadi tidak ada yang bisa membacanya selain Anda — bahkan kami pun tidak.",
   "See Pro": "Lihat Pro",
   "Saved": "Tersimpan",
+  "The AI is checking the category…": "AI sedang memeriksa kategorinya…",
+  "Checked by the AI: «{c}» — {n}": "Diperiksa AI: «{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "Tanggal berapa? Katakan lagi dengan tanggalnya — mis. “setiap bulan tanggal 5 bayar internet”.",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "Terlalu pendek ({n} kata) — targetkan 60–150: apa yang terjadi, apa yang kamu lakukan, dan hasilnya.",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "Panjang ({n} kata) — jaga di bawah 2 menit; potong latar belakangnya.",

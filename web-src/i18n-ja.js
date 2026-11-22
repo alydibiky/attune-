@@ -1726,6 +1726,8 @@ export const JA = {
   "so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.": "Proなら、それを検索できるようにし、あなたが「やる」と言ったことも読み取ります。データは端末の外に出ないので、あなた以外は誰も読めません。私たちにも読めません。",
   "See Pro": "Proを見る",
   "Saved": "保存済み",
+  "The AI is checking the category…": "AI がカテゴリを確認しています…",
+  "Checked by the AI: «{c}» — {n}": "AI が確認：«{c}» — {n}",
   "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.": "毎月何日ですか？日付を入れてもう一度どうぞ——例：「毎月5日にネット代を払う」。",
   "Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.": "短すぎます（{n} 語）——60〜150 語を目安に：何が起きたか、あなたが何をしたか、結果。",
   "Long ({n} words) — keep it under 2 minutes; cut the background.": "長めです（{n} 語）——2 分以内に。背景は削りましょう。",
