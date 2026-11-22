@@ -1,5 +1,17 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (22 Nov 2026, later — Ali: "U never fix it for good … what's the use of AI if it didn't do anything")
+> **Money, the final shape:** (1) code reads and saves at once — `moneycat.js`: HIS category named in any spelling (en / Franco / ar,
+> "under / category / تحت / بند / في / من / على"), the note = only what it was; whole sentence decides when there is one amount; it also
+> wins over a savings goal / subscription / workout / unasked reminder when the money was said spent or the category said as one.
+> (2) when the code is NOT sure (Others, note ≈ the sentence, his categories exist) the MODEL re-reads it in the background with his
+> category list — `moneyai.js` + `window.__attuneMoneyAi` (set while the model is ready); (3) code checks the model's answer (his
+> categories only, his amount, his words) and the result card shows "Checked by the AI: «…» — …" with **Put back** (doit-ui.jsx).
+> Also: money said to be spent is never an agent (Ali's English sentence became "New agent: 25000 egp expense · Amazon, noon…" — the
+> detector AND doFromHome's own agent step). Tests: tests/moneycat/gen.mjs, tests/moneyai/gen.mjs (10,000 + held-out, 100 %),
+> e2e_v1080moneyai.py, units v1080moneycat / v1080moneyai. Reminders: nth weekday (nth:N:W on page, desktop, Reminders.kt) and
+> "every month" with no day asks which day. P8: docs/P8_PHONE_TEST.md — waiting for Ali's screenshots.
+>
 > ## START HERE (22 Nov 2026 — v10.8: Ali: "read every line of the 18 languages" + "re-run the 9 persona reviews")
 > 1. **Languages** — `tools/i18n/deep.mjs` reads every line of the 19 dictionaries (numbers, English left inside, wrong script, symbols,
 >    length, and SHIFTED / SWAPPED lines judged by length, end mark, numbers and a related language); the 320 most-used lines were read by
