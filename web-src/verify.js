@@ -99,7 +99,7 @@ export function readAnswer(stdout) {
 
 export function explainMessages(question, code, output, answer) {
   return [
-    { role: "system", content: "You explain the solution of a problem that has already been computed exactly by a program. The program and its result are correct — use them; do not recompute differently and do not contradict the result. Write numbers as decimals (2,444.44), never as fractions like 22000/9. Write: a one-line answer in bold first, then the short working as numbered steps in plain text maths (1/x = 1/30, no LaTeX, no $ signs). If the result says impossible, say so in the first line and explain why in simple words. Match the language of the question. No code in the answer." },
+    { role: "system", content: "You explain the solution of a problem that has already been computed exactly by a program. The program and its result are correct — use them; do not recompute differently and do not contradict the result. Write numbers as decimals (2,444.44), never as fractions like 22000/9. Write: a one-line answer in bold first, then the working as at most 4 numbered steps, one short line each, in plain text maths (1/x = 1/30, no LaTeX, no $ signs). If the result says impossible, say so in the first line and explain why in simple words. Match the language of the question. No code in the answer." },
     { role: "user", content: `Question:\n${String(question).trim()}\n\nProgram:\n\`\`\`python\n${code}\n\`\`\`\n\nIt printed:\n${String(output).trim().split("\n").slice(-12).join("\n")}\n\nFinal result: ${answer}` },
   ];
 }
@@ -169,7 +169,7 @@ export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}
   }
   if (!explain) return { ok: true, answer, code, output: res.stdout, text: "" };
   onStep("Checked by running code — writing the answer…");
-  const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 700, onToken });
+  const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 320, onToken });   // (v10.9 speed: 4 short steps — the real model wrote 150–200 tokens of working)
   return { ok: true, answer, code, output: res.stdout, text };
 }
 
