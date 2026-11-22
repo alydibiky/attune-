@@ -152,11 +152,37 @@ export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}
     if (!next) return { ok: false, why: "no program", code };
     code = next;
   }
-  const answer = readAnswer(res.stdout);
+  let answer = readAnswer(res.stdout);
+  // v10.9 (the real phone model through Chat: the crane rent + 14 % tax came out 562,500 — the program used 14 instead of 0.14, and
+  // "checked by running code" was shown on it): a result bigger than every number in the question multiplied together, plus its
+  // percentage, can't be right — the program is sent back once with the reason; still impossible → not shown as checked
+  if (implausible(question, answer)) {
+    onStep("Fixing the program and running it again…");
+    const again = await llm([...fixSolveMessages(question, code, `The result ${answer} is impossible for this question. A percentage like 14% means multiply by 0.14 (or by 1.14 to add it on) — never by 14.`)], { maxTokens: 900 });
+    const next = programFrom(again);
+    const r2 = next ? await runPy(next) : null;
+    const a2 = r2 && r2.ok ? readAnswer(r2.stdout) : null;
+    if (!a2 || implausible(question, a2)) return { ok: false, why: "implausible", code, output: res.stdout };
+    code = next; res = r2; answer = a2;
+  }
   if (!explain) return { ok: true, answer, code, output: res.stdout, text: "" };
   onStep("Checked by running code — writing the answer…");
   const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 700, onToken });
   return { ok: true, answer, code, output: res.stdout, text };
+}
+
+/** v10.9: is this result impossible for the question? (a % question whose result is bigger than all its other numbers multiplied
+ *  together and the percentage added on — "14 %" used as ×14). Only judged when the question has a percentage below 100. */
+export function implausible(question, answer) {
+  const q = String(question || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٪/g, "%");
+  const a = Number((String(answer || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).match(/-?\d[\d,]*(?:\.\d+)?/) || [""])[0].replace(/,/g, ""));
+  if (!isFinite(a) || !a) return false;
+  const pcts = (q.match(/\d+(?:\.\d+)?\s*%/g) || []).map((x) => parseFloat(x)).filter((x) => x > 0 && x < 100);
+  if (!pcts.length) return false;
+  const nums = (q.replace(/\d+(?:\.\d+)?\s*%/g, " ").match(/\d[\d,]*(?:\.\d+)?/g) || []).map((x) => Number(x.replace(/,/g, ""))).filter((x) => x > 0);
+  if (!nums.length || nums.length > 5) return false;
+  const pc = Math.max(...pcts) / 100, most = nums.reduce((m, x) => m * Math.max(1, x), 1) * Math.max(1 + pc, 1 / (1 - pc));   // ("the price before a 25 % discount" is 1 / 0.75 of it)
+  return Math.abs(a) > most * 1.05 + 1;
 }
 
 // ---- arithmetic slips in an ordinary answer ----------------------------------------------
