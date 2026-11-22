@@ -66,7 +66,7 @@
 > "M-Pesa …" stays right-to-left); "Everything else about KENYA" → the country's own name. Checked at 320/390/1366 px in 7 languages.
 >
 > ## (20 Nov 2026, later — v10.8: launch items 1–6, Ali: "Do first 6" + "I won't be able to reach any testers for the other languages")
-> **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/DxuJVkUozBd3UHUgvSFNux (docs/mockups/launch-store.html) — store page
+> **Waiting for Ali's picks** (MOCKUPS rule): https://claude.ai/artifact/4nddgVxWY9MqAw3VSpLHjZ (docs/mockups/launch-store.html) — store page
 > ST1–ST3, screenshots SS1–SS2, crash reports CR1/CR3, languages on the first install LG1/LG2, the support e-mail MAIL (rec. ST1 SS1 CR3 LG1).
 > Then build: the store listing (STORE_LISTING.md, AR + EN, 6 screenshots) and the crash log + Send a report (BatteryGuard's log goes in it).
 > **Speed (L4)** with a phone filled like his (3,000 kept notifications, 900 payments, 250 reminders), CPU ×4: Recall 8.6 s → 0.5–0.9 s

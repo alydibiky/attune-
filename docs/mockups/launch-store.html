@@ -77,12 +77,12 @@ section > p { margin: 0; color: var(--mut); max-width: 75ch }
 <p class="lede">These parts of the launch list change what people see, so you pick first. Tick, add a note on any option, then <b>Copy my picks</b> and paste them to me. Everything else on the list doesn't change the look, so I'm working on it now.</p>
 <p class="quote">"Do first 6, also for ur information I won't be able to reach any testers for the other languages"</p></header>
 
-<div class="fixed"><h2>Being done now (no choice needed)</h2><ul>
-<li><b>Size.</b> The phone APK is <span class="num">88 MB</span>. The Play version already leaves Python out: it downloads the first time someone uses code, which saves <span class="num">19 MB</span>. I'm also removing the words of removed features from all 20 languages (about a quarter of them). And the two photo readers (text and barcodes) will come from Google Play services instead of inside the app. Nothing on screen changes.</li>
-<li><b>Every Arabic screen</b> (Settings, Chat, Writing, Lists, Travel, Projects, Tools, Setup and the rest): read and fixed in Egyptian Arabic.</li>
-<li><b>Speed</b>: every page measured with a full phone at a mid-range phone's speed. The goal is under 1 second to open.</li>
-<li><b>Battery</b>: everything that runs in the background is checked and anything wasteful is cut. A small battery log is added so your phone gives real 24-hour numbers.</li>
-<li><b>The 18 other languages, without testers</b>: I read every line in each language, translate it back to English, and fix wrong meanings. Each fix gets a test.</li>
+<div class="fixed"><h2>Already done (no choice needed)</h2><ul>
+<li><b>Size</b>: Python leaves the Play version (<span class="num">19 MB</span> saved), only the words the app still shows are shipped, and the photo readers come from Google Play services. Nothing on screen changed.</li>
+<li><b>Every Arabic screen</b> read and fixed in Egyptian Arabic, plus 117 lines that were still showing in English.</li>
+<li><b>Speed</b>: with a full phone, the longest freeze after opening went from 3.1 s to about 1 s.</li>
+<li><b>Battery</b>: background work stops on battery saver or under 15 %, and a battery log feeds the problem report.</li>
+<li><b>The 18 other languages</b>: every line checked by code, the 320 most-used lines read by hand. Fixed a Japanese block where every Cancel button was wrong, a Bengali swap, From / To meanings, and amounts like "12.000".</li>
 </ul></div>
 
 <section><h2>ST · The store page (what people read before installing)</h2>
