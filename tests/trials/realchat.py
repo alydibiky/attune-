@@ -63,7 +63,7 @@ def main():
                 for _ in range(int(os.environ.get('RC_WAIT', '1200'))):   # up to 10 min
                     page.wait_for_timeout(500); ctx.clock.run_for(500)
                     r = page.evaluate(LAST)
-                    if r["n"] > n0 and not r["streaming"] and (r["text"] or r["card"] or r["err"]): break
+                    if r["n"] > n0 and not r["streaming"] and (r["text"] or r["card"] or (r["err"] and "app was closed" not in r["err"])): break
                 r["wall"] = round(time.time() - t0, 1); r["q"] = t
                 r["calls"] = page.evaluate("() => (window.__mock.bodies || []).map(b => (b.max_tokens || 0) + ':' + String((b.messages || []).slice(-1)[0]?.content || '').slice(0, 40).replace(/\\n/g, ' '))")
                 if r["streaming"]: print("   STILL STREAMING, phase:", r.get("phase"), flush=True)

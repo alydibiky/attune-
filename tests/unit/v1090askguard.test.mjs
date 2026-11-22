@@ -53,6 +53,25 @@ for (const l of ["ar", "arb", "es", "fr", "de", "pt", "it", "ru", "tr", "id", "h
   const D = fs.readFileSync(new URL(`../../web-src/i18n-${l}.js`, import.meta.url), "utf8");
   ok([AG.REFUSE_EN, AG.FAST_EN, "Answering again…", "**You paid {who} {a}** {p} · {n} entries."].every((k) => D.includes(JSON.stringify(k))), `the new lines are in ${l}`);
 }
+// v10.9 round 2 — what the REAL phone model (Blaze, tests/trials/realchat.py) got wrong through the real Chat, each fixed by code
+{
+  const V = await import("../../web-src/verify.js"), D = await import("../../web-src/doit.js"), LA = await import("../../web-src/lifeask.js"), SK = await import("../../web-src/skills.js"), B = await import("../../web-src/boost.js");
+  const crane = "إيجار ونش 3 أيام بـ 12,500 في اليوم وعليهم 14٪ ضريبة، المجموع كام؟", car = "عربية بـ 900 ألف مقدم 30% والباقي على 5 سنين، القسط الشهري كام من غير فوايد؟";
+  ok(V.implausible(crane, "562500") && !V.implausible(crane, "42750"), "562,500 for the crane rent (14 used as ×14) is caught; 42,750 is not");
+  ok(!V.implausible(car, "10500") && !V.implausible("A jacket is 1,800 after a 25% discount. What was the price before", "2400"), "«900 ألف» is 900,000, and 'the price before a discount' may be bigger — right answers pass");
+  ok(V.readAnswer("ANSWER: 22000/9") === "2444.44" && V.readAnswer("ANSWER: 3/11") === "3/11", "a fraction answer (22000/9) becomes 2444.44; a date stays a date");
+  ok(/10,080 minutes/.test(AG.unitNote("how many minutes are in a week")) && /10,080/.test(AG.unitNote("كام دقيقة في الأسبوع؟")), "minutes in a week worked out by the phone (the model said 1,008)");
+  ok(/8 February 2027/.test(AG.hijriNote("When is Ramadan 2027 expected to start?")) || !AG.hijriNote("When is Ramadan 2027 expected to start?"), "Ramadan 2027 from the Umm al-Qura calendar: 8 February (the model said March)");
+  ok(D.understand("15% tip on 640 pounds", { now: Date.now() }).actions.length === 0, "'15% tip on 640 pounds' is a sum to work out, not a 640 expense");
+  ok(D.understand("صرفت 150 على الغدا", { now: Date.now() }).actions[0].kind === "money", "…while «صرفت 150 على الغدا» is still money");
+  ok(LA.chatAsk("what should I eat before the gym", {}) === null, "'what should I eat before the gym' is advice, never 'Nothing spent on Health'");
+  ok(SK.skillFor("عاصمة كندا ايه").id === "fact" && SK.skillFor("what is inflation").id === "explain", "a one-fact question gets one sentence (the model padded 'Ottawa is Canada's biggest city')");
+  ok(!/2–5 short bullets/.test(B.compactSystem("x")) && /one fact gets one line/.test(B.compactSystem("x")), "the small model is no longer told to always add 2–5 bullets");
+  ok(/Never leave placeholders/.test(SK.SKILLS.find((x) => x.id === "email").recipe), "emails are written ready to send, no [Your Name]");
+  const A = fs.readFileSync(new URL("../../web-src/attune.jsx", import.meta.url), "utf8");
+  ok(/q0\.kind !== "none" && q0\.at && q0\.title/.test(A) && /ma\.repeat = q0\.repeat/.test(A), "a reminder code reads completely is used as code read it (the model made 'every first Monday' weekly)");
+  ok(/AG\.fastingAsk\(typed\)\) \{/.test(C) && /const chatTr = /.test(C) && /api\.doSure\(typed\) && \(api\.doKinds\(typed\)/.test(C), "fasting answered by the ruling; 'translate …' done in Chat; «صرفت 150 على الغدا» saved at once");
+}
 ok(RESULT.ok / RESULT.n >= 0.995, `2,500 cases: ${RESULT.ok}/${RESULT.n}`);
 ok(RESULT.share >= 0.6, `different shapes ${(100 * RESULT.share).toFixed(1)} %`);
 console.log(fail ? `FAIL ${fail}/${n}` : `PASS ${n}/${n}`);

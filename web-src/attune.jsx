@@ -10110,14 +10110,20 @@ export default function App() {
       const now = Date.now();
       // (the 1M test: "cancel my reminder to call the bank" — with the AI on, the model made a NEW reminder): what code knows is NOT a
       // reminder to make (cancelling one) is said before the model is asked
-      { let q = null; try { q = quickAction(text, now); } catch (e) {} if (q && q.kind === "none" && (q.problems || []).length) return { action: q, via: "phone" }; }
+      let q0 = null; try { q0 = quickAction(text, now); } catch (e) {}
+      if (q0 && q0.kind === "none" && (q0.problems || []).length) return { action: q0, via: "phone" };
+      // v10.9 (the real phone model run: "remind me every first Monday of the month to call mum" — the model made it WEEKLY, all day):
+      // what code reads completely (a kind, a time, a title, no problem) is used as it is — faster, and the repeat rules are code's
+      if (q0 && q0.kind && q0.kind !== "none" && q0.at && q0.title && !(q0.problems || []).length) return { action: q0, via: "phone" };
       const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready"));
       if (modelOn) {
         try {
           const raw = await LocalEngine.run("", null, { messages: actionMessages(text, now), grammar: ACTION_GRAMMAR,
             temperature: 0, maxTokens: ACTION_MAX_TOKENS, think: false });
           const j = JSON.parse(String(raw).trim());
-          return { action: buildAction(j, text, now), via: "model" };
+          const ma = buildAction(j, text, now);
+          if (q0 && q0.repeat && q0.repeat !== "none" && ma && ma.kind === "reminder") { ma.repeat = q0.repeat; if (q0.at) ma.at = q0.at; ma.allDay = !!q0.allDay; }   // the repeat is code's
+          return { action: ma, via: "model" };
         } catch (e) { /* no model answer: the phone's own reading below */ }
       }
       return { action: quickAction(text, now), via: "phone" };
