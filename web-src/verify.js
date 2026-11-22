@@ -176,7 +176,10 @@ export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}
 /** v10.9: is this result impossible for the question? (a % question whose result is bigger than all its other numbers multiplied
  *  together and the percentage added on — "14 %" used as ×14). Only judged when the question has a percentage below 100. */
 export function implausible(question, answer) {
-  const q = String(question || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٪/g, "%");
+  // («900 ألف» is 900,000 — the real model run: the 10,500 instalment was judged impossible against "900")
+  const q = String(question || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٪/g, "%")
+    .replace(/(\d+(?:\.\d+)?)\s*(ألف|الف|آلاف|الاف|thousand|k\b)/gi, (m, n) => String(Math.round(parseFloat(n) * 1e3)))
+    .replace(/(\d+(?:\.\d+)?)\s*(مليون|ملايين|million|mn\b|m\b)/gi, (m, n) => String(Math.round(parseFloat(n) * 1e6)));
   const a = Number((String(answer || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).match(/-?\d[\d,]*(?:\.\d+)?/) || [""])[0].replace(/,/g, ""));
   if (!isFinite(a) || !a) return false;
   const pcts = (q.match(/\d+(?:\.\d+)?\s*%/g) || []).map((x) => parseFloat(x)).filter((x) => x > 0 && x < 100);

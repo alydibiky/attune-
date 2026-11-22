@@ -815,7 +815,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
 
     // v6.48 Translate mode: the message is translated by the checked engine (numbers, names kept; each piece checked)
-    if (trMode && typed && !img && !fileAtt) {
+    // v10.9 (the real phone model run: «ترجم للإنجليزي: فاتورة رقم 4471…» in Chat said "Working on it — the result shows on Home"):
+    // "translate …" typed in Chat is translated right here, by the same checked engine as Translate mode
+    const chatTr = !trMode && route && typed && !img && !fileAtt && /^\s*(?:please\s+)?(?:translate|ترجم(?:لي|ها|ه)?)(?![\p{L}])/iu.test(typed) && typed.split(/\s+/).length >= 3;
+    if ((trMode || chatTr) && typed && !img && !fileAtt) {
       const to = K.langIn(typed) || (/[\u0600-\u06ff]/.test(typed) ? "en" : "ar");
       const body = K.stripLang(typed.replace(/^\s*(translate|ترجم(لي)?)\s*(this|it|ده|دي)?\s*[:\-]?\s*/i, "")) || typed;
       const cid = ensureChat(typed), aiId = newId();
@@ -835,6 +838,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed), ar = /[\u0600-\u06ff]/.test(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
         { id: newId(), role: "assistant", text: AG.refusal(ar), refused: true, streaming: false }] }));
+      setText(""); return;
+    }
+
+    // v10.9 (the real phone model, twice: «ينفع أشرب قهوة وأنا صايم؟» → «مسموح … من المباح»): a settled ruling is given by code, not guessed
+    if (typed && !img && !fileAtt && AG.fastingAsk(typed)) {
+      const cid = ensureChat(typed), ar = /[\u0600-\u06ff]/.test(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
+        { id: newId(), role: "assistant", text: AG.fastingAnswer(ar), ruleFixed: true, streaming: false }] }));
       setText(""); return;
     }
 
@@ -948,6 +959,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
     const pay = route && !img && !agentK ? api.parsePayment(typed) : null;
     if (pay && pay.ok && typed.length < 600 && !/[?؟]\s*$/.test(typed) && ok("money-log")) {
+      // v10.9 (the real phone model run: «صرفت 150 على الغدا» asked to confirm in Money, while the English sentence was saved at once):
+      // money you say you spent is saved here as on Home — "Done", with Undo
+      if (api.doIt && api.doKinds && api.doSure && api.doSure(typed) && (api.doKinds(typed) || []).includes("money")) {
+        const r = api.doIt(typed);
+        if (r && r.lines && r.lines.length) {
+          const cid = ensureChat(typed);
+          patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
+            { id: newId(), role: "assistant", card: { tone: "emerald", title: "Done", detail: r.lines.map((x) => "• " + x.text).join("\n"), actions: [["Open Money", "open:money"], ...(r.undo ? [["Undo", "undo"]] : [])] }, undo: r.undo || null, askText: typed }] }));
+          setText(""); return;
+        }
+      }
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: said },
@@ -1864,6 +1886,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const bareQ = typed ? typed + (fastK ? AG.FAST_FACT : "") + (futK ? AG.FUTURE_NOTE : "") + langHint(typed) : "";
       if (answer == null && fastK) content += AG.FAST_FACT;
       if (answer == null && futK) content += AG.FUTURE_NOTE;
+      if (answer == null && typed) content += AG.unitNote(typed) + AG.hijriNote(typed);
       content += langHint(typed);
       const plain = answer == null;   // written by the model directly (not checked by code / votes)
       if (answer == null) try {

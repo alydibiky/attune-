@@ -19,7 +19,7 @@ export const SKILLS = [
     "Give ONLY the translation, ready to copy. Keep names, numbers and units exactly. If a phrase has no direct equivalent, add one short note at the end in brackets."),
   R("email",
     /\b(write|draft|reply|compose)\b.{0,40}\b(email|e-mail|message|letter|whatsapp|reply|post|caption)\b|\b(email|letter|message) (to|for)\b|اكتب(لي)?\s+(ايميل|إيميل|رسالة|جواب|خطاب|بوست|رد)|رد على/i,
-    "Write the finished text first, ready to send: (subject line if it is an email), greeting, 2–4 short paragraphs, a clear request or next step, sign-off. Match the tone asked (formal by default for clients). No explanation before it; at most one line of notes after it."),
+    "Write the finished text first, ready to send: (subject line if it is an email), greeting, 2–4 short paragraphs, a clear request or next step, sign-off. Match the tone asked (formal by default for clients). Never leave placeholders like [Your Name] or [Date] — write it ready to send, and leave out what you don't know. No explanation before it; at most one line of notes after it."),
   R("compare",
     /\b(vs\.?|versus|compare|comparison|difference between|differences|better than|which (one )?is better|same as|or the)\b|الفرق بين|قارن|مقارنة|أحسن من|احسن من|ولا\s+\S+\s*[؟?]\s*$|نفس ال/i,
     "Recipe: line 1 = the verdict in **bold** (e.g. **No — they are different models.**). Then a table | Point | A | B | with 4–7 rows of CONCRETE differences (size, capacity, price class, features, best use). Then one line: \"Choose A if …; choose B if …\". Only facts you are sure of — write \"not sure\" in a cell rather than guess."),

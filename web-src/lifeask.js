@@ -378,6 +378,9 @@ const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|
 export function chatAsk(q, stores, { now = Date.now() } = {}) {
   const t = String(q || "").trim();
   if (!t || t.length > 160 || !QUESTION.test(t)) return null;
+  // v10.9 (the real phone model run: "what should I eat before the gym" was answered "Nothing spent on Health this month"): a request for
+  // advice is not a question about your records
+  if (/\bwhat (?:should|can|could) (?:i|we) (?:eat|do|wear|buy|cook|say|read|watch|drink|take)\b|\b(?:any )?tips\b|\badvice\b|\bhow (?:do|can|should) i (?:start|stop|get|lose|gain|improve|learn)\b|(?<![\p{L}])(?:آكل|اكل|ألبس|البس|أطبخ|اطبخ|أشرب|اشرب) (?:ايه|إيه)|نصايح|نصيحة|انصحني/iu.test(t)) return null;
   const members = (stores && stores.care && stores.care.members) || [];
   if (!MINE.test(t) && !memberAsked(t, members)) return null;
   const k = kindOf(t, stores);

@@ -24,7 +24,7 @@ INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('a
         " window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...window.__mock.engine } })); } w(); })();") % json.dumps(json.dumps(LEDGER))
 LAST = """() => { const c = JSON.parse(localStorage.getItem('attune:chats:v1') || '[]'); const list = Array.isArray(c) ? c : (c.chats || []);
   const ch = list.slice().sort((a, b) => (b.updated || 0) - (a.updated || 0))[0] || { messages: [] }; const a = ch.messages.filter((m) => m.role === 'assistant');
-  const m = a[a.length - 1] || {}; return { n: list.reduce((k, x) => k + (x.messages || []).length, 0), phase: m.phase || '', text: m.text || '', card: m.card ? (m.card.title + ' — ' + (m.card.detail || '')) : '', streaming: !!m.streaming, err: m.error || '',
+  const m = a[a.length - 1] || {}; return { n: list.reduce((k, x) => k + (x.messages || []).length, 0), phase: m.phase || '', text: m.text || '', card: m.card ? (m.card.title + ' — ' + (m.card.detail || '')) : m.actionCard && m.status !== 'reading' ? ('[action ' + m.status + '] ' + JSON.stringify(m.action || m.plan || {}).slice(0, 200)) : '', streaming: !!m.streaming, err: m.error || '',
   from: [m.knowledgeUsed ? 'pack-shown' : '', (m.kchips || []).length ? 'pack-used' : '', m.verified ? 'code-checked' : '', m.askedAgain ? 'asked-again' : '', m.ruleFixed ? 'rule-fixed' : '', m.refused ? 'refused' : '', (m.sources || []).length ? 'web' : ''].filter(Boolean).join(','), secs: m.secs || 0 }; }"""
 
 def main():

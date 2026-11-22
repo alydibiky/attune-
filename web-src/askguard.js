@@ -170,3 +170,42 @@ export function payee(text) {
   if (/^(?:ال|لل)/.test(w) || NOT_A_NAME.has(w.toLowerCase()) || NOT_A_NAME.has(w)) return "";
   return w;
 }
+
+// ---- 11. how many minutes in a week (the real phone model said 1,008) ------------------------------------------------------------------
+const U = { second: 1, minute: 60, hour: 3600, day: 86400, week: 604800, month: 2629746, year: 31536000 };
+const UW = [["second", /^(?:seconds?|secs?|ثواني|ثانية|ثانيه|ثانيا)$/i], ["minute", /^(?:minutes?|mins?|دقايق|دقائق|دقيقة|دقيقه)$/i], ["hour", /^(?:hours?|hrs?|ساعات|ساعة|ساعه)$/i],
+  ["day", /^(?:days?|ايام|أيام|يوم)$/i], ["week", /^(?:weeks?|اسابيع|أسابيع|اسبوع|أسبوع)$/i], ["month", /^(?:months?|شهور|أشهر|شهر)$/i], ["year", /^(?:years?|سنين|سنوات|سنة|سنه|عام)$/i]];
+const unitOf = (w) => { const x = String(w || "").replace(/^ال/, ""); const f = UW.find(([, re]) => re.test(x)); return f ? f[0] : null; };
+/** "how many minutes are in a week?", «كام دقيقة في الأسبوع؟» → the note with the number worked out here (or ""). */
+export function unitNote(text) {
+  const t = cleanA(text);
+  const m = /\bhow many (\w+) (?:are )?(?:there )?in (?:a |an |one |1 )?(\w+)/i.exec(t) || /(?<![\p{L}])كام (\p{L}+) (?:في|فى|ف) (?:ال)?(\p{L}+)/u.exec(t);
+  if (!m) return "";
+  const a = unitOf(m[1]), b = unitOf(m[2]);
+  if (!a || !b || U[b] <= U[a]) return "";
+  const n = U[b] / U[a], v = Number.isInteger(n) ? n.toLocaleString("en-US") : (Math.round(n * 100) / 100).toLocaleString("en-US");
+  return `\n\n(Worked out by the phone: 1 ${b} = ${v} ${a}s${b === "month" ? " on average" : b === "year" ? " (a leap year has one day more)" : ""}. Give exactly this number.)`;
+}
+
+// ---- 12. when Ramadan / Eid starts (the real phone model said "around March 2027"; it is about 8 Feb) ------------------------------------
+const HIJRI = [["Ramadan", 9, 1, R(/ramadan|رمضان/i)], ["Eid al-Fitr", 10, 1, R(/eid al[- ]?fitr|عيد الفطر|العيد الصغير/i)], ["Eid al-Adha", 12, 10, R(/eid al[- ]?adha|عيد الأضحى|العيد الكبير/i)]];
+function hijriParts(d) {
+  try { const p = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "numeric", year: "numeric" }).formatToParts(d);
+    const g = (k) => +((p.find((x) => x.type === k) || {}).value || 0); return { d: g("day"), m: g("month") }; } catch (e) { return null; }
+}
+/** "When is Ramadan 2027?", «رمضان الجاي امتى؟» → the expected date, worked out from the Umm al-Qura calendar (or ""). */
+export function hijriNote(text, now = Date.now()) {
+  const t = cleanA(text);
+  if (!/\b(when|start|begin|date|what day)\b|امتي|امتى|إمتى|هيبدا|يبدا|بيبدا|اول يوم|أول يوم|ميعاد|موعد|تاريخ/i.test(t)) return "";
+  const ev = HIJRI.find(([, , , re]) => re.test(t)); if (!ev) return "";
+  const y = +((t.match(/\b(20[2-4]\d)\b/) || [])[1] || 0);
+  const from = y ? new Date(y, 0, 1) : new Date(now), to = y ? new Date(y, 11, 31) : new Date(now + 400 * 864e5);
+  for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+    const h = hijriParts(d); if (!h) return "";
+    if (h.m === ev[1] && h.d === ev[2]) {
+      const iso = d.toISOString().slice(0, 10);
+      return `\n\n(Worked out by the phone from the Umm al-Qura calendar: ${ev[0]} ${y || ""} is expected to start on ${d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} (${iso}); the exact day depends on the moon sighting and may differ by one day. Give this date.)`.replace("  ", " ");
+    }
+  }
+  return "";
+}

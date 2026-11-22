@@ -227,6 +227,9 @@ function understand1(text, opts = {}) {
   // ("the code is 4821", "we are 4 people", "I ran 5 km") is not a payment at all — it goes to the answer, not to "Which did you mean?"
   if (u.actions.length && u.actions.every((a) => a.kind === "money")) {
     const t0 = String(text || "").trim();
+    // v10.9 (the real phone model run: "15% tip on 640 pounds" was saved as a 640 expense): a percentage OF an amount, with no word saying
+    // it was paid, is a sum to work out — «خصم 10% على 500», "20% of 3000", "15% tip on 640"
+    if (/\d\s*[%٪]\s*(?:tip|of|on|off|discount|vat|tax|from|خصم|من|على|ضريب[ةه]|بقشيش)|(?:tip|discount|خصم|بقشيش)\s+(?:of\s+)?\d+\s*[%٪]/i.test(t0.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))) && !MONEY_VERB.test(t0)) return { actions: [], chat: true };
     if (!CURRENCY.test(t0) && !MONEY_VERB.test(t0) && (REQ.test(t0) || (NOT_A_LOG.test(t0) && !/\bremind(?:er)?\b|فكرني|ذكرني|نبهني/i.test(t0)) || u.actions.every((a) => (a.items || []).every((x) => !amountIsMoney(t0, x.amount))))) return { actions: [], chat: true };
   }
   const actions = u.actions.filter((a) => !FIT_KINDS.has(a.kind));
