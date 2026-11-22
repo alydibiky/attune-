@@ -101,7 +101,9 @@ export function noKnowledgeLine(answer) {
   const text = String(answer || "").replace(/[\u200e\u200f\u061c]/g, "").replace(/[ \t]{2,}/g, " ").replace(NOKNOW, "").replace(/\n{3,}/g, "\n\n").trim();
   // what is left once the polite filler is gone ("Hope this helps!", "---", "Sources: none", an emoji): nothing real → empty
   const real = text.split("\n").filter((l) => !/^\s*[*_>•\-#\d٠-٩.)\s]*(?:hope (?:this|that|it) helps!?|let me know[^\n]*|i hope[^\n]*|sources?:? ?none|_?sources?:? none_?|أتمنى[^\n]*|اتمنى[^\n]*|بالتوفيق[^\n]*|-{3,}|[\p{Extended_Pictographic}\s]*)[*_.!\s]*$/iu.test(l)).join("\n");
-  return { text, empty: real.replace(/[\s*_.•\-]/g, "").length < 12 };
+  // (only when such a line WAS there: "12 edges." on its own is a whole answer)
+  const had = text !== String(answer || "").replace(/[\u200e\u200f\u061c]/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  return { text, empty: had && real.replace(/[\s*_.•\-]/g, "").length < 12 };
 }
 
 // ---- 7. dangerous how-to ------------------------------------------------------------------------------------------------------------------

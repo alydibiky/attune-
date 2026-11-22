@@ -27,6 +27,7 @@ ok(AG.fastingAsk("ينفع أشرب قهوة بعد الفطار؟") === null, "
 ok(AG.future("مين هيكسب كاس العالم الجاي؟") && /nobody can know/.test(AG.FUTURE_NOTE), "the next World Cup: the model is told nobody can know");
 ok(AG.adviceNotNews("الجو حر جدا النهارده أعمل إيه") && !wantsWeb("الجو حر جدا النهارده أعمل إيه"), "«الجو حر جدا النهارده أعمل إيه» gets tips, not a web search (it found Facebook posts)");
 ok(wantsWeb("سعر جرام الدهب عيار 21 النهارده كام؟"), "…while today's gold price still searches the web");
+ok(!AG.noKnowledgeLine("12 edges.").empty && AG.noKnowledgeLine("12 edges.").text === "12 edges.", "a short real answer (\"12 edges.\") is never taken for an empty one (e2e_v511 caught it)");
 // Ahmed
 const L = { currency: "EGP", accounts: [{ id: "a", currency: "EGP" }], txns: [
   { type: "expense", amount: 500, cat: "other", note: "لأحمد السباك", date: "2026-11-10", account: "a" },

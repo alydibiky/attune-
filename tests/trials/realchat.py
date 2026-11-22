@@ -24,7 +24,7 @@ INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('a
         " window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...window.__mock.engine } })); } w(); })();") % json.dumps(json.dumps(LEDGER))
 LAST = """() => { const c = JSON.parse(localStorage.getItem('attune:chats:v1') || '[]'); const list = Array.isArray(c) ? c : (c.chats || []);
   const ch = list.slice().sort((a, b) => (b.updated || 0) - (a.updated || 0))[0] || { messages: [] }; const a = ch.messages.filter((m) => m.role === 'assistant');
-  const m = a[a.length - 1] || {}; return { n: ch.messages.length, text: m.text || '', card: m.card ? (m.card.title + ' — ' + (m.card.detail || '')) : '', streaming: !!m.streaming, err: m.error || '',
+  const m = a[a.length - 1] || {}; return { n: list.reduce((k, x) => k + (x.messages || []).length, 0), phase: m.phase || '', text: m.text || '', card: m.card ? (m.card.title + ' — ' + (m.card.detail || '')) : '', streaming: !!m.streaming, err: m.error || '',
   from: [m.knowledgeUsed ? 'pack-shown' : '', (m.kchips || []).length ? 'pack-used' : '', m.verified ? 'code-checked' : '', m.askedAgain ? 'asked-again' : '', m.ruleFixed ? 'rule-fixed' : '', m.refused ? 'refused' : '', (m.sources || []).length ? 'web' : ''].filter(Boolean).join(','), secs: m.secs || 0 }; }"""
 
 def main():
@@ -39,26 +39,38 @@ def main():
         br = p.chromium.launch()
         ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
         ctx.clock.install(time=NOW)
+        if os.environ.get("RC_NET"):
+            page.on("request", lambda rq: ("127.0.0.1" not in rq.url and not rq.url.startswith("data:")) and print("   NET", round(time.time(), 1), rq.method, rq.url[:140], flush=True))
+            page.on("requestfailed", lambda rq: ("127.0.0.1" not in rq.url) and print("   NETFAIL", round(time.time(), 1), rq.url[:100], rq.failure, flush=True))
         page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1500)
+        if os.environ.get("RC_NET"):
+            page.evaluate("""() => { const N = window.AttuneNative; window.__calls = []; for (const k of Object.keys(N)) if (typeof N[k] === 'function') { const f = N[k]; N[k] = function (...a) { window.__calls.push([performance.now() | 0, k, String(a[0] || '').slice(0, 50)]); return f.apply(this, a); }; } }""")
         page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_selector("textarea[placeholder='Message Attune']", timeout=20000)
         for (iid, turns, expect) in items:
+            if os.environ.get("RC_NET"): print("   NEWCHAT", round(time.time(), 1), "stop-btn:", page.locator("button[title='Stop'], button[aria-label='Stop']").count(), flush=True)
             try: page.click("header button[aria-label='New chat']", timeout=3000)
             except Exception: pass
             page.wait_for_timeout(300)
             page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(300)
             for t in (turns if isinstance(turns, list) else [turns]):
                 n0 = page.evaluate(LAST)["n"]
-                page.evaluate("() => { window.__mock.fakeQueue = []; }")
+                page.evaluate("() => { window.__mock.fakeQueue = []; window.__mock.bodies = []; }")
                 t0 = time.time()
+                if os.environ.get("RC_NET"): print("   ASK", round(t0, 1), t[:40], flush=True)
                 page.locator("textarea[placeholder='Message Attune']").fill(t); page.locator("button[title='Send']").click()
+                if os.environ.get("RC_NET"): print("   SENT", round(time.time() - t0, 1), "busy-ui:", page.locator("button[title='Stop']").count(), flush=True)
                 r = None
-                for _ in range(1200):   # up to 10 min
+                for _ in range(int(os.environ.get('RC_WAIT', '1200'))):   # up to 10 min
                     page.wait_for_timeout(500); ctx.clock.run_for(500)
                     r = page.evaluate(LAST)
                     if r["n"] > n0 and not r["streaming"] and (r["text"] or r["card"] or r["err"]): break
                 r["wall"] = round(time.time() - t0, 1); r["q"] = t
+                r["calls"] = page.evaluate("() => (window.__mock.bodies || []).map(b => (b.max_tokens || 0) + ':' + String((b.messages || []).slice(-1)[0]?.content || '').slice(0, 40).replace(/\\n/g, ' '))")
+                if r["streaming"]: print("   STILL STREAMING, phase:", r.get("phase"), flush=True)
                 rows.append((iid, expect, r))
                 print("%s %5.1fs %-14s %s → %s" % (iid, r["wall"], r["from"], t[:50], (r["text"] or r["card"] or r["err"]).replace("\n", " ")[:160]), flush=True)
+                if os.environ.get("RC_CALLS"): print("   calls:", r["calls"], flush=True)
+                if os.environ.get("RC_NET"): print("   NATIVE:", page.evaluate("() => { const c = window.__calls.splice(0); return c.map(x => x.join(' ')).join(' | ') }")[:3000], flush=True)
         br.close()
     env.close()
     with open(out, "w", encoding="utf-8") as f:

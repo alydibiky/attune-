@@ -26,6 +26,11 @@ export const SKILLS = [
   R("steps",
     /^\s*(how (do|can|should) (i|we|you)|how to|steps to|guide to|procedure)\b|\bstep by step\b|(^|\s)(ازاي|إزاي|اعمل ايه|أعمل إيه|خطوات|طريقة|خطوة بخطوة)(?=\s|$|[؟?،,.:!])/i,
     "Recipe: one line saying what the result will be. Then numbered steps, each starting with a verb, one action per step, with the exact value/setting where it matters. Put ⚠️ before any safety warning. End with how to check it worked."),
+  // v10.9 (the real phone model: "capital of Canada?" → «Ottawa … it's Canada's biggest city» — the 3–6 points of "explain" made a small
+  // model invent filler): a short question for ONE fact gets one sentence, nothing added
+  R("fact",
+    /^(?=.{0,90}$)\s*(?:\d{1,2}[.)]\s*)?(?:(?:what(?:'s| is| was) the (?:capital|population|currency|language|tallest|largest|biggest|longest|highest|smallest|boiling|freezing|speed|distance|area|height|age|date|year|name)|who (?:is|was|wrote|invented|painted|sang|discovered|founded|directed|composed|won|built)|when (?:did|was|is|were)|what year|how (?:many|old|tall|far|long|big)|where is)\b|(?:عاصم[ةه]|مين (?:اللي )?(?:كتب|اخترع|غنى|غني|الف|ألف|رسم|اكتشف|اسس|أسس|لحن|مثل)|مين مؤلف|مين رئيس|كام سن[ةه]|امتى|إمتى|فين|اطول|أطول|اكبر|أكبر|اعلى|أعلى))(?!.*\b(?:explain|why|difference|compare)\b)(?!.*(?:اشرح|ليه|الفرق))/i,
+    "Answer in ONE short sentence with the fact itself (add one short clause only if it is needed to be correct). Add nothing else — no list, no extra facts. If you are not sure, say so in one line."),
   R("explain",
     /^\s*(explain|what is|what are|what's|why (is|does|do|are)|how does|how do .* work|define|meaning of)\b|(^|\s)(اشرح|اشرحلي|يعني ايه|يعني إيه|ايه هو|إيه هو|ايه هي|إيه هي|ليه|لماذا|ما هو|ما هي)(?=\s|$|[؟?،,.:!])/i,
     "Recipe: line 1 = a one-sentence answer in **bold**. Then \"How it works\" as 3–6 short numbered points, each cause → effect. Then one concrete example with real numbers. Give technical terms as English (Arabic) when the user writes Arabic or asks for both. No filler."),
