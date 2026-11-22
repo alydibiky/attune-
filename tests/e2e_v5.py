@@ -216,8 +216,9 @@ def sec_actions(br):
         comp.fill(t); page.locator("button[title='Send']").click()
     card = lambda: page.locator("[data-testid=action-card]").last
 
-    # A. the real engine, with the grammar
-    send("remind me tomorrow at 9 to call Ahmed")
+    # A. the real engine, with the grammar (v10.9: a sentence code reads completely is no longer sent to the model — the real phone model
+    # made "every first Monday" weekly — so the model is asked here for one with no time, which code can't finish)
+    send("remind me to call Ahmed")
     page.wait_for_selector("[data-testid=action-card] >> text=read by the model", timeout=60000)
     gb = page.evaluate("window.__mock.grammarBodies")
     check(gb and "root ::=" in gb[-1]["grammar"] and gb[-1]["chat_template_kwargs"]["enable_thinking"] is False,
@@ -233,12 +234,12 @@ def sec_actions(br):
     page.wait_for_selector("[data-testid=act-when-text]", timeout=15000)
     wt = card().locator("[data-testid=act-when-text]").inner_text()
     check("Tomorrow" in wt and "9:00" in wt, "the card spells out the time: " + wt)
-    check(card().locator("[data-testid=act-title]").input_value() == "Call Ahmed", "…and the title")
+    check(card().locator("[data-testid=act-title]").input_value().lower() == "call ahmed", "…and the title")
     card().locator("[data-testid=act-confirm]").click()
     page.wait_for_selector("[data-testid=action-done]", timeout=5000)
     notes = page.evaluate("window.__mock.notes")
     exp = page.evaluate("(() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d.getTime(); })()")
-    check(len(notes) == 1 and notes[0]["at"] == exp and notes[0]["title"] == "Call Ahmed", "Set reminder hands it to the phone at exactly tomorrow 09:00")
+    check(len(notes) == 1 and notes[0]["at"] == exp and notes[0]["title"].lower() == "call ahmed", "Set reminder hands it to the phone at exactly tomorrow 09:00")
     check(page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')).length") == 1, "…and it is kept in the page's list (so it's in backups)")
 
     # C. an alarm in Egyptian Arabic → the Clock app
@@ -292,7 +293,7 @@ def sec_actions(br):
     open_more(page)
     page.locator(".rounded-t-2xl button").filter(has=page.locator("text='Reminders'")).first.click()
     page.wait_for_selector("[data-testid=reminders-panel]", timeout=5000)
-    check(page.locator("[data-testid=rem-item]").count() == 1 and "Call Ahmed" in page.locator("[data-testid=rem-item]").inner_text(), "Reminders lists the one set from chat")
+    check(page.locator("[data-testid=rem-item]").count() == 1 and "call ahmed" in page.locator("[data-testid=rem-item]").inner_text().lower(), "Reminders lists the one set from chat")
     page.fill("[data-testid=rem-title]", "Pay the crane insurance")
     page.locator("[data-testid=rem-add]").click(); page.wait_for_timeout(200)
     check(page.locator("[data-testid=rem-item]").count() == 2 and len(page.evaluate("window.__mock.notes")) == 2, "a reminder added by hand is scheduled on the phone")

@@ -53,8 +53,7 @@ with sync_playwright() as p:
         check("Canberra" in body(), "%s: …and answers it" % size)
 
         b = ask(page, "ينفع أشرب قهوة وأنا صايم في رمضان ؟", ["نعم، شرب القهوة في رمضان جائز. القهوة لا تكسر الصيام."], 3500)
-        sent = json.dumps(b, ensure_ascii=False)
-        check("Settled ruling" in sent, "%s: the model is given the settled ruling with the question" % size)
+        check(not b, "%s: the ruling is given by code — the model is not asked (it said «مسموح» on the real phone model)" % size)
         t = body()
         check("بيفطّر" in t and "شرب القهوة في رمضان جائز" not in t, "%s: its «نعم … جائز» is replaced by the right answer" % size)
 
