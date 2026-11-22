@@ -89,3 +89,26 @@ Speed: «Looking in your notes…» (19 s, the meaning model) ran for EVERY ques
 questions about your own things ("my…", "did I…"). The pack lookup no longer adds ~1,000 tokens of unrelated passages to the prompt,
 and "From: a knowledge pack" shows only when a passage was really used.
 Not fixable by code: the model's own knowledge (e.g. it said bank certificates are easy to trade). The real fix is still M-A / M-B.
+
+## The REAL phone model through the real Chat (22 Nov 2026, v10.9) — tests/trials/realchat.py
+Ali: "your tests are bullshit — whenever I try a simple thing there is always a problem". He was right about the gap: the tests used a
+stand-in model that says what the test wrote. Now Blaze itself (Gemma 4 E2B, Google's 4-bit QAT GGUF — the model on his phone) runs
+through the real Chat screen with his 15 sentences and ~45 everyday ones; every answer is written to tests/trials/realchat-blaze-e2b-q4.md
+and READ. Round 1 → round 3, what it found and what code now does:
+- crane rent 562,500 "checked by code" (14 used as ×14) → impossible results sent back (`verify.implausible`); 157.89 for the price
+  before VAT of 18,000 → also caught; «900 ألف» read as 900,000 in that check
+- "22000/9" as the answer → fractions become numbers (2,444.44)
+- «قهوة وأنا صايم» → «مسموح… من المباح» → the ruling is given by code
+- 10,080 minutes in a week (it said 1,008), Ramadan 2027 = 8 Feb (it said March), 15 % of 640 (it "converted pounds to kg") → worked out
+  by the phone and handed to the model (`unitNote`, `hijriNote`, `percentNote`)
+- "15% tip on 640 pounds" was SAVED as a 640 expense → a sum, not money
+- "what should I eat before the gym" → "Nothing spent on Health" → advice never goes to your records
+- "translate …" in Chat → "the result shows on Home" → translated in Chat; «3/11» came back "⟦2/3⟧" → dates kept whole, merged
+  markers put back, a leftover marker is never "done"
+- «صرفت 150 على الغدا» asked to confirm in Money → saved at once (as Home, with Undo)
+- "every first Monday of the month" made WEEKLY by the model → a reminder code reads completely is used as read (also instant)
+- "Ottawa is Canada's biggest city", "Tokyo the most populous city", pounds→kg bullets → the small model is no longer told to always add
+  2–5 bullets; one-fact questions get one sentence
+- "and with 10% VAT?" answered with 14 % again → the follow-up is told the question CHANGED
+- Franco "eh a7san mobile b 15 alf" (a7san taken as a phone name, answered in English) → given in Arabic letters, answered in Egyptian
+Still the model's own knowledge (no code can add it): who sang «أنا لك على طول», who invented the telephone ("nobody alone").

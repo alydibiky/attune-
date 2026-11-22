@@ -219,7 +219,7 @@ export function followOf(text) {
    word by word, so every reader that knows Egyptian Arabic understands it. The keyboard's own dictionary (franco-words.js)
    turned around, plus the command words people type to an assistant. Words it doesn't know (names, brands) stay as written. */
 import { FROM_KEYBOARD } from "./franco-words.js";
-const CMD = { fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرني", fakkarni: "فكرني", fakkrni: "فكرني", nabehny: "نبهني", nabahny: "نبهني", nabbehny: "نبهني",
+const CMD = { a7san: "أحسن", ahsan: "أحسن", aw7ash: "أوحش", "2a7san": "أحسن", fakarny: "فكرني", fakkarny: "فكرني", fakarni: "فكرني", fakkarni: "فكرني", fakkrni: "فكرني", nabehny: "نبهني", nabahny: "نبهني", nabbehny: "نبهني",
   sa7eeny: "صحيني", sa7iny: "صحيني", sa7eny: "صحيني", sa7ini: "صحيني", ab3atly: "ابعتلي", ab3atli: "ابعتلي", ab3at: "ابعت", akalem: "اكلم", a2alem: "اكلم", akallem: "اكلم", kallem: "كلم",
   edfa3: "ادفع", adfa3: "ادفع", dafa3t: "دفعت", dfa3t: "دفعت", salaft: "سلفت", sallaft: "سلفت", estalaft: "استلفت", esstalaft: "استلفت", eslaft: "استلفت", estlaft: "استلفت",   /* v9.9.38 (the 1M test: "salaft ahmed 7350" was an English 7,350 expense) */ saraft: "صرفت", sraft: "صرفت", eshtaret: "اشتريت", eshtarait: "اشتريت", ghada: "غدا", "8ada": "غدا", ghadaa: "غدا",
   fetar: "فطار", fe6ar: "فطار", fitar: "فطار", "3asha": "عشا", "3ashaa": "عشا", bokra: "بكرة", bukra: "بكرة", naharda: "النهارده", ennaharda: "النهارده", elnaharda: "النهارده",

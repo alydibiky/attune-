@@ -209,3 +209,14 @@ export function hijriNote(text, now = Date.now()) {
   }
   return "";
 }
+
+// ---- 13. "15% tip on 640 pounds" (the real phone model gave 96, then "converted 640 pounds to kilograms") ---------------------------------
+/** One percentage of one amount → the note with the sum worked out here (or ""). */
+export function percentNote(text) {
+  const t = clean(text).replace(/٪/g, "%").replace(/(\d),(\d{3})\b/g, "$1$2");
+  const ps = t.match(/\d+(?:\.\d+)?\s*%/g) || [], ns = t.replace(/\d+(?:\.\d+)?\s*%/g, " ").match(/\d+(?:\.\d+)?/g) || [];
+  if (ps.length !== 1 || ns.length !== 1 || !/\b(of|on|off|tip|discount|vat|tax)\b|من|على|خصم|بقشيش|ضريب/i.test(t)) return "";
+  const p = parseFloat(ps[0]), n = parseFloat(ns[0]); if (!(p > 0 && n > 0)) return "";
+  const r = (x) => (Math.round(x * 100) / 100).toLocaleString("en-US");
+  return `\n\n(Worked out by the phone: ${p}% of ${r(n)} = ${r(n * p / 100)}; ${r(n)} + ${p}% = ${r(n * (1 + p / 100))}; ${r(n)} − ${p}% = ${r(n * (1 - p / 100))}; the price before ${p}% was added on = ${r(n)} ÷ ${1 + p / 100} = ${r(n / (1 + p / 100))}; the price before a ${p}% discount = ${r(n)} ÷ ${1 - p / 100} = ${r(n / (1 - p / 100))}. Use the one the question asks for. "Pounds" next to an amount is money, not weight.)`;
+}

@@ -187,7 +187,11 @@ export function implausible(question, answer) {
   const nums = (q.replace(/\d+(?:\.\d+)?\s*%/g, " ").match(/\d[\d,]*(?:\.\d+)?/g) || []).map((x) => Number(x.replace(/,/g, ""))).filter((x) => x > 0);
   if (!nums.length || nums.length > 5) return false;
   const pc = Math.max(...pcts) / 100, most = nums.reduce((m, x) => m * Math.max(1, x), 1) * Math.max(1 + pc, 1 / (1 - pc));   // ("the price before a 25 % discount" is 1 / 0.75 of it)
-  return Math.abs(a) > most * 1.05 + 1;
+  if (Math.abs(a) > most * 1.05 + 1) return true;
+  // (the real phone model: "18,000 with 14% VAT included — the price before VAT?" → 157.89): a price BEFORE a percentage is added or
+  // taken off is never less than the price ÷ (1 + the percentage)
+  if (nums.length === 1 && /\b(before|without|excluding|excl\.?|original(?:ly)?|pre-?tax)\b|قبل|من غير|بدون|الأصلي|الاصلي/i.test(q)) return Math.abs(a) < (nums[0] / (1 + pc)) * 0.95;
+  return false;
 }
 
 // ---- arithmetic slips in an ordinary answer ----------------------------------------------

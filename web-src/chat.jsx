@@ -160,6 +160,7 @@ export function langHint(text) {
   // v10.9 (Ali's P8 test: Egyptian questions got formal answers): Egyptian is asked for plainly, with examples
   if (ar > la && writesEgyptian(t)) return "\n\n(اكتب الرد بالمصري زي ما المصريين بيتكلموا، مش فصحى: «عايز» مش «أريد»، «ده» مش «هذا»، «لو» مش «إذا»، «لازم» مش «يجب»، «إزاي» مش «كيف».)";
   if (ar > la) return "\n\n(اكتب الرد بالعربي — بالمصري لو السؤال بالمصري.)";
+  if (la > ar * 3 && UND.looksFranco(t)) return "\n\n(اكتب الرد بالمصري بالحروف العربي.)";   // v10.9: Franco is Egyptian, not English
   if (la > ar * 3) return "\n\n(Write the reply in English.)";
   return "";
 }
@@ -1730,7 +1731,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // not as a question on its own. (v5.16)
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
       const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && !AG.ownProblem(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
-        ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
+        ? prevQ.text + "\nFollow-up — the question above CHANGED like this; answer the changed question with the NEW number(s), not the old ones: " + typed : typed;   // (v10.9: the real model answered "and with 10% VAT?" with 14 % again)
       // v6.9: "okay you do the frontend only" after a website request continues THAT website
       const siteFollow = route && !longMsg && !img && !sources && api.codeTask ? websiteFollowUp(typed, history) : null;
       // v6.16 (Ali): a code task or a maths / physics problem gets its reference from the packs (the official docs, the textbook
@@ -1886,7 +1887,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const bareQ = typed ? typed + (fastK ? AG.FAST_FACT : "") + (futK ? AG.FUTURE_NOTE : "") + langHint(typed) : "";
       if (answer == null && fastK) content += AG.FAST_FACT;
       if (answer == null && futK) content += AG.FUTURE_NOTE;
-      if (answer == null && typed) content += AG.unitNote(typed) + AG.hijriNote(typed);
+      if (answer == null && typed) content += AG.unitNote(typed) + AG.hijriNote(typed) + AG.percentNote(typed);
+      // v10.9 (the real phone model: "eh a7san mobile b 15 alf" — it took "a7san" for a phone's name): Franco is given in Arabic letters too
+      if (answer == null && typed && UND.looksFranco(typed)) { const fa = UND.francoToArabic(typed); if (fa !== typed) content += "\n\n(This is Egyptian Arabic written in Latin letters (Franco). In Arabic letters: «" + fa + "». Answer in Egyptian Arabic.)"; }
       content += langHint(typed);
       const plain = answer == null;   // written by the model directly (not checked by code / votes)
       if (answer == null) try {

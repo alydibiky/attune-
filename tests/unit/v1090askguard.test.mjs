@@ -11,6 +11,7 @@ const { egyptianize, writesEgyptian } = await import("../../web-src/answerfix.js
 const { answerSources } = await import("../../web-src/sourcelabel.js");
 const { factsBlock } = await import("../../web-src/knowledge.js");
 const fs = await import("fs");
+const UND = await import("../../web-src/understand.js");
 let fail = 0, n = 0; const ok = (c, m) => { n++; if (!c) { console.log("FAIL " + m); fail++; } };
 
 // his exact sentences
@@ -59,6 +60,11 @@ for (const l of ["ar", "arb", "es", "fr", "de", "pt", "it", "ru", "tr", "id", "h
   const crane = "إيجار ونش 3 أيام بـ 12,500 في اليوم وعليهم 14٪ ضريبة، المجموع كام؟", car = "عربية بـ 900 ألف مقدم 30% والباقي على 5 سنين، القسط الشهري كام من غير فوايد؟";
   ok(V.implausible(crane, "562500") && !V.implausible(crane, "42750"), "562,500 for the crane rent (14 used as ×14) is caught; 42,750 is not");
   ok(!V.implausible(car, "10500") && !V.implausible("A jacket is 1,800 after a 25% discount. What was the price before", "2400"), "«900 ألف» is 900,000, and 'the price before a discount' may be bigger — right answers pass");
+  ok(V.implausible("A phone costs 18,000 with 14% VAT included. What is the price before VAT?", "157.89") && !V.implausible("A phone costs 18,000 with 14% VAT included. What is the price before VAT?", "15789.47"), "157.89 for the price before VAT of 18,000 is caught; 15,789.47 is not");
+  { const T = await import("../../web-src/translate.js"); const p = T.protect("فاتورة رقم 4471 بتاريخ 3/11 بمبلغ 12,350 جنيه");
+    ok(p.tokens.includes("3/11") && T.restore("dated ⟦1/2⟧", ["3", "11"]).text === "dated 3/11" && !T.restore("dated ⟦9⟧ x", ["3"]).ok, "«بتاريخ 3/11» stays 3/11 (the model wrote “dated ⟦2/3⟧”); a marker left over is never shown as done"); }
+  ok(/15% of 640 = 96/.test(AG.percentNote("15% tip on 640 pounds")) && /15,789\.47/.test(AG.percentNote("A phone costs 18,000 with 14% VAT included. What is the price before VAT?")), "a percentage of an amount is worked out by the phone (the model turned 640 pounds into kilograms)");
+  ok(UND.francoToArabic("eh a7san mobile b 15 alf").includes("أحسن"), "Franco «a7san» is «أحسن» (the model took it for a phone's name)");
   ok(V.readAnswer("ANSWER: 22000/9") === "2444.44" && V.readAnswer("ANSWER: 3/11") === "3/11", "a fraction answer (22000/9) becomes 2444.44; a date stays a date");
   ok(/10,080 minutes/.test(AG.unitNote("how many minutes are in a week")) && /10,080/.test(AG.unitNote("كام دقيقة في الأسبوع؟")), "minutes in a week worked out by the phone (the model said 1,008)");
   ok(/8 February 2027/.test(AG.hijriNote("When is Ramadan 2027 expected to start?")) || !AG.hijriNote("When is Ramadan 2027 expected to start?"), "Ramadan 2027 from the Umm al-Qura calendar: 8 February (the model said March)");

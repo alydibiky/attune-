@@ -18,7 +18,7 @@ const LOCK = new RegExp([
   "\\b[A-Z]{1,6}[-/]\\d[\\w/-]*\\b|\\b[A-Z]{1,3}\\d{3,}[\\w-]*\\b|\\b\\d+[A-Z]{1,4}\\d*\\b",                      // codes: INV-2026-001, A12345, 12B
   "\\b(?:" + PRODUCTS + ")\\s?\\d{1,4}\\w*(?:\\s(?:Pro|Max|Plus|Ultra|Mini|Lite|SE))?\\b",                         // iPhone 15 Pro, Galaxy S24
   "\\b[A-Z]{2,5}[- ]?\\d{2,5}\\w*\\b",                                                                            // RTX 3050, LTM 1100, GT-500
-  "\\d{1,4}[-/.]\\d{1,2}[-/.]\\d{2,4}", "\\d{1,2}:\\d{2}(?::\\d{2})?(?:\\s?[ap]\\.?m\\.?)?",                        // dates, times
+  "\\d{1,4}[-/.]\\d{1,2}[-/.]\\d{2,4}", "\\b\\d{1,2}/\\d{1,2}\\b", "\\d{1,2}:\\d{2}(?::\\d{2})?(?:\\s?[ap]\\.?m\\.?)?",                        // dates, times
   "[$€£¥₹₺₽₩₦₱฿₫৳₪]\\s?\\d[\\d.,'\\u00a0]*\\d|[$€£¥₹₺₽₩₦₱฿₫৳₪]\\s?\\d|\\d(?:[\\d.,']*\\d)?\\s?(?:[$€£¥₹₺₽₩₦₱฿₫৳₪]|[A-Z]{3}\\b)|\\b[A-Z]{3}\\s?\\d[\\d.,']*\\d", // amounts
   "\\d+(?:[.,]\\d+)*\\s?%", "\\d+(?:[.,']\\d+)*",                                                                 // percentages, numbers
 ].join("|"), "gu");
@@ -30,6 +30,9 @@ export function protect(text) {
 /** Markers → the original tokens. ok only if every marker came back exactly once and no unknown one appeared. */
 export function restore(text, tokens) {
   const seen = new Map(); let bad = [];
+  // (v10.9, the real phone model: «بتاريخ 3/11» came back "dated ⟦2/3⟧" — two markers merged into one: each is put back, and any marker
+  // left over makes the piece "not ok", so it is translated again or checked)
+  text = String(text || "").replace(/⟦\s*(\d+)\s*([/:.\-])\s*(\d+)\s*⟧/g, "⟦$1⟧$2⟦$3⟧");
   const out = String(text || "").replace(/⟦\s*(\d+)\s*⟧|\[\[\s*(\d+)\s*\]\](?!\s)|«(\d+)»/g, (m, a, b, c) => {
     const k = +(a || b || c); if (!(k >= 1 && k <= tokens.length)) { bad.push(m); return m; }
     seen.set(k, (seen.get(k) || 0) + 1); return tokens[k - 1];
@@ -38,6 +41,7 @@ export function restore(text, tokens) {
   const lat = (x) => String(x).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/\s/g, "");
   const missing = tokens.map((t, i) => (seen.get(i + 1) || lat(out).includes(lat(t)) ? null : t)).filter((x) => x != null);
   const doubled = [...seen].filter(([, n]) => n > 1).map(([k]) => tokens[k - 1]);
+  if (/[⟦⟧]/.test(out)) bad.push("⟦");
   return { text: out, ok: !missing.length && !doubled.length && !bad.length, missing, doubled, bad };
 }
 
