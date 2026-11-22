@@ -15089,4 +15089,10 @@ export const UR = {
   "911 emergencies": "911 ایمرجنسی",
   "988 mental-health crisis line": "988 ذہنی صحت بحران لائن",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "اس ہفتے دو بار فون کی گرافکس چپ نے ایپ بند کر دی جب تیز انجن جواب دے رہا تھا۔ اب یہ CPU پر ہے (سست مگر مستحکم)؛ آپ انجن ← اسپیڈ میں GPU دوبارہ آزما سکتے ہیں۔",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "میں اس میں مدد نہیں کر سکتا — اس سے لوگوں کو نقصان پہنچ سکتا ہے۔ اگر کوئی خطرے میں ہے تو اپنے مقامی ایمرجنسی نمبر پر کال کریں۔",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "نہیں — روزے کی حالت میں جان بوجھ کر کچھ بھی کھانا یا پینا (کافی، چائے، پانی، جوس یا سگریٹ) روزہ توڑ دیتا ہے؛ چاروں مسالک اس پر متفق ہیں۔ افطار سے سحری تک یہ جائز ہے۔ اگر آپ نے واقعی بھول کر پیا تو روزہ درست ہے۔ بیمار، مسافر اور حاملہ یا دودھ پلانے والی خواتین کو رخصت ہو سکتی ہے — اپنے معاملے کے لیے کسی قابلِ اعتماد عالم سے پوچھیں۔",
+  "Answering again…": "دوبارہ جواب دے رہا ہوں…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} کو ادائیگی کے طور پر کچھ درج نہیں۔ ادائیگی تب گنی جاتی ہے جب نام اس کے نوٹ میں ہو (مثلاً “{who} کو 500”)۔",
+  "**You paid {who} {a}** {p} · 1 entry.": "**آپ نے {who} کو {a} دیے** {p} · 1 اندراج۔",
+  "**You paid {who} {a}** {p} · {n} entries.": "**آپ نے {who} کو {a} دیے** {p} · {n} اندراجات۔",
 };

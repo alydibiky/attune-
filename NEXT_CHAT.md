@@ -1,5 +1,17 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (22 Nov 2026, night — v10.9: Ali's P8 phone test on the real model: "absolute bs … I lost hope in this app")
+> **The model was handed the wrong things and trusted blindly. Fixed by code around it — `web-src/askguard.js`, wired into Chat:**
+> pack passages only when they answer the question (`packsFit`; the prompt no longer teaches «لا تحتوي معرفتك»; that line is never an
+> answer — asked again); "8. What's…" list numbers dropped (no "Record it in Money?"); a sum with its own numbers is its own question
+> (the jacket got the crane total) + an answer about the PREVIOUS question is asked again without history; queued messages are add-ons
+> only when they read like one; bombs / poison / meth refused by code (20 languages); fasting: the ruling goes with the question and
+> «نعم … جائز» is replaced (20 languages); the future is unknowable; tips ≠ web news (the heat question found Facebook posts);
+> «دفعت كام لأحمد» = only Ahmed's entries (myledger payee); Egyptian: «اشرحلي…» detected, long answers egyptianized, firmer hint;
+> "Looking in your notes…" (19 s on EVERY question — a check that was always true) only for "my…" questions; "From: a knowledge
+> pack" only when a passage was used. Tests: tests/askguard/gen.mjs (10,000 100 %, held-out first run 97.8 % → 100 %, shapes 70 %),
+> unit v1090askguard, e2e_v1090askguard.py (phone + computer). REVIEW_P8 has the table. Next: Ali re-runs docs/P8_PHONE_TEST.md.
+>
 > ## START HERE (22 Nov 2026, later — Ali: "U never fix it for good … what's the use of AI if it didn't do anything")
 > **Money, the final shape:** (1) code reads and saves at once — `moneycat.js`: HIS category named in any spelling (en / Franco / ar,
 > "under / category / تحت / بند / في / من / على"), the note = only what it was; whole sentence decides when there is one amount; it also

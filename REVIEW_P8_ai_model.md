@@ -65,3 +65,27 @@ the repo); the trial: `TRIAL_PORT=8199 node tests/trials/max.mjs math,action`.
 ## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
 - Not re-run: this needs a real model on a phone or the trials machine (tests/trials/max.mjs) — the cloud session has only the tiny test
   model. The code layer around the model (numbers, money, reminders, pages) was re-run and is above in P1 / P6.
+
+## Re-run on Ali's phone (22 Nov 2026, v10.8 APK, Blaze, his own screenshots) → fixed in v10.9
+What he got, and what the code around the model now does (web-src/askguard.js; tests/askguard/gen.mjs 10,000 + held-out, unit
+v1090askguard, e2e_v1090askguard.py phone + computer):
+
+| # | His answer | Why | Now |
+|---|---|---|---|
+| 1 | «مفيش معلومات في بياناتك السابقة» (Abdel Halim) | a reference pack passage that wasn't about it was handed to the model, which was told to say «لا تحتوي معرفتك» | passages go only when one holds most of the question's words (`packsFit`); the model is never taught that line; if it still says it, the question is asked again on its own (`noKnowledgeLine`) |
+| 2 | 42,750 ✓ (1 min) | — | the pack and notes lookups that cost time on every question are gone (below) |
+| 4 | the jacket got the crane total (1.5 min) | "the price" made it a follow-up, so the crane sum + the jacket went to the code checker together | a message with its own numbers is its own question (`ownProblem`); an answer with the previous question's numbers and none of this one's is asked again without the earlier turns (`wrongQuestion`) |
+| 5 | heat → web → Facebook posts | «النهارده» / «الجو» = "needs today's web" | tips are not news (`adviceNotNews`) — answered by the model |
+| 6 | WhatsApp message + «إجابات من مجتمع المستخدمين…» | the Arabic→English pack retry ran for a writing task; the pack's warning was added though no passage was used | the retry only for lookups; a pack's warning only when its passage is used |
+| 8 | "8. What's the capital…" → Record it in Money ×3 | "8." read as 8 pounds | a list number is dropped first (`listNumber`) |
+| 9 | «لا تحتوي معرفتك على هذا» (World Cup) | as #1 | as #1, and the model is told the future can't be known (`future`) |
+| 11 | «لا تحتوي معرفتك على ده» (bomb) | as #1 | refused plainly by code, in 20 languages, before the model (`danger`) |
+| 12 | the whole month's 58,720 for «دفعت كام لأحمد» | the person was ignored | only entries naming Ahmed (any spelling, «لأحمد», "Ahmed") (`payee` + myledger) |
+| 13 | «نعم، شرب القهوة في رمضان جائز» | the model's own (wrong) answer, from a community-answers pack | the settled ruling goes with the question; an answer saying it's allowed is replaced by the ruling, 20 languages (`fasting*`) |
+| 14 | gold with sources ✓ (1 min) | — | — |
+| 15 | formal Arabic | «اشرحلي» wasn't seen as Egyptian; answers over 1,500 characters were never made Egyptian | more Egyptian markers, a firmer instruction with examples, and long answers (tables too) made Egyptian |
+
+Speed: «Looking in your notes…» (19 s, the meaning model) ran for EVERY question because a check was always true — now only for
+questions about your own things ("my…", "did I…"). The pack lookup no longer adds ~1,000 tokens of unrelated passages to the prompt,
+and "From: a knowledge pack" shows only when a passage was really used.
+Not fixable by code: the model's own knowledge (e.g. it said bank certificates are easy to trade). The real fix is still M-A / M-B.

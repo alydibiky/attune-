@@ -15088,4 +15088,10 @@ export const ZH = {
   "911 emergencies": "911 紧急电话",
   "988 mental-health crisis line": "988 心理危机热线",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "本周手机的图形芯片两次在快速引擎回答时关闭了应用。现在它改用 CPU（较慢但稳定）；你可以在 引擎 → 速度 中再次尝试 GPU。",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "这个我不能帮忙——它可能伤害他人。如果有人处于危险中，请拨打当地的紧急电话。",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "不行——斋戒期间故意吃喝任何东西（咖啡、茶、水、果汁或吸烟）都会破坏斋戒，四大教法学派对此一致。从开斋（伊夫塔尔）到封斋饭（苏胡尔）之间可以吃喝。如果确实是忘记了而喝，斋戒依然有效。病人、旅行者以及孕妇或哺乳期妇女可以豁免——具体情况请咨询你信任的学者。",
+  "Answering again…": "正在重新回答…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p}没有记录付给{who}的款项。备注里写了名字的付款才会计入（例如“500 给{who}”）。",
+  "**You paid {who} {a}** {p} · 1 entry.": "**你付给{who} {a}**{p} · 1 笔。",
+  "**You paid {who} {a}** {p} · {n} entries.": "**你付给{who} {a}**{p} · {n} 笔。",
 };

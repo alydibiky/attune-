@@ -15088,4 +15088,10 @@ export const FA = {
   "911 emergencies": "911 اورژانس",
   "988 mental-health crisis line": "988 خط بحران سلامت روان",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "این هفته دو بار تراشه گرافیکی گوشی برنامه را هنگام پاسخ موتور سریع بست. اکنون روی CPU است (کندتر، پایدار)؛ می‌توانید GPU را دوباره در موتور ← سرعت امتحان کنید.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "در این مورد نمی‌توانم کمک کنم — ممکن است به مردم آسیب بزند. اگر کسی در خطر است، با شماره اورژانس محلی تماس بگیرید.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "نه — خوردن یا نوشیدن عمدی هر چیزی در حال روزه (قهوه، چای، آب، آبمیوه یا سیگار) روزه را باطل می‌کند؛ هر چهار مذهب بر این متفق‌اند. از افطار تا سحر جایز است. اگر واقعاً از روی فراموشی نوشیدید، روزه‌تان درست است. بیمار، مسافر و زن باردار یا شیرده ممکن است معاف باشند — برای وضعیت خودتان از عالمی مورد اعتماد بپرسید.",
+  "Answering again…": "دوباره پاسخ می‌دهم…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} چیزی به‌عنوان پرداخت به {who} ثبت نشده است. پرداخت وقتی حساب می‌شود که نام در یادداشتش باشد (مثلاً «500 به {who}»).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**به {who} {a} پرداخت کردید** {p} · ۱ مورد.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**به {who} {a} پرداخت کردید** {p} · {n} مورد.",
 };

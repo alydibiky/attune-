@@ -15089,4 +15089,10 @@ export const IDN = {
   "911 emergencies": "911 darurat",
   "988 mental-health crisis line": "988 layanan krisis kesehatan mental",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Dua kali minggu ini chip grafis ponsel menutup aplikasi saat mesin cepat sedang menjawab. Sekarang berjalan di CPU (lebih lambat, stabil); kamu bisa mencoba GPU lagi di Mesin → Kecepatan.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "Saya tidak bisa membantu soal itu — bisa membahayakan orang. Jika ada yang dalam bahaya, hubungi nomor darurat setempat.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Tidak — makan atau minum apa pun dengan sengaja saat berpuasa (kopi, teh, air, jus, atau merokok) membatalkan puasa; keempat mazhab sepakat. Boleh dari berbuka hingga sahur. Jika Anda minum karena benar-benar lupa, puasa Anda tetap sah. Orang sakit, musafir, serta wanita hamil atau menyusui bisa mendapat keringanan — untuk kasus Anda, tanyakan kepada ulama yang Anda percaya.",
+  "Answering again…": "Menjawab lagi…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Tidak ada yang tercatat dibayar ke {who} {p}. Pembayaran dihitung jika namanya ada di catatannya (mis. “500 ke {who}”).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Anda membayar {who} {a}** {p} · 1 catatan.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Anda membayar {who} {a}** {p} · {n} catatan.",
 };

@@ -24,3 +24,8 @@ seconds until the first word and until the end.
 
 What I will do with the answers: each wrong one gets a fix in the app's code around the model (like the maths and the web-check
 before), with a test, and REVIEW_P8 gets its re-run section.
+
+## Round 1 (22 Nov 2026, v10.8 APK) → v10.9
+Right: 2 (42,750), 8 (Canberra, after the "8." money card), 14 (gold with sources). Wrong: 1, 4, 5, 6 (a stray pack line), 8 (money card),
+9, 11, 12, 13, 15 (formal) — each fixed by code with a test (REVIEW_P8_ai_model.md, last section). Times: 1–1.5 min; the 19 s notes search
+on every question and the unrelated pack passages are gone. Please run all 15 again on the v10.9 APK.

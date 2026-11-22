@@ -15088,4 +15088,10 @@ export const JA = {
   "911 emergencies": "911 緊急通報",
   "988 mental-health crisis line": "988 メンタルヘルス危機ライン",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "今週、高速エンジンが回答中にスマホのグラフィックチップがアプリを2回閉じました。現在はCPUで動作しています（遅めですが安定）。エンジン → 速度 でGPUを再度試せます。",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "それはお手伝いできません。人を傷つけるおそれがあります。誰かが危険な状態なら、地域の緊急番号に電話してください。",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "いいえ。断食中に意図して何かを食べたり飲んだりすること（コーヒー、紅茶、水、ジュース、喫煙）は断食を破ります。四大法学派の見解は一致しています。イフタールからスフールまでは問題ありません。本当に忘れて飲んだ場合、断食は有効です。病人、旅行者、妊娠中や授乳中の女性は免除されることがあります。ご自身の場合は、信頼できる学者に尋ねてください。",
+  "Answering again…": "もう一度答えています…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p}、{who}への支払いとして記録されたものはありません。メモに名前があると支払いとして数えます（例：「{who}に500」）。",
+  "**You paid {who} {a}** {p} · 1 entry.": "**{who}に{a}を支払いました**{p} · 1件。",
+  "**You paid {who} {a}** {p} · {n} entries.": "**{who}に{a}を支払いました**{p} · {n}件。",
 };

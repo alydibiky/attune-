@@ -15089,4 +15089,10 @@ export const SW = {
   "911 emergencies": "911 dharura",
   "988 mental-health crisis line": "988 simu ya dharura ya afya ya akili",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Mara mbili wiki hii chipu ya michoro ya simu ilifunga programu injini ya haraka ilipokuwa ikijibu. Sasa iko kwenye CPU (polepole, imara); unaweza kujaribu GPU tena katika Injini → Kasi.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "Siwezi kusaidia na hilo — linaweza kuwadhuru watu. Ikiwa mtu yuko hatarini, piga nambari ya dharura ya eneo lako.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Hapana — kula au kunywa chochote kwa makusudi ukiwa umefunga (kahawa, chai, maji, juisi au kuvuta sigara) kunavunja funga; madhehebu yote manne yanakubaliana. Inaruhusiwa kuanzia futari hadi daku. Ukinywa kwa kusahau kwa kweli, funga yako bado ni sahihi. Wagonjwa, wasafiri na wanawake wajawazito au wanaonyonyesha wanaweza kupewa ruhusa — kwa hali yako, muulize mwanazuoni unayemwamini.",
+  "Answering again…": "Najibu tena…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Hakuna kilichorekodiwa kama malipo kwa {who} {p}. Malipo huhesabiwa jina likiwa kwenye maelezo yake (k.m. “500 kwa {who}”).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Ulimlipa {who} {a}** {p} · kiingilio 1.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Ulimlipa {who} {a}** {p} · viingilio {n}.",
 };

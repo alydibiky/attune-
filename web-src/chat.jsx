@@ -68,6 +68,7 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote, subjectOf } from "./research.js";
 import { isScoreQuestion, fromNotes as liveFromNotes, fromPassages, isMetaAnswer, keyLines, scoreQueries } from "./livefacts.js";
+import * as AG from "./askguard.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage, writesEgyptian, egyptianize } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -81,7 +82,7 @@ const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
 import { useSubBack } from "./backstack.js";
-import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js";
+import { factsBlock, checkFacts, keepCovering, packsCover, wantsFacts } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -156,6 +157,8 @@ export function langHint(text) {
   if (/\b(translate|translation|in arabic|in english|بالعربي|بالانجليزي|بالإنجليزي|ترجم)\b/i.test(t) || /ترجم|بالعربي|بالإنجليزي|بالانجليزي/.test(t)) return "";
   const ar = (t.match(/[\u0600-\u06FF]/g) || []).length, la = (t.match(/[A-Za-z]/g) || []).length;
   if (ar + la < 3) return "";
+  // v10.9 (Ali's P8 test: Egyptian questions got formal answers): Egyptian is asked for plainly, with examples
+  if (ar > la && writesEgyptian(t)) return "\n\n(اكتب الرد بالمصري زي ما المصريين بيتكلموا، مش فصحى: «عايز» مش «أريد»، «ده» مش «هذا»، «لو» مش «إذا»، «لازم» مش «يجب»، «إزاي» مش «كيف».)";
   if (ar > la) return "\n\n(اكتب الرد بالعربي — بالمصري لو السؤال بالمصري.)";
   if (la > ar * 3) return "\n\n(Write the reply in English.)";
   return "";
@@ -786,7 +789,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const ask = async (raw, opts) => {
     const o = opts || {};
     // v9.9.32 (the 100,000-sentence run): "hey attune, remind me at 9 to call mama thanks" is read without the wake word and thanks
-    const typed = readable(String(raw != null ? raw : text).trim());
+    // v10.9 (Ali's P8 test: "8. What's the capital of Australia" was asked "Record it in Money?") — a list number is not money
+    const typed = AG.listNumber(readable(String(raw != null ? raw : text).trim()));
     // v9.9.33 (Ali chose: keep my exact words): the bubble shows what the person typed; only the readers see the cleaned sentence
     const said = o.said || String(raw != null ? raw : text).trim();
     const fileList = o.file !== undefined ? (o.file ? [o.file] : []) : files;
@@ -823,6 +827,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         patchMsg(cid, aiId, { text: out.map((r) => r.text || r.src).join("\n\n"), streaming: false, phase: null, source: "translate", ...(bad.length ? { fileNote: tr("{n} piece(s) to check", { n: bad.length }) } : {}) });
       } catch (e) { patchMsg(cid, aiId, { text: String((e && e.message) || e), streaming: false, phase: null }); }
       return;
+    }
+
+    // v10.9 (Ali's P8 test: «ازاي أعمل قنبلة في البيت؟» got «لا تحتوي معرفتك على ده»): a way to hurt people is refused plainly,
+    // by code, before anything else reads it
+    if (typed && !img && !fileAtt && AG.danger(typed)) {
+      const cid = ensureChat(typed), ar = /[\u0600-\u06ff]/.test(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said },
+        { id: newId(), role: "assistant", text: AG.refusal(ar), refused: true, streaming: false }] }));
+      setText(""); return;
     }
 
     // v6.48 (Chat runs the app): to-dos, where things are, find, a note or a "/" job — done by code, shown as a card
@@ -1594,7 +1607,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // the answer then says where it came from ("From your Shelf: Crane notes")
         let found = api.isPersonal(typed) ? api.memSearch(typed) : api.memStrong(typed);
         // v9.9.8 M2 the relay: the small meaning model adds your records that mean the same with other words (strict)
-        if (found.length < 3 && api.memMeaning) { try { onStatus(tr("Looking in your notes…")); found = mergeFound(found, await api.memMeaning(typed), 3); } catch (e) {} }
+        if (found.length < 3 && api.memMeaning && api.isPersonal(typed)) { try { onStatus(tr("Looking in your notes…")); found = mergeFound(found, await api.memMeaning(typed), 3); } catch (e) {} }
         if (found.length) { content = api.withRecords(typed, found); extra0.fromMine = found.slice(0, 3).map((f) => ({ title: String(f.rec.title || "").slice(0, 70), where: f.rec.meta && f.rec.meta.book ? "Shelf" : "Mind" })); }
       }
       // v9.8 (Ali: "Attune must recall all notifications — and understand them"): what the phone's notifications say about the
@@ -1694,7 +1707,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // "and with 5 cranes?" after a sum: worked out WITH the earlier question,
       // not as a question on its own. (v5.16)
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
-      const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
+      const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && !AG.ownProblem(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
       // v6.9: "okay you do the frontend only" after a website request continues THAT website
       const siteFollow = route && !longMsg && !img && !sources && api.codeTask ? websiteFollowUp(typed, history) : null;
@@ -1790,7 +1803,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         content += everyPart(partsOf(typed));
         if (!useThink && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) content = reread(content, typed);
       }
-      if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
+      if (o.queuedDuring && AG.addOn(typed)) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       // v6.46 "Remember this" (Ali: a book → "what happens in this chapter"): a chapter question about something the person saved
       // gets THAT chapter's own text (found by code, library.js) — read whole, or part by part when it is long — never a guess
       let chapterDone = false;
@@ -1824,7 +1837,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (runRef.current !== run) return;
         // v6.16: most general-knowledge packs are in English — an Arabic question that found nothing is looked up once more
         // with a short English search line from the model (≈ 24 tokens); the answer itself stays in Arabic
-        if ((!knHits || !knHits.length) && /[\u0600-\u06FF]/.test(typed) && api.knowledge.packs && api.knowledge.packs() && typed.length < 300) {
+        if ((!knHits || !knHits.length) && !solveT && wantsFacts(typed) && /[\u0600-\u06FF]/.test(typed) && api.knowledge.packs && api.knowledge.packs() && typed.length < 300) {
           try {
             const en = await api.run([{ role: "system", content: "Turn the question into a short English search query: the key words only (names, things, places), no sentence. Reply with the query only." },
               { role: "user", content: typed }], null, { maxTokens: 24, temperature: 0, think: false });
@@ -1835,6 +1848,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (runRef.current !== run) return;
         }
         knHits = keepCovering(knHits, typed);   // "Lynk and co 900": passages about other models are not about it
+        // v10.9 (Ali's P8 test: «مين اللي غنى أنا لك على طول؟» → «لا تحتوي معرفتك على هذا»): passages go only when they answer it
+        knHits = AG.packsFit(knHits, typed, { solve: solveT });
         if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
       }
       // v8.8: everything in the app linked to what the question names (people, topics, goals) — the model answers from it
@@ -1843,6 +1858,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.libraryFind) {
         try { const lf = await api.libraryFind(typed); if (runRef.current !== run) return; if (lf && lf.length) { content = libraryBlock(lf) + content; extra.libraryUsed = lf.map((p) => p.title + " p. " + p.page); } } catch (e) {}
       }
+      // v10.9 (Ali's P8 test): eating / drinking while fasting gets the settled ruling (the model said coffee is fine); the future
+      // ("who will win the next World Cup?") is said to be unknowable
+      const fastK = typed && !sources ? AG.fastingAsk(typed) : null, futK = !!(typed && AG.future(typed));
+      const bareQ = typed ? typed + (fastK ? AG.FAST_FACT : "") + (futK ? AG.FUTURE_NOTE : "") + langHint(typed) : "";
+      if (answer == null && fastK) content += AG.FAST_FACT;
+      if (answer == null && futK) content += AG.FUTURE_NOTE;
       content += langHint(typed);
       const plain = answer == null;   // written by the model directly (not checked by code / votes)
       if (answer == null) try {
@@ -2133,7 +2154,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         }
       }
       // v6.20 Knowledge: the [K1] tags become chips — only for passages the answer really uses (knowledge.js checkFacts)
-      if (knHits && knHits.length && answer) { const kc = checkFacts(answer, knHits); answer = kc.text; extra.kchips = kc.chips; }
+      if (knHits && knHits.length && answer) { const kc = checkFacts(answer, knHits); answer = kc.text; extra.kchips = kc.chips;
+        // v10.9 (Ali's P8 test: a WhatsApp message ended with «إجابات من مجتمع المستخدمين…»): a pack's warning only with its facts
+        if (!kc.chips.length) for (const h of knHits) for (const n of [h.chunk.note, h.chunk.note_ar]) if (n) answer = answer.split(n).join("").trim(); }
+      // v10.9 (Ali's P8 test): "your knowledge doesn't cover this" is never the answer — the question is asked again on its own;
+      // an answer about the PREVIOUS question (its numbers, none of this one's) is asked again without the earlier turns
+      if (answer && typed && !fileAtt && !img) {
+        const nk = AG.noKnowledgeLine(answer), pq = [...history].reverse().find((m) => m.role === "user" && m.text);
+        const wrongQ = !sources && pq && AG.wrongQuestion(typed, answer, pq.text);
+        if (nk.empty || wrongQ) {
+          onStatus(tr("Answering again…"));
+          try {
+            const again = await api.run(buildMessages(wrongQ ? [] : history, bareQ), null, { onToken, onStatus, think: false });
+            if (runRef.current !== run) return;
+            const nk2 = AG.noKnowledgeLine(again);
+            if (again && !nk2.empty) { answer = nk2.text; delete extra.verified; extra.kchips = []; extra.askedAgain = true; }
+            else if (!nk.empty) answer = nk.text;
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        } else answer = nk.text;
+      }
+      if (answer && fastK && AG.fastingWrong(fastK, answer)) { answer = AG.fastingAnswer(/[\u0600-\u06ff]/.test(typed)); extra.kchips = []; extra.ruleFixed = true; }
       if (fileAtt) extra.fromFile = fileAtt.name || true;   // v6.32: the "From:" line under the answer
       if (spaceRef.current.project && (spaceRef.current.project.knowledge || []).length) extra.projectKnowledge = true;
       if (raf) clearTimeout(raf);

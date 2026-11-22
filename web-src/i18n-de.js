@@ -15088,4 +15088,10 @@ export const DE = {
   "911 emergencies": "911 Notfälle",
   "988 mental-health crisis line": "988 Krisentelefon für psychische Gesundheit",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Diese Woche hat der Grafikchip des Handys die App zweimal geschlossen, während die schnelle Engine antwortete. Sie läuft jetzt auf der CPU (langsamer, stabil); den GPU kannst du unter Engine → Geschwindigkeit erneut versuchen.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "Dabei kann ich nicht helfen – es könnte Menschen schaden. Wenn jemand in Gefahr ist, ruf den örtlichen Notruf an.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Nein – absichtliches Essen oder Trinken während des Fastens (Kaffee, Tee, Wasser, Saft oder Rauchen) bricht das Fasten; alle vier Rechtsschulen sind sich einig. Vom Iftar bis zum Suhur ist es erlaubt. Wenn du aus echtem Vergessen getrunken hast, bleibt dein Fasten gültig. Kranke, Reisende sowie Schwangere und Stillende können befreit sein – frag für deinen Fall einen Gelehrten, dem du vertraust.",
+  "Answering again…": "Antworte noch einmal…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Nichts als an {who} bezahlt erfasst {p}. Eine Zahlung zählt, wenn der Name in ihrer Notiz steht (z. B. „500 an {who}“).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Du hast {who} {a} gezahlt** {p} · 1 Eintrag.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Du hast {who} {a} gezahlt** {p} · {n} Einträge.",
 };

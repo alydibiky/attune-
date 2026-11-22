@@ -1,3 +1,4 @@
+import { adviceNotNews } from "./askguard.js";
 /* ---- v6.12: Auto — the chat picks the model, the web search and the thinking for each question --------------------------------
    Ali: "the chat should detect the best engine for this question if I downloaded more than one, and whether it needs web search
    or thinking". Pure logic; the chat calls it before answering. Tests: tests/unit/v710router.test.mjs.
@@ -56,6 +57,8 @@ export function wantsWeb(text, task = taskOf(text)) {
   if (t.trim().length < 8 || PERSONAL.test(t)) return false;
   if (task === "code" || task === "math" || task === "translate") return false;
   if (/^(write|draft|rewrite|summari[sz]e|translate|fix|improve|make it|اكتب|لخص|ترجم|صلح|حسّن)/i.test(t.trim())) return false;
+  // v10.9 (Ali's P8 test: «الجو حر جدا النهارده أعمل إيه؟» searched the web and came back with Facebook posts): tips are not news
+  if (adviceNotNews(t)) return false;
   return FRESH.test(t) || looksLikeProductName(t);
 }
 

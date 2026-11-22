@@ -15088,4 +15088,10 @@ export const KO = {
   "911 emergencies": "911 응급",
   "988 mental-health crisis line": "988 정신건강 위기 상담 전화",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "이번 주에 빠른 엔진이 답하는 중에 휴대폰 그래픽 칩이 앱을 두 번 닫았습니다. 지금은 CPU에서 실행 중입니다(느리지만 안정적). 엔진 → 속도에서 GPU를 다시 시도할 수 있습니다.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "그 일은 도와드릴 수 없어요. 사람들을 다치게 할 수 있습니다. 누군가 위험에 처해 있다면 지역 긴급 전화번호로 연락하세요.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "아니요. 단식 중에 일부러 무엇이든 먹거나 마시면(커피, 차, 물, 주스, 흡연) 단식이 깨집니다. 네 학파 모두 같은 견해입니다. 이프타르부터 수후르까지는 괜찮습니다. 정말 잊고 마셨다면 단식은 유효합니다. 환자, 여행자, 임신 중이거나 수유 중인 여성은 면제될 수 있으니, 본인의 경우는 믿을 만한 학자에게 물어보세요.",
+  "Answering again…": "다시 답하는 중…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who}에게 지불한 기록이 없습니다. 메모에 이름이 있으면 지불로 계산됩니다(예: “{who}에게 500”).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**{who}에게 {a}을(를) 지불했어요** {p} · 1건.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**{who}에게 {a}을(를) 지불했어요** {p} · {n}건.",
 };

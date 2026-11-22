@@ -33,6 +33,8 @@ const SAME = [["mohamed", "muhammad", "mohammed", "mohammad", "mohamad", "mhmd",
   ["hazem", "حازم"], ["wael", "وائل", "وايل"], ["nader", "نادر"], ["emad", "imad", "عماد"], ["fady", "fadi", "فادي"], ["bassem", "basem", "باسم"], ["ramy", "rami", "رامي"], ["maged", "majed", "ماجد"]];
 const CANON = new Map(); for (const g of SAME) for (const w of g) CANON.set(fold(w).trim(), fold(g[0]).trim());
 const canon = (w) => CANON.get(w) || w;
+/** v10.9: one key for any spelling of a first name («أحمد», "Ahmed", "ahmad" → "ahmed"). */
+export const nameKey = (w) => canon(fold(w).trim());
 /** Common first names (Egypt / Arab world, both scripts) — a word that is one of these is a name even without a capital. */
 export const isFirstName = (w) => CANON.has(fold(w).trim());
 

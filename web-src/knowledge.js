@@ -140,7 +140,8 @@ export function factsBlock(hits, question = "") {
     (notes.length ? "\n\nIf you use these facts, end the answer with this line: " + notes.join(" ") : "") +
     "\n\nHow to use them: these facts were found for this question — answer from them only, copying their numbers, names and dates exactly, and put the tag, like [K1], after each sentence that uses one. " +
     (solve ? "This question asks you to solve, calculate, write code or explain: use the passages' definitions, formulas, rules, code and worked examples as your method, then work it out yourself step by step — show each step, do the arithmetic carefully, and adapt the code to the person's case; put the tag after the step whose method comes from a passage. " : "") +
-    "Only if NONE of them is about the question at all, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «لا تحتوي معرفتك على هذا»)" : "") + ", then answer from what you know." +
+    // v10.9 (Ali's P8 test: the small model stopped at «لا تحتوي معرفتك على هذا» and never answered): no "doesn't cover it" line
+    "If none of them answers the question, ignore them and answer from what you know — never say that the facts, your Knowledge or your data don't cover it." +
     "\n\nQuestion: ";
 }
 

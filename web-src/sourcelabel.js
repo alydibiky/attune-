@@ -18,7 +18,8 @@ export function answerSources(m) {
   const out = [];
   if (m.lifeData || m.learnedUsed || m.projectKnowledge) out.push("data");
   if (m.fromFile || m.readInParts || m.fromPhotoTable) out.push("file");
-  if ((m.kchips && m.kchips.length) || m.knowledgeUsed) out.push("pack");
+  // v10.9 (Ali's P8 test: "From: a knowledge pack" under answers that used none): passages shown but not used are not a source
+  if ((m.kchips && m.kchips.length) || (m.knowledgeUsed && !Array.isArray(m.kchips))) out.push("pack");
   if ((m.sources || []).some((s) => /^https?:/i.test(String((s && s.url) || ""))) || m.factSheet) out.push("web");
   if (m.calc || m.verified || m.computed || m.codeCheck || m.fixedSlip) out.push("calc");
   return out.length ? out : ["model"];

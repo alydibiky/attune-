@@ -15088,4 +15088,10 @@ export const TH = {
   "911 emergencies": "911 เหตุฉุกเฉิน",
   "988 mental-health crisis line": "988 สายด่วนวิกฤตสุขภาพจิต",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "สัปดาห์นี้ชิปกราฟิกของโทรศัพท์ปิดแอปไปสองครั้งขณะที่เอนจินเร็วกำลังตอบ ตอนนี้ใช้ CPU แทน (ช้ากว่าแต่เสถียร) คุณลองใช้ GPU อีกครั้งได้ที่ เอนจิน → ความเร็ว",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "ช่วยเรื่องนี้ไม่ได้ — อาจทำให้ผู้อื่นได้รับอันตราย หากมีคนตกอยู่ในอันตราย โปรดโทรหาเบอร์ฉุกเฉินในพื้นที่",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "ไม่ได้ — การกินหรือดื่มสิ่งใดโดยเจตนาขณะถือศีลอด (กาแฟ ชา น้ำ น้ำผลไม้ หรือการสูบบุหรี่) ทำให้การถือศีลอดเสีย ทั้งสี่มัซฮับเห็นตรงกัน ตั้งแต่ละศีลอด (อิฟฏอร) จนถึงซะฮูรทำได้ หากดื่มเพราะลืมจริง ๆ การถือศีลอดยังใช้ได้ ผู้ป่วย ผู้เดินทาง และหญิงตั้งครรภ์หรือให้นมบุตรอาจได้รับการผ่อนผัน — สำหรับกรณีของคุณ โปรดถามผู้รู้ที่คุณไว้ใจ",
+  "Answering again…": "กำลังตอบใหม่…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "ไม่มีรายการที่จ่ายให้ {who} {p} การจ่ายจะนับเมื่อมีชื่ออยู่ในบันทึก (เช่น “500 ให้ {who}”)",
+  "**You paid {who} {a}** {p} · 1 entry.": "**คุณจ่ายให้ {who} {a}** {p} · 1 รายการ",
+  "**You paid {who} {a}** {p} · {n} entries.": "**คุณจ่ายให้ {who} {a}** {p} · {n} รายการ",
 };

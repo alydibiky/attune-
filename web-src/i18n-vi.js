@@ -15088,4 +15088,10 @@ export const VI = {
   "911 emergencies": "911 khẩn cấp",
   "988 mental-health crisis line": "988 đường dây khủng hoảng sức khỏe tâm thần",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Tuần này chip đồ họa của điện thoại đã hai lần đóng ứng dụng khi công cụ nhanh đang trả lời. Giờ nó chạy trên CPU (chậm hơn, ổn định); bạn có thể thử lại GPU trong Công cụ → Tốc độ.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "Tôi không thể giúp việc đó — nó có thể gây hại cho người khác. Nếu có ai đang gặp nguy hiểm, hãy gọi số khẩn cấp tại địa phương.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Không — cố ý ăn hoặc uống bất cứ thứ gì khi đang nhịn chay (cà phê, trà, nước, nước ép hay hút thuốc) đều làm mất hiệu lực nhịn chay; cả bốn trường phái đều đồng ý. Từ lúc xả chay (iftar) đến bữa suhoor thì được phép. Nếu bạn uống do thật sự quên, việc nhịn chay vẫn có giá trị. Người ốm, người đi đường xa, phụ nữ mang thai hoặc cho con bú có thể được miễn — với trường hợp của bạn, hãy hỏi một học giả bạn tin tưởng.",
+  "Answering again…": "Đang trả lời lại…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Không có khoản nào được ghi là đã trả cho {who} {p}. Một khoản được tính khi tên có trong ghi chú (vd. “500 cho {who}”).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Bạn đã trả {who} {a}** {p} · 1 khoản.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Bạn đã trả {who} {a}** {p} · {n} khoản.",
 };

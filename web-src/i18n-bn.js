@@ -15088,4 +15088,10 @@ export const BN = {
   "911 emergencies": "911 জরুরি",
   "988 mental-health crisis line": "988 মানসিক স্বাস্থ্য সংকট লাইন",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "এই সপ্তাহে দুবার দ্রুত ইঞ্জিন উত্তর দেওয়ার সময় ফোনের গ্রাফিক্স চিপ অ্যাপ বন্ধ করে দিয়েছে। এখন এটি CPU-তে চলছে (ধীর, স্থির); ইঞ্জিন → গতি থেকে আবার GPU চেষ্টা করতে পারেন।",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "এতে আমি সাহায্য করতে পারব না — এতে মানুষের ক্ষতি হতে পারে। কেউ বিপদে থাকলে স্থানীয় জরুরি নম্বরে ফোন করুন।",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "না — রোজা অবস্থায় ইচ্ছাকৃতভাবে কিছু খাওয়া বা পান করা (কফি, চা, পানি, জুস বা ধূমপান) রোজা ভেঙে দেয়; চার মাযহাবই একমত। ইফতার থেকে সেহরি পর্যন্ত এটা জায়েজ। সত্যিই ভুলে গিয়ে পান করলে আপনার রোজা ঠিক থাকে। অসুস্থ, মুসাফির এবং গর্ভবতী বা দুগ্ধদানকারী নারীরা ছাড় পেতে পারেন — নিজের ক্ষেত্রে বিশ্বস্ত কোনো আলেমকে জিজ্ঞেস করুন।",
+  "Answering again…": "আবার উত্তর দিচ্ছি…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who}-কে দেওয়া হিসেবে কিছু লেখা নেই। নোটে নাম থাকলে পেমেন্টটি গোনা হয় (যেমন “{who}-কে 500”)।",
+  "**You paid {who} {a}** {p} · 1 entry.": "**আপনি {who}-কে {a} দিয়েছেন** {p} · ১টি এন্ট্রি।",
+  "**You paid {who} {a}** {p} · {n} entries.": "**আপনি {who}-কে {a} দিয়েছেন** {p} · {n}টি এন্ট্রি।",
 };

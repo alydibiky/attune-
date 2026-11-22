@@ -15089,4 +15089,10 @@ export const HI = {
   "911 emergencies": "911 इमरजेंसी",
   "988 mental-health crisis line": "988 मानसिक स्वास्थ्य संकट लाइन",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "इस हफ़्ते दो बार फ़ोन की ग्राफ़िक्स चिप ने ऐप बंद कर दिया जब तेज़ इंजन जवाब दे रहा था। अब यह CPU पर है (धीमा, स्थिर); आप इंजन → स्पीड में GPU फिर से आज़मा सकते हैं।",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "मैं इसमें मदद नहीं कर सकता — इससे लोगों को नुकसान हो सकता है। अगर कोई खतरे में है, तो अपने स्थानीय आपातकालीन नंबर पर कॉल करें।",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "नहीं — रोज़े के दौरान जानबूझकर कुछ भी खाना या पीना (कॉफ़ी, चाय, पानी, जूस या धूम्रपान) रोज़ा तोड़ देता है; चारों मज़हब इस पर सहमत हैं। इफ़्तार से सहरी तक यह जायज़ है। अगर आपने सच में भूलकर पिया, तो आपका रोज़ा सही है। बीमार, मुसाफ़िर और गर्भवती या दूध पिलाने वाली महिलाओं को छूट मिल सकती है — अपने मामले के लिए किसी भरोसेमंद आलिम से पूछें।",
+  "Answering again…": "फिर से जवाब दे रहा हूँ…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} को भुगतान के रूप में कुछ दर्ज नहीं है। भुगतान तब गिना जाता है जब नाम उसके नोट में हो (जैसे “{who} को 500”)।",
+  "**You paid {who} {a}** {p} · 1 entry.": "**आपने {who} को {a} दिए** {p} · 1 एंट्री।",
+  "**You paid {who} {a}** {p} · {n} entries.": "**आपने {who} को {a} दिए** {p} · {n} एंट्री।",
 };

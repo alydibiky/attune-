@@ -12309,4 +12309,10 @@ export const AR = {
   "Or type here…": "أو اكتب هنا…",
   "The details are on the screen.": "التفاصيل على الشاشة.",
   "with: ": "مع: ",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "مقدرش أساعد في ده — ممكن يأذي ناس. لو حد في خطر، كلّم رقم الطوارئ.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "لا — أي أكل أو شرب بقصد وإنت صايم (قهوة، شاي، مية، عصير، أو سجاير) بيفطّر، والمذاهب الأربعة متفقين على كده. تقدر تشربها من الفطار لحد السحور. ولو شربت ناسي، صيامك صحيح. والمريض والمسافر والحامل والمرضع ليهم رخصة — ولحالتك الخاصة اسأل عالم تثق فيه.",
+  "Answering again…": "بجاوب تاني…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "مفيش حاجة متسجلة إنك دفعتها لـ{who} {p}. الدفعة بتتحسب لما الاسم يبقى في الملاحظة (مثلاً «500 لـ{who}»).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**دفعت لـ{who} {a}** {p} · عملية واحدة.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**دفعت لـ{who} {a}** {p} · {n} عمليات.",
 };

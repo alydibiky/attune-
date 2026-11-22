@@ -15080,4 +15080,10 @@ export const ARB = {
   "911 emergencies": "911 للطوارئ",
   "988 mental-health crisis line": "988 خط أزمات الصحة النفسية",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "مرتين هذا الأسبوع أغلق معالج الرسوميات في الهاتف التطبيقَ أثناء رد المحرك السريع. إنه الآن على الـCPU (أبطأ لكنه ثابت)؛ يمكنك تجربة الـGPU مجددًا من المحرك ← السرعة.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "لا أستطيع المساعدة في ذلك — فقد يؤذي الناس. إذا كان أحد في خطر، فاتصل برقم الطوارئ المحلي.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "لا — الأكل أو الشرب عمدًا أثناء الصيام (القهوة أو الشاي أو الماء أو العصير أو التدخين) يُفطِر باتفاق المذاهب الأربعة. ويجوز ذلك من الإفطار حتى السحور. ومن شرب ناسيًا فصيامه صحيح. وللمريض والمسافر والحامل والمرضع رخصة — وفي حالتك الخاصة اسأل عالمًا تثق به.",
+  "Answering again…": "أُجيب مرة أخرى…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "لا يوجد شيء مسجَّل مدفوعًا لـ{who} {p}. تُحسب الدفعة عندما يكون الاسم في ملاحظتها (مثلًا «500 لـ{who}»).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**دفعتَ لـ{who} {a}** {p} · عملية واحدة.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**دفعتَ لـ{who} {a}** {p} · {n} عمليات.",
 };

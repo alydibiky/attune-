@@ -15089,4 +15089,10 @@ export const ES = {
   "911 emergencies": "911 emergencias",
   "988 mental-health crisis line": "988 línea de crisis de salud mental",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Dos veces esta semana el chip gráfico del teléfono cerró la app mientras el motor rápido respondía. Ahora está en la CPU (más lento, estable); puedes probar la GPU otra vez en Motor → Velocidad.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "No puedo ayudar con eso: podría hacer daño a otras personas. Si alguien está en peligro, llama al número de emergencias de tu zona.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "No: comer o beber cualquier cosa a propósito mientras ayunas (café, té, agua, zumo o fumar) rompe el ayuno; las cuatro escuelas coinciden. Está bien desde el iftar hasta el suhur. Si bebiste por un olvido sincero, tu ayuno sigue siendo válido. Los enfermos, los viajeros y las mujeres embarazadas o lactantes pueden estar exentos; para tu caso concreto, consulta a un erudito de confianza.",
+  "Answering again…": "Respondiendo de nuevo…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "No hay nada registrado como pagado a {who} {p}. Un pago cuenta cuando el nombre está en su nota (p. ej., «500 a {who}»).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Pagaste a {who} {a}** {p} · 1 movimiento.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Pagaste a {who} {a}** {p} · {n} movimientos.",
 };

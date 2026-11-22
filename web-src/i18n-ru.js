@@ -15088,4 +15088,10 @@ export const RU = {
   "911 emergencies": "911 экстренные службы",
   "988 mental-health crisis line": "988 линия кризисной психологической помощи",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Дважды за эту неделю графический чип телефона закрыл приложение, пока быстрый движок отвечал. Сейчас он работает на CPU (медленнее, но стабильно); GPU можно попробовать снова в Движок → Скорость.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "С этим я не помогу — это может навредить людям. Если кто-то в опасности, позвоните в местную экстренную службу.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Нет — намеренная еда или питьё во время поста (кофе, чай, вода, сок или курение) нарушают пост; все четыре мазхаба согласны. От ифтара до сухура это разрешено. Если вы выпили по искренней забывчивости, пост остаётся действительным. Больные, путники, беременные и кормящие могут быть освобождены — по своему случаю спросите учёного, которому доверяете.",
+  "Answering again…": "Отвечаю заново…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Ничего не записано как оплаченное {who} {p}. Платёж учитывается, когда имя есть в заметке (например, «500 для {who}»).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**Вы заплатили {who} {a}** {p} · 1 запись.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**Вы заплатили {who} {a}** {p} · записей: {n}.",
 };

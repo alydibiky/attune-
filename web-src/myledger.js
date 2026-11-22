@@ -9,6 +9,8 @@ import { tr, dateLocale } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { CAT_WORDS } from "./yusr/logtext.js";
 import { LEX } from "./understand.js";
+import { payee } from "./askguard.js";
+import { nameKey, fold } from "./entities.js";
 
 /** The category a question is about ("how much on food this week?" → "food"), or "". Salary only for income questions. */
 export function catAsked(q) {
@@ -111,8 +113,21 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
   const cur = (tx) => ((acct.get(tx.account) || {}).currency || ledger.currency || homeCurrency());
   const custom = new Map((ledger.customCats || []).map((c) => [c.id, [c.en || c.name || c.id, c.ar || c.en || c.id]]));
   const catName = (id) => { const c = CATS[id] || custom.get(id) || [String(id || "Other"), String(id || "أخرى")]; return ar ? c[1] : tr(c[0]); };
+  // v10.9 (Ali's P8 test: «دفعت كام لأحمد الشهر ده؟» was answered with the whole month): money to one person counts only the
+  // entries that name them (any spelling: «أحمد», Ahmed, ahmad)
+  const who = onlyCat ? "" : payee(question), whoK = who ? nameKey(who) : "";
+  // («لأحمد السباك», «وأحمد», "to Ahmed": a name glued to ل / و / ب is still the name)
+  const names = (x) => fold([x.note, x.person, x.payee, x.to, x.who, x.merchant].filter(Boolean).join(" ").replace(/لـ/g, "ل")).trim().split(" ").flatMap((w) => [w, w.replace(/^(?:ول|وب|ل|و|ب)(?=[\u0621-\u064a]{3})/, "")]).map(nameKey);
   const inSpan = (ledger.txns || []).filter((x) => x && x.date >= span.from && x.date <= span.to && (x.type === "expense" || x.type === "income") && (acct.get(x.account) || {}).unit !== "g"
-    && (!onlyCat || x.type === "income" || (x.cat || "other") === onlyCat));
+    && (!onlyCat || x.type === "income" || (x.cat || "other") === onlyCat) && (!whoK || (x.type === "expense" && names(x).includes(whoK))));
+  if (whoK) {
+    const amt = [...new Set(inSpan.map(cur))].map((c) => money(inSpan.filter((x) => cur(x) === c).reduce((a, x) => a + (+x.amount || 0), 0), c)).join(" + ");
+    const lines = inSpan.sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 15).map((x) => `- ${x.date} · ${catName(x.cat)} · ${money(+x.amount || 0, cur(x))}${x.note ? " — " + String(x.note).replace(/[|\n]/g, " ").slice(0, 60) : ""}`);
+    const head = !inSpan.length ? T("Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).", { who, p: P }, `مفيش حاجة متسجلة إنك دفعتها لـ${who} ${inAr(span.label[1])}. الدفعة بتتحسب لما الاسم يبقى في الملاحظة (مثلاً «500 لـ${who}»).`)
+      : inSpan.length === 1 ? T("**You paid {who} {a}** {p} · 1 entry.", { who, a: amt, p: P }, `**دفعت لـ${who} ${amt}** ${inAr(span.label[1])} · عملية واحدة.`)
+      : T("**You paid {who} {a}** {p} · {n} entries.", { who, a: amt, p: P, n: inSpan.length }, `**دفعت لـ${who} ${amt}** ${inAr(span.label[1])} · ${inSpan.length === 2 ? "عمليتين" : inSpan.length + " عمليات"}.`);
+    return { text: [head, ...(short || !lines.length ? [] : ["", ...lines])].join("\n").trim(), total: inSpan.reduce((a, x) => a + (+x.amount || 0), 0), count: inSpan.length, empty: !inSpan.length, span, who };
+  }
   const out = [], sums = {};
   const part = (type) => {
     const rows = inSpan.filter((x) => x.type === type).sort((a, b) => (a.date < b.date ? 1 : -1));

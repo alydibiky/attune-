@@ -56,9 +56,9 @@ ok(worst < 100, `each lookup takes well under 100 ms (${worst.toFixed(1)} ms)`);
 const hits = [{ tag: "K1", chunk: { title: "Villa rules", page: 0, text: "The gate code for the villa is 4471.", src: "s1" } }, { tag: "K2", chunk: { title: "Contract", page: 2, text: "Late fee is 2% per month.", src: "s2" } }];
 const blk = K.factsBlock(hits, "gate code?");
 ok(/Facts from your Knowledge/.test(blk) && /\[K1\] \(Villa rules\)/.test(blk) && /\[K2\] \(Contract, p\. 2\)/.test(blk), "the block lists every passage with its tag and source");
-ok(/answer from them only/.test(blk) && /doesn't cover it/.test(blk) && /Question: $/.test(blk), "…says to use only these facts, to say when they don't answer, and ends before the question");
+ok(/answer from them only/.test(blk) && /ignore them and answer from what you know/.test(blk) && !/لا تحتوي معرفتك/.test(blk) && /Question: $/.test(blk), "…says to use only these facts, to answer from its own knowledge when they don't fit (v10.9: never «لا تحتوي معرفتك»), and ends before the question");
 ok(K.factsBlock([], "x") === "", "no facts → no block");
-ok(/معرفتك/.test(K.factsBlock(hits, "كود البوابة كام؟")), "an Arabic question gets the Arabic 'not covered' phrase");
+ok(!/معرفتك/.test(K.factsBlock(hits, "كود البوابة كام؟")), "v10.9 (Ali's P8 test): an Arabic question is never taught the «لا تحتوي معرفتك» line");
 
 // ---- citation checking
 let c = K.checkFacts("The gate code is 4471 [K1]. The fee is 5% [K2]. Parking is free [K7].", hits);

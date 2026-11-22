@@ -15089,4 +15089,10 @@ export const TRK = {
   "911 emergencies": "911 acil",
   "988 mental-health crisis line": "988 ruh sağlığı kriz hattı",
   "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.": "Bu hafta iki kez, hızlı motor yanıt verirken telefonun grafik çipi uygulamayı kapattı. Şimdi CPU'da çalışıyor (daha yavaş, kararlı); GPU'yu Motor → Hız bölümünden yeniden deneyebilirsin.",
+  "I can't help with that — it could hurt people. If someone is in danger, call your local emergency number.": "Bu konuda yardımcı olamam — insanlara zarar verebilir. Biri tehlikedeyse yerel acil durum numarasını arayın.",
+  "No — eating or drinking anything on purpose while fasting (coffee, tea, water, juice, or smoking) breaks the fast; all four schools agree. It's fine from iftar until suhoor. If you drank by honest forgetting, your fast still counts. The sick, travellers and pregnant or nursing women may be excused — for your own case, ask a scholar you trust.": "Hayır — oruçluyken bilerek herhangi bir şey yemek ya da içmek (kahve, çay, su, meyve suyu veya sigara) orucu bozar; dört mezhep de bu konuda hemfikirdir. İftardan sahura kadar serbesttir. Gerçekten unutarak içtiyseniz orucunuz geçerlidir. Hastalar, yolcular, hamile ve emziren kadınlar muaf olabilir — kendi durumunuz için güvendiğiniz bir âlime danışın.",
+  "Answering again…": "Yeniden yanıtlanıyor…",
+  "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} kişisine ödenmiş olarak kayıtlı bir şey yok. Bir ödeme, adı notunda geçtiğinde sayılır (ör. “{who} için 500”).",
+  "**You paid {who} {a}** {p} · 1 entry.": "**{who} kişisine {a} ödedin** {p} · 1 kayıt.",
+  "**You paid {who} {a}** {p} · {n} entries.": "**{who} kişisine {a} ödedin** {p} · {n} kayıt.",
 };
