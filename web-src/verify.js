@@ -92,12 +92,14 @@ export function fixSolveMessages(question, code, error) {
 export function readAnswer(stdout) {
   const m = String(stdout || "").match(/ANSWER:\s*(.+)\s*$/m);
   // v6.8 (the trials): 18.4 * 0.75 prints 13.799999999999999 — a computer rounding artifact, shown as 13.8
-  return m ? m[1].trim().replace(/-?\d+\.\d{9,}/g, (n) => String(parseFloat(parseFloat(n).toPrecision(12)))) : null;
+  // v10.9 (the real phone model: «22000 ÷ 9 شهور» was answered "22000/9" — a Fraction printed as it is): a fraction becomes its number
+  return m ? m[1].trim().replace(/^(-?\d+)\s*\/\s*(\d+)(?=\s*[^\d\/]*$)/, (x, a, b) => (+b && !(+a <= 31 && +b <= 12) ? String(Math.round((+a / +b) * 100) / 100) : x))
+    .replace(/-?\d+\.\d{9,}/g, (n) => String(parseFloat(parseFloat(n).toPrecision(12)))) : null;
 }
 
 export function explainMessages(question, code, output, answer) {
   return [
-    { role: "system", content: "You explain the solution of a problem that has already been computed exactly by a program. The program and its result are correct — use them; do not recompute differently and do not contradict the result. Write: a one-line answer in bold first, then the short working as numbered steps in plain text maths (1/x = 1/30, no LaTeX, no $ signs). If the result says impossible, say so in the first line and explain why in simple words. Match the language of the question. No code in the answer." },
+    { role: "system", content: "You explain the solution of a problem that has already been computed exactly by a program. The program and its result are correct — use them; do not recompute differently and do not contradict the result. Write numbers as decimals (2,444.44), never as fractions like 22000/9. Write: a one-line answer in bold first, then the short working as numbered steps in plain text maths (1/x = 1/30, no LaTeX, no $ signs). If the result says impossible, say so in the first line and explain why in simple words. Match the language of the question. No code in the answer." },
     { role: "user", content: `Question:\n${String(question).trim()}\n\nProgram:\n\`\`\`python\n${code}\n\`\`\`\n\nIt printed:\n${String(output).trim().split("\n").slice(-12).join("\n")}\n\nFinal result: ${answer}` },
   ];
 }
