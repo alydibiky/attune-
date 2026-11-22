@@ -230,11 +230,14 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   // sentences only (a debt like "Ahmed my friend owes me 500" stays a debt); not sure → Attune asks instead of saving a guess
   { const raw = String(text || "").trim(), short = raw.split(/\s+/).length <= 7 && !/\d/.test(raw);
     let tx = null; try { tx = readTeach(raw, stores.people || loadDir()); } catch (e) {}
+    // v10.8 (persona 6 re-run: "remind me every Monday to call mum" asked «Who do you mean? Write the name, e.g. “Nada is my wife”») —
+    // a reminder is a reminder; who "mum" is can be taught another time
+    if (tx && tx.kind !== "rule" && /\bremind\s+me\b|(?:^|[\s،,:])(?:فكرني|فكّرني|ذكرني|ذكّرني)(?=\s|$|[،,:.!؛])/i.test(raw)) tx = null;
     if (tx && (tx.kind === "rule" || (short && tx.kind === "who"))) return { actions: [{ kind: "teach", x: tx }] };
     if (tx && tx.kind === "ask" && !/^\s*tell me (?:a|an|about|how|why|what|the|more|something)\b/i.test(raw) && (short || /\b(tell|notify|alert|hide|never show)\b|قولي|نبهني|اخفي/i.test(raw))) return { actions: [], ask: { kind: "teach", en: teachLine(tx, { tr }), ar: tx.qAr } }; }
   // v9.1 (e2e_v513: "Crane hire 25000 each day, the 1st to the 5th… Give me the rent and the rent with the 14 tax added" was recorded as
   // two expenses, 25,000 and 14): a request in a LATER sentence makes it a question too — unless money was clearly spent / paid
-  if (!EAT.test(t) && !MONEY_VERB.test(t) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };
+  if (!EAT.test(t) && !MONEY_VERB.test(t) && !/\bremind\s+me\b|فكرني|ذكرني/i.test(t.replace(/\u0651/g, "")) && t.split(/[.!?؟\n]+/).slice(1).some((x) => REQ.test(x))) return { actions: [], chat: true };   // v10.8: "Hi! Remind me…", "Every Saturday... remind me" are reminders
   // v9.1 (e2e_v700auto: "Lynk and co 900" — a car's name — was recorded as a 900 expense called "co"): a car maker's name with a
   // number and no spending word or currency is a question about the car ("fuel for the Hyundai 500" is still money)
   if (makerOf(t) && !MONEY_VERB.test(t) && !CURRENCY.test(t) && !Object.entries(CAT_WORDS).some(([k, re]) => re.test(t))) return { actions: [], chat: true };
@@ -279,7 +282,8 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
   if (/^\s*(please\s+)?(explain|describe|write|summari[sz]e|translate|compare|teach me|help me (understand|write)|tell me (about|how|why|a))\b|^\s*(اشرح|اشرحلي|اوصف|أوصف|لخص|لخصلي|ترجم|ترجملي|قارن|اكتب|اكتبلي|علمني|فهمني|احكيلي)/i.test(t)) return { actions: [], chat: true };
   // v9.0 (the full test run: the marble riddle — "an empty glass … the coffee table" — logged water and a coffee): a long sentence
   // with no amount that doesn't say something was eaten or drunk is a question or a story for Chat, not something to log
-  if (!/\b(ate|eaten|eat|eating|breakfast|lunch|dinner|supper|snack|drank|drink|drinking)\b|اكلت|أكلت|كلت|فطرت|اتغديت|اتعشيت|فطار|غدا|عشا|شربت|بشرب/i.test(t) && !/[\d٠-٩]/.test(t) && t.split(/\s+/).filter(Boolean).length > 6) return { actions: [], chat: true };
+  if (!/\b(ate|eaten|eat|eating|breakfast|lunch|dinner|supper|snack|drank|drink|drinking)\b|اكلت|أكلت|كلت|فطرت|اتغديت|اتعشيت|فطار|غدا|عشا|شربت|بشرب/i.test(t) && !/[\d٠-٩]/.test(t) && t.split(/\s+/).filter(Boolean).length > 6
+    && !/\bremind|فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني/i.test(t)) return { actions: [], chat: true };   // v10.8 (persona 6 re-run): "remind me every Friday to pay rent" (7 words, no number) is a reminder
   // v9.0 (the sentence bank: "buy me AirPods Pro 2 under 9000" was logged as 9,000 spent): a wish with a price limit is for an agent,
   // never money already spent
   if (/\b(under|below|less than|cheaper than|at most|max)\b|أقل من|اقل من|تحت|بحد أقصى/i.test(t) && /\b(buy me|get me|find me|tell me when|notify me|let me know when|alert me|watch)\b|اشتريلي|هاتلي|دورلي|نبهني|قولي لما|عرفني لما/i.test(t)) return { actions: [], chat: true };
@@ -297,7 +301,7 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
       ar: `خطة ${pl.month}: دخل ${f(pl.income)} — ${f(pl.fixedTotal)} ثابت، ${f(pl.potsTotal)} للتحويش، ${f(pl.flexTotal)} مصاريف عادية، ${f(pl.free)} حر.`, rows, open: "money", sources: ["money", "life"] } };
   }
   // a reminder / alarm / timer
-  if (looksLikeAction(t) && /remind|alarm|wake me|timer|فكرني|ذكرني|صحيني|منبه|تايمر|نبهني/i.test(t)) {
+  if (looksLikeAction(t) && /remind|alarm|wake me|timer|فكرني|ذكرني|صحيني|منبه|تايمر|نبهني/i.test(t.replace(/\u0651/g, ""))) {   // v10.8: «فكّرني» with a shadda too
     const a = quickAction(t, now);
     if (a && ["reminder", "alarm", "timer"].includes(a.kind) && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
     return { actions: [], chat: true };
@@ -448,7 +452,7 @@ const EMPTY_DAY = { meals: {}, water: 0, workouts: [] };
 export function starterLedger(now = Date.now()) {
   const cur = homeCurrency(null), c = (savedCountry() || "").toUpperCase();
   return { lang: "en", premium: { active: false }, theme: "midnight", ui: { accent: "", fs: "m", tabs: { trends: 1, accounts: 1, goals: 1, notes: 1, zakat: 1, bills: 1 }, title: "Yusr", period: "month", dec: 1, wk: "mon" },
-    country: c, currency: cur, pin: null, accounts: [{ id: "a" + now.toString(36), name: "Cash", emoji: "💵", currency: cur, start: 0 }], txns: [], budgets: { overall: 0, cats: {} },
+    country: c, currency: cur, pin: null, accounts: [{ id: "a" + now.toString(36), name: tr("Cash"), emoji: "💵", currency: cur, start: 0 }],   /* v10.8 (persona walk): «Cash» showed in English in Arabic */ txns: [], budgets: { overall: 0, cats: {} },
     recurring: [], customCats: [], goals: [], debts: [], projects: [] };
 }
 /** Apply one action to the stores → { stores: { key: value }, done: { en, ar }, open, need?: "reminder" | "note" | "period" | "money-setup" } */

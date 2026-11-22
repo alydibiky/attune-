@@ -298,6 +298,11 @@ contact: the person's name if any. phone: digits only if a number was written. m
  */
 export function buildAction(json, text0, nowIn) {
   const now = nowIn || Date.now();
+  // v10.8 (the reminder run): two spaces ("every  Thursday", "remind  me") and direction marks («الساعة ‎7») broke the patterns below
+  text0 = String(text0 || "").replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, "").replace(/[ \t\u00a0\u202f]+/g, " ")
+    // "8 a.m." = "8am"; «8 الصبح» / «8 بالليل» without «الساعة» is a time too
+    .replace(/(\d)\s*a\.\s?m\.?/gi, "$1am").replace(/(\d)\s*p\.\s?m\.?/gi, "$1pm")
+    .replace(/(^|[^\d:\u0600-\u06ff])([\d٠-٩]{1,2})\s+(الصبح|صباحا|صباحًا|بالليل|باليل|مساء|مساءً|المسا|بليل)/g, (m, a, h, w) => (/الساعة\s*$|الساعه\s*$/.test(a) ? m : a + "الساعة " + h + " " + w));
   const text = easeTime(text0, now);
   const j = json && typeof json === "object" ? json : {};
   let kind = KINDS.includes(j.action) ? j.action : guessKind(text);
@@ -325,9 +330,23 @@ export function buildAction(json, text0, nowIn) {
     const dt = new Date(y, mo - 1, da, h, mi);
     if (dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === da && h < 24 && mi < 60) t = { at: dt.getTime(), allDay: false, said: { day: "model", time: "model" } };
   }
+  // v10.8 (persona 6 re-run: «فكرني كل جمعة ادفع الإيجار» had no date — "every Friday" in English did): a reminder that names its
+  // weekday(s) but no time is all day on the next of those days, like the English one
+  if (!t && (kind === "reminder" || kind === "calendar")) { const ds = daysIn(text); const at = ds.length ? firstOnDays(ds, now, 9, 0) : null; if (at) t = { at, allDay: true, said: { day: "weekday", time: "none" } }; }
   let durationSec = 0;
   if (kind === "timer") { durationSec = parseDuration(text) || (j.minutes > 0 ? j.minutes * 60 : 0); if (!durationSec) problems.push("How long should the timer be?"); }
   if ((kind === "reminder" || kind === "alarm" || kind === "calendar") && !t) problems.push("When? Pick the date and time.");
+  // v10.8 (the reminder run: "every day at 07:00" said at 10:00 became 19:00): a repeating reminder keeps the hour it was given — when this
+  // morning's has gone it starts at the next turn, it does not flip to the evening (no pm / evening word was said)
+  if (t && repeatIn(text) !== "none" && !/\b(pm|p\.m|evening|tonight|night|afternoon)\b|مساء|بالليل|باليل|العصر|المغرب|العشا|بليل/i.test(text)) {
+    // only a time that says it is the morning — "7 am", «7 الصبح», or a clock time "07:00" / "10:00"; a bare "at 8" keeps the next 8 o'clock
+    const hm = /(?:\bat\s+|الساعة\s*|الساعه\s*|\b)(0?\d|1[0-2])(?:(:\d{2})\s*(?:am|a\.m|الصبح|صباحا|صباحًا)?|\s*(am|a\.m|الصبح|صباحا|صباحًا))(?=\s|$|[,،.!:;؛)])/i.exec(text.replace(/\b\d{1,2}(?:st|nd|rd|th)\b/gi, " "));
+    if (hm) { const h = +hm[1], d = new Date(t.at); if (d.getHours() === h + 12 && h < 12) { d.setHours(h); t = { ...t, at: d.getTime() }; } } }
+  // v10.8 (the reminder run: "on the 22nd of every month", said on the 22nd after 9:00, was "already passed"): a repeating reminder
+  // whose first time has gone starts at its next turn
+  if (t && t.at <= now && kind !== "timer") { const rp = repeatIn(text); if (rp !== "none") { const d = new Date(t.at);
+      for (let i = 0; i < 3 && d.getTime() <= now; i++) { if (rp === "monthly") d.setMonth(d.getMonth() + 1); else if (rp === "daily" || rp === "weekdays") d.setDate(d.getDate() + 1); else d.setDate(d.getDate() + 7); }
+      if (d.getTime() > now) t = { ...t, at: d.getTime() }; } }
   if (t && t.at < now - 60000 && kind !== "timer") problems.push("That time has already passed — pick a later one.");
   if (t && t.at > now + 366 * 86400000) problems.push("That is more than a year away — check the date.");
   const phone = normalizePhone(j.phone || (String(text).match(/(?:\+|00)?\d[\d\s-]{7,16}\d/) || [""])[0]);
@@ -387,13 +406,13 @@ function guessKind(text) {
    one sentence → repeat "days:0,2,4" (0 = Sunday). Names in English (full or short), Egyptian / formal Arabic, with or without «ال»,
    glued to «و» («وتلات») — a bare Arabic day name counts only after «كل» / «و» / a comma, so «اربع» (four) is never a day by itself. */
 const DAY_RE = [
-  [/\bsun(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:حد|احد|أحد)(?=$|[\s,،])/, 0],
-  [/\bmon(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:اتنين|اثنين|إثنين)(?=$|[\s,،])/, 1],
-  [/\btue(s|sday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:تلات|ثلاثاء|تلاتاء)(?=$|[\s,،])/, 2],
-  [/\bwed(nesday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:اربع|أربع|اربعاء|أربعاء)(?=$|[\s,،])/, 3],
-  [/\bthu(rs|rsday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)خميس(?=$|[\s,،])/, 4],
-  [/\bfri(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)(?:جمعة|جمعه)(?=$|[\s,،])/, 5],
-  [/\bsat(urday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*)سبت(?=$|[\s,،])/, 6],
+  [/\bsun(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)(?:حد|احد|أحد)(?=$|[\s,،.!؟?:؛])/, 0],
+  [/\bmon(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)(?:اتنين|اثنين|إثنين)(?=$|[\s,،.!؟?:؛])/, 1],
+  [/\btue(s|sday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)(?:تلات|ثلاثاء|تلاتاء)(?=$|[\s,،.!؟?:؛])/, 2],
+  [/\bwed(nesday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)(?:اربع|أربع|اربعاء|أربعاء)(?=$|[\s,،.!؟?:؛])/, 3],
+  [/\bthu(rs|rsday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)خميس(?=$|[\s,،.!؟?:؛])/, 4],
+  [/\bfri(day)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)(?:جمعة|جمعه)(?=$|[\s,،.!؟?:؛])/, 5],
+  [/\bsat(urday)?s?\b/i, /(?:^|[\s,،])(?:و?ال|و|كل\s*(?:يوم\s+)?)سبت(?=$|[\s,،.!؟?:؛])/, 6],
 ];
 /** The weekdays a sentence names, sorted (0 = Sunday). */
 export function daysIn(text) {
@@ -424,13 +443,16 @@ function repeatIn(text) {
   // v9.0 (Ali: "remind me on the last day of each month to pay interest for mom" got no date): the month's last day, every month
   if (LAST_DAY.test(s)) return "lastday";
   { const lw = lastWeekdayIn(s); if (lw >= 0) return "last:" + lw; }
-  if (/\bevery month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
+  // v10.8 (persona 6 re-run): "on the 3rd of each month", "each Friday", "on Fridays" — "each" and the plural are "every" too;
+  // «كل يوم سبت» is every Saturday, not every day
+  if (/\b(?:every|each) month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
   { const ds = daysIn(s); if (ds.length >= 2 && ds.length < 7) return "days:" + ds.join(","); }
+  if (/كل\s+يوم\s+(?:ال)?(?:حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$|[،,.!؟?:؛])/.test(s)) return "weekly";
   if (/every ?day|daily|كل يوم|يوميا|يوميًا/i.test(s)) return "daily";
   // v9.9.17 (the hard run): «فكرني كل جمعة الساعة 10» was a one-time reminder — one Arabic day after «كل» is every week
-  if (/كل\s+(?:يوم\s+)?(?:ال)?(?:حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/.test(s)) return "weekly";
+  if (/كل\s+(?:يوم\s+)?(?:ال)?(?:حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$|[،,.!؟?:؛])/.test(s)) return "weekly";
   if (/weekdays|every weekday|أيام الشغل|ايام الشغل/i.test(s)) return "weekdays";
-  if (/every (week|sun|mon|tue|wed|thu|fri|sat)|weekly|كل اسبوع|كل أسبوع|أسبوعيا|اسبوعيا/i.test(s)) return "weekly";
+  if (/(?:every|each) (week|sun|mon(?!th)|tue|wed|thu|fri|sat)|\b(?:sun|mon|tues|wednes|thurs|fri|satur)days\b|weekly|كل اسبوع|كل أسبوع|أسبوعيا|اسبوعيا/i.test(s)) return "weekly";
   return "none";
 }
 function cleanText(x, n) { return String(x || "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n); }
@@ -444,17 +466,23 @@ function titleFrom(text, kind, contact) {
   // rent", «كمان ساعتين», "next Friday at noon", «يوم الخميس»): the time words go first, then a lone at / on
   const MON = "(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*", AMON = "(?:يناير|فبراير|مارس|ابريل|أبريل|مايو|يونيو|يوليو|اغسطس|أغسطس|سبتمبر|اكتوبر|أكتوبر|نوفمبر|ديسمبر)";
   let s = String(text || "").replace(new RegExp(LAST_DAY.source, "gi"), " ")
+    // v10.8: whole month phrases first — "on the last Thursday of every month", "of every month" (the day / "every month" cleaners below
+    // took them apart and left «the last Thursday of», «of»)
+    .replace(/\b(?:every |each |on the |on )?last (?:sun|mon(?!th)|tue|wed|thu|fri|sat)[a-z]* (?:of|in) (?:the|every|each) month\b/gi, " ")
+    .replace(/\bof\s+(?:every|each|the)\s+month\b/gi, " ")
     .replace(new RegExp("\\b(on |by |before )?(the )?\\d{1,2}(st|nd|rd|th)?( of)? " + MON + "\\b|\\b(on |by )?" + MON + " \\d{1,2}(st|nd|rd|th)?\\b", "gi"), " ")
     .replace(new RegExp("(يوم |في )?[\\d٠-٩]{1,2} " + AMON, "g"), " ")
     .replace(/\b(next|this|coming) (sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|\b(next|this) (week|month)\b|\b(at )?(noon|midday|midnight)\b/gi, " ")
     .replace(/(كمان|بعد)\s+(ساعتين|ساعه|ساعة|نص ساعه|نص ساعة|ربع ساعه|ربع ساعة|دقيقتين|يومين|[\d٠-٩]+\s+\S+)/g, " ")
-    .replace(/(^|\s)يوم\s+(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
+    .replace(/(^|\s)(?:كل\s+)?يوم\s+(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(?=\s|$)/g, " ")
     .replace(/\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/gi, " ").replace(/\s+(at|on)\s*(?=\s|$)/gi, " ")
     .replace(/^(please |can you |could you )?(set (an? )?(alarm|timer|reminder)( for)?|wake me( up)?|add|put|schedule)\s+/i, "").replace(/^\s*[:\-–]\s*/, "")
     .replace(/\b(please )?remind me( to\b)?/gi, " ").replace(/^\s*reminder\s*(to\b|for\b|:|-)?/i, " ").replace(/\b(please )?(don'?t let me forget|make sure i (remember|don'?t forget))( to\b)?/gi, " ")
     .replace(/(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|صحيني|صحّيني)(\s+(إن|ان|اني|إني)(?=\s)|\s+ب(?=ال))?/g, " ").replace(/^\s*(حطلي|حط|اعمل|اعملي)\s+/, "")
-    .replace(/\b(every|each|on)\s+((sun|mon|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")
-    .replace(/\b(every ?day|daily|every week|weekly|every weekday|weekdays|every month|monthly)\b/gi, " ")
+    .replace(/\b(every|each|on)\s+((sun|mon(?!th)|tue|tues|wed|thu|thurs|fri|sat)[a-z]*\.?(\s*(,|and|&)?\s*))+/gi, " ")   /* "mon" is not "month" */
+    .replace(/\b(sun|mon|tues|wednes|thurs|fri|satur)days\b/gi, " ")   // v10.8: "on Sundays" left «Sundays»
+    // (v10.8, the held-out run: "send the weekly report" lost «weekly» — after the / my / a it is part of the task, not the schedule)
+    .replace(/\b(every ?day|every week|every weekday|weekdays|every month)\b|(?<!\b(?:the|my|a|an|our|your|his|her|their)\s)\b(daily|weekly|monthly)\b/gi, " ")
     .replace(/\b(every |each |on the )?last (sun|mon|tue|wed|thu|fri|sat)[a-z]* (of|in) (the|every|each) month\b|(كل )?(آخر|اخر) \S+ (في|من|ف|ب)? ?(ال)?شهر|كل شهر/gi, " ")
     .replace(/\b(tomorrow|today|tonight|in the (morning|evening|afternoon))\b|\bat \d{1,2}([:.]\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?|\b\d{1,2}([:.]\d{2})?\s*(am|pm)\b|\bin \d+ \w+/gi, " ")
     .replace(/كل\s+((يوم\s+)?(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت)(\s*(،|,|و)\s*(ال)?(حد|احد|أحد|اتنين|اثنين|تلات|ثلاثاء|اربع|أربع|اربعاء|أربعاء|خميس|جمعه|جمعة|سبت))*)/g, " ")
@@ -462,6 +490,14 @@ function titleFrom(text, kind, contact) {
     .replace(/(كل يوم|يوميا|بكرة|بكره|النهارده|الساعة [\d٠-٩]{1,2}([:.][\d٠-٩]{2})?( ونص| وربع| الا ربع)?|بعد [\d٠-٩]+ \S+|بالليل|الصبح|الضهر|العصر|المغرب|مساء|صباحا)/g, " ")
     // (persona 2: «ادفع الكهربا يوم ١٠», "on the 2nd" — the day of the month is the reminder's date, not its title)
     .replace(/\bon the \d{1,2}(st|nd|rd|th)?\b|\bon \d{1,2}(st|nd|rd|th)\b|\bthe \d{1,2}(st|nd|rd|th)\b|(^|\s)يوم [\d٠-٩]{1,2}(?=\s|$)/gi, " ")
+    // v10.8 (the reminder run): a «الساعة» left alone, Arabic fillers in front («معلش، بص، طيب، يا أتيون»), stray punctuation at the edges
+    .replace(/(^|\s)(?:الساعة|الساعه)(?=\s|$|[،,.!:؛—-])/g, " ").replace(/(^|\s)(?:صباحا|صباحًا|الصبح)(?=\s|$|[،,.!:؛—-])/g, " ")
+    .replace(/^\s*(?:(?:معلش|بص|طيب|يا\s*(?:أتيون|اتيون|باشا)|لو سمحت|ok|OK)[\s،,:—-]*)+/i, "")
+    .replace(/^[\s،,:;؛.—–\-!]+|[\s،,:;؛—–\-]+$/g, "")
+    // v10.8: a greeting / filler around the request is not part of the title ("hey remind me … to call the bank" → «hey to call the bank»)
+    .replace(/^[\s📌,:;.!…—–\-]+/u, "")
+    .replace(/^\s*(?:(?:hey|hi|hello|ok(?:ay)?|so|um+|uh+|btw|yo|pls|plz|please|can you|could you|would you|quick one|note)[\s,!:.…—–\-]+)+/i, "")
+    .replace(/(?:[\s,]+(?:ok(?:ay)?|thanks?|thank you|thx|pls|plz|please|asap|:\)|شكرا|تمام|ماشي))+\s*[.!]*\s*$/i, "")
     .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "").replace(/^\s*(about|عن)\s+/i, "");
   s = cleanText(s.replace(/^\s*[:\-–,]+\s*/, ""), 60);   // v9.9.15: "set a reminder tomorrow at 9: send the report" kept ": send the report"
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;

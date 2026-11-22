@@ -75,3 +75,7 @@ entry points and the agents' memory of "Not this one".
 | **13. Family space** | Family health + Sync exist; money and to-dos are one person's | *Medium-large.* |
 
 **Order I'd build them (unchanged top 5, re-ranked by effort now that it's measured):** 10 → 1 → 11 → 3 → 9.
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- No new ideas added (the app is narrowed — finishing, not new features). The walk found that Home already answers money questions from
+  your own data at once (P6) and opens any page by its name (P2) — two of the "fewer taps" ideas are now true.

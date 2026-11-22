@@ -50,3 +50,12 @@ numbers — and who keeps using it for two months to see what breaks over time.
 
 ## Tests added
 `tests/unit/v860p1.test.mjs` — 16 checks, one per bug above, so none can come back. All unit tests pass.
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- The 60-day sentences typed into Home ("fuel 500", "maid 400", "spent 250 on lunch", «كشري 85», «دفعت ١٢٠٠ كهربا»…) all land in Money
+  with the right total, at both sizes, in both languages ✔.
+- The old "still open" list re-checked: blood pressure «120/80» and "slept 7 hours" are logged; "loan 5000 from the bank, 12 months" is a
+  plan; typos ("spnt 200 on lunh") and "spent -50" are recorded ✔. What is left is in persona 6.
+- New and fixed: the money readers took "12.000" (German / Spanish / Turkish…) as 12, didn't know Bengali digits or 万 / लाख / triệu / тыс,
+  read a lakh as a million, multiplied "3,500 km" / «1.500 kenara» / «61,000 más» by 1,000 or 1,000,000 — all fixed (numfmt.js), with a
+  10,000-case test in 21 languages (tests/numbers/gen.mjs: 95.63 % → 100 %, held-out 100 %).

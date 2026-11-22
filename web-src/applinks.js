@@ -84,7 +84,10 @@ const PAGES = [["money", /^(?:the )?money$|^(?:ال)?فلوس$|^(?:ال)?مصا�
   // v9.9.19 B4
   ["habits", /^(?:the |my )?habits?$|^(?:ال)?عادات$|^عاداتي$/i], ["countdowns", /^(?:the |my )?countdowns?$|^(?:ال)?عد (?:ال)?تنازلي$/i],
   ["weekplan", /^(?:the |my )?week(?:ly)? ?plan$|^(?:ال)?خطة (?:ال)?[اأ]سبوع$|^خطة [اأ]سبوعي$/i], ["focus", /^(?:the )?focus(?: timer)?$|^(?:ال)?تركيز$|^تايمر (?:ال)?تركيز$/i],
-  ["braindump", /^(?:the |my )?brain ?dump$|^organi[sz]e(?: this| my day)?$|^فضفضة$|^نظم(?: ده| يومي)?$/i]];
+  ["braindump", /^(?:the |my )?brain ?dump$|^organi[sz]e(?: this| my day)?$|^فضفضة$|^نظم(?: ده| يومي)?$/i],
+  // v10.8 (the persona walk: "pro" / "open pro" never reached the Pro page — a person who wants to upgrade had to know it is in Settings)
+  ["panel:plan", /^(?:attune )?pro$|^(?:attune )?premium$|^upgrade$|^plans?(?: (?:&|and) billing)?$|^(?:the |my )?subscription$|^pricing$|^(?:ال)?اشتراك$|^برو$|^(?:ال)?باقة$|^(?:ال)?باقات$/i],
+  ["panel:backup", /^(?:the |my )?backup$|^(?:ال)?نسخة (?:ال)?احتياطية$|^(?:ال)?باك ?اب$/i], ["panel:profile", /^(?:the |my )?profile$|^(?:ال)?بروفايل$|^ملفي$/i]];
 /** "open Money" / "go to Agents" / «افتح الفلوس» → the page's id, or "". */
 export function pageOf(text) {
   // v9.9.32 (the 100,000 chat orders: "pull up reminders", "take me to my habits page", «افتحلي صفحة الفلوس» went to the AI or Maps)

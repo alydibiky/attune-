@@ -1,4 +1,4 @@
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 /* ---- v6.27 Job ready — from your CV to a job, inside CV / Resume (a "Job ready" tab, no new tool). All CODE:
    · roleOf / skillsCheck: the job you want → the skills employers usually ask for, which your CV already shows and which it
      doesn't (each missing one can start a Learn daily course).
@@ -89,13 +89,14 @@ export function feedback(answer, { cvText = "", lang = "en" } = {}) {
   const cvWords = new Set(String(cvText).toLowerCase().match(/\p{L}{5,}/gu) || []);
   const fromCV = (a.toLowerCase().match(/\p{L}{5,}/gu) || []).filter((w) => cvWords.has(w)).length;
   const good = [], fix = [];
-  const T = (en, arT) => (ar ? arT : en);
-  if (words < 40) fix.push(T(`Too short (${words} words) — aim for 60–150: say what happened, what you did, and the result.`, `قصيرة جدًا (${words} كلمة) — استهدف 60–150: ماذا حدث، وماذا فعلت، وما النتيجة.`));
-  else if (words > 220) fix.push(T(`Long (${words} words) — keep it under 2 minutes; cut the background.`, `طويلة (${words} كلمة) — اجعلها أقل من دقيقتين؛ اختصر المقدمة.`));
-  else good.push(T(`A good length (${words} words).`, `طول مناسب (${words} كلمة).`));
-  if (fillers >= 3) fix.push(T(`${fillers} filler words (um, like, you know…) — pause instead.`, `${fillers} كلمات حشو (يعني، اه…) — توقف لحظة بدلًا منها.`));
+  // v10.8: the coach's lines are shown as they come (cv-ui), so they are translated here — they were English in 18 languages
+  const T = (en, arT, vars) => (ar ? arT : tr(en, vars));
+  if (words < 40) fix.push(T("Too short ({n} words) — aim for 60–150: say what happened, what you did, and the result.", `قصيرة جدًا (${words} كلمة) — استهدف 60–150: ماذا حدث، وماذا فعلت، وما النتيجة.`, { n: words }));
+  else if (words > 220) fix.push(T("Long ({n} words) — keep it under 2 minutes; cut the background.", `طويلة (${words} كلمة) — اجعلها أقل من دقيقتين؛ اختصر المقدمة.`, { n: words }));
+  else good.push(T("A good length ({n} words).", `طول مناسب (${words} كلمة).`, { n: words }));
+  if (fillers >= 3) fix.push(T("{n} filler words (um, like, you know…) — pause instead.", `${fillers} كلمات حشو (يعني، اه…) — توقف لحظة بدلًا منها.`, { n: fillers }));
   if (story.situation && story.action && story.result) good.push(T("A clear story: what happened → what you did → the result.", "قصة واضحة: ماذا حدث ← ماذا فعلت ← النتيجة."));
-  else fix.push(T("Tell it as a story: " + ["what happened", "what YOU did", "the result"].filter((_, i) => !Object.values(story)[i]).join(", ") + " is missing.", "احكها كقصة: ينقصها " + ["ماذا حدث", "ماذا فعلت أنت", "النتيجة"].filter((_, i) => !Object.values(story)[i]).join("، ") + "."));
+  else fix.push(T("Tell it as a story — missing: {m}.", "احكها كقصة: ينقصها " + ["ماذا حدث", "ماذا فعلت أنت", "النتيجة"].filter((_, i) => !Object.values(story)[i]).join("، ") + ".", { m: ["what happened", "what YOU did", "the result"].filter((_, i) => !Object.values(story)[i]).map((x) => tr(x)).join(/^(zh|ja)$/.test(getLang()) ? "、" : ", ") }));
   if (hasNum) good.push(T("A number makes the result believable.", "الرقم يجعل النتيجة مقنعة."));
   else if (words >= 25) fix.push(T("Add a number to the result (how many, how much, how fast).", "أضف رقمًا للنتيجة (كم، بكم، بأي سرعة)."));
   if (fromCV >= 2) good.push(T("It matches what your CV says.", "تتوافق مع ما في سيرتك الذاتية."));

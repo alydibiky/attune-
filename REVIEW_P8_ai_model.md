@@ -61,3 +61,7 @@
 `tests/unit/v860p8.test.mjs` — 7 checks (Arabic digits route, reversed % rule, food check pulled / kept / no table, web offer
 for who-made-it questions, the f-string repair). Real-model scripts used: `scratchpad/p8/p8.mjs`, `vm.mjs`, `eg.mjs` (not in
 the repo); the trial: `TRIAL_PORT=8199 node tests/trials/max.mjs math,action`.
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- Not re-run: this needs a real model on a phone or the trials machine (tests/trials/max.mjs) — the cloud session has only the tiny test
+  model. The code layer around the model (numbers, money, reminders, pages) was re-run and is above in P1 / P6.

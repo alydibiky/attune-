@@ -27,7 +27,7 @@ export function harden(text0, rnd, { keep = null, lang = "", allowCut = true, al
     () => (human ? t.replace(/ة(?=\s|$)/g, () => (rnd() < 0.5 ? "ه" : "ة")).replace(/ى(?=\s|$)/g, "ي") : t),   // a person's Arabic spelling (ة/ه, ى/ي)
     () => t.replace(/[أإ]/g, () => pick(["ا", "أ", "إ"])),                                      // alef forms — banks and people write them all
     () => (sms ? pick(PREFIX) + t : t),                                                         // a prefix some SMS apps add
-    () => (sms || human ? t + pick(SUFFIX) : t),                                                // "(1/2)" of a long SMS, an emoji a person adds
+    () => (sms ? t + pick(SUFFIX) : human ? t + pick(SUFFIX.slice(1)) : t),                    // "(1/2)" of a long SMS; a person adds an emoji, never "(1/2)" (v10.8: it was added to typed text too)
     () => (!allowCase ? t : human && rnd() < 0.5 ? t.toLowerCase() : t.toUpperCase()),          // case (ALL CAPS happens everywhere; all lower only when a person types)
     () => (human ? t.replace(/(\S+)$/, (m) => m + " " + pick(STRAY)) : t),                       // a stray word (people only)
     () => (allowCut && t.length > 110 ? t.slice(0, 95 + Math.floor(rnd() * 20)) + "…" : t),     // the notification cut short

@@ -186,3 +186,8 @@ html:not(.att-light) .wk-dh.wk-today b { background: var(--wk-money); color: #1A
 .att-cq { container-type: inline-size; container-name: page; }
 .att-2col { grid-template-columns: minmax(0, 1fr); }
 @container page (min-width: 820px) { .att-2col { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); } }
+
+/* v10.8 (the persona walk, Arabic Follow-ups): an empty box with dir="auto" takes its direction from its (empty) value — left to right —
+   so an Arabic example in it read scrambled («قولها أو اكتبها — «الشغالة بقت 700» with its quotes and number moved). While the example
+   shows, the box follows the page's direction; once something is typed, dir="auto" follows the typed words as before. */
+:root[dir=rtl] input:placeholder-shown, :root[dir=rtl] textarea:placeholder-shown { direction: rtl; }

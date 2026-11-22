@@ -8045,6 +8045,10 @@ export default function App() {
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
   // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
   // v6.43: after Android closed the app in the background, it reopens on the screen that was open (takeResume)
+  // v10.8 (the persona walk): the first Money account was created as "Cash" in English — once, it takes the app's language («كاش»)
+  useEffect(() => { let n = 0; const go = () => { try { if (getLang() === "en") return; if (tr("Cash") === "Cash") { if (++n < 6) tm = setTimeout(go, 1500); return; }   /* the language's lines load a moment after start */
+      const L = JSON.parse(localStorage.getItem("ledger.v3") || "null"); const a = L && Array.isArray(L.accounts) ? L.accounts.find((x) => x && x.name === "Cash") : null;
+      if (a) { a.name = tr("Cash"); localStorage.setItem("ledger.v3", JSON.stringify(L)); } } catch (e) {} }; let tm = setTimeout(go, 1200); return () => clearTimeout(tm); }, []);
   const resumed = useRef(undefined);
   if (resumed.current === undefined) resumed.current = takeResume();
   const [mode, setModeRaw] = useState(() => { if (resumed.current) return RETIRED.includes(resumed.current.mode) ? "chat" : resumed.current.mode; let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
@@ -9941,7 +9945,8 @@ export default function App() {
     doKinds: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask ? [] : u.actions.map((a) => a.kind); } catch (e) { return []; } },
     // v9.9.15: is this an order for an agent ("tell me when … is under …", «اشتريلي … بأقل من …», "track my Amazon order")? → its kind, or ""
     twoOrders: (t) => { try { const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return !!(u && u.two); } catch (e) { return false; } },   // v9.9.17
-    pageOf: (t) => { try { return AL.pageOf(t); } catch (e) { return ""; } },
+    // v10.8: a page's name alone ("pro", «برو», "settings") opens it here too — the computer's box goes through Chat
+    pageOf: (t) => { try { return AL.pageOf(t) || (String(t || "").trim().split(/\s+/).length <= 3 ? AL.pageOf("open " + String(t).trim().replace(/[.!?؟]+$/, "")) : ""); } catch (e) { return ""; } },
     isRule: (t) => { try { return !!RS.ruleFor(t); } catch (e) { return false; } },
     agentKind: (t) => { try { const ag = parseAgent(t, { now: Date.now(), country: agentCountry(), usual: loadAgents().usual, prefs: loadBooking() }); return ag && ["watch", "track", "order", "buy"].includes(ag.kind) ? ag.kind : ""; } catch (e) { return ""; } },
     doIt: (t) => { try { return doRef.current ? doRef.current(t, { force: true }) : null; } catch (e) { return null; } },   // (Chat checked first: doSure + the judge + the person's pick)

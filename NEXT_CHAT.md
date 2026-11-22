@@ -1,5 +1,25 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (22 Nov 2026 — v10.8: Ali: "read every line of the 18 languages" + "re-run the 9 persona reviews")
+> 1. **Languages** — `tools/i18n/deep.mjs` reads every line of the 19 dictionaries (numbers, English left inside, wrong script, symbols,
+>    length, and SHIFTED / SWAPPED lines judged by length, end mark, numbers and a related language); the 320 most-used lines were read by
+>    hand in all 18. Found and fixed: Japanese 1708–1725 slipped by one (every **Cancel** read «言い方が違いますか？ 修正する →»), Bengali
+>    Cancel ↔ "Save the correction" swapped + a Know-tab swap, Chinese load-chart «幅度», "From"/"To" had two meanings — new keys
+>    `From§range` / `To§range` / `From§account` / `To§account` / `To§email` (tr() shows the part before § in English; Egyptian showed
+>    «المصدر» over the Money date filter), "Later" / "{n} late" wrong in 9 languages, 414 thousands written the language's way, 117 lines
+>    the app shows missing in Egyptian, the interview coach English in 18 languages (jobready T() now translates). Tests: v1080langs,
+>    v1080numbers, audit passes.
+> 2. **Numbers** — the readers took "12.000" as 12: `web-src/numfmt.js` (ungroup: 12.000 / 12 000 / 1.500,50 / every script's digits /
+>    5万 / 2 लाख / 1,20,000 / elfu 12; KWD-style 3 decimals kept) is used by doit, braindump, agent-rules, agents2, scout, planner, life.
+>    Also: a lakh is 100,000 (was a million), units are whole words ("3,500 km", «1.500 kenara» were ×1000/×1e6), "200 thousand" / "15,000
+>    thanks" / «thứ Sáu» are not ordinals, "9000 am Freitag" is money. Generator tests/numbers/gen.mjs: 95.63 % → 100 %, held-out 100 %.
+> 3. **Persona re-run** — `tests/e2e_v1080personas.py` (phone + computer, en + ar; screenshots in tests/docs/personas/). Fixed: "pro" /
+>    «برو» / "upgrade" / a page's name alone opens it (cmdrun + Chat's pageOf); «Cash» → «كاش»; an Arabic example in an empty box now
+>    follows the page's direction (one CSS rule for 895 boxes); repeating reminders (see REVIEW_P6 re-run) with tests/reminders/repeat.mjs
+>    72.86 % → 100 % (71.7 % shapes), held-out 89.85 % → 100 %. tests/lib/hard.mjs: "(1/2)" only for SMS, never typed text (said so).
+> **Next:** Ali's picks on the launch page (ST/SS/CR/LG/MAIL) → store listing + Send a report; still open: "every first Monday of the month",
+> "every month" with no day.
+>
 > ## START HERE (21 Nov 2026, evening — v10.8: Ali's phone screenshots + problem report)
 > 1. **"Any notification is to do even if it's not that important"** — Mr.Beard's WhatsApp advert «📷 تخيل بوكس فيه كل اللي ممكن تحتاجه …
 >    عليه خصم ٥٠٪» became a late to-do. Two bugs: «ممكن تحتاجه» ("you might need it") read as «ممكن تـ…» = "could you" (autopilot.js

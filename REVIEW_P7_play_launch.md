@@ -54,3 +54,6 @@ handling, the build workflow and the real size of the last APK (run
 - **Size** — 115 MB first download; the Python engine for Code (26 MB) and other optional packs could download on first use.
 - **"Pro is bought in the Google Play version"** text is shown in test builds; make sure the Play build shows the Buy buttons
   (it does when Billing connects — test it in the closed test).
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- Nothing new to submit from the code side; the "only you can do" list above is unchanged (store listing, declarations, the frozen bundle).

@@ -570,6 +570,11 @@ spaces-ui.jsx: <div className="flex justify-end"><button onClick={() => askHere(
 attune.jsx: {busy ? "…" : tr("Search")}
 shelf-ui.jsx: <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search si
 
+## Cash
+attune.jsx: useEffect(() => { let n = 0; const go = () => { try { if (getLang() === "en") return; if (tr("Cash") === "Cash") { if (++n < 6) tm = setTime
+attune.jsx: if (a) { a.name = tr("Cash"); localStorage.setItem("ledger.v3", JSON.stringify(L)); } } catch (e) {} }; let tm = setTimeout(go, 1200); retur
+doit.js: country: c, currency: cur, pin: null, accounts: [{ id: "a" + now.toString(36), name: tr("Cash"), emoji: "💵", currency: cur, start: 0 }],   
+
 ## Copied
 attune.jsx: copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
 attune.jsx: share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e)

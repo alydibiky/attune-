@@ -35,3 +35,15 @@ weekends, VAT, Metro routes, dates and reminders — and fixed every wrong answe
 
 ## Tests added
 `tests/unit/v860p6.test.mjs` — 10 checks for the fixes above. All unit tests pass.
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- "how much did I spend this month?" / «صرفت كام الشهر ده؟» answers the exact total from your own Money, at once ✔.
+- The old "still open" list: "insurance expires next month", "warranty ends 2028", "Netflix renews on the 5th" are deadlines now ✔;
+  "every last Friday of the month" is a monthly reminder ✔.
+- New and fixed (repeating reminders): "remind me every Friday to pay rent" went to Chat; «فكرني كل جمعة …» had no date; «كل يوم سبت» was
+  every day; "each Friday", "on Fridays", "of each month" didn't repeat; "on the 5th of every month" was titled «of to pay rent»;
+  "remind me every Monday to call mum" asked who mum is; "every day at 07:00" said at 10:00 became 19:00; "8 a.m." was 8 pm; «8 الصبح»
+  wasn't a time; "send the weekly report" lost «weekly»; two spaces or a direction mark broke it. All fixed, with a 10,000-case test
+  (tests/reminders/repeat.mjs: 72.86 % → 81 % on the harder version → 100 %, 71.7 % shapes; held-out 89.85 % → 100 %).
+- Still open: "every first Monday of the month" (makes a one-off for next Monday — the title shows what was meant); "remind me every month
+  to pay the internet" with no day goes to Chat (it needs to ask which day).

@@ -62,3 +62,13 @@ normal person writes them (no keywords, Arabic digits), screenshots and the repl
 **Also fixed while doing it:** every reply of the Home box in formal Arabic (سُجّل، حُفظ، لم يُعرف، ما زال، لا يوجد، سيذكّرك…)
 is now Egyptian, as Ali chose for the whole app. Tests: `tests/unit/v860p2b.test.mjs` (4 checks); `v727life` now expects the
 name as typed («أحمد», «سارة»).
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- First start: the welcome shows the app's language and the country (Egypt picked) — no English left in Arabic ✔.
+- The side menu's search finds what a normal person types ("pro", "settings", "backup", "language", "remind", "money"; «فلوس»,
+  «الإعدادات», «لغة», «تذكير») ✔.
+- Fixed: typing "pro" (or "upgrade", «الاشتراك», «برو») in Home asked "What did you mean? to-do / note / web / Chat" — a page's name alone
+  now opens it (phone and computer); "open pro" now opens the Pro page too.
+- Fixed: the first Money account showed «Cash» in English in Arabic (now «كاش», also renamed once on phones that have it).
+- Fixed: an Arabic example inside an empty box read scrambled («قولها أو اكتبها — «الشغالة بقت 700» with its quotes and number moved) —
+  an empty box now follows the page's direction (one rule for the app's 895 boxes).

@@ -70,3 +70,7 @@ Plans & billing captured on each, and on day 9 every place a free user taps (Mon
 - **P3-A Trial on Home**: a small line under the greeting — "Pro trial: 2 days left · see what you used" from day 5, and once on
   day 8 "Your trial ended — Money, Follow-ups and 15 answers a day stay free" with a Keep Pro button. *Recommend.*
 - **P3-B One currency word** in Arabic prices (all «جنيه» or all EGP). *Recommend «جنيه».*
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- The Pro page opens from Home ("pro", «برو») with a price, in English and Arabic, phone and computer ✔ (before: "pro" never reached it).
+- The store listing / screenshots are still waiting for Ali's picks (ST / SS / CR / LG / MAIL on the launch page).

@@ -31,9 +31,13 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 
 ## Week 2 (10–16 Nov): the closed test is running — fix what testers find
 - [ ] Testers' reports → fixed within a day; each fix gets a test so it can't come back.
-- [ ] ~~Ask testers who speak French, Spanish, Hindi, Urdu…~~ Ali has none (20 Nov) → Claude reads every line of the 18 other languages
-      and translates it back (L7).
-- [ ] The 9 persona reviews (REVIEW_P1–P9) re-run on the release build; anything "broken" or "confusing" fixed.
+- [x] ~~Ask testers who speak French, Spanish, Hindi, Urdu…~~ Ali has none (20 Nov) → Claude reads every line of the 18 other languages
+      and translates it back (L7). **Done 22 Nov:** every line through tools/i18n/deep.mjs (numbers, English left, wrong script, symbols,
+      length, shifted / swapped lines) + the 320 most-used lines read in all 18; fixed: a Japanese block slipped by one (every Cancel was
+      wrong), a Bengali swap, From / To meanings, Later / late in 9 languages, 414 thousands written the language's way, 117 missing
+      Egyptian lines, the interview coach English in 18 languages (v1080langs, v1080numbers).
+- [x] The 9 persona reviews (REVIEW_P1–P9) re-run on the release build; anything "broken" or "confusing" fixed. **Done 22 Nov**
+      (tests/e2e_v1080personas.py; each REVIEW_P file has its "Re-run" section; P8 needs a real model — not run in the cloud).
 - [ ] Agents: hotels + products checked on the real sites from Egypt; Scout on Dubizzle / Hatla2ee.
 
 ## Week 3 (17–23 Nov): store and speed

@@ -21,6 +21,7 @@ import * as K from "./commands.js";
 import { isEmailAsk } from "./emaildraft.js";
 import * as W from "./whereis.js";
 import { parseListCommand } from "./lists.js";
+import { pageOf } from "./applinks.js";
 
 const L = (en, ar, open) => ({ en, ar, ...(open ? { open } : {}) });
 /** The place in "I want to go to Cairo Tower" / «عايز اروح برج القاهرة» / "where is Maadi station?". */
@@ -86,6 +87,9 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   // v9.2 (Ali picked 6): "add buy tiles to the renovation" → a task on that project's board (only when such a project exists)
   { const pt = api.projectTask ? api.projectTask(t) : null; if (pt && !files.length) return { type: "projectTask", projectId: pt.project.id, name: pt.project.name, text: pt.text }; }
   { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
+  // v10.8 (the persona walk: "pro" alone asked "What did you mean? to-do / note / web / Chat") — a page's name alone opens it
+  //   ("pro", "upgrade", «الاشتراك», "money", "settings"); "open …" sentences were already understood further on
+  if (!files.length && t.split(/\s+/).length <= 3) { let pg = ""; try { pg = pageOf("open " + t.replace(/[.!?؟]+$/, "")); } catch (e) { pg = ""; } if (pg) return { type: "open", mode: pg }; }
   const det = (api.detect && api.detect(t)) || {};
   const records = (api.records && api.records()) || [];
   // v10.6: "where is my wife / where's Nada / «مراتي فين»" — a person, read from the location notifications (never a thing or a map)

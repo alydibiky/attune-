@@ -93,3 +93,10 @@ Arabic fallback lines up.
 - **V-C Consistency pass**: 3 radii, Nunito only, one header style, chips instead of underlined links. *Recommend — no new
   look, the same look made consistent.*
 - **V-D Empty states**: a small illustration + one example button on Home, Money, Fit, Follow-ups, Agents.
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- Home, Money, Follow-ups, Settings, Pro: no sideways scroll at 390 or 1366, in English or Arabic ✔ (the full layout test at 11 widths is
+  e2e_v1060layout.py, in the full run).
+- Fixed: Arabic examples inside empty boxes read left-to-right (scrambled quotes and numbers) — see P2.
+- Fixed: Settings on the computer showed "Account and this device" in English in Arabic — 117 lines the app uses were missing from
+  Egyptian Arabic (all added); 2 more were missing in all 19 other languages ("Saved — checking again", the ✓ note under comparisons).

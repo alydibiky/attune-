@@ -57,3 +57,8 @@ days exactly as the phone keeps them. Then I **opened the real app with that yea
 `tests/unit/v860p9.test.mjs` — 8 checks (money vs food numbers, «طعمية» / water bill, mixed-script debts, meal words in names,
 a subscription typed twice, open-ended plans a year ahead, one row per person, "when did I last…"). The year simulation and the
 real-app run: `scratchpad/p9/year.mjs`, `ui.py` (not in the repo).
+
+## Re-run on the release build (22 Nov 2026, v10.8) — `tests/e2e_v1080personas.py`, phone 390 + computer 1366, English + Arabic
+- A year of use: the speed test with a full phone (3,000 notifications, 900 payments, 250 reminders) is in the full run (e2e_v1060fixes).
+- Fixed for long-time users: the first Money account is renamed «كاش» once in Arabic; months-old reminders "every month on the 22nd" said
+  on the 22nd now start next month instead of "that time has passed".
