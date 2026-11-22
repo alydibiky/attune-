@@ -9,7 +9,8 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page
 env = Env(); errors = []
 ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "store")
-now = datetime.datetime.now(); ms = lambda d=0, h=0, m=0: int((now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(days=d, hours=h + 1, minutes=m)).timestamp() * 1000)   # later than now: never "late"
+# a fixed morning (8:30 today) in the data AND the browser's clock — run at 3 am, the to-dos read «4:00 ص» (v10.8)
+now = datetime.datetime.now().replace(hour=8, minute=30, second=0, microsecond=0); ms = lambda d=0, h=0, m=0: int((now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(days=d, hours=h + 1, minutes=m)).timestamp() * 1000)   # later than now: never "late"
 iso = lambda d=0: (now + datetime.timedelta(days=d)).date().isoformat()
 LEDGER = {"accounts": [{"id": "a1", "name": "CIB", "currency": "EGP"}, {"id": "a2", "name": "Cash", "currency": "EGP"}],
   "txns": [{"id": "t1", "type": "income", "amount": 32000, "cat": "salary", "account": "a1", "date": iso(-19), "note": "Salary"},
@@ -30,6 +31,7 @@ def data(lang):
            {"id": "r3", "title": t[2], "at": ms(3), "repeat": "none", "created": ms(-2)}, {"id": "r4", "title": t[3], "at": ms(5), "repeat": "month", "created": ms(-30)},
            {"id": "r5", "title": t[4], "at": ms(6), "repeat": "year", "created": ms(-40)}]
     led = json.loads(json.dumps(LEDGER)); led["currency"] = "EGP"
+    if lang == "ar": led["accounts"][1]["name"] = "كاش"   # the first account takes the app's language (v10.8)
     for x, nm in zip(led["txns"], t[5:11]): x["note"] = nm
     lists = {"lists": [{"id": "l1", "name": "Talabat" if lang == "en" else "طلبات", "emoji": "🛒", "items": [{"id": "i%d" % i, "text": x, "done": i < 2} for i, x in enumerate(t[11])], "repeat": {"every": "once"}, "created": 0},
                        {"id": "l2", "name": t[12], "emoji": "✈", "items": [{"id": "j%d" % i, "text": x, "done": False} for i, x in enumerate(t[13])], "repeat": {"every": "once"}, "created": 0}]}
@@ -62,7 +64,7 @@ with sync_playwright() as p:
         out = os.path.join(ROOT, lang); os.makedirs(out, exist_ok=True)
         ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=init(lang))
         page.set_viewport_size({"width": 412, "height": 640})
-        page.goto(env.url); page.wait_for_timeout(2500)
+        page.clock.install(time=now); page.goto(env.url); page.wait_for_timeout(2500)
         for name, mode, en, ar in SHOTS:
             page.evaluate("(m) => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", mode); page.wait_for_timeout(1600)
             shot = base64.b64encode(page.screenshot()).decode()
@@ -72,7 +74,7 @@ with sync_playwright() as p:
         ctx.close()
         # the computer: the week calendar, for the large-screen slot
         ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=(1366, 768), extra_init=init(lang))
-        page.goto(env.url); page.wait_for_timeout(2800)
+        page.clock.install(time=now); page.goto(env.url); page.wait_for_timeout(2800)
         shot = base64.b64encode(page.screenshot()).decode()
         fp = br.new_page(viewport={"width": 1920, "height": 1080})
         fp.set_content((FRAME % (1920, 1080, "rtl" if lang == "ar" else "ltr", 60, 20, 150, "كل أسبوعك على الكمبيوتر" if lang == "ar" else "Your week on the computer", shot, 1600)).replace("border-radius:44px", "border-radius:18px")); fp.wait_for_timeout(300)

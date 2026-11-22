@@ -25,7 +25,8 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
       Start / Schedule / Plan / Details / School split or fixed; tests unit v1080arabic + e2e_v1080arabic). Open: the travel guides'
       own text (43 countries, ~214 KB) is English only — a content job, asked to Ali.
 - [x] The app's name in Egyptian Arabic: "Attune" everywhere (Ali picked).
-- [ ] Crash and freeze safety: an on-phone crash log + "Send a report" (nothing sent by itself) — waiting for Ali's CR pick;
+- [x] Crash and freeze safety: an on-phone crash log + "Send a report" (nothing sent by itself) — Ali picked CR3 + OK-CR (20 Nov, re-confirmed
+      22 Nov): one card after Attune closed by itself, the problem never shown, sent through the share sheet (e2e_v1080crash);
       [x] every page < 1 s on a mid-range phone with a full phone (20 Nov, v10.8: Recall 8.6 s → 0.5–0.9 s, the box at 1.7–2.2 s,
       the longest freeze after opening 3.1 → 1.0–1.2 s; Autopilot and "Attune noticed" worked out after the first screen, in pieces).
 
@@ -41,7 +42,9 @@ An **organisation** account (company + D-U-N-S number) skips the 14-day test, bu
 - [ ] Agents: hotels + products checked on the real sites from Egypt; Scout on Dubizzle / Hatla2ee.
 
 ## Week 3 (17–23 Nov): store and speed
-- [ ] Store listing (STORE_LISTING.md): Arabic first, 6 screenshots of the hero flows, a 30-second video.
+- [ ] Store listing (STORE_LISTING.md): Arabic first, 6 screenshots of the hero flows, a 30-second video. **22 Nov:** ST1 + SS1 + LG1
+      re-confirmed; text done (EN + AR), screenshots remade from v10.8 (docs/store/en|ar, a fixed 8:30 morning, «كاش»). Left: the support
+      e-mail (Ali is making one) and the 30-second video.
 - [ ] Data safety, Health Connect, foreground-service and financial-features declarations (REVIEW_P7 list).
 - [x] Size: Python already downloads on first use in the Play build (19 MB); v10.8: shipped language files without removed features'
       lines (22 → 17 MB), the Play build reads barcodes / text through Play services. LG1/LG2 (all languages inside or not) waits for Ali.
