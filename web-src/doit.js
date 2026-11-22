@@ -338,6 +338,10 @@ function understandAllRaw(text, { now = Date.now(), stores = {} } = {}) {
   if (looksLikeAction(t) && /remind|alarm|wake me|timer|فكرني|ذكرني|صحيني|منبه|تايمر|نبهني/i.test(t.replace(/\u0651/g, ""))) {   // v10.8: «فكّرني» with a shadda too
     const a = quickAction(t, now);
     if (a && ["reminder", "alarm", "timer"].includes(a.kind) && !a.problems.length) return { actions: [{ kind: "reminder", action: a }] };
+    // v10.8 (persona 6, Ali: "fix both"): "remind me every month to pay the internet" — a month but no day: ask which day, not Chat
+    if (a && a.kind === "reminder" && a.problems.some((p) => /^When\?/.test(p)) && /\b(?:every|each)\s+month\b|\bmonthly\b|كل\s+شهر|شهريا|شهريًا/i.test(t))
+      return { actions: [], ask: { kind: "remind-day", en: "Which day of the month? Say it again with the day — e.g. “every month on the 5th to pay the internet”.",
+        ar: "أنهي يوم في الشهر؟ قولها تاني باليوم — مثلاً «كل شهر يوم ٥ ادفع النت»." } };
     return { actions: [], chat: true };
   }
   // v8.6 (the whole-app test): "meeting with Ali Tuesday 3pm", «ميعاد الدكتور بكرة الساعة 5» — an appointment with a day and a time

@@ -140,7 +140,15 @@ object Reminders {
                     c.set(java.util.Calendar.DAY_OF_MONTH, 1); c.add(java.util.Calendar.MONTH, 1)
                     c.set(java.util.Calendar.DAY_OF_MONTH, c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
                 }
-                else -> if (repeat.startsWith("last:")) {
+                else -> if (repeat.startsWith("nth:")) {
+                    // v10.8 "every first Monday of the month" = "nth:1:1" (n = 1..4, 0 = Sunday): next month's n-th such weekday, same time
+                    val p = repeat.removePrefix("nth:").split(":"); val n = p.getOrNull(0)?.trim()?.toIntOrNull() ?: return from
+                    val wd = p.getOrNull(1)?.trim()?.toIntOrNull() ?: return from
+                    if (n !in 1..4 || wd !in 0..6) return from
+                    c.set(java.util.Calendar.DAY_OF_MONTH, 1); c.add(java.util.Calendar.MONTH, 1)
+                    while (c.get(java.util.Calendar.DAY_OF_WEEK) - 1 != wd) c.add(java.util.Calendar.DAY_OF_MONTH, 1)
+                    c.add(java.util.Calendar.DAY_OF_MONTH, 7 * (n - 1))
+                } else if (repeat.startsWith("last:")) {
                     // "every last Friday of the month" (0 = Sunday): next month's last such weekday, same time of day
                     val wd = repeat.removePrefix("last:").trim().toIntOrNull() ?: return from
                     c.set(java.util.Calendar.DAY_OF_MONTH, 1); c.add(java.util.Calendar.MONTH, 1)

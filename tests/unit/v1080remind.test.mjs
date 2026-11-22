@@ -22,6 +22,19 @@ for (const [t, title, repeat, day, hour] of [
   if (a && day != null) ok(a.d.getDay() === day, `${JSON.stringify(t)} falls on day ${day} (got ${a.d.getDay()})`);
   if (a && hour != null) ok(a.d.getHours() === hour, `${JSON.stringify(t)} at ${hour}:00 (got ${a.d.getHours()})`);
 }
+// v10.8 (Ali: "fix both"): the n-th weekday of the month, and "every month" with no day asks which day
+for (const [t, repeat, date] of [["remind me every first Monday of the month to call mum", "nth:1:1", "2026-12-07"], ["فكرني أول اتنين في الشهر ادفع الجمعية", "nth:1:1", "2026-12-07"],
+  ["remind me on the second Friday of every month to pay the club", "nth:2:5", "2026-12-11"], ["remind me every 3rd Sunday of the month at 7pm to visit grandma", "nth:3:0", "2026-12-20"]]) {
+  const a = one(t); ok(a && a.repeat === repeat, `${JSON.stringify(t)} repeats ${repeat} (got ${a && a.repeat})`);
+  ok(a && `${a.d.getFullYear()}-${String(a.d.getMonth() + 1).padStart(2, "0")}-${String(a.d.getDate()).padStart(2, "0")}` === date, `${JSON.stringify(t)} first on ${date} (got ${a && a.d.toDateString()})`);
+}
+for (const t of ["remind me every month to pay the internet", "فكرني كل شهر ادفع النت"]) { const r = understand(t, { now: NOW }); ok(r.ask && r.ask.kind === "remind-day" && !r.actions.length, `${JSON.stringify(t)} asks which day`); }
+const { nextOccurrence } = await import("../../web-src/actions.js");
+{ let x = new Date(2026, 11, 7, 9).getTime(); const seen = []; for (let i = 0; i < 3; i++) { x = nextOccurrence({ at: new Date(2026, 11, 7, 9).getTime(), repeat: "nth:1:1" }, x); seen.push(new Date(x).getDate()); }
+  ok(seen.join(",") === "4,1,1", `the next first Mondays: Jan 4, Feb 1, Mar 1 (got ${seen})`); }
+const { createRequire } = await import("node:module"); const { next } = createRequire(import.meta.url)("../../desktop/lib/reminders.js");
+ok(new Date(next(new Date(2026, 11, 7, 9).getTime(), "nth:1:1", new Date(2026, 11, 7, 9).getTime())).getDate() === 4, "the computer app rings the next first Monday too");
+const fs = await import("fs"); ok(/startsWith\("nth:"\)/.test(fs.readFileSync(new URL("../../app/src/main/java/com/aldibiki/attune/Reminders.kt", import.meta.url), "utf8")), "the phone's Reminders.kt knows nth:");
 ok(RESULT.ok / RESULT.n >= 0.995, `2,500 composed cases: ${RESULT.ok}/${RESULT.n}`);
 ok(RESULT.share >= 0.6, `different shapes ${(100 * RESULT.share).toFixed(1)} %`);
 console.log(fail ? `FAIL ${fail}/${n}` : `PASS ${n}/${n}`);

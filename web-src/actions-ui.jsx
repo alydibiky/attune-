@@ -19,8 +19,13 @@ const REPEAT_LABEL = { none: "Once", daily: "Every day", weekly: "Every week", w
 const DAY_BTN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // "days:0,2,4" → "Sun · Tue · Thu"; the rest by name
 const LAST_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// v10.8: the day's name in the app's language (it was English in every language but Egyptian); 22 Nov 2026 is a Sunday
+const dayName = (wd) => (getLang() === "ar" ? ["حد", "اتنين", "تلات", "أربع", "خميس", "جمعة", "سبت"][wd]
+  : (() => { try { return new Date(2026, 10, 22 + wd).toLocaleDateString(dateLocale(), { weekday: "long" }); } catch (e) { return LAST_DAY[wd]; } })());
+const NTH_LABEL = ["1st {d} of every month", "2nd {d} of every month", "3rd {d} of every month", "4th {d} of every month"];
 const repeatLabel = (r) => (/^days:/.test(String(r || "")) ? daysText(r).split(" · ").map((d) => tr(d)).join(" · ")
-  : /^last:\d$/.test(String(r || "")) ? tr("Last {d} of every month", { d: (getLang() === "ar" ? ["حد", "اتنين", "تلات", "أربع", "خميس", "جمعة", "سبت"] : LAST_DAY)[+String(r).slice(5)] }) : tr(REPEAT_LABEL[r] || ""));
+  : /^last:\d$/.test(String(r || "")) ? tr("Last {d} of every month", { d: dayName(+String(r).slice(5)) })
+  : /^nth:[1-4]:\d$/.test(String(r || "")) ? tr(NTH_LABEL[+String(r).split(":")[1] - 1], { d: dayName(+String(r).split(":")[2]) }) : tr(REPEAT_LABEL[r] || ""));
 
 const pad = (n) => String(n).padStart(2, "0");
 export function toLocalInput(ms) { if (!ms) return ""; const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }

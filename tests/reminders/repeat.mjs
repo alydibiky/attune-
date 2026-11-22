@@ -21,18 +21,24 @@ const TASKS = { en: HELD ? ["renew the parking permit", "water the plants", "sen
 const ASK = { en: ["remind me", "please remind me", "Remind me", "hey remind me", "can you remind me"], ar: ["فكرني", "فكّرني", "ذكرني", "يا أتيون فكرني"] };
 function one() {
   const L = rnd() < 0.62 ? "en" : "ar", task = pick(TASKS[L]), ask = pick(ASK[L]);
-  const form = Math.floor(rnd() * (L === "en" ? 6 : 4)); let sched, repeat, day = null, dom = null, hour = null;
+  // v10.8 (Ali: "fix both"): + the n-th weekday of the month (forms 6 / 4) and "every month" with no day — that one must ASK which day (7 / 5)
+  const form = Math.floor(rnd() * (L === "en" ? 8 : 6)); let sched, repeat, day = null, dom = null, hour = null, nth = null, askDay = false;
+  const ORD = [["first", "1st"], ["second", "2nd"], ["third", "3rd"], ["fourth", "4th"]], AR_ORD = ["أول", "تاني", "تالت", "رابع"];
   if (L === "en") {
     if (form === 0) { const [d, n] = pick(EN_DAYS); sched = pick(["every " + d, "every " + d, "on " + d + "s", "each " + d]); repeat = "weekly"; day = n; }
     else if (form === 1) { const a = pick(EN_DAYS); let b = pick(EN_DAYS); while (b[1] === a[1]) b = pick(EN_DAYS); sched = "every " + a[0] + " and " + b[0]; repeat = "days:" + [a[1], b[1]].sort().join(","); day = [a[1], b[1]]; }
     else if (form === 2) { dom = 1 + Math.floor(rnd() * 27); const o = dom === 1 || dom === 21 ? "st" : dom === 2 || dom === 22 ? "nd" : dom === 3 || dom === 23 ? "rd" : "th"; sched = pick(["on the " + dom + o + " of every month", "every month on the " + dom + o, "on the " + dom + o + " of each month"]); repeat = "monthly"; }
     else if (form === 3) { const [d, n] = pick(EN_DAYS); sched = pick(["every last " + d + " of the month", "on the last " + d + " of every month"]); repeat = "last:" + n; day = n; }
     else if (form === 4) { hour = 7 + Math.floor(rnd() * 4); sched = pick(["every day at " + hour + " am", "daily at " + hour + "am", "every day at " + hour + ":00 am", "every morning at " + hour, "daily at " + hour + " a.m.", "every day at " + String(hour).padStart(2, "0") + ":00"]); repeat = "daily"; }
+    else if (form === 6) { const [d, n] = pick(EN_DAYS), k = Math.floor(rnd() * 4); sched = pick(["every " + pick(ORD[k]) + " " + d + " of the month", "on the " + pick(ORD[k]) + " " + d + " of every month", "the " + pick(ORD[k]) + " " + d + " of each month"]); repeat = "nth:" + (k + 1) + ":" + n; day = n; nth = k + 1; }
+    else if (form === 7) { sched = pick(["every month", "each month", "monthly"]); repeat = "ask"; askDay = true; }
     else { const [d, n] = pick(EN_DAYS); hour = 7 + Math.floor(rnd() * 4); sched = pick(["every " + d + " at " + hour + " am", "every " + d + " at " + hour + "am", "every " + d + " at " + String(hour).padStart(2, "0") + ":00", "each " + d + " " + hour + " am", "every " + d.slice(0, 3) + " at " + hour + " am"]); repeat = "weekly"; day = n; }
   } else {
     if (form === 0) { const n = Math.floor(rnd() * 7); sched = pick(["كل " + AR_BARE[n], "كل " + AR_DAYS[n][0], "كل يوم " + AR_BARE[n]]); repeat = "weekly"; day = n; }
     else if (form === 1) { const a = Math.floor(rnd() * 7); let b = Math.floor(rnd() * 7); while (b === a) b = Math.floor(rnd() * 7); sched = "كل " + AR_DAYS[a][0] + " و" + AR_DAYS[b][0]; repeat = "days:" + [a, b].sort().join(","); day = [a, b]; }
     else if (form === 2) { const n = Math.floor(rnd() * 7); sched = AR_DAYS[n][0]; repeat = "none"; day = n; }
+    else if (form === 4) { const n = Math.floor(rnd() * 7), k = Math.floor(rnd() * 4); sched = pick([AR_ORD[k] + " " + AR_BARE[n] + " في الشهر", "كل " + AR_ORD[k] + " " + AR_DAYS[n][0] + " في الشهر", AR_ORD[k] + " " + AR_DAYS[n][0] + " من كل شهر"]); repeat = "nth:" + (k + 1) + ":" + n; day = n; nth = k + 1; }
+    else if (form === 5) { sched = pick(["كل شهر", "شهريا"]); repeat = "ask"; askDay = true; }
     else { hour = 7 + Math.floor(rnd() * 4); const n = Math.floor(rnd() * 7); sched = pick(["كل " + AR_DAYS[n][0] + " الساعة " + hour + " الصبح", "كل " + AR_DAYS[n][0] + " " + hour + " الصبح", "كل " + AR_DAYS[n][0] + " الساعة " + hour + " صباحا"]); repeat = "weekly"; day = n; }
   }
   // the parts in a random order, joined the way people type: commas, dashes, colons, emoji, a capital, "pls" / «لو سمحت», a closing word
@@ -48,7 +54,7 @@ function one() {
   let text = pick(LEAD) + parts.map((x, i) => (i === 0 ? x : pick(SEP) + x)).join("") + pick(DECO) + (rnd() < 0.3 ? pick(DECO) : "");
   if (L === "en" && rnd() < 0.25) text = text.replace(/\b(remind|every|each|month|on)\b/i, (w) => (rnd() < 0.5 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)));
   text = harden(text, rnd, { lang: L, human: true, allowCut: false, keep: task });
-  return { L, text, task, repeat, day, dom, hour };
+  return { L, text, task, repeat, day, dom, hour, nth, askDay };
 }
 const cases = Array.from({ length: N }, one);
 let ok = 0; const fails = [];
@@ -56,11 +62,13 @@ const JUNK = /\b(every|each|month|of|on the|daily|day|last)\b|كل|الشهر|ا
 for (const c of cases) {
   const r = understand(c.text, { now: NOW }); const a = r && r.actions && r.actions.length === 1 && r.actions[0].kind === "reminder" ? r.actions[0].action : null;
   let why = "";
-  if (!a) why = r && r.chat ? "went to Chat" : r && r.ask ? "asked " + (r.ask.kind || "") : "nothing";
+  if (c.askDay) { if (!(r && r.ask && r.ask.kind === "remind-day")) why = a ? "made a reminder with no day" : r && r.chat ? "went to Chat" : "did not ask which day"; }
+  else if (!a) why = r && r.chat ? "went to Chat" : r && r.ask ? "asked " + (r.ask.kind || "") : "nothing";
   else {
     const d = new Date(a.at);
     if (a.repeat !== c.repeat) why = `repeat ${a.repeat} (want ${c.repeat})`;
     else if (Array.isArray(c.day) ? !c.day.includes(d.getDay()) : c.day != null && d.getDay() !== c.day) why = `day ${d.getDay()} (want ${c.day})`;
+    else if (c.nth && Math.ceil(d.getDate() / 7) !== c.nth) why = `the ${Math.ceil(d.getDate() / 7)}th week (want ${c.nth})`;
     else if (c.dom && d.getDate() !== c.dom) why = `date ${d.getDate()} (want ${c.dom})`;
     else if (c.hour != null && d.getHours() !== c.hour) why = `hour ${d.getHours()} (want ${c.hour})`;
     else if (a.at <= NOW) why = "in the past";

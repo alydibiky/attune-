@@ -18,7 +18,12 @@ function next(from, repeat, after) {
     else if (/^last:\d$/.test(repeat || "")) {   // "every last Friday of the month" (0 = Sunday)
       const wd = +repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setMonth(d.getMonth() + 1, 0);
       while (d.getDay() !== wd) d.setDate(d.getDate() - 1);
-    } else if (/^days:/.test(repeat || "")) {    // "days:0,2,4" — the next of those weekdays
+    } else if (/^nth:[1-4]:\d$/.test(repeat || "")) {   // v10.8 "every first Monday of the month" = "nth:1:1" — next month's n-th such weekday
+      const [n, wd] = repeat.slice(4).split(":").map(Number); d.setDate(1); d.setMonth(d.getMonth() + 1);
+      while (d.getDay() !== wd) d.setDate(d.getDate() + 1); d.setDate(d.getDate() + 7 * (n - 1));
+    } else if (repeat === "lastday") { d.setDate(1); d.setMonth(d.getMonth() + 2, 0); }   // v10.8: as on the phone — the month's last day
+    else if (repeat === "yearly") d.setFullYear(d.getFullYear() + 1)                      // v10.8: as on the phone — a birthday every year
+    else if (/^days:/.test(repeat || "")) {    // "days:0,2,4" — the next of those weekdays
       const ds = new Set(repeat.slice(5).split(",").map((x) => +x).filter((x) => x >= 0 && x <= 6));
       if (!ds.size) return from;
       do { d.setDate(d.getDate() + 1); } while (!ds.has(d.getDay()));

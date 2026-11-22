@@ -362,6 +362,15 @@ export function buildAction(json, text0, nowIn) {
     if (first) { t = { at: first, allDay: false, said: { day: "days", time: tm ? "said" : "default" } }; for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1); }
     if (kind === "none") kind = "reminder";
   }
+  // "every first Monday of the month": the first ring is this month's if it is still ahead, else next month's
+  if (/^nth:[1-4]:\d$/.test(repeat) && (kind === "reminder" || kind === "alarm" || kind === "none")) {
+    const [n, wd] = repeat.slice(4).split(":").map(Number), tm = t && t.said && t.said.time && t.said.time !== "relative" && t.said.time !== "none" ? new Date(t.at) : null, n0 = new Date(nowIn || Date.now());
+    let first = nthOf(n0.getFullYear(), n0.getMonth(), n, wd, tm ? tm.getHours() : 9, tm ? tm.getMinutes() : 0);
+    if (first.getTime() <= n0.getTime()) first = nthOf(n0.getFullYear(), n0.getMonth() + 1, n, wd, tm ? tm.getHours() : 9, tm ? tm.getMinutes() : 0);
+    t = { at: first.getTime(), allDay: !tm, said: { day: "nth", time: tm ? "said" : "default" } };
+    for (let i = problems.length - 1; i >= 0; i--) if (/^When\?|already passed/.test(problems[i])) problems.splice(i, 1);
+    if (kind === "none") kind = "reminder";
+  }
   // "every last Friday of the month": the first ring is this month's last Friday if it is still ahead, else next month's
   if (/^last:\d$/.test(repeat) && (kind === "reminder" || kind === "alarm" || kind === "none")) {
     const wd = +repeat.slice(5), tm = t && t.said && t.said.time && t.said.time !== "relative" ? new Date(t.at) : null, n0 = new Date(nowIn || Date.now());
@@ -437,12 +446,25 @@ function lastWeekdayIn(s) {
   const hit = LAST_WD.find(([re]) => new RegExp("^(" + re + ")").test(w));
   return hit ? hit[1] : -1;
 }
+// v10.8 (persona 6, Ali: "fix both"): "every first Monday of the month", «أول اتنين في الشهر» → "nth:1:1" (the 1st Monday; 0 = Sunday)
+const NTH_EN = { first: 1, "1st": 1, second: 2, "2nd": 2, third: 3, "3rd": 3, fourth: 4, "4th": 4 }, NTH_AR = { "أول": 1, "اول": 1, "تاني": 2, "ثاني": 2, "تالت": 3, "ثالث": 3, "رابع": 4 };
+function nthWeekdayIn(s) {
+  const t = String(s || "").replace(/\s+/g, " ").replace(/(^|\s)[إآ]ول(?=\s)/g, "$1أول");   // «إول» / «آول» as people type أول
+  let m = /\b(first|1st|second|2nd|third|3rd|fourth|4th) (sun|mon(?!th)|tue|wed|thu|fri|sat)[a-z]* (?:of|in) (?:the|every|each|a) month\b/i.exec(t);
+  if (m) { const wd = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(m[2].slice(0, 3).toLowerCase()); return wd >= 0 ? [NTH_EN[m[1].toLowerCase()], wd] : null; }
+  m = /(أول|اول|تاني|ثاني|تالت|ثالث|رابع) (?:يوم )?(\S+) (?:في|من|ف|ب)? ?(?:كل )?(?:ال)?شهر/.exec(t);
+  if (m) { const hit = LAST_WD.find(([re]) => new RegExp("^(" + re + ")").test(m[2].startsWith("ال") ? m[2] : "ال" + m[2])) || LAST_WD.find(([re]) => new RegExp("^(" + re + ")").test(m[2])); return hit ? [NTH_AR[m[1]], hit[1]] : null; }
+  return null;
+}
+/** The n-th weekday of a month at a time of day (n = 1..4). */
+export function nthOf(y, mo, n, wd, h = 9, mi = 0) { const d = new Date(y, mo, 1, h, mi, 0, 0); while (d.getDay() !== wd) d.setDate(d.getDate() + 1); d.setDate(d.getDate() + 7 * (n - 1)); return d; }
 const LAST_DAY = /\b(?:on\s+)?(?:the\s+)?(?:last|final)\s+day\s+(?:of|in)\s+(?:the\s+|each\s+|every\s+|a\s+)?month\b|\b(?:(?:at|on|by) )?(?:the )?month[- ]end\b|\b(?:(?:at|on|by) )?(?:the )?end of (?:the |each |every )?month\b|(?:آخر|اخر)\s+(?:يوم|يوم)\s+(?:في|ف|من|ب)?\s*(?:كل\s+)?(?:ال)?شهر|(?:آخر|اخر)\s+الشهر|نهاية\s+(?:كل\s+)?(?:ال)?شهر/i;
 function repeatIn(text) {
   const s = String(text || "");
   // v9.0 (Ali: "remind me on the last day of each month to pay interest for mom" got no date): the month's last day, every month
   if (LAST_DAY.test(s)) return "lastday";
   { const lw = lastWeekdayIn(s); if (lw >= 0) return "last:" + lw; }
+  { const nw = nthWeekdayIn(s); if (nw) return "nth:" + nw[0] + ":" + nw[1]; }
   // v10.8 (persona 6 re-run): "on the 3rd of each month", "each Friday", "on Fridays" — "each" and the plural are "every" too;
   // «كل يوم سبت» is every Saturday, not every day
   if (/\b(?:every|each) month\b|\bmonthly\b|كل شهر|شهريا|شهريًا/i.test(s)) return "monthly";
@@ -468,7 +490,8 @@ function titleFrom(text, kind, contact) {
   let s = String(text || "").replace(new RegExp(LAST_DAY.source, "gi"), " ")
     // v10.8: whole month phrases first — "on the last Thursday of every month", "of every month" (the day / "every month" cleaners below
     // took them apart and left «the last Thursday of», «of»)
-    .replace(/\b(?:every |each |on the |on )?last (?:sun|mon(?!th)|tue|wed|thu|fri|sat)[a-z]* (?:of|in) (?:the|every|each) month\b/gi, " ")
+    .replace(/\b(?:every |each |on the |on )?(?:last|first|1st|second|2nd|third|3rd|fourth|4th) (?:sun|mon(?!th)|tue|wed|thu|fri|sat)[a-z]* (?:of|in) (?:the|every|each|a) month\b/gi, " ")
+    .replace(/(?:كل )?(?:أول|اول|إول|آول|تاني|ثاني|تالت|ثالث|رابع) (?:يوم )?\S+ (?:في|من|ف|ب)? ?(?:كل )?(?:ال)?شهر/g, " ")
     .replace(/\bof\s+(?:every|each|the)\s+month\b/gi, " ")
     .replace(new RegExp("\\b(on |by |before )?(the )?\\d{1,2}(st|nd|rd|th)?( of)? " + MON + "\\b|\\b(on |by )?" + MON + " \\d{1,2}(st|nd|rd|th)?\\b", "gi"), " ")
     .replace(new RegExp("(يوم |في )?[\\d٠-٩]{1,2} " + AMON, "g"), " ")
@@ -528,6 +551,7 @@ export function nextOccurrence(r, after) {
     else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
     else if (r.repeat === "lastday") { d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); }   // v9.0 the month's last day
     else if (/^last:\d$/.test(r.repeat)) { const wd = +r.repeat.slice(5); d.setDate(1); d.setMonth(d.getMonth() + 2); d.setDate(0); while (d.getDay() !== wd) d.setDate(d.getDate() - 1); }   // persona 6: "every last Friday"
+    else if (/^nth:[1-4]:\d$/.test(r.repeat)) { const [n, wd] = r.repeat.slice(4).split(":").map(Number); const x = nthOf(d.getFullYear(), d.getMonth() + 1, n, wd, d.getHours(), d.getMinutes()); d.setTime(x.getTime()); }   // v10.8
     else if (/^days:/.test(r.repeat)) { const ds = r.repeat.slice(5).split(",").map(Number); if (!ds.length) return t; do { d.setDate(d.getDate() + 1); } while (!ds.includes(d.getDay())); }   // v8.4
     else return t;
     t = d.getTime();
