@@ -6536,7 +6536,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     const accs = rep.accounts.length ? rep.accounts : allRep.accounts;
     if (!accs.length) { setBoxRes({ err: tr("Open the ledger once and add an account first — then write here.") }); return; }
     const opts = { today: new Date().toISOString().slice(0, 10), currency: allRep.cur, accounts: accs.map((a) => a.name),
-      cats: ["food", "groceries", "transport", "bills", "rent", "shopping", "health", "fun", "coffee", "gifts", "salary", "other", ...((L.customCats || []).map((c) => c.id))] };
+      cats: ["food", "groceries", "transport", "bills", "rent", "shopping", "health", "fun", "coffee", "gifts", "salary", "other", ...((L.customCats || []).map((c) => c.id))], ledger: L };
     setBoxBusy(true);
     let raw = "";
     if (modelStateRef.current === "ready") { try { raw = await callClaude(logPrompt(text, opts), { prefix: "money", json: true, maxTokens: 700, think: false, temperature: 0.2 }); } catch (e) { raw = ""; } }

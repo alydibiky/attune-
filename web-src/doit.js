@@ -9,18 +9,19 @@
    apply(action, stores, ctx) → { stores: { key: newValue }, done: { en, ar }, open }   (pure; the page writes the keys, keeps the old
    values for Undo, and does what code can't do alone: schedule a reminder, file a note in Mind, log a period).
    Tests: tests/unit/v731doit.test.mjs, tests/e2e_v731doit.py.                                                                    */
-import { ungroup } from "./numfmt.js";   // v10.8: "12.000" / "12 000" = twelve thousand
+import { ungroup } from "./numfmt.js";
+import { fitItem, catNamed, saidAsCategory, SPENT, francoSafe } from "./moneycat.js";   // v10.8: his own categories named in the sentence + a clean note   // v10.8: "12.000" / "12 000" = twelve thousand
 import { numWords, notSpent, splitOrders, tidy } from "./sense.js";   // v9.9.17
 import { tr } from "./i18n.js";
 import { readMealText } from "./fitread.js";
 import { makerOf } from "./makers.js";
-import { readLocal, CAT_WORDS, fixTypos } from "./yusr/logtext.js";
+import { readLocal, CAT_WORDS, fixTypos, isQuestion } from "./yusr/logtext.js";
 import { potIntent, addPot, loadPots, planMonth, POTS_KEY } from "./planner.js";
 import { morningCard } from "./morning.js";
 import { billsIntent, billsAnswer } from "./bills.js";
 import { familyIntent, addItems as famItems, addExpense as famExpense, balances as famBalances, listNow as famList, FAMILY_KEY } from "./family.js";
 import { quickAction, looksLikeAction } from "./actions.js";
-import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf } from "./life.js";
+import { chatLifeIntent, addCommitment, scheduleOf, payAmount, togglePaid, progressOf, amountsIn } from "./life.js";
 import { subPay } from "./subpay.js";
 import { chatDeadlineIntent, addDeadline } from "./deadlines.js";
 import { EXERCISES, burned, today as fitToday } from "./fit.js";
@@ -150,7 +151,40 @@ const REQ = /^\s*(please\s+)?(give|show|tell|suggest|recommend|explain|write|mak
  *  sleep are no longer recorded from Chat or Home (a priced meal still records its money). Set to false to bring them back. */
 export const FIT_ARCHIVED = true;
 const FIT_KINDS = new Set(["food", "water", "weight", "workout", "sleep", "period"]);
-export function understand(text0, opts = {}) {
+// v10.8 (Ali, 22 Nov: "25000 egp expense under masroof nada for shopping winter clothes" → Others, the whole sentence as the note): every
+// money item, from any reading, goes to the category the sentence names (his own first) with a note of only what it was (moneycat.js)
+function ledgerOf(stores) { const L = stores && stores["ledger.v3"]; if (L) return typeof L === "string" ? (() => { try { return JSON.parse(L); } catch (e) { return null; } })() : L;
+  try { return typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("ledger.v3") || "null") : null; } catch (e) { return null; } }
+function fitMoney(u, text, stores, now = Date.now()) {
+  if (!u || !Array.isArray(u.actions)) return u;
+  const L = ledgerOf(stores);
+  if (!u.actions.some((a) => a && a.kind === "money")) {
+    // one amount + one of HIS categories named ("monthly fee 850 L.E. for Gym", «امبارح ٨٥٠ بند العربية عشان …») is an expense even when the
+    // rest of the reading sent it to Chat or found nothing — never a question, a reminder or a plan
+    const own = L && (L.customCats || []).length ? catNamed(text, L) : null;
+    const am = own && own.own ? amountsIn(ungroup(francoSafe(text))).filter((a) => a.value > 0) : [];
+    // …also over a savings goal / a subscription / a meal the other readers made ("1200 under Umrah Fund" is not a goal of 1,200; «دفعت 300
+    // تحت Gym عشان الاشتراك الشهري» was spent) — when the category was said AS a category or the sentence says it was spent
+    // (a subscription whose "person" is only his category's name — "paid, to Gym monthly fee" — is not a debt with a person)
+    // (also a reminder no one asked for — "monthly fee: today" — and a workout read from "spent 300 … on gym": Fit is archived)
+    const asked = /\bremind|alarm|wake me|فكرني|ذكرني|نبهني|صحيني/i.test(String(text || "").replace(/\u0651/g, ""));
+    const soft = u.actions.every((a) => a && (a.kind === "pot" || a.kind === "food" || a.kind === "workout" || (a.kind === "reminder" && !asked) || (a.kind === "life" && a.c && (!a.c.person || (own && catNamed(a.c.person, L) && catNamed(a.c.person, L).id === own.id)))));
+    const strong = own && own.own && (saidAsCategory(text, own) || SPENT.test(text));
+    if (own && own.own && am.length === 1 && (!u.actions.length || (soft && strong)) && !isQuestion(text) && !/\bremind|فكرني|ذكرني|نبهني|owes?\b|عليه|سلف|lent|borrow/i.test(text)) {
+      const today = isoDay(now), income = /\b(got|received|earned|income|salary)\b|قبضت|جالي|استلمت/i.test(text);
+      return { actions: [{ kind: "money", items: [fitItem({ type: income ? "income" : "expense", amount: am[0].value, cat: own.id, date: (/\byesterday\b|امبارح/i.test(text) ? isoDay(now - 864e5) : today), note: "", account: "", src: text }, text, L)] }] };
+    }
+    return u;
+  }
+  // one money item → the whole sentence decides its category and note ("1,200 EGP, category masroof nada, yesterday": the commas cut it
+  // into clauses and the amount's clause never saw the category); several → each item's own clause
+  return { ...u, actions: u.actions.map((a) => { if (!(a && a.kind === "money" && Array.isArray(a.items))) return a;
+    const one = a.items.length === 1; return { ...a, items: a.items.map((x) => fitItem(x, one ? text : x.src || text, L)) }; }) };
+}
+export function understand(text0, opts = {}) { return fitMoney(understandRaw(text0, opts), text0, opts && opts.stores, (opts && opts.now) || Date.now()); }
+export function understandAll(text, opts = {}) { return fitMoney(understandAllRaw(text, opts), text, opts && opts.stores, (opts && opts.now) || Date.now()); }
+
+function understandRaw(text0, opts = {}) {
   text0 = ungroup(text0);
   // v9.9.17 (the 10,000 hard sentences): number words are read as numbers («دفعت ميتين جنيه تاكسي», "spent three hundred on lunch");
   // two orders in one sentence are both done ("paid 300 for lunch and remind me to call Ahmed at 5" was ONE reminder titled "paid
@@ -218,7 +252,7 @@ function understand1(text, opts = {}) {
   return actions.length === u.actions.length ? u : { ...u, actions, ...(actions.length ? {} : { chat: true }) };
 }
 /** The full reader (meals, water, weight… too) — what Chat used before Fit was archived; Attune Fit can use it as is. */
-export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
+function understandAllRaw(text, { now = Date.now(), stores = {} } = {}) {
   const t = fixTypos(ungroup(String(text || "")).trim());   // persona 1: "spnt 200 on lunh"
   if (!t) return { actions: [] };
   // v9.9 (Ali, with FU6: "edit anything by talking — the maid is now taking 700 and it gets done"): a change to something already in
@@ -228,7 +262,7 @@ export function understandAll(text, { now = Date.now(), stores = {} } = {}) {
     if (ed) return { actions: [], ask: { kind: "life-edit", en: editDone(ed, { tr, now }), ar: editDone(ed, { ar: true, now }), open: ed.blocked ? "life" : "" } }; }
   // v9.9.3 L1/L2 (Ali: "Nada is my wife … it learns"): what you teach Attune — who someone is, or a rule for notifications. Short
   // sentences only (a debt like "Ahmed my friend owes me 500" stays a debt); not sure → Attune asks instead of saving a guess
-  { const raw = String(text || "").trim(), short = raw.split(/\s+/).length <= 7 && !/\d/.test(raw);
+  { const raw = String(text || "").trim(), short = raw.split(/\s+/).length <= 7 && !/[\d٠-٩۰-۹]/.test(raw);   // v10.8: «٤٢٠٠ بند ماما» has a number too
     let tx = null; try { tx = readTeach(raw, stores.people || loadDir()); } catch (e) {}
     // v10.8 (persona 6 re-run: "remind me every Monday to call mum" asked «Who do you mean? Write the name, e.g. “Nada is my wife”») —
     // a reminder is a reminder; who "mum" is can be taught another time

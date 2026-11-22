@@ -16,6 +16,7 @@
       waits on a model that is still loading.
    Pure, no DOM, no network. Tests: tests/unit/v714yusrlog.test.mjs.
    ========================================================================= */
+import { fitItem } from "../moneycat.js";   // v10.8: his own categories named in the words + a clean note
 
 const AR_DIGITS = { "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
   "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9", "٫": ".", "٬": "," };
@@ -210,6 +211,9 @@ export function parseLog(raw, text, opts = {}) {
     for (const l of local.items) { const k = used.indexOf(l.amount); if (k >= 0) used.splice(k, 1); else items.push({ ...l, src: undefined }); }
   }
   if (!items.length) items = local.items.map((x) => ({ ...x, src: undefined }));
+  // v10.8 (Ali: "… under masroof nada for shopping winter clothes" → Others): his own category named in the words + a clean note — each item
+  // read against its own clause (found by its amount), or the whole text
+  if (opts.ledger) { const left = local.items.slice(); items = items.map((x) => { const k = left.findIndex((l) => l.amount === x.amount); const src = k >= 0 ? left.splice(k, 1)[0].src : text; return fitItem(x, src || text, opts.ledger); }); }
   items = items.map(({ src, ...x }) => x);
   return items.length ? { ok: true, items, warnings, via: j && Array.isArray(j.items) ? "model" : "code" }
     : { ok: false, items: [], warnings, why: "No amount found. Write it like: lunch 150, taxi 60, got salary 30000." };
