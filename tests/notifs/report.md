@@ -2,11 +2,11 @@
 
 - Became money when it is NOT a payment: **0** (added by itself, without a tap: **0**)
 - Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **0**
-- What it is (the kind Recall files it under): 4739 of 4785 right (99.0%)
+- What it is (the kind Recall files it under): 4785 of 4785 right (100.0%)
 
 | area | notifications | wrong | right % | kind wrong |
 |---|---|---|---|---|
-| bank_composed | 1600 | 0 | 100.0 | 46 of 739 |
+| bank_composed | 1600 | 0 | 100.0 | 0 of 739 |
 | bank_cib_real | 200 | 0 | 100.0 | 0 of 167 |
 | bank_eg_out | 250 | 0 | 100.0 | 0 of 232 |
 | bank_eg_in | 250 | 0 | 100.0 | 0 of 250 |
@@ -37,7 +37,3 @@
 | email_misc | 200 | 0 | 100.0 | – |
 
 ## What went wrong (examples of each)
-
-### bank_composed
-- kind read as **promo** × 29: «Messages · BanqueMisr: عزيزي العميل. خصم 13235.25 EGP. ببطاقة رقم **1602. لصالح فوري. في 17/9/26. للاستفسار 19666» · «Messages · HSBC: عميلنا العزيز، ⏎ خصم 85,420 ج.م ⏎ يوم 27 Nov ⏎ بطاقة الخصم المباشر 7974* ⏎ الرصيد 3,169,108.57 EGP ⏎ لو لم تقم» · «Messages · AAIB: عزيزي العميل, خصم 88,235 EGP, من بطاقتك المنتهية بـ 3669, لصالح طلبات, بتاريخ 3-6-2026, لو لم تقم بهذه العملية»
-- kind read as **message** × 17: «Messages · ADIB: LE 25075 has been charged ⏎ on 2026-08-21 21:24 ⏎ at KAZYON ⏎ from a/c ****3659 ⏎ Thank you for banking with u» · «Messages · Credit Agricole: Dear Client - L.E 12217 has been charged - from account ending 2386 - 16-2-2026 - Ref 96416957 - Bal: LE 413,1» · «Messages · QNB: L.E 17,198.00 has been charged; 25-10-2026; Txn ID 43845966; at AMAZON.EG; from a/c ****1794; Bal: LE 364625.2»

@@ -311,6 +311,17 @@ for (const [name, n0, maker] of G) { const n = Math.round(n0 * TOTAL / 10000); l
     const m = maker(); if (!m) continue; const [note, want, kind, cc, recent, guessWant] = m;
     // v10.2 (Ali: "harder and all unique"): HARD=1 → each notification gets 1–4 real-world changes that keep its meaning (tests/lib/hard.mjs)
     if (HARD) { const a = want && want.a ? String(Math.floor(want.a)).replace(/\B(?=(\d{3})+$)/g, "[,.]?") : ""; note.text = harden(note.text, rnd, { keep: a ? new RegExp(a) : null, human: /^chat|calls/.test(name) && !/^(?:Phone|Missed)/.test(note.title) && !/مكالمة|missed/i.test(note.text), sms: note.app === "Messages" }); }
+    // v10.9 (the HARD run had 42 % different shapes — Ali's bar is 60 %; the generator's fault): what banks, wallets and apps really put
+    // AROUND a message — a greeting, "Not you? Call 19666", «للاستفسار 19623», a line break instead of a full stop, a 🔔 — never its meaning
+    if (HARD && !/^chat|calls/.test(name)) {
+      const ar = /[\u0600-\u06ff]/.test(note.text), sms = note.app === "Messages";
+      const pre = sms ? pick(["", "", "", ar ? "عميلنا العزيز، " : "Dear Customer, ", ar ? "عزيزي العميل: " : "Dear Client: ", "[" + note.title + "] ", ar ? "تنبيه: " : "Alert: "]) : pick(["", "", "🔔 ", "📌 ", "• "]);
+      // (a bank's sign-off only on a bank's message, and the "(2)" count is in a notification's title, not its words — the first wrap
+      // put them anywhere: the generator's fault)
+      const bank = /^bank/.test(name);
+      const post = sms ? pick(["", "", "", bank ? (ar ? " للاستفسار اتصل 19623" : " Not you? Call 19666") : "", bank ? (ar ? " شكرا لاستخدامكم خدماتنا" : " Thank you for banking with us.") : "", ar ? "\nخدمة العملاء 19666" : "\nHelpline 19666", " -"]) : pick(["", "", " ›", "\n" + note.app]);
+      note.text = pre + (rnd() < 0.3 ? note.text.replace(/\. (?=\S)/g, () => pick([".\n", " | ", ". ", " - "])) : note.text) + post;
+    }
     const key = note.app + "|" + note.title + "|" + note.text; if (seen.has(key)) continue; seen.add(key); made++; texts.push(note.title + ": " + note.text);
     setCountry(cc || "eg"); let g, why; try { g = act(note, recent ? { recent } : {}); why = judge(want, g, guessWant); } catch (e) { g = { kind: "" }; why = "THROW " + e.message; }
     const falseMoney = why && ["quiet", "nomoney", "ask", "bill", "followup", "delivered", "todo", "callback"].includes(want.t) && /became money|chat talk became/.test(why);

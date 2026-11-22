@@ -27,7 +27,9 @@ const PRIZE = /\b(congratulations|you(?:'ve| have)? won|you are (?:a |the )?winn
 const ownLink = (t, sender) => { const who = String(sender || "").toLowerCase().replace(/[^a-z0-9]/g, ""); if (who.length < 2) return false;
   const hosts = [...String(t).matchAll(/https?:\/\/([^\/\s]+)/gi)].map((m) => m[1].toLowerCase()); if (!hosts.length) return false;
   return hosts.every((h) => { const base = h.replace(/^www\./, "").split("."); return base[0] === who && /^(?:eg|com|net|com\.eg|ae|sa|co|io|bank|me)$/.test(base.slice(1).join(".")); }); };
-export const isScam = (text, sender = "") => { const t = String(text || ""); return PRIZE.test(t) || (LINK.test(t) && LURE.test(t) && !ownLink(t, sender)); };
+// v10.9 (the HARD run): «تم تحويل 7512 جنيه لمحفظتك بالخطأ برجاء إعادة المبلغ على الرقم 010…» — the classic wallet scam — was saved as money
+const MISTAKE = /(?:بالخط[أإاءئ]|بالغلط|عن طريق الخط[أا]|غلط)[^\n]{0,80}?(?:[اإأ]عاد[ةه]|رجع|ترجع|يرجى|برجاء|ارجاع|إرجاع|حول|ابعت)|\b(?:sent|transferred|deposited)\b[^\n]{0,60}\bby mistake\b[^\n]{0,80}\b(?:return|send (?:it )?back|refund|transfer (?:it )?back)/i;
+export const isScam = (text, sender = "") => { const t = String(text || ""); return PRIZE.test(t) || MISTAKE.test(t) || (LINK.test(t) && LURE.test(t) && !ownLink(t, sender)); };
 /** An SMS whose sender is a person's phone number, not a bank's name ("+20 10…", "0101…") — people TALK about money there, like in a chat. */
 export const fromPhoneNumber = (n) => !!n && /messag|\bsms\b|mms|رسائل/i.test(String(n.app || "") + " " + String(n.pkg || "")) && /^\s*\+?[\d\s().-]{7,}\s*$/.test(String(n.title || ""));
 const HAPPENED = /\b(debited|credited|charged|you paid|you sent|you received|was deducted|refunded)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|دفع|سداد)|استلمت|وصلك/iu;
@@ -40,6 +42,12 @@ export function notAPayment(text, n = null) {
   if (n && fromPhoneNumber(n)) return "person";
   if (FAILED_W.test(t)) return "failed";
   if (NOTYET_W.test(t)) return "notyet";
+  // v10.9 (real Vodafone Cash SMS: «تم طلب سحب مبلغ 10600 جنيه … للتأكيد اطلب #1*9*» was counted, then the real «تم سحب» again): a
+  // request that waits for your confirmation, and "please transfer 350 EGP to …" (an instruction), are not money that moved
+  // (a notification cut off mid-word: "Fees EGP 416.75 to be pai…" is still "to be paid")
+  if (/\b(?:to be|will be|is to be)\s+\S{0,7}…\s*$|(?<![\p{L}])(?:سيتم|هيتم|هتتخصم|هيتخصم)\s+\S{0,6}…\s*$/u.test(t)) return "notyet";
+  if (/تم\s+طلب\s+(?:سحب|تحويل|دفع)|للتأكيد\s+اطلب|لتأكيد\s+العملية|في\s+انتظار\s+(?:التأكيد|موافقتك)|\b(?:pending (?:your )?(?:approval|confirmation)|awaiting (?:your )?confirmation|to confirm,? (?:dial|reply|enter))\b/i.test(t)) return "notyet";
+  if (/(?:^|[\]:—-])\s*(?:please|kindly)\s+(?:transfer|pay|send)\b|(?:برجاء|يرجى|من فضلك|رجاء)\s+(?:تحويل|دفع|سداد)/iu.test(t)) return "notyet";
   if (OFFER_W.test(t) && !HAPPENED.test(t)) return "offer";
   if (PRICE_W.test(t) && !HAPPENED.test(t)) return "price";
   if (POST_W.test(t)) return "post";

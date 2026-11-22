@@ -59,7 +59,9 @@ export function readNotification(n, opts) {
   let lab = null; try { lab = labelOf(n, opts && opts.teach !== undefined ? opts.teach : loadTeach()); } catch (e) {}
   if (lab && notMoney(lab)) return null;
   if (isChatApp(n) && !countsAsMoney(lab)) return null;
-  const text = [n.title, n.text].filter(Boolean).join(" — ").trim();
+  // v10.9 (real SMS from a bank's short code — "19623", "16999" — read 19623 as the amount): a sender that is only a number is not part
+  // of the message
+  const text = [/^\s*\+?[\d\s-]{3,16}\s*$/.test(String(n.title || "")) ? "" : n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
   // v9.9.17 (the 10,000-notification run): a code that names its purchase, a declined / failed payment, a bill that is only due, a
   // fine, "you will be billed", an offer, a price moving, a prize text, an SMS from a person's number — none of them is money that
@@ -78,7 +80,7 @@ export function readNotification(n, opts) {
   if (!p || !p.ok || !(p.amount > 0) || !p.direction || (p.confidence === "low" && !(known && !p.currency && home.home))) return null;
   if (!p.currency && home.home) p.currency = home.home;
   // v9.9.17: a shop's own "Payment received: EGP 1,879 for your stay" / "We've received your payment" is money the person PAID
-  if (p.direction === "in" && !known && /payment (?:was |has been )?received|received your payment|payment of (?:[^.\n]|\.\d){0,40} received|تم استلام (?:دفعتك|مدفوعاتك)/i.test(text)) p.direction = "out";
+  if (p.direction === "in" && !known && /payment (?:was |has been )?received|received your payment|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|تم استلام (?:دفعتك|مدفوعاتك)/i.test(text)) p.direction = "out";
   // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
     ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence,

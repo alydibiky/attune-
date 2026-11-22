@@ -125,20 +125,23 @@ const THREE_DEC = /^(KWD|BHD|OMR|JOD|TND|LYD|IQD)$/;
 // \b only knows ASCII, so "débité\b" would never match).
 const W = (words, flags = "iu") => new RegExp("(?<![\\p{L}])(?:" + words + ")(?![\\p{L}])", flags);
 const DIRECTION = [
+  // v10.9 (Ali: "notifications to 100 %" — real Egyptian bank / wallet SMS from public SMS-parser projects): «تحويل إنستاباي وارد»,
+  // «إيداع تحويل لحظي … بحسابك», «تم إضافة تحويل لحظي لبطاقتكم», «إشعار إيداع: استلام تحويل فوري» — money IN, though «تحويل» is in them
+  ["in",  /تحويل(?:\s+[^\s.،]+){0,2}\s+وارد|(?:إيداع|ايداع)\s+تحويل|استلام\s+تحويل|تم\s+(?:إضافة|اضافة)\s+تحويل|إشعار\s+(?:إيداع|ايداع)|اشعار\s+(?:إيداع|ايداع)/],
   // v9.9.16 (Ali: "your code should deal with any type of notification" — tests/corpus/world-bank-messages.mjs): wordings from the
   // banks of all 30 countries that the lists below read wrongly or not at all. In first: an INCOMING transfer / salary / "paid you".
   ["in",  /حوال[ةه]\s+وارد|وارد[ةه]\s+(?:محلي|دولي|سريع)|إيداع\s+راتب|ايداع\s+راتب|تم\s+(?:إيداع|ايداع|استلام)/],
-  ["out", /حوال[ةه]\s+صادر|تم\s+الدفع|شراء\s+(?:عبر|إنترنت|انترنت|دولي)/],
+  ["out", /حوال[ةه]\s+صادر|تم\s+تنفيذ\s+تحويل(?![^\n]{0,40}(?:الي|إلى|الى|ل)\s*حساب(?:ك|كم))|تم\s+الدفع|شراء\s+(?:عبر|إنترنت|انترنت|دولي)/],
   // v10.2 (the HARD composed run): «وصلك تحويل … على بطاقتك» is money IN; «تم تحويل … لصالح …» / «… من حسابك / بطاقتك» is money OUT —
   // unless it says the money went TO your account / card / wallet
   ["in",  /وصلك|وصل لك|وصلتك|استلمت مبلغ|تم\s+استلام/],
-  ["out", /لصالح|تم\s+تحويل(?![^.;\n]{0,80}(?:(?:الى|إلى)\s*|ل)(?:حسابك|حسابكم|بطاقتك|محفظتك))(?!\s+(?:راتب|مرتب))|(?:من|بـ?)\s*(?:حسابك|حسابكم|بطاقتك)(?:\s|$|[.,،;])/],
+  ["out", /لصالح|تم\s+تحويل(?!(?:[^.;\n]|\.(?=\d|م)){0,80}(?:(?:[اأإآ]لى|[اأإآ]لي)\s*|ل)(?:حسابك|حسابكم|بطاقتك|بطاقتكم|محفظتك))(?!\s+(?:راتب|مرتب))|(?:من|بـ?)\s*(?:حسابك|حسابكم|بطاقتك)(?:\s|$|[.,،;])/],
   ["in",  /\b(?:paid you|sent you|you(?:'ve| have)? received|has been credited|was credited|credited (?:to|with|by)|credit amt|direct deposit|automatically deposited|salary of)\b/i],
   ["in",  /\bCR\b(?=\s|$|[:.,])/],
   ["out", /\b(?:debited by|has been debited|was debited|debit amt|you paid|you have paid|purchase of|a purchase|pos purchase|spent on)\b/i],
   ["out", /\bDR\b(?=\s|$|[:.,])/],
   ["in",  W("gelmi[sş]tir|yat[ıi]r[ıi]lm[ıi][sş]t[ıi]r|yat[ıi]r[ıi]ld[ıi]|hesab[ıi]n[ıi]za[^.]{0,80}(?:havale|eft|fast|para)|menerima|dikreditkan|dana masuk|uang masuk|virement re[cç]u|vous avez re[cç]u|accredito|accreditato|has recibido|recibiste|voc[eê] recebeu|recebeu um pix|je hebt[^.]{0,30}ontvangen|du hast[^.]{0,40}erhalten|erhalten|received from|ontvangen")],
-  ["out", W("al[ıi][sş]veri[sş]|harcama|[oö]deme yap[ıi]lm[ıi][sş]t[ıi]r|didebet|telah didebet|transfer ke|pembelian|kartenzahlung|pagou|compra (?:de|por|aprovada)|paiement (?:par carte|de)|effectu[ée] un paiement|d[ée]bit[ée] de|pagamento di|je hebt[^.]{0,30}betaald|betaald aan|paid from|paid to")],
+  ["out", W("kart[ıi]n[ıi]zdan[\\s\\S]{0,60}?i[sş]yerinden|al[ıi][sş]veri[sş]|harcama|[oö]deme yap[ıi]lm[ıi][sş]t[ıi]r|didebet|telah didebet|transfer ke|pembelian|kartenzahlung|pagou|compra (?:de|por|aprovada)|paiement (?:par carte|de)|effectu[ée] un paiement|d[ée]bit[ée] de|pagamento di|je hebt[^.]{0,30}betaald|betaald aan|paid from|paid to")],
   // STRONGEST FIRST: an explicit debit/credit verb beats any preposition.
   // This ordering is not cosmetic. "تم خصم 250 من حسابك" contains "من حساب",
   // and an earlier version read that as money arriving — it would have ADDED
@@ -221,9 +224,27 @@ function payAmount(text, home) {
     // A number sitting right after "balance"/"الرصيد" is not the amount. The
     // penalty is heavy enough that a message containing ONLY a balance yields
     // no amount at all, rather than proposing to move the balance.
-    if (NEAR_BALANCE.test(before)) score -= 14;
+    // v10.9 (real SMS: «رصيدك 5000 جم. تم إيداع 150 جم» — the 150 was punished for the balance word of the sentence before): only
+    // the words since the last sentence end count; «رصيد حسابك في فودافون كاش الحالي 4221.58» — "الحالي / الجديد" is the balance too
+    const bSeg = before.split(/[.،;\n!](?=\s)|\.\s/).pop();
+    if (NEAR_BALANCE.test(bSeg)) score -= 14;
+    if (/(?:الحالي|الحالى|الجديد|المتبقي)\s*:?\s*$/.test(before) && /رصيد/.test(t.slice(Math.max(0, at - 60), at))) score -= 14;
+    // a fee next to a purchase ("fees EGP 15.00 and purchase EGP 300.00", «مصاريف الخدمة 1 جنيه») is not the payment
+    if (/(?:fees?|charges?|commission|رسوم|مصاريف|عموله|عمولة)[^\d]{0,14}$/iu.test(before)) score -= 6;
     if (NEAR_BALANCE.test(after)) score -= 3;
-    if (NEAR_REF.test(before)) score -= 9;              // reference numbers
+    // reference numbers — v10.9 (real NBE SMS: «حسابكم رقم 0130 بمبلغ 3000.0 جم» lost its amount to the «رقم» of the account): only a
+    // reference word with no other number between it and this one counts
+    if (NEAR_REF.test(before.replace(/^[\s\S]*\d/, ""))) score -= 9;
+    // v10.9: "iCloud+ 50 GB", "Google One (100 GB)", «باقة 10 جيجا», "a 6.7-inch", "5000 mAh" — a size is not the price
+    if (/^\s?(?:gb|mb|tb|kb|gbps|mbps|ghz|mhz|mp|mah|wh|kwh|inch(?:es)?|cm|mm|ml|kg|جيجا|ميجا|تيرا|جيجابايت|ميجابايت|بوصه|بوصة|مللي)/iu.test(after)) score -= 12;
+    // v10.9 (the HARD run: SBI's "A/C X1234 debited by 296 … SMS BLOCK 1234 to 9223008333" read 1234): the number right after the
+    // money verb is the payment; a number in an instruction ("SMS BLOCK 1234", "call 19666", «اتصل 19623») is not
+    if (/(?:debited by|credited by|debited with|credited with|debited for|charged|withdrawn|spent|paid|purchase of|بمبلغ|بقيمة|مبلغ|خصم|سحب|ايداع|إيداع|دفع)\s*(?:[A-Z]{3}|Rs\.?|INR|جنيه|ج\.م)?\s*$/i.test(before)) score += 4;
+    if (/(?:\bsms|\bsend|\bblock|\bstop|\bcall|\bdial|\bhelpline|اتصل|ارسل|أرسل|للاستفسار|خدمة العملاء)\s*(?:[A-Z]+\s+)?$/i.test(before)) score -= 8;
+    // v10.9: a product's number — "Microsoft 365", "iPhone 15", "Galaxy S24", "PS5", "Windows 11" — is its name, not the price
+    if (/(?:microsoft|office|xbox|windows|iphone|ipad|galaxy|pixel|playstation|ps|redmi|honor|huawei|oppo|vivo|realme|macbook|airpods|series|model|version|ios|android)\s?[a-z]?$/i.test(before) && !/^\s?(?:[A-Z]{3}\b|جنيه|ج\.م|جم|\$)/.test(after)) score -= 9;
+    // "APR 14, 2026" / "on 14 NOV": a day next to a month name (any case) is a date, not money
+    if (val <= 31 && !/[.,]\d{2}$/.test(raw) && (/(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*$/i.test(before) || /^\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i.test(after))) score -= 10;
     if (/[.,]\d{2}$/.test(raw)) score += 3;            // 1,500.00 / 12,50 look like money
     if (/[,. '’]\d{3}/.test(raw)) score += 2;
     if (raw.replace(/[^\d]/g, "").length >= 9 && !/[,. '’]\d{3}/.test(raw)) score -= 9;   // phone / reference length (not 1,250,000.00)
@@ -232,11 +253,11 @@ function payAmount(text, home) {
     if (/\d:\s?$/.test(before) || /^\s?:\d/.test(after)) score -= 8;   // v10.2: a time (18:36) is not the amount
     if (/^[-\/.]\d{1,2}[-\/.]\d{1,2}/.test(after) && /^(?:19|20)\d{2}$/.test(raw)) score -= 12;   // v10.2: the year of 2026-07-26 is not the amount
     // v9.9.16 (the world corpus): "A/c **3545", "card ending 4521", "kart 1234", «بطاقة *4321», "Acct XX789" — a tail is not money
-    if (/(?:a\/c|acc(?:oun)?t|acct?|card(?:\s+no\.?)?|ending|ends? (?:in|with)|biten|nolu|kart\w*|rek(?:ening)?|conto|carta|tarjeta|terminaci[oó]n|cuenta|compte|carte|konto|cheq|بطاقة|بطاقتك|حساب\w*|المنتهية\s+ب.?)[\s.:#-]*[xX*•.]*\s*$/iu.test(before) || /[*•xX]{1,6}\s?$/.test(before.slice(-7))) score -= 12;
+    if (/(?:a\/c|acc(?:oun)?t|acct?|card(?:\s+no\.?)?|ending|ends? (?:in|with)|biten|nolu|kart\w*|rek(?:ening)?|conto|carta|tarjeta|terminaci[oó]n|cuenta|compte|carte|konto|cheq|بطاقة|بطاقتك|حساب\w*|المنتهي[ةه]?\s*(?:ب|بـ|برقم)\s*|المنتهي[ةه]?|ينتهي\s*(?:ب|بـ)|رقم\s+(?:الحساب|البطاقة|المحفظة))[\s.:#-]*[xX*•.]*\s*$/iu.test(before) || /[*•xX]{1,6}\s?$/.test(before.slice(-7))) score -= 12;
     if (/(?:avl\.?|avail(?:able)?|limit|lmt|kullan[ıi]labilir|bakiye|saldo|solde|kontostand|رصيد|الرصيد|المتاح|المتوفر|\bbal\b)[^\d]{0,22}$/iu.test(before)) score -= 10;
     if (/^\s*(?:today|so far|this (?:week|month))\b/i.test(after) && /spent\s[^\d]{0,6}$/i.test(before)) score -= 6;   // "You've spent £48.20 today"
     // the number that TOUCHES a currency is the amount ("Rs 2500.00", "245,90 TL", «45.00 ر.س») — a date or a count beside it is not
-    if (/(?:(?<![A-Za-z])(?:[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م)/.test(after)) score += 4;
+    if (/(?:(?<![A-Za-z])(?:(?!ATM|POS|REF|PIN|OTP|TXN|ACC|NUM|SMS|VAT|ID\b)[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م|جم(?![\u0621-\u064A])|ج(?![\u0621-\u064A]))/.test(after)) score += 4;
     if (/^[.\/-]\d{1,4}(?!\d)/.test(after) && val <= 31 || /\d[.\/-]$/.test(before) && val <= 2100 && !/[.,]\d{2}$/.test(raw)) score -= 8;   // a piece of a date: 10-11-26, 10.11.2026
     if (!cands.length) score += 0.5;                    // …and of two equal candidates, the first written is the payment
     // v9.9.15: a day of the month ("on 20 December", «يوم 20 ديسمبر») or a count of minutes / nights / people is not an amount

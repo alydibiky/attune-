@@ -26,13 +26,14 @@ const CAT = [[/carrefour|seoudi|spinneys|hyper|metro market|kazyon|oscar|gourmet
 export const catOf = (t) => (CAT.find(([re]) => re.test(String(t || ""))) || [null, "other"])[1];
 const shopIn = (text) => { const m = /\b(?:at|@|from|لدى|في|عند)\s+([A-Z0-9][A-Za-z0-9&' .-]{1,30}?)(?=\s+(?:on|card|بطاقة|using|ref|\d)|[.,]|$)/.exec(String(text || "")); return m ? m[1].trim() : ""; };
 
-const WEEKDAY = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "الأحد": 0, "الاحد": 0, "الاثنين": 1, "الإثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الاربعاء": 3, "الخميس": 4, "الجمعة": 5, "السبت": 6 };
+const WEEKDAY = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "الأحد": 0, "الاحد": 0, "الاثنين": 1, "الاتنين": 1, "الاربع": 3, "الثلاثة": 2, "الإثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الاربعاء": 3, "الخميس": 4, "الجمعة": 5, "السبت": 6 };
 /** "Arriving Thursday" / "arrives tomorrow" / "by 12 Nov" → that day (ms, 9:00), else 0. */
 export function dayIn(text, now) {
-  const t = String(text || "");
+  // (v10.9: «يوم الإحد», «الأتنين» — any alef form; «الجمعه» with ه — is the same day)
+  const t = String(text || "").replace(/(?<![\p{L}])ال[أإآا](?=حد|ثنين|تنين|ربعاء|ربع)/gu, (m) => "الا").replace(/(الجمع|الثلاث)ه(?![\p{L}])/gu, "$1ة");
   if (/\b(today|اليوم|النهارده)\b/i.test(t)) return at9(now);
   if (/\b(tomorrow|بكرة|بكره|غدا|غداً)\b/i.test(t)) return at9(now + DAY);
-  const w = /\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|(الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة|السبت)/i.exec(t);
+  const w = /\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|(الأحد|الاحد|الاثنين|الإثنين|الاتنين|الثلاثاء|الثلاثة|الأربعاء|الاربعاء|الاربع|الخميس|الجمعة|السبت)/i.exec(t);
   if (w) { const k = (w[1] || w[2]).toLowerCase().slice(0, w[1] ? 3 : 20), want = WEEKDAY[k]; if (want != null) { const d = new Date(now); const add = (want - d.getDay() + 7) % 7; return at9(now + add * DAY); } }
   const dm = /\b(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i.exec(t) || /\b(\d{1,2})(?:st|nd|rd|th)\b/i.exec(t);
   if (dm) { const d = new Date(now), day = +dm[1]; const mon = dm[2] ? "janfebmaraprmayjunjulaugsepoctnovdec".indexOf(dm[2].slice(0, 3).toLowerCase()) / 3 : d.getMonth();
@@ -110,10 +111,14 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
     const when = dayIn(text + " " + title, n.ts || now) || at9((n.ts || now) + 3 * DAY);
     return { ...base, kind: "bill", amount: u.amount, at: when, title: smsFrom + " bill", key: "bl:" + smsFrom + ":" + iso(when), line: "Bill", sure: true };
   }
+  // v10.9 (real SMS: CIB's "available limit EGP 20,000.00. Purchase EGP 99.00 at SPOTIFY" made a 20,000 subscription; HSBC's "Purchase from
+  // 006-109***-001 EGP 81.00-" an expense of 1): a bank / wallet message's amount is Money's own reading (paytext.js knows limits, card
+  // numbers and balances) when it has one
+  const payAmt = (() => { try { const e = readNotification(n); return e && e.amount > 0 ? e.amount : 0; } catch (x) { return 0; } })();
   { const all = all0, svc = subOf(all);
-    if (svc && u.amount > 0 && !isChatApp(n) && !no && !left && u.kind !== "promo" && !(u.state === "money in" && !/payment(?:[^.\n]|\.\d){0,40}received|received your payment/i.test(all)) && PAID_W.test(all) && !OFFER_W.test(all)) {
+    if (svc && u.amount > 0 && !isChatApp(n) && !no && !left && u.kind !== "promo" && !(u.state === "money in" && !/payment(?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40}received|received your payment/i.test(all)) && PAID_W.test(all) && !OFFER_W.test(all)) {
       const d = paidDayOf(all, n.ts || now) || iso(n.ts || now);
-      return { ...base, kind: "subscription", title: svc, amount: u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
+      return { ...base, kind: "subscription", title: svc, amount: payAmt || u.amount, cur: curOf(all), date: d, key: "sb:" + svc + ":" + d.slice(0, 7), line: "Subscription" };
     } }
   // v9.9.30 (Ali: "not keep asking — really smart"): a shop's / an app's receipt ("Your payment of EGP 3,942.00 was successful",
   // "total charged EGP 5458.00 to card 6907") is an expense Attune adds by itself — it was asked "You paid … add it?" before.
@@ -132,8 +137,9 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
     { let e = null; try { e = readNotification(n); } catch (x) {} if (e && codeSure(e)) return null; }   // v9.9.9: never from a chat
     const shop = shopIn(title + " " + text), out = u.state === "money out" || (u.state !== "money in" && paidSure);
     const rc = out && paidSure && !moneySourceNote(n) && !/messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || ""));   // a shop's receipt (Steam, Booking.com), not a bank SMS: sure (v9.9.30)
-    return { ...base, kind: out ? "expense" : "income", amount: u.amount, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : out && paidSure ? { sure: true } : {}),
-      key: (out ? "x:" : "i:") + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
+    const amt = payAmt || u.amount;
+    return { ...base, kind: out ? "expense" : "income", amount: amt, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : out && paidSure ? { sure: true } : {}),
+      key: (out ? "x:" : "i:") + Math.round(amt * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
   }
   if (u.kind === "delivery") {
     if (u.state === "delivered") return { ...base, kind: "delivered", key: "dl:" + app, line: "Delivered" };
@@ -153,7 +159,7 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
     return { ...base, kind: "todo", sure: true, at: when, who: u.who, title: u.who.replace(/\s*\(.*\)\s*$/, "").replace(/\s+\d[\d ]*$/, "") + ": " + text.slice(0, 80), key: "td:" + tdKey(u.who, text), line: "To-do" };
   }
   if (u.kind === "call" && u.who) {
-    const same = (recent || []).filter((r) => r.id !== n.id && Math.abs((r.ts || 0) - (n.ts || 0)) < DAY && (() => { const v = understandNote(r); return v.kind === "call" && v.who === u.who; })());
+    const same = (recent || []).filter((r) => r.id !== n.id && Math.abs((r.ts || 0) - (n.ts || 0)) < DAY && (() => { const v = understandNote(r); const k = (x) => String(x || "").toLowerCase().replace(/\s+/g, " ").trim(); return v.kind === "call" && k(v.who) === k(u.who); })());   // (v10.9: "JOHN" and "John " are one caller)
     if (same.length >= 1 || /whatsapp|telegram|messenger|viber|botim|imo/i.test(app + " " + (n.pkg || ""))) return { ...base, kind: "callback", sure: true, at: now + 15 * 60000, who: u.who, title: "Call back " + u.who, key: "cb:" + u.who + ":" + iso(n.ts || now), line: "Call back" };
     return null;
   }

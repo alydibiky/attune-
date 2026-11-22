@@ -15,7 +15,7 @@ const KINDS = [
     /\b(shipped|out for delivery|on (?:its|the) way|arriv(?:ing|es|ed)|delivered|dispatched|courier|tracking|your (?:order|package|parcel|shipment)|order (?:#|no|number|confirmed|placed|is ready)|rider|picked up)\b|تم الشحن|في الطريق|خرجت? للتوصيل|شحنتك|هيوصل|وصل طلبك|تم التوصيل|طلبك|الطلب|الشحنة|المندوب|الطيار/i,
     "delivery order package parcel shipment shipping courier arriving arrive coming tracking اوردر طلب الطلب شحنه الشحنه دليفري توصيل المندوب جاي هيوصل order delivery"],
   ["bank", /bank|cib|nbe|banquemisr|qnb|hsbc|alahly|instapay|vodafone.?cash|fawry|valu|paymob|paypal|wise|revolut|meeza|aman|sympl|contact|souhoola/,
-    /\b(debited|credited|transaction|purchase|spent|withdraw(?:al|n)?|deposit(?:ed)?|transfer(?:red)?|balance|card ending|your card|payment of|paid|refund(?:ed)?|received|egp|usd|sar|aed|qar|kwd|bhd|omr|jod)\b|تم خصم|خصم مبلغ|تم ايداع|تم إيداع|ايداع|إيداع|تحويل|رصيد|بطاقتك|كارت|سحب|عملية شراء|مبلغ|جنيه/i,
+    /\b(debited|credited|charged|transaction|purchase|spent|le|l\.e|withdraw(?:al|n)?|deposit(?:ed)?|transfer(?:red)?|balance|card ending|your card|payment of|paid|refund(?:ed)?|received|egp|usd|sar|aed|qar|kwd|bhd|omr|jod)\b|تم خصم|خصم مبلغ|تم ايداع|تم إيداع|ايداع|إيداع|تحويل|رصيد|بطاقتك|كارت|سحب|عملية شراء|مبلغ|جنيه|(?<![\p{L}])(?:جم|ج\.م)(?![\p{L}])|وصلك|تم دفع|تم سداد/iu,
     "money bank payment paid spent purchase transaction card transfer balance debit credit refund فلوس البنك دفع دفعت خصم تحويل رصيد كارت فيزا مصاريف flos bank"],
   ["call", /dialer|phone|telecom|incallui|contacts/, /\b(missed (?:voice |video )?call|incoming (?:voice |video )?call|calling|voicemail|called you)\b|مكالمة فائتة|مكالمه فائته|مكالمة لم يرد عليها|اتصل بك|بيتصل/i,
     "call called missed phone ring rang voicemail اتصل اتصال مكالمه كلمني رن رنه kalemny etasal"],
@@ -59,7 +59,8 @@ export function understandNote(n) {
   // is an offer, not a delivery; an email only counts as a delivery when a shop sent it
   // v9.9.17: «تم خصم 3,317 جم من بطاقتك» is money deducted, not a discount («خصم 30٪»); offers in the app's other languages
   const PROMO0 = /\b\d+\s*(?:%|egp|le|جنيه)?\s*off\b|\bsale\b|\bdiscount\b|\bpromo(?:code)?\b|\bcoupon\b|\bcashback\b|\b(?:special )?offers?\b|\bdeals?\b|\bbonus\b|\binstead of\b|عرض|(?<!تم )خصم \d|تخفيض|كوبون/i;
-  const PROMO = { test: (x) => (PROMO0.test(x) || OFFER_W.test(x)) && !/تم خصم|خصم مبلغ|\b(debited|credited|charged)\b/i.test(x) };
+  // v10.9 (the HARD run): a bank's «خصم 13235.25 EGP. ببطاقة رقم **1602 لصالح فوري» / «خصم 23,744 ج.م من حسابك المنتهي» is a debit, not an offer
+  const PROMO = { test: (x) => (PROMO0.test(x) || OFFER_W.test(x)) && !/تم خصم|خصم مبلغ|\b(debited|credited|charged)\b/i.test(x) && !(/خصم\s*[\d٠-٩][\d٠-٩.,٬٫]*\s*(?:EGP|LE|L\.E|ج\.?\s?م|جم|جنيه|USD|SAR|AED|\$)(?!\s*[%٪])/i.test(x) && /من\s*حساب|بطاق|رقم مرجعي|رقم العملي|الرصيد|لصالح|المنتهي|لو لم تقم/.test(x)) };
   // a person's chat is a message (or a missed call) whatever words it uses («انا في الطريق» is not a delivery, "the gate code" not a flight)
   const realChat = REAL_CHAT.test(src), cal = /calendar|com\.google\.android\.apps\.tachyon|\bmeet\b/.test(src);
   const SHOP = /amazon|noon|jumia|talabat|breadfast|aramex|dhl|fedex|ups|bosta|mylerz|shein|temu|aliexpress|instashop/i;

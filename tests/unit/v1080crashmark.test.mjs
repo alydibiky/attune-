@@ -12,7 +12,7 @@ ok(/"fast_turn"[\s\S]{0,200}\.commit\(\)/.test(fe.slice(fe.indexOf("private fun 
 const cc = fe.slice(fe.indexOf("fun checkCrash("));
 ok(/ExitWatch\.unexpectedAt >= at/.test(cc), "a mark counts only when Android says the app ended unexpectedly (not swiped away)");
 ok(/CrashLog\.add\(ctx, "closed while the fast engine was answering"/.test(cc), "it goes into the problem report");
-ok(/7 \* 24 \* 3600_000L[\s\S]{0,80}Prefs\.setFastCpu\(ctx, true\)/.test(cc), "on the GPU twice in 7 days → the CPU");
+ok(/7 \* 24 \* 3600_000L[\s\S]{0,80}Prefs\.setFastCpu\(ctx, true(, auto = true)?\)/.test(cc), "on the GPU twice in 7 days → the CPU (v10.9: for 3 days or until an update, then the GPU again)");
 ok(/unexpectedAt = e\.timestamp/.test(rd("ExitWatch.kt")), "ExitWatch remembers the newest unexpected ending, on screen or in the background");
 const cl = rd("CrashLog.kt");
 ok(/Battery, last 24 h \(now \$\{BatteryGuard\.level\(ctx\)\} %/.test(cl) && /nothing of Attune's ran in the background/.test(cl), "the battery part says the level now, or that nothing ran");
