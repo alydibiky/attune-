@@ -15094,4 +15094,11 @@ export const RU = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Ничего не записано как оплаченное {who} {p}. Платёж учитывается, когда имя есть в заметке (например, «500 для {who}»).",
   "**You paid {who} {a}** {p} · 1 entry.": "**Вы заплатили {who} {a}** {p} · 1 запись.",
   "**You paid {who} {a}** {p} · {n} entries.": "**Вы заплатили {who} {a}** {p} · записей: {n}.",
+  "Monthly payment": "Ежемесячный платёж",
+  "Months needed": "Нужно месяцев",
+  "Per year": "В год",
+  "Per month": "В месяц",
+  "Each part": "Каждая часть",
+  "Price before": "Цена до",
+  "Price after discount": "Цена со скидкой",
 };

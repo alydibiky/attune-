@@ -15095,4 +15095,11 @@ export const TRK = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} kişisine ödenmiş olarak kayıtlı bir şey yok. Bir ödeme, adı notunda geçtiğinde sayılır (ör. “{who} için 500”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**{who} kişisine {a} ödedin** {p} · 1 kayıt.",
   "**You paid {who} {a}** {p} · {n} entries.": "**{who} kişisine {a} ödedin** {p} · {n} kayıt.",
+  "Monthly payment": "Aylık taksit",
+  "Months needed": "Gereken ay",
+  "Per year": "Yıllık",
+  "Per month": "Aylık",
+  "Each part": "Her pay",
+  "Price before": "Önceki fiyat",
+  "Price after discount": "İndirimli fiyat",
 };

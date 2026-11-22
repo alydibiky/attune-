@@ -15086,4 +15086,11 @@ export const ARB = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "لا يوجد شيء مسجَّل مدفوعًا لـ{who} {p}. تُحسب الدفعة عندما يكون الاسم في ملاحظتها (مثلًا «500 لـ{who}»).",
   "**You paid {who} {a}** {p} · 1 entry.": "**دفعتَ لـ{who} {a}** {p} · عملية واحدة.",
   "**You paid {who} {a}** {p} · {n} entries.": "**دفعتَ لـ{who} {a}** {p} · {n} عمليات.",
+  "Monthly payment": "القسط الشهري",
+  "Months needed": "عدد الأشهر اللازمة",
+  "Per year": "سنويًا",
+  "Per month": "شهريًا",
+  "Each part": "نصيب كل جزء",
+  "Price before": "السعر قبل",
+  "Price after discount": "السعر بعد الخصم",
 };

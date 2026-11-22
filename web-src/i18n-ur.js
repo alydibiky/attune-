@@ -15095,4 +15095,11 @@ export const UR = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} کو ادائیگی کے طور پر کچھ درج نہیں۔ ادائیگی تب گنی جاتی ہے جب نام اس کے نوٹ میں ہو (مثلاً “{who} کو 500”)۔",
   "**You paid {who} {a}** {p} · 1 entry.": "**آپ نے {who} کو {a} دیے** {p} · 1 اندراج۔",
   "**You paid {who} {a}** {p} · {n} entries.": "**آپ نے {who} کو {a} دیے** {p} · {n} اندراجات۔",
+  "Monthly payment": "ماہانہ قسط",
+  "Months needed": "درکار مہینے",
+  "Per year": "سالانہ",
+  "Per month": "ماہانہ",
+  "Each part": "ہر حصہ",
+  "Price before": "پہلے کی قیمت",
+  "Price after discount": "رعایت کے بعد قیمت",
 };

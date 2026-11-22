@@ -131,7 +131,7 @@ export function programFrom(text) {
  * The verified-maths pipeline. llm(messages, {maxTokens, onToken}) → text; runPy(code) → run result.
  * → { ok, answer, code, output, text } or { ok:false, why }
  */
-export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}, onToken, explain = true }) {
+export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}, onToken, onAnswer, explain = true }) {
   onStep("Working it out as a program…");
   // Python starts while the program is being written (it takes a few
   // seconds the first time), and the screen shows the program growing
@@ -168,6 +168,8 @@ export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}
     code = next; res = r2; answer = a2;
   }
   if (!explain) return { ok: true, answer, code, output: res.stdout, text: "" };
+  // v10.9 S2 (speed): the checked number is shown the moment the program prints it; the working is written after
+  try { onAnswer && onAnswer(answer); } catch (e) {}
   onStep("Checked by running code — writing the answer…");
   const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 320, onToken });   // (v10.9 speed: 4 short steps — the real model wrote 150–200 tokens of working)
   return { ok: true, answer, code, output: res.stdout, text };

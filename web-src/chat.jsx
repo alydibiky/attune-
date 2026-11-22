@@ -61,6 +61,7 @@ import { ActionCard } from "./actions-ui.jsx";
 import * as K from "./commands.js";
 import * as TRN from "./translate.js";
 import { looksLikeCalc, calculate } from "./calc.js";
+import { quickSum, quickSumMarkdown, quickFollowUp } from "./quicksum.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteFollowUp, refusesToBuild, arithmeticSlips, fixSlips } from "./verify.js";
@@ -944,6 +945,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       setText("");
       return;
     }
+    // v10.9 S1 (Ali: "make the speed much faster" — a sum in words took 40–60 s with the phone's model): everyday sums — split, a rate ×
+    // a count + tax, a percentage, saving to reach, instalments, a certificate's return, what is left — worked out here at once
+    // (quicksum.js), and a short follow-up ("and with 10% VAT?", «ولو 5 أيام؟») is the same sum with the new number. Before Money's own
+    // step, so «دفعت 2000 من 5000 والباقي كام» is answered, not saved.
+    if (route && !img && !fileAtt && (!only || only === "calc")) {
+      const prevU = chat ? [...chat.messages].reverse().find((m) => m.role === "user" && m.text) : null;
+      const prevA = chat ? [...chat.messages].reverse().find((m) => m.role === "assistant") : null;
+      const fu = prevU && prevA && prevA.quickSum ? quickFollowUp(prevU.text, typed) : null;
+      const qs = fu ? fu.q : quickSum(typed);
+      if (qs) {
+        const cid = ensureChat(typed);
+        patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
+          { id: newId(), role: "user", text: said },
+          { id: newId(), role: "assistant", text: quickSumMarkdown(qs, fu ? fu.text : typed), calc: true, quickSum: qs.kind, askText: typed }] }));
+        setText("");
+        return;
+      }
+    }
+
     // v9.9.15 (the 10,000-sentence run, seen on the real page): «اشتريلي iPhone 16 بأقل من 45000» showed "Payment found: +45000", and
     // "tell me when iPhone 16 goes under 40000" went to the AI — in Chat an order for an agent now does what the Home box does:
     // the agent is made (asked on its page when something is missing), with Undo
@@ -1773,7 +1793,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         try {
           const mref = await refFor(mathQ);
           if (runRef.current !== run) return;
-          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, ""), onAnswer: (a) => onToken("**" + String(a) + "**\n\n", "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -2167,7 +2187,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           try {
             const mref = await refFor(mathQ);
           if (runRef.current !== run) return;
-          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, ""), onAnswer: (a) => onToken("**" + String(a) + "**\n\n", "") });
             if (runRef.current !== run) return;
             if (r && r.ok && r.text) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; extra.fixedSlip = true; st = api.lastStats(); }
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }

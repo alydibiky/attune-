@@ -15095,4 +15095,11 @@ export const PT = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Nada registrado como pago a {who} {p}. Um pagamento conta quando o nome está na nota (ex.: “500 para {who}”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**Você pagou {a} a {who}** {p} · 1 lançamento.",
   "**You paid {who} {a}** {p} · {n} entries.": "**Você pagou {a} a {who}** {p} · {n} lançamentos.",
+  "Monthly payment": "Parcela mensal",
+  "Months needed": "Meses necessários",
+  "Per year": "Por ano",
+  "Per month": "Por mês",
+  "Each part": "Cada parte",
+  "Price before": "Preço antes",
+  "Price after discount": "Preço com desconto",
 };

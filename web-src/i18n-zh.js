@@ -15094,4 +15094,11 @@ export const ZH = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p}没有记录付给{who}的款项。备注里写了名字的付款才会计入（例如“500 给{who}”）。",
   "**You paid {who} {a}** {p} · 1 entry.": "**你付给{who} {a}**{p} · 1 笔。",
   "**You paid {who} {a}** {p} · {n} entries.": "**你付给{who} {a}**{p} · {n} 笔。",
+  "Monthly payment": "每月还款",
+  "Months needed": "所需月数",
+  "Per year": "每年",
+  "Per month": "每月",
+  "Each part": "每份",
+  "Price before": "之前的价格",
+  "Price after discount": "折后价",
 };

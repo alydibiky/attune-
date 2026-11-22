@@ -108,8 +108,26 @@ object Prefs {
 
     // ---- the fast engine (LiteRT-LM, .litertlm models) ----------------------------
     /** Keep the fast engine on the CPU (the GPU is the default and the point of it). */
-    fun fastCpu(ctx: Context): Boolean = sp(ctx).getBoolean("fast_cpu", false)
-    fun setFastCpu(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_cpu", on).commit()
+    /* v10.9 S3 (Ali: "make the speed much faster" — his phone answered at ~10 words a second, CPU speed): a move to the CPU that the APP
+       made after a crash used to last forever. Now it lasts 3 days or until the next app update, then the GPU is tried once more (the
+       crash guard still catches a driver that really can't). A choice the person made in Engine → Speed is kept as it is. */
+    fun fastCpu(ctx: Context): Boolean {
+        val p = sp(ctx)
+        if (!p.getBoolean("fast_cpu", false)) return false
+        if (p.getBoolean("fast_cpu_auto", false)) {
+            val ver = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).longVersionCode } catch (e: Exception) { 0L }
+            val old = System.currentTimeMillis() - p.getLong("fast_cpu_at", 0L) > 3L * 24 * 3600_000L
+            if (old || ver != p.getLong("fast_cpu_ver", -1L)) {
+                p.edit().putBoolean("fast_cpu", false).putBoolean("fast_cpu_auto", false).putString("fast_note", "").commit()
+                return false
+            }
+        }
+        return true
+    }
+    fun setFastCpu(ctx: Context, on: Boolean, auto: Boolean = false): Boolean {
+        val ver = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).longVersionCode } catch (e: Exception) { 0L }
+        return sp(ctx).edit().putBoolean("fast_cpu", on).putBoolean("fast_cpu_auto", on && auto).putLong("fast_cpu_at", System.currentTimeMillis()).putLong("fast_cpu_ver", ver).commit()
+    }
     /**
      * Multi-token prediction (speculative decoding) in the fast engine. OFF by
      * default since v5.17: on Ali's phone it doubled tokens — "ItIt is is",
@@ -119,7 +137,8 @@ object Prefs {
     fun setFastMtp(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_mtp_v2", on).commit()
     /** Crash guard for the fast engine's GPU start, like gpu_trial. */
     fun fastTrial(ctx: Context): Boolean = sp(ctx).getBoolean("fast_trial", false)
-    fun setFastTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_trial", on).commit()
+    fun setFastTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_trial", on).putLong("fast_trial_at", if (on) System.currentTimeMillis() else 0L).commit()
+    fun fastTrialAt(ctx: Context): Long = sp(ctx).getLong("fast_trial_at", 0L)
     fun fastNote(ctx: Context): String = sp(ctx).getString("fast_note", "") ?: ""
     fun setFastNote(ctx: Context, s: String) = sp(ctx).edit().putString("fast_note", s).apply()
 }

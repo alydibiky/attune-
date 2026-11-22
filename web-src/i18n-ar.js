@@ -12315,4 +12315,11 @@ export const AR = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "مفيش حاجة متسجلة إنك دفعتها لـ{who} {p}. الدفعة بتتحسب لما الاسم يبقى في الملاحظة (مثلاً «500 لـ{who}»).",
   "**You paid {who} {a}** {p} · 1 entry.": "**دفعت لـ{who} {a}** {p} · عملية واحدة.",
   "**You paid {who} {a}** {p} · {n} entries.": "**دفعت لـ{who} {a}** {p} · {n} عمليات.",
+  "Monthly payment": "القسط الشهري",
+  "Months needed": "عدد الشهور",
+  "Per year": "في السنة",
+  "Per month": "في الشهر",
+  "Each part": "نصيب كل واحد",
+  "Price before": "السعر قبل",
+  "Price after discount": "السعر بعد الخصم",
 };

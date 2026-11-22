@@ -15095,4 +15095,11 @@ export const IDN = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Tidak ada yang tercatat dibayar ke {who} {p}. Pembayaran dihitung jika namanya ada di catatannya (mis. “500 ke {who}”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**Anda membayar {who} {a}** {p} · 1 catatan.",
   "**You paid {who} {a}** {p} · {n} entries.": "**Anda membayar {who} {a}** {p} · {n} catatan.",
+  "Monthly payment": "Cicilan bulanan",
+  "Months needed": "Bulan yang dibutuhkan",
+  "Per year": "Per tahun",
+  "Per month": "Per bulan",
+  "Each part": "Tiap bagian",
+  "Price before": "Harga sebelum",
+  "Price after discount": "Harga setelah diskon",
 };

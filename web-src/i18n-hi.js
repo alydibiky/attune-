@@ -15095,4 +15095,11 @@ export const HI = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who} को भुगतान के रूप में कुछ दर्ज नहीं है। भुगतान तब गिना जाता है जब नाम उसके नोट में हो (जैसे “{who} को 500”)।",
   "**You paid {who} {a}** {p} · 1 entry.": "**आपने {who} को {a} दिए** {p} · 1 एंट्री।",
   "**You paid {who} {a}** {p} · {n} entries.": "**आपने {who} को {a} दिए** {p} · {n} एंट्री।",
+  "Monthly payment": "मासिक किस्त",
+  "Months needed": "ज़रूरी महीने",
+  "Per year": "प्रति वर्ष",
+  "Per month": "प्रति माह",
+  "Each part": "हर हिस्सा",
+  "Price before": "पहले की कीमत",
+  "Price after discount": "छूट के बाद कीमत",
 };

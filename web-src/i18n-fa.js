@@ -15094,4 +15094,11 @@ export const FA = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} چیزی به‌عنوان پرداخت به {who} ثبت نشده است. پرداخت وقتی حساب می‌شود که نام در یادداشتش باشد (مثلاً «500 به {who}»).",
   "**You paid {who} {a}** {p} · 1 entry.": "**به {who} {a} پرداخت کردید** {p} · ۱ مورد.",
   "**You paid {who} {a}** {p} · {n} entries.": "**به {who} {a} پرداخت کردید** {p} · {n} مورد.",
+  "Monthly payment": "قسط ماهانه",
+  "Months needed": "ماه‌های لازم",
+  "Per year": "در سال",
+  "Per month": "در ماه",
+  "Each part": "هر سهم",
+  "Price before": "قیمت قبل",
+  "Price after discount": "قیمت پس از تخفیف",
 };

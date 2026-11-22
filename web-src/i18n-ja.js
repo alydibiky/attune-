@@ -15094,4 +15094,11 @@ export const JA = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p}、{who}への支払いとして記録されたものはありません。メモに名前があると支払いとして数えます（例：「{who}に500」）。",
   "**You paid {who} {a}** {p} · 1 entry.": "**{who}に{a}を支払いました**{p} · 1件。",
   "**You paid {who} {a}** {p} · {n} entries.": "**{who}に{a}を支払いました**{p} · {n}件。",
+  "Monthly payment": "月々の支払い",
+  "Months needed": "必要な月数",
+  "Per year": "年あたり",
+  "Per month": "月あたり",
+  "Each part": "1人あたり",
+  "Price before": "元の価格",
+  "Price after discount": "割引後の価格",
 };

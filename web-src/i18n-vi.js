@@ -15094,4 +15094,11 @@ export const VI = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Không có khoản nào được ghi là đã trả cho {who} {p}. Một khoản được tính khi tên có trong ghi chú (vd. “500 cho {who}”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**Bạn đã trả {who} {a}** {p} · 1 khoản.",
   "**You paid {who} {a}** {p} · {n} entries.": "**Bạn đã trả {who} {a}** {p} · {n} khoản.",
+  "Monthly payment": "Trả góp hằng tháng",
+  "Months needed": "Số tháng cần",
+  "Per year": "Mỗi năm",
+  "Per month": "Mỗi tháng",
+  "Each part": "Mỗi phần",
+  "Price before": "Giá trước",
+  "Price after discount": "Giá sau giảm",
 };

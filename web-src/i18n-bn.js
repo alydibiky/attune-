@@ -15094,4 +15094,11 @@ export const BN = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who}-কে দেওয়া হিসেবে কিছু লেখা নেই। নোটে নাম থাকলে পেমেন্টটি গোনা হয় (যেমন “{who}-কে 500”)।",
   "**You paid {who} {a}** {p} · 1 entry.": "**আপনি {who}-কে {a} দিয়েছেন** {p} · ১টি এন্ট্রি।",
   "**You paid {who} {a}** {p} · {n} entries.": "**আপনি {who}-কে {a} দিয়েছেন** {p} · {n}টি এন্ট্রি।",
+  "Monthly payment": "মাসিক কিস্তি",
+  "Months needed": "প্রয়োজনীয় মাস",
+  "Per year": "বছরে",
+  "Per month": "মাসে",
+  "Each part": "প্রতিটি ভাগ",
+  "Price before": "আগের দাম",
+  "Price after discount": "ছাড়ের পরে দাম",
 };

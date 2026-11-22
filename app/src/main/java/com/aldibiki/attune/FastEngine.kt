@@ -354,7 +354,7 @@ object FastEngine {
                         val now = System.currentTimeMillis(); val prev = sp.getLong("fast_turn_crash", 0L)
                         sp.edit().putLong("fast_turn_crash", now).apply()
                         if (now - prev < 7 * 24 * 3600_000L) {
-                            Prefs.setFastCpu(ctx, true)
+                            Prefs.setFastCpu(ctx, true, auto = true)
                             Prefs.setFastNote(ctx, "Twice this week the phone's graphics chip closed the app while the fast engine was answering. It is on the CPU now (slower, steady); you can try the GPU again in Engine → Speed.")
                         }
                     }
@@ -362,9 +362,14 @@ object FastEngine {
             }
         } catch (e: Throwable) {}
         if (Prefs.fastTrial(ctx)) {
+            // v10.9 S3: only a real crash while the GPU started counts (Android says so — ExitWatch); the person closing the app, or
+            // Android freeing memory, during a start is not the graphics chip's fault and no longer sends the model to the CPU
+            val at = Prefs.fastTrialAt(ctx)
             Prefs.setFastTrial(ctx, false)
-            Prefs.setFastCpu(ctx, true)
-            Prefs.setFastNote(ctx, "Last time, starting the fast engine on the GPU closed the app. It is on the CPU now; you can try the GPU again in Engine → Speed.")
+            if (at == 0L || android.os.Build.VERSION.SDK_INT < 30 || ExitWatch.unexpectedAt >= at) {   // (Android 9–10 can't say why: the old rule)
+                Prefs.setFastCpu(ctx, true, auto = true)
+                Prefs.setFastNote(ctx, "Last time, starting the fast engine on the GPU closed the app. It is on the CPU now; you can try the GPU again in Engine → Speed.")
+            }
         }
     }
 

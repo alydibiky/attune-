@@ -10077,10 +10077,10 @@ export default function App() {
       return analyzeFile({ question, file, llm, runPy: (code, files) => runCode({ lang: "python", code, files, timeoutMs: 45000 }), onStep: (x) => onStep && onStep(tr(x)), onToken });
     },
     // ---- verified answers (verify.js, code.js) ----
-    verifyMath: async (question, { onStep, onToken } = {}) => {
+    verifyMath: async (question, { onStep, onToken, onAnswer } = {}) => {
       if (!(await pythonAvailable())) return { ok: false, why: "no python" };
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken ? (t) => o.onToken(t) : undefined });
-      return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), onStep: (x) => onStep && onStep(tr(x)), onToken });
+      return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), onStep: (x) => onStep && onStep(tr(x)), onToken, onAnswer });
     },
     codeTask: async (task0, { onStep, onToken, lang: forced, ref = "" } = {}) => {
       const lang = forced || guessLang(task0), task = task0 + ref;   // v6.16: the docs from the coding pack ride along; the language is judged from the request

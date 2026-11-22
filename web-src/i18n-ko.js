@@ -15094,4 +15094,11 @@ export const KO = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "{p} {who}에게 지불한 기록이 없습니다. 메모에 이름이 있으면 지불로 계산됩니다(예: “{who}에게 500”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**{who}에게 {a}을(를) 지불했어요** {p} · 1건.",
   "**You paid {who} {a}** {p} · {n} entries.": "**{who}에게 {a}을(를) 지불했어요** {p} · {n}건.",
+  "Monthly payment": "월 납입금",
+  "Months needed": "필요한 개월 수",
+  "Per year": "연간",
+  "Per month": "월간",
+  "Each part": "1인당",
+  "Price before": "이전 가격",
+  "Price after discount": "할인 후 가격",
 };

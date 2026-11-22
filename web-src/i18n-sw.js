@@ -15095,4 +15095,11 @@ export const SW = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "Hakuna kilichorekodiwa kama malipo kwa {who} {p}. Malipo huhesabiwa jina likiwa kwenye maelezo yake (k.m. “500 kwa {who}”).",
   "**You paid {who} {a}** {p} · 1 entry.": "**Ulimlipa {who} {a}** {p} · kiingilio 1.",
   "**You paid {who} {a}** {p} · {n} entries.": "**Ulimlipa {who} {a}** {p} · viingilio {n}.",
+  "Monthly payment": "Malipo ya kila mwezi",
+  "Months needed": "Miezi inayohitajika",
+  "Per year": "Kwa mwaka",
+  "Per month": "Kwa mwezi",
+  "Each part": "Kila sehemu",
+  "Price before": "Bei kabla",
+  "Price after discount": "Bei baada ya punguzo",
 };

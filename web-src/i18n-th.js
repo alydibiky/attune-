@@ -15094,4 +15094,11 @@ export const TH = {
   "Nothing recorded as paid to {who} {p}. A payment counts when the name is in its note (e.g. “500 to {who}”).": "ไม่มีรายการที่จ่ายให้ {who} {p} การจ่ายจะนับเมื่อมีชื่ออยู่ในบันทึก (เช่น “500 ให้ {who}”)",
   "**You paid {who} {a}** {p} · 1 entry.": "**คุณจ่ายให้ {who} {a}** {p} · 1 รายการ",
   "**You paid {who} {a}** {p} · {n} entries.": "**คุณจ่ายให้ {who} {a}** {p} · {n} รายการ",
+  "Monthly payment": "ค่างวดต่อเดือน",
+  "Months needed": "จำนวนเดือนที่ต้องใช้",
+  "Per year": "ต่อปี",
+  "Per month": "ต่อเดือน",
+  "Each part": "ส่วนละ",
+  "Price before": "ราคาก่อน",
+  "Price after discount": "ราคาหลังหักส่วนลด",
 };
