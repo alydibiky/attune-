@@ -1,5 +1,12 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, evening — Ali's picks on quick input)
+> Picks: PW1 PW2 · SS1 SS2 SS3 SS4 ("do as you wish") · BK1 + note ("see the message saved and saved to what") BK2 BK3; PW3 not
+> understood (explained), PW4 not now. Combined page (OK-PW, OK-SS, OK-BK): https://claude.ai/artifact/FBuHWjYDtYYC2uoaoPPsK7
+> (docs/mockups/quick-input-combined.html). **Build each block only after his OK**, in this order: OK-BK (smallest, his point 3),
+> OK-PW, then OK-SS (SS4 plan: subscriptions + passports + cards first, then visas, then IDs per country; 10,000 hard cases each).
+> v10.9.2 is on main (7 older tests now count only the page on the screen — kept pages stay hidden in the page).
+
 > ## START HERE (23 Nov 2026, later — v10.9.2: Ali: "I want to reach 50 ms minimum")
 > Tap → next drawn frame, 8,000 payments, CPU slowed 4× (tests/e2e_v1091speed.py, phone 390 + computer 1366):
 > - **The side menu opens in ~25 ms** (was ~125): while it opens / closes the page under it is FROZEN (FrozenPage, React.memo that skips
