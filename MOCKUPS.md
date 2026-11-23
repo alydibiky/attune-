@@ -95,3 +95,9 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 - 20 Nov 2026 (Ali: "Do first 6" of the launch list + "I won't be able to reach any testers for the other languages"): store page ST1–ST3, screenshots SS1–SS2, crash reports CR1/CR3, languages on the first install LG1–LG2, support e-mail MAIL — docs/mockups/launch-store.html → https://claude.ai/artifact/4nddgVxWY9MqAw3VSpLHjZ (recommended ST1 SS1 CR3 LG1; waiting for Ali)
 - 20 Nov 2026: Ali picked **ST1 ("I want it on English") · CR3 · LG1 · MAIL — not chosen yet** (no SS pick → SS1 proposed) → combined docs/mockups/launch-combined.html → https://claude.ai/artifact/MBYPFQfpkNzMD7fFjdjMM3 (OK-ST, OK-CR; waiting for his OK)
 - 20 Nov 2026: Ali said **OK-ST** + **OK-CR ("OK but I don't want users to see the problem — they just send it")** → built in v10.8: STORE_LISTING.md English first + Arabic, screenshots SS1 in docs/store/en|ar (tests/store/shots.py); problem reports without ever showing the problem (e2e_v1080crash)
+- 23 Nov 2026 (v10.9.1, Ali's 10-point list: "fast way to input the passwords", "set up your life … I don't even know if bank messages are
+  being read", "taking a SS of a subscription should be put right in a subscription … passports, visas, MasterCards … every country"):
+  PW1–PW4 (passwords: paste the Notion page · Google Passwords / any .csv · screenshots · Autofill later), SS1–SS4 (one "Scan anything",
+  new screenshots read by themselves, Share → Attune, every country / format tested), BK1 (built: Set up rows open, bank row live) +
+  BK2 (a live line on Money) + BK3 (a notification when reading stops) — docs/mockups/quick-input.html →
+  https://claude.ai/artifact/PAaS5zeqTkLDCCHH4oAXKz (waiting for Ali; recommended PW1 PW2 SS1 SS2 SS3 BK2 BK3)

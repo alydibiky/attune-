@@ -126,7 +126,7 @@ export function countsTowardLimit(question, isHadithQuestion) {
 /** v6.10 — Plans & billing page: what Pro gives, grouped by the app it belongs to (Money is included in Pro). */
 export const BILLING_GROUPS = [   // v9.9.34 FP-4: what Attune does for you with Pro, place by place
   { id: "money", icon: "💰", title: "Money", items: [
-    "Bank and wallet messages saved by themselves, with Undo", "Every year of Money kept, with PDF and Excel", "Money for two: one budget with your partner" ] },
+    "Money Guardian: charged twice, forgotten subscriptions, price rises", "Every year of Money kept, with PDF and Excel", "Money for two: one budget with your partner" ] },
   { id: "day", icon: "📅", title: "Your day", items: [
     "Automations and phone rules — as many as you need", "Close the day, week plan and scheduled messages", "The whole “Set up your life” guide and a monthly check-up" ] },
   { id: "tools", icon: "🧰", title: "Tools", items: [
@@ -139,7 +139,8 @@ export const COMPARE_ROWS = [   // v9.9.34 FP-4: Free = you do it, Attune keeps 
   ["Chat, voice and answers, offline", "Unlimited", "+ expert review, deep research"],
   ["Money, reminders, debts, lists, dates — just say it", "Unlimited", "Unlimited"],
   ["Money history", "Last 3 months", "Every year + PDF and Excel"],
-  ["Bank messages → Money", "Asks you each time", "By itself, with Undo"],
+  ["Bank messages → Money (amount, shop, category)", "By itself, with Undo", "By itself, with Undo"],
+  ["Money Guardian: charged twice, subscriptions, price rises", "The first finding", "Every finding + reports"],
   ["Automations and phone rules", "1 rule", "Unlimited"],
   ["Agents that find, watch and buy", "1 agent", "Unlimited"],
   ["Morning brief", "✓", "✓"],

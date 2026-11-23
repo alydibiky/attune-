@@ -11,7 +11,7 @@ ok(/2500 situations, 2500 right/.test(out), "2,500 generated situations all righ
 // held-out
 const now = Date.parse("2026-11-13T10:00:00");   // a Friday
 ok(P.allowed("money", false) && P.allowed("reminders", false) && P.allowed("chat", false), "Free: money, reminders, Chat — never locked");
-ok(!P.allowed("autoMoney", false) && P.allowed("autoMoney", true), "bank messages saved by themselves: Pro only");
+ok(P.allowed("autoMoney", false) && P.allowed("autoMoney", true), "v10.9.1 (Ali's option A): bank messages saved by themselves are FREE");
 for (let i = 0; i < 3; i++) P.noteUse("photo", now);
 ok(!P.canUse("photo", { pro: false, now }).ok && P.canUse("photo", { pro: true, now }).ok, "the 4th photo read today: Free stops, Pro goes on");
 ok(P.canUse("photo", { pro: false, now: now + 86400000 }).ok, "…tomorrow Free reads again");

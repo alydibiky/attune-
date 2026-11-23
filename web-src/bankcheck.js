@@ -26,7 +26,16 @@ export function bankCheck({ reader = true, access = false, diag = {}, queue = []
   const out = (state, x = {}) => ({ state, n: 0, add: [], entries: [], from: "", at: 0, ...x });
   if (!reader) return out("unavailable");
   if (!access) return out("off");
-  if (hasNotifPayment(ledger)) return out("done");
+  /* v10.9.1 (Ali, 23 Nov: "I don't even know still if bank messages are being read still"): done is no longer a dead end — it says
+     how many were read this week, the last one, and whether the reader is still awake (Android can pause it after the step was done) */
+  if (hasNotifPayment(ledger)) {
+    const d = diag || {}, mine = ((ledger && ledger.txns) || []).filter((t) => t && t.source === "notification" && Number(t.amount) > 0);
+    const when = (t) => +t.at || +t.ts || +t.created || Date.parse(String(t.date || "") + "T12:00:00") || 0;
+    const lastT = mine.slice().sort((a, b) => when(b) - when(a))[0] || null, week = mine.filter((t) => now - when(t) <= 7 * 24 * H).length;
+    const seen = Math.max(+d.seen || 0, +d.conn || 0, +d.rescan || 0);
+    const asleep = d.live === false || (seen > 0 && now - seen > QUIET_H * H), smsoff = d.smsSwitch === false;
+    return out("done", { n: week, at: lastT ? when(lastT) : 0, last: lastT ? { amount: Number(lastT.amount), note: String(lastT.note || ""), date: String(lastT.date || ""), type: lastT.type } : null, asleep, smsoff });
+  }
   let entries = [];
   try { entries = inbox([...(queue || []), ...(old || [])], done || [], opts); } catch (e) { entries = []; }
   if (entries.length) { const add = entries.filter((e) => !alreadyIn(e, ledger)); return out("waiting", { n: entries.length, add, entries }); }

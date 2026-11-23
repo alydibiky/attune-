@@ -27,7 +27,7 @@ with sync_playwright() as p:
     check("You do it" in two and "Attune does it" in two, "Show me → the Plan page opens on the two columns (You do it · Attune does it)")
     page.locator("[data-testid=compare] summary").click(); page.wait_for_timeout(200)
     tbl = page.locator("[data-testid=compare]").inner_text()
-    check("Asks you each time" in tbl and "By itself, with Undo" in tbl and "3 a day each" in tbl, "the table: bank messages — Free asks, Pro by itself WITH Undo; 3 a day each")
+    check("Asks you each time" not in tbl and "By itself, with Undo" in tbl and "The first finding" in tbl and "3 a day each" in tbl, "the table (v10.9.1 option A): bank messages by themselves in Free AND Pro, with Undo; Guardian is the Pro depth; 3 a day each")
     page.reload(); page.wait_for_selector("[data-testid=phone-home]", timeout=15000); page.wait_for_timeout(500)
     check(page.locator("[data-testid=pro-typed]").count() == 0, "shown once a day — not again after reopening")
     # a Pro-only screen

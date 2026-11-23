@@ -45,7 +45,7 @@ export const CAT_EMOJI = { food: "🍲", groceries: "🛒", transport: "🚗", b
 export const looksLikeId = (id) => { const s = String(id || ""); return s.length >= 8 && !/\s/.test(s) && /\d/.test(s) && /^[a-z0-9_-]+$/i.test(s); };
 export function catName(L, id, ar = false) {
   const c = ((L && L.customCats) || []).find((x) => x.id === id);
-  if (c) return (ar ? c.ar : tr(c.en)) || c.name || c.en || id;
+  if (c) { const n = (ar ? c.ar : c.en ? tr(c.en) : "") || c.name || c.en || c.ar || c.label || ""; if (n && !looksLikeId(n)) return n; }
   const n = CAT_NAMES[id];
   return n ? (ar ? n[1] : tr(n[0])) : (id && !looksLikeId(id) ? id[0].toUpperCase() + id.slice(1) : ar ? "من غير تصنيف" : tr("Uncategorised"));
 }

@@ -11,7 +11,7 @@ const TOTAL = +(process.argv[2] || 10000);
 let seed = 34 + 7919 * +(process.env.SEED_SHIFT || 0); const rnd = () => { let t = (seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const DAY = 86400000, iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-const PRO_ONLY = ["autoMoney", "guardianChase", "closeDay", "weekPlan", "msgSchedule", "desktop", "moneyForTwo", "driveBackup", "yearReport", "pdfExport", "excelExport", "expertReview", "deepResearch", "guideFull", "brain"];
+const PRO_ONLY = ["guardianChase", "closeDay", "weekPlan", "msgSchedule", "desktop", "moneyForTwo", "driveBackup", "yearReport", "pdfExport", "excelExport", "expertReview", "deepResearch", "guideFull", "brain"];
 const FREE_FEATURES = ["money", "reminders", "debts", "lists", "dates", "chat", "voice", "morningBrief", "hadith", "prayers", "emergency", "guide3"];
 const DAILY = { photo: 3, xray: 3, convert: 3, slides: 3 }, KEPT = { agents: 1, rules: 1, papers: 10 };
 const seen = new Set(); let n = 0, bad = 0; const why = {};

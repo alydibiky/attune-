@@ -72,6 +72,17 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
     catch (e) { flash(tr(e.message)); setSp(read()); }
     finally { setBusy(""); }
   };
+  const applyGpu = async (want) => {
+    setBusy(tr("Restarting the engine…"));
+    let r = null;
+    try { r = (await nativeCall("setSpeed", { fastCpu: !want })).speed || read(); } catch (e) { r = read(); }
+    finally { setBusy(""); }
+    setSp(r);
+    if (!r) return;
+    if (want && r.fastBackend === "GPU") flash(tr("Now on the graphics chip ✓"));
+    else if (want) flash(tr("The graphics chip refused on this phone — Attune stays on the CPU (it still works, just slower)."));
+    else flash(tr("Now on the CPU ✓"));
+  };
   const installDraft = async () => {
     setBusy(tr("Downloading the draft model…")); setPct(0);
     try { await nativeCall("install", DRAFT_SPEC, (p) => setPct(p)); setSp(read()); flash(tr("Draft model ready")); }
@@ -107,7 +118,10 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           <p className="text-[12px] text-[var(--c-warn)] flex items-center gap-1.5"><Zap size={13} className="shrink-0" />
             {tr(sp.fastBackend === "GPU" ? "Fast engine on the graphics chip" : "Fast engine on the CPU")}{DEV && sp.fastMtp ? " · " + tr("multi-token prediction on") : ""}</p>
           {DEV && sp.fastNote ? <p className="text-[12px] text-[var(--c-warn)] flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
-          {DEV && row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
+          {/* v10.9.1 (Ali: "I pressed use the graphics chip, it said restarting the engine, then …"): the switch shows where the engine
+              REALLY runs (it showed the wish even when the GPU refused and the engine stayed on the CPU), and after the restart one clear line
+              says what happened */}
+          {DEV && row(sp.fastBackend ? sp.fastBackend === "GPU" : !sp.fastCpu, () => !busy && applyGpu(sp.fastBackend !== "GPU"), "Use the graphics chip",
             "On: the model runs on the GPU — first words in about a second. Off: the CPU, slower, only for phones whose GPU driver misbehaves.")}
           {DEV && row(!!sp.fastMtpPref, () => !busy && apply({ fastMtp: !sp.fastMtpPref }, tr("Restarting the engine…")), "Multi-token prediction (faster writing)",
             "Off by default: on some phones it doubles words and digits (“ItIt is is”, “20205”). Turn it on only if answers stay correct.")}

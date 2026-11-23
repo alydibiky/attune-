@@ -348,6 +348,14 @@ export const LOOKS = ["plain", "glass"];
 export const isBigScreen = () => { try { return !!((typeof window !== "undefined" && window.AttuneNative && window.AttuneNative.desktop) || (typeof matchMedia === "function" && matchMedia("(min-width: 1024px)").matches)); } catch (e) { return false; } };
 export const defaultLook = () => (isBigScreen() ? "glass" : "plain");
 const GLOW = { burgundy: ["#4A1A2E", "#F9E6EC"] };
+/** The dark glass of each ground: Midnight = the accent's glow on near-black (the look Ali OK'd); Black = true black for OLED, no glow;
+ *  Graphite = neutral greys; Warm = brown-black. */
+export const GLASS_DARK = {
+  slate: { mid: "#1A1119", end: "#0E0C12", bar: "rgba(22,15,21,.84)", solid: "#1D1419", solid2: "#271B22", ink: "#F3EBEE", mut: "#BEAFB5" },
+  black: { flat: true, glow: false, mid: "#000000", end: "#000000", bar: "rgba(0,0,0,.88)", solid: "#0C0C0D", solid2: "#161617", ink: "#F2F2F2", mut: "#A8A8AD" },
+  zinc: { glow: false, mid: "#1A1A1D", end: "#111113", bar: "rgba(24,24,27,.86)", solid: "#1C1C1F", solid2: "#26262A", ink: "#ECECEE", mut: "#A1A1AA" },
+  stone: { mid: "#201A16", end: "#14110E", bar: "rgba(31,26,22,.86)", solid: "#221D19", solid2: "#2C2520", ink: "#EEE9E4", mut: "#B5ACA4" },
+};
 /** The glass tokens (on top of the theme's own accent): → { vars, page } — page = the ground drawn under everything. */
 export function glassVars(theme) {
   const t = theme || {}, acc = CALM_ACCENT[t.accent] ? t.accent : "burgundy", light = resolveBg(t.bg || "auto") === "light";
@@ -357,14 +365,21 @@ export function glassVars(theme) {
         "--c-acc": a, "--c-soft": soft, "--g-bar": "rgba(247,243,241,.86)", "--g-solid": "#FBF9F8", "--g-solid-2": "#F3EFED", "--g-shadow": "0 6px 22px rgba(122,31,61,.07)", "--g-edge": "rgba(255,255,255,.9)" }
     : { "--c-bg": "transparent", "--c-surf": "rgba(255,255,255,.065)", "--c-surf-2": "rgba(255,255,255,.11)", "--c-ink": "#F3EBEE", "--c-mut": "#BEAFB5", "--c-ln": "rgba(255,255,255,.12)",
         "--c-acc": a, "--c-soft": soft, "--g-bar": "rgba(22,15,21,.84)", "--g-solid": "#1D1419", "--g-solid-2": "#271B22", "--g-shadow": "none", "--g-edge": "rgba(255,255,255,.12)" };
-  const page = light ? `radial-gradient(120% 100% at 0% 0%, ${glow} 0%, #F5F4F2 45%, #EFEDEA 100%)` : `radial-gradient(120% 90% at 8% 0%, ${glow} 0%, #1A1119 48%, #0E0C12 100%)`;
-  return { vars, page, light };
+  /* v10.9.1 (Ali, 23 Nov: "look and background colours, most of them don't work"): with Glass on, every dark ground (Midnight, Black,
+     Graphite, Warm) drew the SAME burgundy-black page — a tap changed nothing. Each dark ground now has its own glass. */
+  const dk = light ? null : (GLASS_DARK[resolveBg(t.bg || "auto")] || GLASS_DARK.slate);
+  if (dk) Object.assign(vars, { "--c-ink": dk.ink, "--c-mut": dk.mut, "--g-bar": dk.bar, "--g-solid": dk.solid, "--g-solid-2": dk.solid2 });
+  const page = light ? `radial-gradient(120% 100% at 0% 0%, ${glow} 0%, #F5F4F2 45%, #EFEDEA 100%)`
+    : dk.flat ? dk.mid : `radial-gradient(120% 90% at 8% 0%, ${dk.glow === false ? dk.mid : glow} 0%, ${dk.mid} 48%, ${dk.end} 100%)`;
+  return { vars, page, light, ground: light ? "#F5F4F2" : dk.end };
 }
 export function glassCss(theme) {
-  const { vars, page, light } = glassVars(theme), v = Object.entries(vars).map(([k, x]) => k + ":" + x).join(";");
+  const { vars, page, light, ground } = glassVars(theme), v = Object.entries(vars).map(([k, x]) => k + ":" + x).join(";");
   // (a sheet or a window over a dim backdrop keeps solid colours — frosted on frosted would be hard to read)
-  return `html.att-glass{--g-page:${page};background:${light ? "#F5F4F2" : "#0E0C12"}}html.att-glass.att-glass.att-glass .calm{${v}}`
-    + `html.att-glass.att-glass.att-glass [class*="bg-black/"] .calm,html.att-glass.att-glass.att-glass [role="dialog"].calm,html.att-glass.att-glass.att-glass [role="dialog"] .calm{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`;
+  // (v10.9.1, Ali's Mind screenshot: the words under the top bar showed through it — "144 kept" over "Mind": the bars that stick on top
+  // use --g-bar, which was set only inside .calm, and the app's top bar is outside .calm → no colour at all. The bar colours are on html too.)
+  return `html.att-glass{--g-page:${page};--g-bar:${vars["--g-bar"]};--g-solid:${vars["--g-solid"]};--g-solid-2:${vars["--g-solid-2"]};background:${ground}}html.att-glass.att-glass.att-glass .calm{${v}}`
+    + `html.att-glass.att-glass.att-glass [class*="bg-black/"],html.att-glass.att-glass.att-glass [class*="bg-black/"] .calm,html.att-glass.att-glass.att-glass [role="dialog"].calm,html.att-glass.att-glass.att-glass [role="dialog"] .calm{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`;
 }
 
 /* v9.5 (Ali, 5 Nov: "not all background colours work"): the redesigned screens (.calm) had their own fixed colours, so Settings →
@@ -418,7 +433,8 @@ export function areaCss(theme) {
   const toks = Object.entries(AREA).map(([k, v]) => `--c-area-${k}:${v[light ? "l" : "d"][0]};--c-area-${k}-soft:${v[light ? "l" : "d"][1]}`).join(";");
   const pages = Object.entries(AREA).map(([k, v]) => { const [a, soft] = v[light ? "l" : "d"];
     // (v9.8, Ali: "when I press Agents the sidebar turned blue"): the page only — never the sidebar, the top bar or the bottom bar
-    return `html.att-themed.att-themed[data-area="${k}"] .calm:not(aside):not(nav):not(header){--c-acc:${a};--c-soft:${soft};--c-btn:${soft};--c-on-btn:${a}}`; }).join("");
+    // (v10.9.1, Ali's Settings screenshot: Settings opened over Documents had violet chips — a sheet / window keeps the theme's colour)
+    return `html.att-themed.att-themed[data-area="${k}"] .calm:not(aside):not(nav):not(header):not([role="dialog"]):not([role="dialog"] *):not([class*="bg-black/"] *){--c-acc:${a};--c-soft:${soft};--c-btn:${soft};--c-on-btn:${a}}`; }).join("");
   return `html{${toks}}` + pages;
 }
 /** The .calm colour tokens for a theme → { "--c-bg": "#…", … } (pure; tests: tests/unit/v950theme.test.mjs). */
@@ -494,7 +510,7 @@ export function applyTheme(theme, doc) {
   root.classList.toggle("att-glass", glass);
   root.classList.toggle("att-glass-blur", glass && isBigScreen());   // (real blur on a computer only — G3)
   try {
-    const bgc = glass ? (light ? "#F5F4F2" : "#140E13") : light ? "#F4F5F3" : bgNow === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
+    const bgc = glass ? (light ? "#F5F4F2" : (GLASS_DARK[bgNow] || GLASS_DARK.slate).end) : light ? "#F4F5F3" : bgNow === "black" ? "#000000" : getComputedStyle(root).getPropertyValue("--color-slate-950") || "#020618";
     let m = d.querySelector('meta[name="theme-color"]');
     if (!m) { m = d.createElement("meta"); m.name = "theme-color"; d.head.appendChild(m); }
     m.content = bgc.trim();

@@ -1,5 +1,26 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026 — v10.9.1: Ali's 10-point list with 7 screenshots — "I am extremely tired")
+> **Fixed by code, each with a test (tests/unit/v1091fixes.test.mjs, tests/e2e_v1091themes.py, tests/e2e_v1091speed.py):**
+> 1 Free/Pro option A (Ali agreed): bank / wallet messages go to Money by themselves in FREE (plan.js: autoMoney no longer Pro); Pro =
+>   Money Guardian's findings (Free sees the first), every year + reports, computer, Money for two, brain (billing.js table). Sync left as it
+>   is (free since v9.9.40) — ASK Ali: his option A text said "sync" in Pro.
+> 3 Set up your life: every row opens something (done → its page; backup → the backup panel); the bank row always says what the reader is
+>   doing now ("Working ✓ — n read this week · last: CIB · 450") or, in amber, paused / SMS off / access off, with the fixing button
+>   (bankcheck.js done → n, last, asleep, smsoff). 4 "Use the graphics chip" follows the REAL backend and flashes what happened (his phone's
+>   GPU crashes LiteRT → back on the CPU; FastEngine.checkCrash). 5/8 Glass: the app's top bar (outside .calm) had no colour (--g-bar only in
+>   .calm) → words slid under "☰ Mind"; now on html + solid on phones; the Autopilot sheet is a portal with a solid ground. 6 Glass:
+>   Midnight / Black / Graphite / Warm drew the same ground → GLASS_DARK per ground; area colours never reach sheets (Settings over Documents
+>   was violet); colour dots label on top; each background chip shows its colour. 7 "Most of it went on cmuwco6x7sl16y" → the name, or the
+>   biggest entry's note, "in one payment". Also: an app's nudge / ad («لسه مادفعتش الإشتراك؟ ادفع دلوقتي») is not "waiting for your answer"
+>   (chat apps or a named person only); a vague model summary ("Someone is requesting something related to …") is never a to-do.
+> 9 Lag, measured (8,000 payments, CPU 4×): the Set up driver parsed ALL stores every 1.5 s on every page (58 ms freezes) → only while the
+>   interview runs; lsjson.js readJSON parses a store once per change (loadLedger, safe-to-spend, setup); Money's formatter cached; unchanged
+>   prefs no longer re-save the ledger. Money 322 → ~200 ms, Home 437 → ~260 ms, menu ~200 → ~130 ms, idle freezes 58 ms → 0.
+>   NOT measurable here: the phone's synchronous Android bridge calls — next step if Ali still feels lag: time them on the phone.
+> **Waiting for Ali's picks:** https://claude.ai/artifact/PAaS5zeqTkLDCCHH4oAXKz (docs/mockups/quick-input.html) — PW1–PW4 passwords,
+> SS1–SS4 screenshot → right place, BK1 (built) BK2 BK3 bank status.
+>
 > ## START HERE (22 Nov 2026, night — v10.9: Ali's P8 phone test on the real model: "absolute bs … I lost hope in this app")
 > **The model was handed the wrong things and trusted blindly. Fixed by code around it — `web-src/askguard.js`, wired into Chat:**
 > pack passages only when they answer the question (`packsFit`; the prompt no longer teaches «لا تحتوي معرفتك»; that line is never an

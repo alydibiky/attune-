@@ -21,6 +21,14 @@ const mentionsMe = (text, me = []) => { const t = fold(text); return (me || []).
 const src = (c, n) => ({ chatKey: c.key, chat: c.chat, who: c.who, text: c.text, ts: n.ts || 0, id: String(n.id || ""), app: c.app });
 
 /** n: a notification. ctx: { roles (chatroles store), known (chats seen), me: [your names], list: [open shopping items] } */
+/** v10.9.1 a model summary that says nothing ("Someone is requesting something related to 'X' and 'Y'", "The sender asks about the message"). */
+export function vagueSummary(sum, c = {}) {
+  const t = String(sum || "").trim(); if (!t) return false;
+  if (/\b(?:someone|somebody|the (?:sender|user|person|contact))\b[^.]{0,40}\b(?:is )?(?:requesting|asking|wants?)\b[^.]{0,20}\bsomething\b|\bsomething related to\b|\brelated to ['"‘“]|\bregarding the message\b|\babout (?:the|this) message\b/i.test(t)) return true;
+  const quoted = (t.match(/['"‘“][^'"’”]{2,60}['"’”]/g) || []).map((q) => q.slice(1, -1).toLowerCase());
+  return quoted.length >= 1 && quoted.every((q) => q === String(c.chat || "").toLowerCase() || q === String(c.who || "").toLowerCase() || String(c.text || "").toLowerCase().includes(q)) && t.replace(/['"‘“][^'"’”]*['"’”]/g, "").split(/\s+/).length < 12;
+}
+
 export function decide(n, { roles = {}, known = {}, me = [], list = [], minds = {} } = {}) {
   const c = chatOf(n, known); if (!c) return null;
   const from = src(c, n), nz = noiseOf(c.text);
@@ -45,7 +53,10 @@ export function decide(n, { roles = {}, known = {}, me = [], list = [], minds = 
       // v9.9.31 kept: what code can't read (Dima in Russian: "send me the contract tomorrow") — the phone's AI reading of THIS message,
       // checked and kept by notifmind (code + model, sure, a request to do something), with its due date
       { const md = minds[String(n.id)];
-        if (!c.group && md && md.by === "code+model" && md.sure && md.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(md.action || ""))
+        /* v10.9.1 (Ali's Autopilot screenshot: «Aswa2 pen fel taree5» — "the worst pen in history", a comment — became "To-do: S7s Bomb:
+           Someone is requesting something related to 'S7s Bomb' and 'Aswa2 pen fel taree5'"): a reading that can't say WHAT is asked
+           (a vague summary that only names the chat / quotes the message) is not a request */
+        if (!c.group && md && md.by === "code+model" && md.sure && md.intent === "request" && /^(?:do|pay|submit|call_back|pickup)$/.test(md.action || "") && !vagueSummary(md.summary, c))
           return { kind: "todo", from, title: (c.who || c.chat) + ": " + String(md.summary || c.text).slice(0, 80), due: md.due && md.due.date ? Date.parse(md.due.date + "T" + (md.due.time || "09:00") + ":00") : 0, why: { t: "{w} asked you something", v: { w: c.who || c.chat } } }; }
       if (hit) return { kind: "alert", from, topic: hit, why: { t: "it's about {x} — you asked to know", v: { x: hit } } };
       return { kind: "keep", from, why: { t: "nothing asked of you", v: {} } };

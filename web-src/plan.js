@@ -25,7 +25,10 @@ export const LIMITS = {
 };
 /** FP-4: what only Pro has (Free sees it with a short "Pro" note; nothing is deleted). */
 export const PRO_ONLY = new Set([
-  "autoMoney",        // bank / wallet messages saved by themselves (Free: each one waits for a tap)
+  // v10.9.1 (Ali, 23 Nov, option A: "making people addicted to the app features … should be in free so they subscribe for pro for
+  // continuity"): bank / wallet messages saved by themselves (amount, shop, category) is FREE now — "autoMoney" is no longer Pro.
+  // Pro keeps the depth: Money Guardian's findings (guardian-ui: Free sees the first one), every year + reports, the computer app,
+  // Money for two, the brain.
   "guardianChase",    // Money Guardian chases for you (Free: sees the findings)
   "closeDay", "weekPlan", "msgSchedule",   // Free keeps the morning brief
   // v9.9.40 (Ali: "syncing is free … via Google accounts, from the computer, the mobile or another mobile"): sync is free

@@ -840,7 +840,9 @@ function currOptions(sel){return CURRENCY_CODES.map(c=>'<option value="'+c+'"'+(
 function countryOptions(sel){return '<option value="">\u2014</option>'+COUNTRIES.slice().sort((a,b)=>(db.lang==='ar'?a[2].localeCompare(b[2]):a[1].localeCompare(b[1]))).map(c=>'<option value="'+c[0]+'"'+(sel===c[0]?' selected':'')+'>'+(db.lang==='ar'?c[2]:c[1])+' \u00b7 '+c[3]+'</option>').join('');}
 function countryCurrency(code){const c=COUNTRIES.find(x=>x[0]===code);return c?c[3]:null;}
 function sym(c){return (db.lang==='ar'?CURR[c]:CURR_EN[c])||CURR[c]||c;}
-function fmt(v,c){const s=sym(c||db.currency);const dec=(db.ui&&db.ui.dec===0)?0:2;const n=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:(dec&&v%1)?2:0,maximumFractionDigits:dec});
+/* v10.9.1 (Ali: "laggy"): toLocaleString with options builds a new number formatter on EVERY call — the biggest cost of opening Money; one per style now */
+const NF={};const nf=(mn,mx)=>NF[mn+':'+mx]||(NF[mn+':'+mx]=new Intl.NumberFormat('en-US',{minimumFractionDigits:mn,maximumFractionDigits:mx}));
+function fmt(v,c){const s=sym(c||db.currency);const dec=(db.ui&&db.ui.dec===0)?0:2;const n=nf((dec&&v%1)?2:0,dec).format(Math.abs(v));
   /* v6.35 (Ali: the Arabic pages "disturbing for the eyes"): in Arabic the sign and the digits stay one left-to-right piece
      ("-17,922") followed by the currency, never split over two lines ("ج.م-" / "17,922"); a no-break space everywhere */
   if(db.lang==='ar')return '\u2066'+(v<0?'-':'')+n+'\u2069\u00A0'+s;
@@ -871,7 +873,7 @@ function applyUI(){const u=db.ui||{};document.documentElement.setAttribute('data
   }
 function applyTheme(){document.documentElement.setAttribute('data-theme',db.theme||'midnight');applyUI();const m=document.querySelector('meta[name=theme-color]');if(m)m.content=(db.theme==='pearl')?'#F4F1EA':(db.theme==='emerald'?'#0A130F':(db.theme==='ocean'?'#080F18':'#12151C'));}
 function setTheme(th){if(th!=='midnight'&&!requirePremium('themes'))return;db.theme=th;db.ui.accent='';save();applyTheme();renderSettings();}
-function setUI(k,v){db.ui[k]=v;save();applyTheme();renderSettings();if(k==='period'){state.period=v;}}
+function setUI(k,v){if(db.ui[k]===v){if(k==='period')state.period=v;return;}/* v10.9.1: Attune sends its prefs on every open — an unchanged one no longer re-saves all of Money */db.ui[k]=v;save();applyTheme();renderSettings();if(k==='period'){state.period=v;}}
 function toggleTab(k){db.ui.tabs[k]=db.ui.tabs[k]?0:1;db.ui.tabsSet=1;save();applyUI();renderSettings();}
 function resetLook(){db.theme='midnight';db.ui.accent='';db.ui.fs='m';db.ui.tabs={trends:1,accounts:1,goals:1,notes:1,zakat:1,bills:1};db.ui.tabOrder=['trends','accounts','goals','notes','zakat','bills'];db.ui.title='Yusr';save();applyTheme();renderSettings();toast('\u2713');}
 function moveTab(k,dir){if(!db.ui.tabOrder)return;db.ui.tabOrder=db.ui.tabOrder.filter(x=>x!=='notes'&&x!=='invoices');const o=db.ui.tabOrder;const i=o.indexOf(k);if(i<0)return;const j=i+dir;if(j<0||j>=o.length)return;const tmp=o[i];o[i]=o[j];o[j]=tmp;db.ui.tabsSet=1;save();applyUI();renderSettings();}
@@ -2267,7 +2269,7 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
       else if(op==='gold-fetch'){ fetchGoldPrice(true).then(function(ok){ try{ save(); }catch(e){} }); return {ok:true,pending:true}; }
       else if(op==='cat-add'){ openCat(); setv('cat-emoji',a.emoji); setv('cat-label',a.label); saveCat(); }
       else if(op==='project-add'){ openProject(); setv('proj-name',a.name); saveProject(); }
-      else if(op==='prefs'){ if(a.period) setUI('period',a.period); if(a.wk) setUI('wk',a.wk); if(a.dec!=null) setUI('dec',a.dec?1:0); if(a.country) setCountry(a.country); if(a.currency) setCurrency(a.currency); if(a.lang&&(a.lang==='ar'||a.lang==='en')) setLang(a.lang); if(a.budget!=null){ db.budgets=db.budgets||{overall:0,cats:{}}; db.budgets.overall=Math.max(0,+a.budget||0); save(); }
+      else if(op==='prefs'){ if(a.period) setUI('period',a.period); if(a.wk) setUI('wk',a.wk); if(a.dec!=null) setUI('dec',a.dec?1:0); if(a.country&&a.country!==db.country) setCountry(a.country); if(a.currency&&a.currency!==db.currency) setCurrency(a.currency); if(a.lang&&(a.lang==='ar'||a.lang==='en')&&a.lang!==db.lang) setLang(a.lang); if(a.budget!=null){ db.budgets=db.budgets||{overall:0,cats:{}}; const _b=Math.max(0,+a.budget||0); if(db.budgets.overall!==_b){ db.budgets.overall=_b; save(); } }
         const _vt=['trends','accounts','goals','zakat','bills']; if(a.tabs&&typeof a.tabs==='object'){ db.ui.tabs=db.ui.tabs||{}; _vt.forEach(k=>{ if(a.tabs[k]!=null) db.ui.tabs[k]=a.tabs[k]?1:0; }); db.ui.tabsSet=1; save(); applyUI(); }
         if(Array.isArray(a.tabOrder)){ const o=a.tabOrder.filter(k=>_vt.includes(k)); _vt.forEach(k=>{ if(!o.includes(k)) o.push(k); }); db.ui.tabOrder=o; db.ui.tabsSet=1; save(); applyUI(); } }
       // v9.3 (Ali picked D4 — A and B, people choose): a family share opened on this phone — its accounts and entries merged by id

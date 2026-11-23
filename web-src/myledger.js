@@ -5,6 +5,7 @@ import { weekStart } from "./country.js";   // v9.9.38 WK: the week starts on yo
    Now Instant and Chat spot a question about the person's own spending / income, read the ledger, and answer with sums
    computed here — the model never adds up money. Pure logic; tests: tests/unit/v702myledger.test.mjs.                       */
 
+import { readJSON } from "./lsjson.js";
 import { tr, dateLocale } from "./i18n.js";
 import { homeCurrency } from "./locale.js";
 import { CAT_WORDS } from "./yusr/logtext.js";
@@ -89,7 +90,7 @@ export function spanWords(span) {
 }
 /** The Money ledger as the Money tab saved it, or null. */
 export function loadLedger(store = typeof localStorage !== "undefined" ? localStorage : null) {
-  try { const j = JSON.parse((store && store.getItem("ledger.v3")) || "null"); return j && Array.isArray(j.txns) ? j : null; } catch (e) { return null; }
+  const j = readJSON("ledger.v3", null, store); return j && Array.isArray(j.txns) ? j : null;   // v10.9.1: parsed once per change (lsjson.js)
 }
 
 // v9.9.38 (the 1M test: "You spent 150 EGP in today", «في النهارده»): "in" only where English / Arabic say it

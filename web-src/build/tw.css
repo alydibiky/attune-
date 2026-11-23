@@ -94,6 +94,8 @@ html.att-glass #root, html.att-glass #root > div { background: transparent }
 html.att-glass .calm .c-card, html.att-glass .calm .c-list { border-color: var(--g-edge); box-shadow: var(--g-shadow) }
 html.att-glass.att-glass-blur .calm .c-card, html.att-glass.att-glass-blur .wk { -webkit-backdrop-filter: blur(14px) saturate(1.15); backdrop-filter: blur(14px) saturate(1.15) }
 html.att-glass .sticky { background: var(--g-bar) !important }
+/* v10.9.1: a phone draws glass without live blur, so a see-through bar showed the words under it — there the bar is solid */
+html.att-glass:not(.att-glass-blur) .sticky { background: var(--g-solid) !important }
 html.att-glass.att-glass-blur .sticky { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px) }
 html.att-glass aside.calm, html.att-glass nav.calm { background: transparent }
 

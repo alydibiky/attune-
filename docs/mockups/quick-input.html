@@ -1,0 +1,371 @@
+<title>Attune Quick Input</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+/* Layout: a reading column of option rows; each row = a phone screen in Attune's dark burgundy look + what it does + pick/note. */
+:root {
+  --bg: #f6f3f3; --surf: #ffffff; --ink: #231c1e; --mut: #6f6468; --ln: #e6dfe1; --acc: #7a2a45; --soft: #f6e8ed; --ok: #1e7a43; --warn: #9a5b05;
+  --font: "Nunito", "Segoe UI", system-ui, sans-serif;
+  /* the phone: Attune's dark glass, like Ali's screenshots */
+  --p-bg: #140e13; --p-surf: #231a20; --p-surf2: #2d222a; --p-ink: #f3ebee; --p-mut: #bfb0b6; --p-ln: rgba(255,255,255,.12); --p-acc: #e58aa2; --p-soft: #3a1e27; --p-ok: #6fd39a; --p-warn: #e8b04b;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #e8b04b; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171314; --surf: #221c1e; --ink: #f3ecee; --mut: #b3a6ab; --ln: #3a3134; --acc: #e39ab3; --soft: #3a2229; --ok: #6fd39a; --warn: #e8b04b; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 150px }
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 30px }
+h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance }
+h2 { font-size: 21px; font-weight: 900; margin: 0; text-wrap: balance }
+.lede { color: var(--mut); margin: 6px 0 0; max-width: 70ch }
+.quote { border-inline-start: 3px solid var(--acc); padding: 4px 12px; margin: 10px 0 0; font-style: italic; max-width: 70ch }
+section { display: grid; gap: 14px }
+.opt { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; align-items: start }
+.opt.rec { border-color: var(--acc) }
+@media (max-width: 640px) { .opt { grid-template-columns: minmax(0, 1fr) } }
+.code { display: inline-block; font-weight: 900; background: var(--soft); color: var(--acc); border-radius: 8px; padding: 1px 8px; margin-inline-end: 6px }
+.tag { display: inline-block; font-size: 12px; font-weight: 800; color: var(--ok); border: 1px solid currentColor; border-radius: 99px; padding: 0 8px; margin-inline-start: 6px; vertical-align: 2px }
+.tag.built { color: var(--acc) }
+.info { min-width: 0 }
+.info h3 { margin: 0; font-size: 17px; font-weight: 900 }
+.info p { margin: 6px 0 0 }
+.info ul { margin: 6px 0 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px }
+.pm { display: grid; gap: 4px; margin-top: 8px; font-size: 14px } .pm b { font-weight: 800 }
+.pick { margin-top: 12px; display: grid; gap: 8px }
+.pick label { display: flex; gap: 8px; align-items: center; font-weight: 800; cursor: pointer; min-height: 40px }
+.pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--acc) }
+.pick textarea { width: 100%; min-height: 56px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 10px; resize: vertical }
+.pick textarea:focus, button:focus-visible, input:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px }
+.fixed { background: var(--surf); border: 1px solid var(--ln); border-radius: 18px; padding: 16px }
+.fixed ul { margin: 8px 0 0; padding-inline-start: 20px; display: grid; gap: 4px }
+.tbl { overflow-x: auto } .tbl table { border-collapse: collapse; font-size: 13.5px; min-width: 560px } .tbl th, .tbl td { text-align: start; padding: 6px 10px; border-bottom: 1px solid var(--ln); vertical-align: top } .tbl th { font-weight: 900 }
+/* ---- the phone ---- */
+.ph { width: 250px; max-width: 100%; margin: 0 auto; border-radius: 26px; border: 6px solid #2b2426; overflow: hidden; background: radial-gradient(120% 90% at 8% 0%, #4a1a2e 0%, var(--p-bg) 48%, #0e0c12 100%);
+  color: var(--p-ink); padding: 10px 10px 14px; display: grid; gap: 8px; min-height: 420px; align-content: start; font-size: 11px; line-height: 1.35 }
+.sb { display: flex; justify-content: space-between; font-weight: 800; font-size: 10px; color: var(--p-mut); padding: 0 2px }
+.top { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 13.5px } .top .bk { color: var(--p-mut); font-size: 15px }
+.cd { background: var(--p-surf); border: 1px solid var(--p-ln); border-radius: 14px; padding: 8px 9px; display: grid; gap: 5px }
+.cd.soft { background: var(--p-soft) }
+.lab { font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--p-mut) }
+.row { display: flex; align-items: center; gap: 6px; min-height: 20px; border-top: 1px solid var(--p-ln); padding-top: 4px } .row:first-of-type { border-top: 0; padding-top: 0 }
+.t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.m { color: var(--p-mut) } .a { color: var(--p-acc); font-weight: 900 } .ok { color: var(--p-ok); font-weight: 900 } .wn { color: var(--p-warn); font-weight: 900 }
+.b { display: inline-flex; align-items: center; justify-content: center; border-radius: 99px; padding: 4px 10px; font-weight: 900; font-size: 10.5px; background: var(--p-acc); color: #2a0f19; white-space: nowrap }
+.b.o { background: transparent; color: var(--p-acc); border: 1px solid var(--p-acc) }
+.btns { display: flex; gap: 5px; flex-wrap: wrap }
+.bx { width: 14px; height: 14px; border-radius: 4px; flex: none; display: grid; place-items: center; font-size: 9px; font-weight: 900; border: 2px solid var(--p-mut) }
+.bx.on { background: var(--p-acc); border-color: var(--p-acc); color: #2a0f19 }
+.paste { background: #0d0a0d; border: 1px dashed var(--p-ln); border-radius: 10px; padding: 6px 7px; font-family: ui-monospace, Menlo, monospace; font-size: 9.5px; color: var(--p-mut); white-space: pre-line }
+.lock { font-family: ui-monospace, Menlo, monospace; letter-spacing: .1em; color: var(--p-mut) }
+.shot { border-radius: 10px; background: linear-gradient(160deg, #1f2a3a, #10151d); border: 1px solid var(--p-ln); padding: 7px; display: grid; gap: 3px; font-size: 9.5px }
+.shot .nf { color: #e50914; font-weight: 900; font-size: 11px }
+.pass { border-radius: 10px; background: linear-gradient(160deg, #2a3a2f, #121a14); border: 1px solid var(--p-ln); padding: 7px; display: grid; gap: 2px; font-size: 9px; font-family: ui-monospace, Menlo, monospace; color: #cfe3d4 }
+.sheet { background: var(--p-surf2); border-radius: 16px 16px 12px 12px; padding: 9px; display: grid; gap: 6px; border: 1px solid var(--p-ln) }
+.ntf { background: #f2eef0; color: #231c1e; border-radius: 14px; padding: 7px 9px; display: grid; gap: 2px; font-size: 10px } .ntf b { font-weight: 900 }
+.ntf .m2 { color: #6f6468 }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px }
+.tile { background: var(--p-surf); border: 1px solid var(--p-ln); border-radius: 12px; padding: 7px; display: grid; gap: 2px; text-align: center; font-weight: 800 }
+.tile i { font-style: normal; font-size: 15px }
+/* ---- the pick bar ---- */
+.bar-pick { position: fixed; inset: auto 0 0; z-index: 20; background: var(--surf); border-top: 1px solid var(--ln);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.bar-pick .in { max-width: 1000px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.bar-pick .codes { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: pre-wrap; word-break: break-word; max-height: 84px; overflow: auto }
+.bar-pick button { font: inherit; font-weight: 900; border: 0; border-radius: 99px; padding: 10px 18px; background: var(--acc); color: var(--surf); cursor: pointer; min-height: 44px }
+.bar-pick textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Quick input, without typing</h1>
+  <p class="lede">Your points 2, 3 and 10 (23 Nov). Each option has its phone screen. Tick what you want, add a note on any option, then tap <b>Copy my picks</b> at the bottom and send it to me. Nothing here is built until you pick.</p>
+  <p class="quote">"Manually putting things will make people bored from my app — taking a screenshot of a subscription should be put right in a subscription with the appropriate title, same with passports, visas, MasterCards… everything, for every country and format."</p>
+</header>
+
+<!-- ======================= A. PASSWORDS ======================= -->
+<section>
+  <div><h2>A · Your passwords, in one go</h2>
+  <p class="lede">Today each account is a separate paper you fill by hand. You keep them in a Notion page with a toggle per account (Microsoft, Discord, Instagram, Ubisoft, Steam…). These bring all of them in at once, each locked with your fingerprint like a CVC.</p></div>
+
+  <div class="opt rec" data-code="PW1">
+    <div class="ph" aria-label="Phone: paste a whole page">
+      <div class="sb"><span>12:09</span><span>53%</span></div>
+      <div class="top"><span class="bk">‹</span>Add passwords</div>
+      <div class="cd"><span class="lab">Paste your whole page</span>
+        <div class="paste">▸ Microsoft
+  email: aly…@outlook.com
+  pass: ••••••••
+▸ discord account
+  user: skittlz
+  pass: ••••••
+▸ Instagram …</div>
+        <div class="btns"><span class="b">Read it</span><span class="b o">Paste</span></div></div>
+      <div class="cd"><span class="lab">Found 19 accounts — check them</span>
+        <div class="row"><span class="bx on">✓</span><span class="t">Microsoft · aly…@outlook.com</span><span class="lock">••••</span></div>
+        <div class="row"><span class="bx on">✓</span><span class="t">Discord · skittlz</span><span class="lock">••••</span></div>
+        <div class="row"><span class="bx on">✓</span><span class="t">Steam · skittlzcarbon</span><span class="lock">••••</span></div>
+        <div class="row"><span class="bx on">✓</span><span class="t">Mariam's password</span><span class="wn">no user?</span></div>
+        <div class="btns"><span class="b">Save all 19 🔒</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">PW1</span>Paste the whole page <span class="tag">recommended</span></h3>
+      <p>In Notion: open the page, select all, copy (or ⋯ → Export → Markdown). In Attune: Papers → Add passwords → Paste. Attune splits it by the toggles / headings, finds the email, user name, password, PIN and notes in each one, and shows the list before saving.</p>
+      <ul><li>Works with any notes app: Notion, Samsung Notes, Google Keep, WhatsApp to yourself, a .txt.</li>
+        <li>Arabic, Franco and English labels («الباسورد», «باس», "pw", "pass:", "user", "email").</li>
+        <li>An account it isn't sure about is marked, so you fix just that one.</li></ul>
+      <div class="pm"><span><b>+</b> One paste, 19 accounts in a few seconds. Nothing leaves the phone.</span><span><b>−</b> Notion collapses toggles on copy in some versions; Export → Markdown always has everything.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-PW1">Pick PW1</label><textarea id="note-PW1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt rec" data-code="PW2">
+    <div class="ph" aria-label="Phone: import a passwords file">
+      <div class="sb"><span>12:10</span><span>53%</span></div>
+      <div class="top"><span class="bk">‹</span>Import passwords</div>
+      <div class="cd"><span class="lab">From another app</span>
+        <div class="row"><span class="t">Google Password Manager</span><span class="a">passwords.csv</span></div>
+        <div class="row"><span class="t">Samsung Pass</span><span class="m">.csv</span></div>
+        <div class="row"><span class="t">Chrome · Edge · Firefox</span><span class="m">.csv</span></div>
+        <div class="row"><span class="t">Bitwarden · 1Password · Apple</span><span class="m">.csv</span></div>
+        <div class="btns"><span class="b">Choose the file</span></div></div>
+      <div class="cd soft"><span class="ok">✓ 143 accounts read</span><span class="m">12 already in Attune — kept once · 4 without a password — skipped</span>
+        <div class="btns"><span class="b">Save 127 🔒</span><span class="b o">See them</span></div>
+        <span class="m">Then delete passwords.csv — Attune can do it for you.</span></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">PW2</span>Import from Google Passwords (or any password app) <span class="tag">recommended</span></h3>
+      <p>passwords.google.com → ⚙ → Export passwords gives a passwords.csv. Choose it in Attune and every login comes in: site, user name, password, notes. The same for Samsung Pass, Chrome, Edge, Firefox, Bitwarden, 1Password and Apple's export.</p>
+      <div class="pm"><span><b>+</b> Hundreds of accounts in one tap, exact (no reading mistakes). Duplicates merged.</span><span><b>−</b> The .csv is plain text: Attune offers to delete it right after.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-PW2">Pick PW2</label><textarea id="note-PW2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt" data-code="PW3">
+    <div class="ph" aria-label="Phone: screenshots of the page">
+      <div class="sb"><span>12:11</span><span>52%</span></div>
+      <div class="top"><span class="bk">‹</span>Add passwords</div>
+      <div class="cd"><span class="lab">From screenshots</span>
+        <div class="grid2"><div class="tile"><i>🖼️</i>1 of 3</div><div class="tile"><i>🖼️</i>2 of 3</div></div>
+        <span class="m">Open every toggle first, then take the screenshots.</span></div>
+      <div class="cd"><span class="lab">Read · check each one</span>
+        <div class="row"><span class="t">Ubisoft · user: ali_d</span><span class="wn">l or 1?</span></div>
+        <div class="row"><span class="t">Blizzard · Overwatch</span><span class="ok">✓</span></div>
+        <div class="btns"><span class="b">Save 17 🔒</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">PW3</span>From screenshots of the page</h3>
+      <p>Screenshot the open toggles; Attune reads them on the phone and asks about letters that look alike (l / 1 / I, O / 0).</p>
+      <div class="pm"><span><b>+</b> Works for anything you can see on a screen.</span><span><b>−</b> A password must be letter-perfect; reading a photo is never 100 %, so you check each one. PW1 or PW2 are exact.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-PW3">Pick PW3</label><textarea id="note-PW3" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt" data-code="PW4">
+    <div class="ph" aria-label="Phone: Attune fills passwords in other apps">
+      <div class="sb"><span>12:12</span><span>52%</span></div>
+      <div class="cd"><span class="lab">Instagram · Log in</span>
+        <div class="row"><span class="t m">Phone, user name or email</span></div>
+        <div class="row"><span class="t m">Password</span></div></div>
+      <div class="sheet"><span class="lab">Attune · Autofill</span>
+        <div class="row"><span class="t">Instagram · aly…</span><span class="b">Fill 🔒</span></div>
+        <div class="row"><span class="t">Instagram · work</span><span class="b o">Fill</span></div></div>
+      <div class="cd"><span class="lab">New login seen</span><span>Save the Discord password you just typed in Attune?</span><div class="btns"><span class="b">Save</span><span class="b o">Never for Discord</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">PW4</span>Attune fills and saves them in other apps (later)</h3>
+      <p>Attune becomes the phone's password filler (Android Autofill): the fingerprint, then the login is filled in Instagram, Steam, any site; a new password you type is offered to be saved. This makes it a real password manager.</p>
+      <div class="pm"><span><b>+</b> No copy-paste ever again.</span><span><b>−</b> A big new part (Android Autofill service + its own tests); I'd do it after PW1 + PW2.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-PW4">Pick PW4</label><textarea id="note-PW4" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= B. SCREENSHOT → RIGHT PLACE ======================= -->
+<section>
+  <div><h2>B · A screenshot or photo goes to the right place by itself</h2>
+  <p class="lede">One rule for all of them: Attune reads it on the phone, decides what it is, files it with the right title, and shows one "What I understood" card with Undo. Nothing to fill by hand.</p></div>
+
+  <div class="opt rec" data-code="SS1">
+    <div class="ph" aria-label="Phone: one Scan anything button">
+      <div class="sb"><span>12:18</span><span>53%</span></div>
+      <div class="shot"><span class="nf">NETFLIX</span><span>Your membership · Standard</span><span>EGP 240.00 · next billing 4 Dec 2026</span><span class="m">Visa •••• 4417</span></div>
+      <div class="cd soft"><span class="lab">What I understood</span>
+        <div class="row"><span class="t">📺 <b>Netflix</b> — subscription</span></div>
+        <div class="row"><span class="t">240 EGP every month · next 4 Dec</span></div>
+        <div class="row"><span class="t">Paid with Visa •••• 4417</span></div>
+        <span class="ok">✓ Saved in Bills & subscriptions</span>
+        <div class="btns"><span class="b o">Undo</span><span class="b o">✎ Change</span><span class="b o">Open</span></div></div>
+      <div class="grid2"><div class="tile"><i>📷</i>Camera</div><div class="tile"><i>🖼️</i>Screenshots</div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">SS1</span>One "Scan anything" button <span class="tag">recommended</span></h3>
+      <p>In the Home box (📎) and in Papers: take a photo or choose screenshots (several at once). Each one is filed:</p>
+      <ul><li><b>Subscription / bill</b> (Netflix, Shahid, iCloud, WE, Vodafone…) → Bills & subscriptions: name, price, how often, next date.</li>
+        <li><b>Passport</b> → Papers: number, name, nationality, birth and end dates — read from the two code lines at the bottom (every country uses the same ones).</li>
+        <li><b>Visa / residence</b> → Papers with its end date and entries; <b>national ID</b> → number, birth date, end date (Egypt, Saudi, UAE… by their own rules).</li>
+        <li><b>Bank card</b> (Mastercard, Visa, Meeza…) → Papers: bank, last 4, end date; the full number tap-to-show; the CVC never kept unless you say so.</li>
+        <li><b>Receipt / transfer</b> → Money · <b>ticket / booking</b> → Trips · <b>prescription</b> → Family health.</li></ul>
+      <div class="pm"><span><b>+</b> One habit for everything. Every number is checked by code (card numbers by their check digit, passport lines by theirs, dates by the calendar).</span><span><b>−</b> When a photo is blurry it says so and asks for another, before saving.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS1">Pick SS1</label><textarea id="note-SS1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt rec" data-code="SS2">
+    <div class="ph" aria-label="Phone: new screenshots read automatically">
+      <div class="sb"><span>12:20</span><span>52%</span></div>
+      <div class="ntf"><b>Attune · from your screenshot</b><span>Shahid VIP — 99 EGP monthly. Saved in Bills ✓</span><span class="m2">Undo · Open</span></div>
+      <div class="cd"><span class="lab">Autopilot · Done for you</span>
+        <div class="row"><span class="ok">✓</span><span class="t">Subscription: Shahid VIP · 99/month</span><span class="a">Undo</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">Visa: Schengen (France) · ends 2 Mar</span><span class="a">Undo</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">Paid: Carrefour 1,240 EGP</span><span class="a">Undo</span></div>
+        <div class="row"><span class="m">?</span><span class="t">A card photo — keep it in Papers?</span><span class="a">Yes</span></div></div>
+      <div class="cd"><span class="lab">Settings</span><div class="row"><span class="t">Read my new screenshots</span><span class="b">On</span></div><div class="row"><span class="t">Also new camera photos of papers</span><span class="b o">Off</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">SS2</span>New screenshots are read by themselves <span class="tag">recommended</span></h3>
+      <p>You take the screenshot as you would anyway — Attune notices it (Recall already sees new screenshots), reads it, and files the sure ones by itself with Undo in "Done for you". Only when it really can't tell, it asks one question. A screenshot that isn't a paper, bill or receipt is left alone.</p>
+      <div class="pm"><span><b>+</b> Zero taps — the most "automatic" one.</span><span><b>−</b> Needs the photos permission once. Card photos always ask before saving.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS2">Pick SS2</label><textarea id="note-SS2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt rec" data-code="SS3">
+    <div class="ph" aria-label="Phone: share to Attune from any app">
+      <div class="sb"><span>12:21</span><span>52%</span></div>
+      <div class="cd"><span class="lab">Gmail · Your Spotify receipt</span><span>Premium Individual · EGP 59.99 · renews 18 Dec</span></div>
+      <div class="sheet"><span class="lab">Share</span>
+        <div class="grid2"><div class="tile"><i>✦</i>Attune</div><div class="tile"><i>💬</i>WhatsApp</div><div class="tile"><i>✉️</i>Gmail</div><div class="tile"><i>📋</i>Copy</div></div></div>
+      <div class="cd soft"><span class="ok">✓ Spotify Premium — 59.99 EGP monthly, next 18 Dec</span><span class="m">Saved in Bills & subscriptions</span><div class="btns"><span class="b o">Undo</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">SS3</span>"Share → Attune" from any app</h3>
+      <p>Share a screenshot, a photo, a PDF, an e-mail or a text from any app to Attune, and it is filed the same way as SS1 — no need to open Attune first.</p>
+      <div class="pm"><span><b>+</b> Works from Gmail, WhatsApp, the gallery, a bank app, a browser.</span><span><b>−</b> None really; it is the same reader as SS1.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS3">Pick SS3</label><textarea id="note-SS3" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt" data-code="SS4">
+    <div class="ph" aria-label="Phone: what Attune can read">
+      <div class="sb"><span>12:22</span><span>52%</span></div>
+      <div class="top"><span class="bk">‹</span>What Attune can read</div>
+      <div class="pass"><span>P&lt;EGYDIBIKY&lt;&lt;ALY&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span><span>A12345678&lt;9EGY9001014M3003027&lt;&lt;&lt;&lt;</span></div>
+      <div class="cd"><span class="lab">Read for every country</span>
+        <div class="row"><span class="ok">✓</span><span class="t">Passports — all countries</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">Visas · residence cards</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">IDs — your 30 country packs</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">Cards: Visa · Mastercard · Meeza · Mada · Amex…</span></div>
+        <div class="row"><span class="ok">✓</span><span class="t">Dates: 03/02/28 · ٣ مارس ٢٠٢٨ · 2028-03-02</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">SS4</span>Every country and format, tested</h3>
+      <p>How SS1–SS3 stay accurate: one reader per kind of paper, each with its 10,000 hard cases (your rule) — passports of all countries through their code lines, national IDs per country pack (30), visas, bank cards of every network (check digit + its first digits), subscriptions from the 200 most used services in your 30 countries, every date and number style in the 20 languages.</p>
+      <div class="pm"><span><b>+</b> "No mistakes" is measured, not hoped.</span><span><b>−</b> This is the long part of the work; I'd build SS1 with passports, cards and subscriptions first, then the rest country by country.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-SS4">Pick SS4</label><textarea id="note-SS4" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= C. BANK MESSAGES: ALWAYS KNOW ======================= -->
+<section>
+  <div><h2>C · Always know that bank messages are being read</h2>
+  <p class="lede">Your point 3. Part of it is already fixed in this update (BK1). The others make sure you never have to wonder again.</p></div>
+
+  <div class="opt" data-code="BK1">
+    <div class="ph" aria-label="Phone: Set up your life fixed">
+      <div class="sb"><span>12:18</span><span>53%</span></div>
+      <div class="top"><span class="bk">‹</span>Set up your life</div>
+      <div class="cd">
+        <div class="row"><span class="bx on">✓</span><span class="t"><b>Your salary day</b><br><span class="m">Done</span></span><span class="a">Open ›</span></div>
+        <div class="row"><span class="bx on">✓</span><span class="t"><b>Bank messages → Money</b><br><span class="ok">Working ✓ — 6 read this week · last: CIB · 450 · 22 Nov</span></span><span class="a">Check ›</span></div>
+        <div class="cd soft"><span>Bank messages are being read. 6 payments this week went to Money by themselves.</span><div class="btns"><span class="b">Check now</span><span class="b o">Review in Money</span></div></div>
+        <div class="row"><span class="bx on">✓</span><span class="t"><b>Bills and subscriptions</b><br><span class="m">Done · 5 saved</span></span><span class="a">Open ›</span></div>
+        <div class="row"><span class="bx"></span><span class="t"><b>Your data kept safe</b><br><span class="m">Not yet</span></span><span class="b">Turn on backup</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">BK1</span>Set up your life: every row opens, the bank row says what it's doing <span class="tag built">built in this update</span></h3>
+      <ul><li>Every row is a button: a done step opens the page where its things are; "Turn on backup" opens the backup itself.</li>
+        <li>The bank row always shows: how many were read this week, the last one, and a <b>Check now</b>. If Android paused the reader or you turned notification access off, it says that in amber with <b>Fix it now</b>.</li></ul>
+      <div class="pick"><label><input type="checkbox" id="pick-BK1">OK BK1 as it is</label><textarea id="note-BK1" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt rec" data-code="BK2">
+    <div class="ph" aria-label="Phone: status on Money">
+      <div class="sb"><span>12:24</span><span>51%</span></div>
+      <div class="top"><span class="bk">☰</span>Money</div>
+      <div class="cd soft"><div class="row"><span class="ok">●</span><span class="t">Reading bank messages · 3 today · last 12:04</span><span class="a">›</span></div></div>
+      <div class="cd"><span class="lab">This month</span><span style="font-size:18px;font-weight:900">58,743 EGP</span><span class="m">spent · 2,600 in</span></div>
+      <div class="cd"><span class="lab">If it stops</span><div class="row"><span class="wn">●</span><span class="t wn">Not reading since 6:10 — tap to fix</span><span class="b">Fix</span></div></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">BK2</span>A live line at the top of Money <span class="tag">recommended</span></h3>
+      <p>Green: "Reading bank messages · 3 today · last 12:04". Amber the moment something is wrong (paused by Android, access off, SMS switch off) with the button that fixes it. Tap → the list of what was read today.</p>
+      <div class="pm"><span><b>+</b> You see it every time you open Money.</span><span><b>−</b> One more line on Money.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-BK2">Pick BK2</label><textarea id="note-BK2" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+
+  <div class="opt rec" data-code="BK3">
+    <div class="ph" aria-label="Phone: a notification when reading stops">
+      <div class="sb"><span>18:40</span><span>40%</span></div>
+      <div class="ntf"><b>Attune stopped reading bank messages</b><span>Android paused it at 12:10. 2 bank SMS since then are waiting.</span><span class="m2">Fix it now · Not now</span></div>
+      <div class="ntf"><b>Attune · read again ✓</b><span>2 payments added to Money: Talabat 312 · Uber 96</span></div>
+    </div>
+    <div class="info">
+      <h3><span class="code">BK3</span>A phone notification if reading stops <span class="tag">recommended</span></h3>
+      <p>If a bank SMS arrives and Attune couldn't read it, or the reader has been silent for 6 hours while the phone was in use, one notification says so with <b>Fix it now</b>; after fixing it reads what is still in the shade and tells you what it added.</p>
+      <div class="pm"><span><b>+</b> You never find out a week later.</span><span><b>−</b> At most one such notification a day.</span></div>
+      <div class="pick"><label><input type="checkbox" id="pick-BK3">Pick BK3</label><textarea id="note-BK3" placeholder="Your note on this option"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<div class="fixed">
+  <h2>Fixed in this update (no pick needed)</h2>
+  <ul>
+    <li><b>1 · Free / Pro</b>: bank messages and notifications now go to Money by themselves in Free too (amount, shop, category, with Undo). Pro keeps Money Guardian's findings, every year + reports, the computer app, Money for two, the brain.</li>
+    <li><b>4 · Use the graphics chip</b>: the switch now shows where the engine really runs, and says in one line whether the GPU worked or refused.</li>
+    <li><b>5 · Overlapping words</b>: the Autopilot message sheet was see-through over the card — it now opens on top with a solid background; a check runs on every page in Glass and Plain, dark and light, phone and computer.</li>
+    <li><b>6 · Look / background colours</b>: with Glass on, Midnight, Black, Graphite and Warm all drew the same ground — each is its own now; Settings no longer turns violet over Documents.</li>
+    <li><b>7 · "Most of it went on cmuwco6x7sl16y"</b>: the category's name (or what the money was for), never its code.</li>
+    <li><b>8 · Mind</b>: the top bar was see-through in Glass, so words slid under "Mind" — it is solid now.</li>
+    <li><b>Also</b>: an app's ad («لسه مادفعتش الإشتراك؟ ادفع دلوقتي») is no longer "waiting for your answer"; «Aswa2 pen fel taree5» no longer becomes a to-do.</li>
+  </ul>
+</div>
+</div>
+
+<div class="bar-pick">
+  <div class="in">
+    <div class="codes" id="codes">Nothing ticked yet</div>
+    <button id="copy" type="button">Copy my picks</button>
+    <textarea id="fallback" hidden readonly aria-label="Your picks"></textarea>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = "attune-mock-quick-input";
+  const codes = [...document.querySelectorAll(".opt")].map((o) => o.dataset.code);
+  let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const text = () => codes.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim() : "")).join("\n");
+  const show = () => { const t = text(); document.getElementById("codes").textContent = t || "Nothing ticked yet"; };
+  for (const c of codes) {
+    const cb = document.getElementById("pick-" + c), nt = document.getElementById("note-" + c);
+    if (!cb || !nt) continue;
+    if (st[c]) { cb.checked = !!st[c].on; nt.value = st[c].note || ""; }
+    cb.addEventListener("change", () => { st[c] = { ...(st[c] || {}), on: cb.checked }; save(); show(); });
+    nt.addEventListener("input", () => { st[c] = { ...(st[c] || {}), note: nt.value, on: (st[c] && st[c].on) || !!nt.value.trim() }; cb.checked = st[c].on; save(); show(); });
+  }
+  show();
+  const btn = document.getElementById("copy"), fb = document.getElementById("fallback");
+  btn.addEventListener("click", () => {
+    const t = text() || "No picks";
+    const fallback = () => { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); btn.textContent = "Select and copy the text"; };
+    try { navigator.clipboard.writeText(t).then(() => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); }, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>

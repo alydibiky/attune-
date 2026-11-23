@@ -11,8 +11,12 @@ import { openPlan } from "./plan-ui.jsx";
 import { bankCheck, SAY as BANK_SAY, BTN as BANK_BTN } from "./bankcheck.js";
 import { payReader, openAccess, addPaidNow } from "./paylog-ui.jsx";
 import { payOpts } from "./locale.js";
+import { readJSON } from "./lsjson.js";
 
-const j = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+/* v10.9.1 (Ali, 23 Nov: "the app is still very very laggy"): the Set up driver read and PARSED all of Money, Follow-ups, Dates, reminders
+   and agents every 1.5 s on every page (and the Home card every 4 s) — with months of bank messages that is a stutter every 1.5 s on a
+   phone. A store is parsed again only when its text changed; and the driver checks every 1.5 s only while the interview runs. */
+const j = (k, d) => readJSON(k, d);
 /** Everything the steps look at, from the stores. */
 export function setupData() {
   return { ledger: j("ledger.v3", {}), life: j("attune:life:v1", { items: [] }), radar: j("attune:radar:v1", { items: [] }),
@@ -74,6 +78,20 @@ export function BankCheckBox({ bump }) {
   </div>;
 }
 
+/** v10.9.1 the bank step when it is done: is the reader still reading? (a "Check now" that reads the shade again) */
+function BankWorking({ c }) {
+  const [msg, setMsg] = useState("");
+  if (!c) return null;
+  return <div className="rounded-[12px] px-3 py-2.5 mb-2 space-y-1.5 border border-[var(--c-ln)]" style={{ background: "var(--c-soft)" }} data-testid="bank-working" data-asleep={c.asleep ? "1" : "0"}>
+    <p className="m-0 text-[13px] font-bold" dir="auto">{c.asleep || c.smsoff ? tr(c.smsoff ? "Reading SMS is switched off." : "Android paused Attune's notification reader.") : tr("Bank messages are being read. {n} payments this week went to Money by themselves.", { n: c.n })}</p>
+    {c.last ? <p className="m-0 text-[12.5px] c-sub tabular-nums" dir="auto">{tr("The last one: {x}", { x: [c.last.note, Math.round(c.last.amount).toLocaleString("en-US"), c.last.date].filter(Boolean).join(" · ") })}</p> : null}
+    <div className="flex flex-wrap gap-2 pt-0.5">
+      <button onClick={() => setMsg(bankAct(c.asleep ? "fix" : c.smsoff ? "smson" : "check"))} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="bank-working-check">{tr(c.asleep ? "Fix it now" : c.smsoff ? "Turn SMS on" : "Check now")}</button>
+      <button onClick={() => bankAct("review")} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]" data-testid="bank-working-money">{tr("Review in Money")}</button></div>
+    {msg ? <p className="m-0 text-[12px] font-bold text-[var(--c-acc)]" dir="auto">{msg}</p> : null}
+  </div>;
+}
+
 /** Starts (or continues) the interview in Chat at the first step not done — or at `id`. */
 export function startSetup(id = null) {
   const pro = proNow(), p = S.progress(setupData(), pro);
@@ -108,8 +126,13 @@ export function SetupDriver({ trial }) {
       const step = S.STEPS.find((s) => s.id === a); if (step) try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: step.open } })); } catch (x) {}
     };
     window.addEventListener("attune-setup-act", act);
+    let last = 0;
     const tick = setInterval(() => {
-      const run = getRun(), d = setupData(), pro = proNow(), p = S.progress(d, pro);
+      const run = getRun(), bonusOpen = !!(trial && !trial.bought && (+trial.left || 0) > 0 && !localStorage.getItem(S.BONUS_FLAG));
+      // nothing to follow (no interview, no trial bonus to give): look once every 30 s, not every 1.5 s
+      if (!run && (!bonusOpen || Date.now() - last < 30000)) return;
+      last = Date.now();
+      const d = setupData(), pro = proNow(), p = S.progress(d, pro);
       // TR-3: 6 of 8 really done during the trial → 7 more days, once
       if (trial && S.bonusDue({ done: p.done, trial, given: !!localStorage.getItem(S.BONUS_FLAG) })) {
         const until = S.bonusEnd(trial.first);
@@ -168,15 +191,26 @@ export function SetupPage({ back }) {
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{tr("A step counts only when Attune really has it — a real salary, a real bank message, real papers.")}</p></div>
     <div className="c-card divide-y divide-[var(--c-ln)]">
       {p.steps.map((s) => { const bankOn = s.id === "bank" && !s.locked && !s.done && bankAllowed();
-        // v10.4 (Ali: "I can't press allow or tick, it does not do anything"): the box is a button too — the same as the row's button
-        const go = s.done ? null : s.locked ? openPlan : bankOn ? () => setBankOpen((v) => !v) : () => startSetup(s.id);
-        return <React.Fragment key={s.id}><div className="flex items-center gap-3 min-h-[56px] py-1.5" data-testid="setup-step" data-id={s.id} data-done={s.done ? "1" : "0"}>
-        <button disabled={!go} onClick={go || undefined} aria-label={tr(s.title)} className={"w-6 h-6 rounded-[7px] grid place-items-center text-[12px] font-black shrink-0 " + (s.done ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "border-2 border-[var(--c-ln)]")} data-testid="setup-box">{s.done ? "✓" : s.locked ? "🔒" : ""}</button>
+        /* v10.9.1 (Ali, 23 Nov: "the set up your life is bullshit and I can't press anything, and I don't even know still if bank messages
+           are being read"): EVERY row opens something — a done step opens the page where its things are, the backup step opens the backup
+           panel itself (it went through Chat), and the bank row always says what the reader is doing now, not only "Done" */
+        const openIt = () => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: s.open } })); } catch (e) {} };
+        const go = s.locked ? openPlan : bankOn ? () => setBankOpen((v) => !v) : s.done ? (s.id === "bank" ? () => setBankOpen((v) => !v) : openIt) : s.id === "backup" ? openIt : () => startSetup(s.id);
+        const bc = s.id === "bank" && s.done ? bankNow() : null, lost = bc && bc.state !== "done", warn = bc && (lost || bc.asleep || bc.smsoff);
+        // (a step done before, but the reader is gone now — notification access turned off, a copy that can't read: say THAT)
+        const sub = s.locked ? "PRO" : bc ? (lost ? bankWords(bc).t : warn ? tr(bc.smsoff ? "Reading SMS is switched off." : "Android paused Attune's notification reader.")
+            : bc.last ? tr("Working ✓ — {n} read this week · last: {x}", { n: bc.n, x: [bc.last.note, Math.round(bc.last.amount).toLocaleString("en-US"), bc.last.date].filter(Boolean).join(" · ") }) : tr("Working ✓"))
+          : s.done ? (s.n > 1 ? tr("Done · {n} saved", { n: s.n }) : tr("Done")) : s.id === "bank" && bankAllowed() ? tr("Allowed ✓ — waiting for the first message") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : tr("Not yet");
+        return <React.Fragment key={s.id}><div role="button" tabIndex={0} onClick={go} onKeyDown={(e) => { if (e.key === "Enter") go(); }} className="flex items-center gap-3 min-h-[56px] py-1.5 cursor-pointer active:opacity-70" data-testid="setup-step" data-id={s.id} data-done={s.done ? "1" : "0"}>
+        <span aria-hidden="true" className={"w-6 h-6 rounded-[7px] grid place-items-center text-[12px] font-black shrink-0 " + (s.done ? "bg-[var(--c-acc)] text-[var(--c-on-acc,#fff)]" : "border-2 border-[var(--c-ln)]")} data-testid="setup-box">{s.done ? "✓" : s.locked ? "🔒" : ""}</span>
         <span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{tr(s.title)}</b>
-          <span className="block text-[12px] c-sub">{s.locked ? "PRO" : s.done ? tr("Done") : s.id === "bank" && bankAllowed() ? tr("Allowed ✓ — waiting for the first message") : s.need > 1 ? tr("{n} of {t}", { n: s.n, t: s.need }) : tr("Not yet")}</span></span>
-        {s.done ? null : bankOn ? <button onClick={go} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]" data-testid="setup-bank-check">{bankOpen ? tr("Hide") : tr("Check")}</button> : s.locked ? <button onClick={openPlan} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]">{tr("See Pro")}</button>
-          : <button onClick={() => startSetup(s.id)} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr("Do it")}</button>}
-      </div>{bankOn && bankOpen ? <BankCheckBox bump={() => bump((x) => x + 1)} /> : null}</React.Fragment>; })}
+          <span className={"block text-[12px] " + (warn ? "text-[var(--c-warn,#B45309)] font-bold" : "c-sub")} dir="auto" data-testid="setup-sub">{sub}</span></span>
+        {s.done ? (warn && !lost ? <button onClick={(e) => { e.stopPropagation(); bankAct(bc.smsoff ? "smson" : "fix"); setTimeout(() => bump((x) => x + 1), 1500); }} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold shrink-0" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-bank-fix">{tr(bc.smsoff ? "Turn SMS on" : "Fix it now")}</button>
+            : <span className="text-[12.5px] font-extrabold text-[var(--c-acc)] shrink-0 px-1" data-testid="setup-open">{tr(s.id === "bank" ? "Check" : "Open")} <span className="inline-block rtl:-scale-x-100">›</span></span>)
+          : bankOn ? <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)] shrink-0" data-testid="setup-bank-check">{bankOpen ? tr("Hide") : tr("Check")}</span>
+          : s.locked ? <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)] shrink-0">{tr("See Pro")}</span>
+          : <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold shrink-0" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr(s.id === "backup" ? "Turn on backup" : "Do it")}</span>}
+      </div>{(bankOn || (s.id === "bank" && s.done)) && bankOpen ? (s.done && !lost ? <BankWorking c={bc} /> : <BankCheckBox bump={() => bump((x) => x + 1)} />) : null}</React.Fragment>; })}
     </div>
     {pro ? <div className="c-card space-y-1.5" data-testid="setup-checkup"><b className="block text-[14px]">{tr("This month's check-up")}</b>
       {cu.length ? cu.slice(0, 6).map((x, i) => <p key={i} className="m-0 text-[13px]" dir="auto">{x.kind === "paper" ? tr("{t} ends in {n} days ({d})", { t: x.title, n: x.days, d: x.date }) : tr("Not set up yet: {t}", { t: tr(x.title) })}</p>)

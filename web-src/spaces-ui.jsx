@@ -649,14 +649,16 @@ export function ArtifactsPage({ open }) {
 }
 
 /* ============================== Themes ============================== */
+const BG_DOT = { auto: "linear-gradient(90deg,#F5F4F2 50%,#141313 50%)", slate: "#141313", black: "#000000", zinc: "#1C1C1F", stone: "#221D19", light: "#F5F4F2" };
 export function ThemePicker({ theme, setTheme }) {
   const pick = (t) => { const next = { ...theme, ...t }; saveTheme(next); applyTheme(next); setTheme(next); };
   return (
     <div className="calm bg-transparent!" data-testid="theme-picker">
       {/* v10.0.3 (Ali, 16 Nov: Settings scrolled sideways — the nine colour dots were wider than the phone): the dots wrap */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-[12px] font-bold text-[var(--c-mut)] shrink-0">{tr("Colour")}</span>
-        <div className="flex flex-wrap justify-end gap-0.5 min-w-0">
+      {/* v10.9.1 (Ali's Settings screenshot: the label floated in the middle and the dots ran right-aligned on two rows): label on top */}
+      <div className="mb-3">
+        <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Colour")}</span>
+        <div className="flex flex-wrap gap-0.5 min-w-0">
           {ACCENTS.map(([id, label]) => (
             <button key={id} onClick={() => pick({ accent: id })} title={tr(label)} aria-label={tr(label)} data-testid={"accent-" + id}
               className={`w-11 h-11 rounded-full border-2 flex items-center justify-center p-1.5 ${theme.accent === id ? "border-[var(--c-ink)]" : "border-transparent"}`}
@@ -678,8 +680,10 @@ export function ThemePicker({ theme, setTheme }) {
         <span className="block text-[12px] font-bold text-[var(--c-mut)] mb-2">{tr("Background colour")}</span>
         <div className="flex flex-wrap gap-1.5">
           {BACKGROUNDS.map(([id, label]) => (
-            <button key={id} onClick={() => pick({ bg: id })} data-testid={"bg-" + id}
-              className={chip(theme.bg === id) + " shrink-0"}>{tr(label)}</button>
+            <button key={id} onClick={() => pick({ bg: id })} data-testid={"bg-" + id} aria-pressed={theme.bg === id}
+              className={chip(theme.bg === id) + " shrink-0 inline-flex items-center gap-1.5"}>
+              {/* v10.9.1: each ground shows its colour, so a tap visibly changes something */}
+              <i aria-hidden="true" className="inline-block w-3.5 h-3.5 rounded-full border border-[var(--c-ln)]" style={{ background: BG_DOT[id] }} />{tr(label)}</button>
           ))}
         </div>
       </div>

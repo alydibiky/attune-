@@ -12,6 +12,13 @@
    Nothing here is invented: every number comes from the data. A fact can be forgotten, or corrected ("Not right" → your words are
    kept as a fact of their own, with you as the source). Pure. Tests: tests/brain/gen.mjs (10,000) + tests/unit/v9937brain.test.mjs. */
 
+import { catName, looksLikeId } from "./money-report.js";
+import { isOffer } from "./chats.js";
+const CHAT_PKG = /^(com\.whatsapp(\.w4b)?|org\.telegram\.messenger|org\.thunderdog\.challegram|com\.facebook\.orca|org\.thoughtcrime\.securesms|com\.viber\.voip|com\.instagram\.android|com\.google\.android\.apps\.messaging|com\.samsung\.android\.messaging|com\.android\.mms|com\.discord|com\.microsoft\.teams|com\.slack|jp\.naver\.line\.android|com\.snapchat\.android|com\.imo\.android\.imoim)/;
+const CHAT_APP = /^(whatsapp|telegram|messenger|signal|viber|instagram|messages|sms|discord|teams|slack|line|snapchat|imo)$/i;
+// an app asking you to pay / renew / update / rate (not a person): «ادفع دلوقتي», «جدد اشتراكك», "renew now", "complete your payment"
+const APP_NUDGE = /ادفع (?:دلوقتي|الآن|الان)|جدد(?:\s|ي)|اشتراكك|حدّ?ث التطبيق|\b(?:pay|renew|upgrade|update|subscribe|rate us|complete your (?:payment|order|profile))\b(?: now| today)?/i;
+
 const DAY = 86400000;
 const iso = (t) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const num = (v) => Number(v) || 0;
@@ -35,8 +42,19 @@ function moneyFacts(L, now) {
       nums: { spent, inc, lastSpent, pct } });
     const by = {}; for (const t of now0.filter((x) => x.type === "expense")) { const k = t.cat || "other"; by[k] = by[k] || { a: 0, n: 0 }; by[k].a += num(t.amount); by[k].n++; }
     const top = Object.entries(by).sort((a, b) => b[1].a - a[1].a)[0];
-    if (top && spent > 0) out.push({ id: "money:top:" + m0.slice(0, 7) + ":" + top[0], area: "money", src: "Money", open: "money", weight: 60,
-      T: ["Most of it went on {c}: {a} ({n} times, {p}% of what you spent).", { c: top[0], a: n0(top[1].a) + " " + cur, n: top[1].n, p: Math.round((top[1].a / spent) * 100) }], nums: { cat: top[0], amount: top[1].a, count: top[1].n } });
+    /* v10.9.1 (Ali: "Most of it went on cmuwco6x7sl16y" — "still wrong"): the category's NAME (his own categories too), never its id;
+       a category with no name says what the money was for (the biggest entry's note) instead */
+    if (top && spent > 0) {
+      const ofTop = now0.filter((x) => x.type === "expense" && (x.cat || "other") === top[0]).sort((a, b) => num(b.amount) - num(a.amount));
+      const note = String((ofTop[0] && ofTop[0].note) || "").replace(/\s*↻$/, "").replace(/\s+/g, " ").trim().slice(0, 40);
+      let c = catName(L, top[0]);
+      if ((top[0] === "other" || c === catName(null, "zz00000000")) && note) c = note;
+      if (!c || looksLikeId(c)) c = catName(null, "other");
+      const a = n0(top[1].a) + " " + cur, p = Math.round((top[1].a / spent) * 100);
+      out.push({ id: "money:top:" + m0.slice(0, 7) + ":" + top[0], area: "money", src: "Money", open: "money", weight: 60,
+        T: top[1].n === 1 ? ["Most of it went on {c}: {a} in one payment, {p}% of what you spent.", { c, a, p }]
+          : ["Most of it went on {c}: {a} ({n} times, {p}% of what you spent).", { c, a, n: top[1].n, p }], nums: { cat: top[0], amount: top[1].a, count: top[1].n } });
+    }
   }
   return out;
 }
@@ -70,6 +88,10 @@ function messageFacts(notes, minds, now) {
   for (const n of (notes || [])) {
     if (!n || !n.id || now - num(n.ts) > 7 * DAY) continue;
     const m = (minds || {})[String(n.id)]; if (!m || !/^(do|reply)$/.test(m.action || "")) continue;
+    /* v10.9.1 (Ali's "What Attune knows" screenshot: Sahl's «لسه مادفعتش الإشتراك؟ ادفع دلوقتي…» was "waiting for your answer"): only a
+       PERSON waits for an answer — a message from a chat app (or one the reading named a person in); an app's own nudge or an advert never */
+    const chatApp = CHAT_PKG.test(String(n.pkg || "")) || CHAT_APP.test(String(n.app || ""));
+    if ((!chatApp && (!m.who || APP_NUDGE.test(String(n.title || "") + " " + String(n.text || "")))) || isOffer(n.text)) continue;
     const who = m.who || n.title || n.app || "";
     out.push({ id: "msg:" + n.id, area: "messages", src: n.app || "Notifications", open: "recall", weight: 75, person: who,
       T: m.action === "do" ? ["{w} asked you: “{x}”{d}", { w: who, x: String(n.text || "").replace(/\s+/g, " ").slice(0, 90), d: m.due && m.due.date ? " — " + m.due.date : "" }]

@@ -7,6 +7,7 @@
    The logic is chatpilot.js / autopilot2.js / chatroles.js (tested); this file carries out the effects and draws the card. */
 import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import React, { useEffect, useMemo, useState } from "react";
+const createPortal = (el, target) => window.ReactDOM.createPortal(el, target);   // (the page loads ReactDOM as a global)
 import { Check, Undo2, Zap, ShoppingCart, MessageCircle, BellRing, ListChecks } from "lucide-react";
 import { tr, dateLocale } from "./i18n.js";
 import * as CP from "./chatpilot.js";
@@ -81,9 +82,16 @@ function lineOf(d) {
   if (d.kind === "todo") return tr("To-do: {t}", { t: d.title || d.from.text });
   return (d.from.who ? d.from.who + " · " : "") + d.from.chat + ": " + String(d.from.text || "").slice(0, 80);
 }
-function MessageSheet({ d, close, undo, never }) {
+/* v10.9.1 (Ali's Autopilot screenshot: the sheet's words lay on top of the card's words): the sheet sat inside the glass card — a moving
+   (transformed) box, so "fixed" was the card's box, and the card's see-through colour. It now opens on the page itself (a portal) with
+   a solid background. */
+function MessageSheet(props) {
+  const el = <MessageSheetIn {...props} />;
+  try { return typeof document !== "undefined" && document.body ? createPortal(<div className="calm">{el}</div>, document.body) : el; } catch (e) { return el; }
+}
+function MessageSheetIn({ d, close, undo, never }) {
   return <div className="fixed inset-0 z-[80] bg-black/50 flex items-end justify-center" onClick={close} data-testid="cp-sheet">
-    <div className="w-full max-w-[560px] rounded-t-[22px] bg-[var(--c-surf)] p-4 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="w-full max-w-[560px] rounded-t-[22px] bg-[var(--g-solid,var(--c-surf))] text-[var(--c-ink)] shadow-2xl p-4 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       <div className="c-card space-y-1"><p className="m-0 text-[11px] font-extrabold tracking-[0.06em] uppercase c-sub" dir="auto">{d.from.chat} · {d.from.app === "whatsapp" ? "WhatsApp" : d.from.app}</p>
         <p className="m-0 text-[12px] c-sub" dir="auto">{d.from.who ? d.from.who + " · " : ""}{hm(d.from.ts || d.at)}</p>
         <p className="m-0 text-[14px] whitespace-pre-wrap" dir="auto" data-testid="cp-full">{d.from.text}</p></div>

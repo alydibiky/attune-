@@ -1,6 +1,7 @@
 /* ---- v6.37 (upgrade M1): the "Safe to spend today" line on Money (phone: a slim row above the ledger; computer: a card on
    Overview). The number is code (safespend.js) from the ledger, People & plans and the Radar — the same data Money shows.
    A tap opens what it counted: everything due until the next income, so the number is never a mystery. */
+import { readJSON } from "./lsjson.js";
 import { planMonth, loadPots } from "./planner.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -10,7 +11,7 @@ import { fmt } from "./money-calm.js";
 import * as U from "./ui-kit.jsx";
 
 const KEY = "attune:safespend:v1";
-const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
+const j = (k, d) => readJSON(k, null) || d;   // v10.9.1: parsed once per change (lsjson.js)
 const FROM = { money: "Bills", plans: "People & plans", dates: "Dates", debts: "You owe" };
 
 /** Re-reads when Money (in its frame) or another tab writes the ledger. */
