@@ -1,5 +1,12 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, night, later — OK-SS in progress)
+> Ali re-sent "OK-SS (accuracy is everything) · OK-BK" and asked: **"Add a specific model for each thing and make them work together"** →
+> SCAN_PLAN.md (one model per job + code judges every number). Done: web-src/subread.js (subscriptions; tests/scan/gen.mjs 10,000 HARD 100 %,
+> held-out seed 2 100 %; first honest run 78.6 %), web-src/scanread.js (the conductor, not wired into a screen yet). Next: SCAN_PLAN S1's
+> mixed-kind 10,000 test, then S2 (📎 Scan + Share → the "What I understood" card, 20 languages, phone + computer). Still waiting on Ali:
+> OK-PW, whether sync stays free, a few real subscription screenshots.
+
 > ## START HERE (23 Nov 2026, night — v10.9.3: OK-BK built; OK-SS next)
 > Ali OK'd **OK-BK** and **OK-SS** ("will be good if done right and accurate, accuracy is everything"); OK-PW not answered yet.
 > **Built (v10.9.3)**: "Read from your messages" (web-src/readlog.js + readlog-ui.jsx): every bank SMS / notification read, the FULL
