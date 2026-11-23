@@ -31,7 +31,7 @@ const w = P.weekStats({ txns: [{ type: "expense", date: "2026-11-12" }, { type: 
 ok(w.typed === 1 && w.fromMsgs === 1 && w.reminders === 1, "this week: 1 typed, 1 from messages, 1 reminder (an old one not counted)");
 // the Plan page says FP-4
 ok(/saved by themselves, with Undo/.test(B.PRO_BENEFITS[0]), "Pro's first benefit: saved by themselves, WITH Undo (Ali: don't remove undo)");
-ok(B.COMPARE_ROWS.some((r) => /Bank messages/.test(r[0]) && /Asks you/.test(r[1]) && /with Undo/.test(r[2])), "the table: Free asks each time · Pro by itself, with Undo");
+ok(B.COMPARE_ROWS.some((r) => /Bank messages/.test(r[0]) && /By itself, with Undo/.test(r[1]) && /with Undo/.test(r[2])), "the table (v10.9.1 option A): bank messages by themselves with Undo in Free and Pro");
 // every screen wired
 const src = (f) => fs.readFileSync(new URL("../../web-src/" + f, import.meta.url), "utf8");
 ok(/allowed\("autoMoney"\)/.test(src("paylog-ui.jsx")), "Money's auto-save asks plan.js");

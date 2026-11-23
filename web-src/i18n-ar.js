@@ -12324,7 +12324,7 @@ export const AR = {
   "Price after discount": "السعر بعد الخصم",
   "Most of it went on {c}: {a} in one payment, {p}% of what you spent.": "أغلبها راح على {c}: {a} في دفعة واحدة، {p}% من اللي صرفته.",
   "Now on the graphics chip ✓": "شغّال دلوقتي على كارت الشاشة ✓",
-  "The graphics chip refused on this phone — Attune stays on the CPU (it still works, just slower).": "كارت الشاشة رفض على الموبايل ده — أتيون فاضل على المعالج (شغّال عادي، بس أبطأ).",
+  "The graphics chip refused on this phone — Attune stays on the CPU (it still works, just slower).": "كارت الشاشة رفض على الموبايل ده — Attune فاضل على المعالج (شغّال عادي، بس أبطأ).",
   "Now on the CPU ✓": "شغّال دلوقتي على المعالج ✓",
   "Working ✓ — {n} read this week · last: {x}": "شغّال ✓ — اتقرا {n} الأسبوع ده · آخر واحدة: {x}",
   "Working ✓": "شغّال ✓",

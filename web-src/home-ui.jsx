@@ -198,6 +198,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   // the numbers, what needs you, the whole day, missions, what Attune noticed. Opened by "See all", "/report", «وريني التقرير».
   const [rep, setRep] = useState(false);
   useEffect(() => { const on = () => setRep(true); window.addEventListener("attune-my-report", on); return () => window.removeEventListener("attune-my-report", on); }, []);
+  // v10.9.5 (Home is kept between visits): leaving Home closes My report — coming back shows Home, as before
+  useEffect(() => { const off = (e) => { if (e && e.detail === "home") setRep(false); }; window.addEventListener("attune-page-left", off); return () => window.removeEventListener("attune-page-left", off); }, []);
   useSubBack(minimal && rep, () => setRep(false));
   const now1 = minimal ? nowCard({ needs: data.items, fleet, country: myCountry(), now: Date.now() }) : null;
   const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];

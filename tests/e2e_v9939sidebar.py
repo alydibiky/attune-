@@ -13,8 +13,8 @@ with sync_playwright() as p:
         init = INIT + ("try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}" if lang == "ar" else "")
         # ---- phone
         ctx, page = new_page(br, env, errors, extra_init=init, legacy_nav=False)
-        page.goto(env.url); page.wait_for_selector("[data-testid=home-ask]", timeout=15000); page.wait_for_timeout(500)
-        page.click("[data-testid=home-menu]"); page.wait_for_selector("[data-testid=phone-side]", timeout=4000)
+        page.goto(env.url); page.wait_for_selector("[data-testid=home-ask] >> visible=true", timeout=15000); page.wait_for_timeout(500)
+        page.click("[data-testid=home-menu] >> visible=true"); page.wait_for_selector("[data-testid=phone-side] >> visible=true", timeout=4000)
         side = page.locator("[data-testid=phone-side]")
         strip = side.locator("[data-testid=side-setup-strip]")
         check(strip.count() == 1, lang + " phone: the setup strip is at the top while setup is unfinished")
@@ -30,7 +30,7 @@ with sync_playwright() as p:
         check(abs(box[0]["y"] - box[2]["y"]) < 2, lang + " phone: the three sit on one line")
         foot[0].click(); page.wait_for_timeout(500)
         check(page.locator("text=" + ("What Attune knows" if lang == "en" else "Attune")).count() > 0 and page.locator("[data-testid=phone-side]").count() == 0 or page.locator("[data-testid=brain-page], [data-testid*=brain]").count() > 0, lang + " phone: Knows opens what Attune knows")
-        page.click("[data-testid=home-menu]") if page.locator("[data-testid=home-menu]").count() else None
+        page.click("[data-testid=home-menu] >> visible=true") if page.locator("[data-testid=home-menu] >> visible=true").count() else None
         page.wait_for_timeout(300)
         if page.locator("[data-testid=phone-side] [data-testid=side-setup-strip]").count():
             page.locator("[data-testid=phone-side] [data-testid=side-setup-strip]").click(); page.wait_for_timeout(500)
@@ -38,12 +38,12 @@ with sync_playwright() as p:
         # Settings keeps the way in
         page.evaluate("window.dispatchEvent(new CustomEvent('attune-open', { detail: { mode: 'home' } }))"); page.wait_for_timeout(300)
         if page.locator("[data-testid=home-menu]").count():
-            page.click("[data-testid=home-menu]"); page.wait_for_timeout(300); page.locator("[data-testid=phone-side] [data-testid=side-settings]").click(); page.wait_for_timeout(500)
+            page.click("[data-testid=home-menu] >> visible=true"); page.wait_for_timeout(300); page.locator("[data-testid=phone-side] [data-testid=side-settings]").click(); page.wait_for_timeout(500)
             check(page.locator("[data-testid=more-setup]").count() >= 1, lang + " phone: Settings has “Set up your life”")
         ctx.close()
         # ---- computer
         ctx, page = new_page(br, env, errors, extra_init=init, legacy_nav=False, desktop=(1366, 860))
-        page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000); page.wait_for_timeout(500)
+        page.goto(env.url); page.wait_for_selector("[data-testid=side] >> visible=true", timeout=15000); page.wait_for_timeout(500)
         side = page.locator("[data-testid=side]")
         check(side.locator("[data-testid=side-setup-strip]").count() == 1 and side.locator("[data-testid=side-brain]").count() == 1, lang + " computer: strip at the top, Knows at the bottom")
         b = [side.locator("[data-testid=%s]" % t).bounding_box() for t in ("side-brain", "side-backup", "side-settings")]

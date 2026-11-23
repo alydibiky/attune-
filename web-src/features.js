@@ -180,7 +180,7 @@ export const placeLine = (f, t = (s) => s) => f.place.map((x) => t(x)).join(" â†
 /** Open a feature where it lives. */
 export function openFeature(f, navTo) {
   if (!f) return;
-  try { if (f.open === "things") localStorage.setItem("attune:fu:things", "1"); } catch (e) {}
+  try { if (f.open === "things") { localStorage.setItem("attune:fu:things", "1"); window.dispatchEvent(new CustomEvent("attune-fu-things")); } } catch (e) {}   // (v10.9.5: Follow-ups is kept between visits â€” tell it to unfold)
   const mode = f.open === "things" ? "timeline" : f.open;
   if (mode.startsWith("panel:")) { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: mode.slice(6) })); } catch (e) {} return; }
   if (navTo) navTo(mode); else try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode } })); } catch (e) {}

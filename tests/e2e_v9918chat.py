@@ -13,17 +13,17 @@ BOX = "textarea[placeholder='Message Attune']"
 def chat(page):
     page.evaluate("() => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_selector(BOX, timeout=8000); page.wait_for_timeout(300)
 def say(page, t):
-    page.locator(BOX).fill(t); page.locator("button[title='Send']").first.click(); page.wait_for_timeout(900)
+    page.locator(BOX).fill(t); page.locator("button[title='Send'] >> visible=true").first.click(); page.wait_for_timeout(900)
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
     page.set_viewport_size({"width": 390, "height": 844}); page.goto(env.url); page.wait_for_timeout(1200)
     chat(page); say(page, "go to Follow-ups")
-    check(page.locator("header p").first.inner_text().strip() == "Follow-ups", "“go to Follow-ups” opens Follow-ups: " + page.locator("header p").first.inner_text())
+    check(page.locator("header p >> visible=true").first.inner_text().strip() == "Follow-ups", "“go to Follow-ups” opens Follow-ups: " + page.locator("header p >> visible=true").first.inner_text())
     chat(page); say(page, "open Documents")
-    check(page.locator("header p").first.inner_text().strip() == "Documents", "“open Documents” opens Documents: " + page.locator("header p").first.inner_text())
+    check(page.locator("header p >> visible=true").first.inner_text().strip() == "Documents", "“open Documents” opens Documents: " + page.locator("header p >> visible=true").first.inner_text())
     chat(page); say(page, "open Settings")
-    check(page.locator("[data-testid=more-settings]").count() > 0 and page.locator("[data-testid=more-settings]").first.is_visible(), "“open Settings” opens Settings")
+    check(page.locator("[data-testid=more-settings]").count() > 0 and page.locator("[data-testid=more-settings] >> visible=true").first.is_visible(), "“open Settings” opens Settings")
     page.keyboard.press("Escape"); page.wait_for_timeout(300)
     page.reload(); page.wait_for_timeout(1000)
     chat(page); say(page, "spent 85 on parking, also remind me in an hour and a half to water the plants"); page.wait_for_timeout(600)
@@ -38,7 +38,7 @@ with sync_playwright() as p:
     # OK1 (Ali's OK, 11 Nov) for the pages that had their own heading: on a phone the top bar says the name, the page doesn't repeat it
     for m, name in [("privacy", "Privacy"), ("guide", "How to use Attune"), ("slides", "Slides & Reports"), ("convert", "File Converter"), ("pdfchat", "Ask a PDF"), ("cv", "CV / Resume"), ("memory", "Mind"), ("care", "Family health"), ("translate", "Translate"), ("travel", "Travel")]:
         page.evaluate("m => window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:m}}))", m); page.wait_for_timeout(700)
-        bar = page.locator("header p").first.inner_text().strip()
+        bar = page.locator("header p >> visible=true").first.inner_text().strip()
         big = page.locator(".att-h1").filter(has_text=name)
         shown = any(big.nth(i).is_visible() for i in range(big.count()))
         check(bar == name and not shown, "OK1 " + m + ": the top bar says “" + name + "” (" + bar + ") and no second big heading (" + str(shown) + ")")

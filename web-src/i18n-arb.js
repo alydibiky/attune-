@@ -15095,7 +15095,7 @@ export const ARB = {
   "Price after discount": "السعر بعد الخصم",
   "Most of it went on {c}: {a} in one payment, {p}% of what you spent.": "ذهب معظمها إلى {c}: {a} في دفعة واحدة، {p}% مما أنفقته.",
   "Now on the graphics chip ✓": "يعمل الآن على شريحة الرسوميات ✓",
-  "The graphics chip refused on this phone — Attune stays on the CPU (it still works, just slower).": "رفضت شريحة الرسوميات العمل على هذا الهاتف — يبقى أتيون على المعالج (يعمل، لكن أبطأ).",
+  "The graphics chip refused on this phone — Attune stays on the CPU (it still works, just slower).": "رفضت شريحة الرسوميات العمل على هذا الهاتف — يبقى Attune على المعالج (يعمل، لكن أبطأ).",
   "Now on the CPU ✓": "يعمل الآن على المعالج ✓",
   "Working ✓ — {n} read this week · last: {x}": "يعمل ✓ — قُرئت {n} هذا الأسبوع · الأخيرة: {x}",
   "Working ✓": "يعمل ✓",

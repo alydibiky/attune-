@@ -3361,6 +3361,10 @@ function lexRule(text) {
 // Does this question refer to the person's own stuff? Deterministic, cheap,
 // and deliberately generous — a false positive just adds context nobody used.
 const ASK_PERSONAL = /\b(my|mine|our|we|i)\b|\b(last time|earlier|before|previous|that (one|quote|message|photo|note)|remind me|did i|have i|what did)\b/i;
+// v10.9.5: the same in Egyptian Arabic / Fusha — «فاتورة الكهربا الشهر اللي فات كانت كام؟» is about YOUR things (it was English-only, so an
+// Arabic "my…" question never reached the meaning search)
+const ASK_PERSONAL_AR = /(?:^|[\s،؟?.!])(?:انا|أنا|احنا|إحنا|نحن|بتاعي|بتاعتي|بتاعنا|بتوعي|عندي|عندنا|دفعت|اشتريت|كتبت|حفظت|سجلت|قلتلك|قولتلك|فاكر|فاكره|المرة اللي فاتت|آخر مرة|اخر مرة|الشهر اللي فات|الشهر الماضي|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي|امبارح|إمبارح|أمس|قبل كده|خاصتي|لدي|لديّ)(?=$|[\s،؟?.!])/u;
+const isPersonalAsk = (q) => ASK_PERSONAL.test(q) || ASK_PERSONAL_AR.test(String(q || ""));
 
 const ASK_PROMPT = (question, found, turns, langRule, lexBlockText) =>
 `You are the user's assistant. It runs on their own device; nothing they say leaves it.
@@ -8161,14 +8165,19 @@ export default function App() {
   const modeWas = useRef(mode), justShown = modeWas.current !== mode && keptMounted.current.has(mode) ? mode : null; modeWas.current = mode;
   const [pageThaw, setPageThaw] = useState(null);
   const keptStamp = useRef({}), lastMode = useRef(mode), [pageGen, setPageGen] = useState({});
+  // v10.9.5: a kept page whose data changed while you were away is built again AT ONCE (not shown old, then rebuilt 80 ms later —
+  // what you typed or opened in that moment was lost, and the old numbers flashed). Unchanged → shown at once, exactly as it was.
+  const genRef = useRef({}), staleShown = !!justShown && keptStamp.current[justShown] !== dataStamp();
+  if (staleShown) genRef.current[justShown] = (genRef.current[justShown] || 0) + 1;
   useEffect(() => {
     const left = lastMode.current; lastMode.current = mode;
-    if (left && left !== mode) keptStamp.current[left] = dataStamp();   // what the page you left had seen
+    if (left && left !== mode) { try { window.dispatchEvent(new CustomEvent("attune-page-left", { detail: left })); } catch (e) {} }   // v10.9.5: a kept page closes its sub-views (Home's report)
+    // (v10.9.5: the stamp is taken when the page was last BUILT (below), not when you left it — something saved while you were on it
+    // that it never read (another sheet, the phone's own writer) made it show old data when you came back: the maid / renewal rows)
     if (!justShown) return undefined;
-    const stale = keptStamp.current[justShown] !== dataStamp();
     setPageThaw(justShown);
-    // shown at once as it was; then brought up to date (re-drawn), or built again if something was saved meanwhile
-    const t = setTimeout(() => { if (stale) setPageGen((g) => ({ ...g, [justShown]: (g[justShown] || 0) + 1 })); setPageThaw(null); }, 80);
+    // shown at once as it was (nothing was saved meanwhile — a stale page was already built again above); then brought up to date
+    const t = setTimeout(() => setPageThaw(null), 80);
     return () => clearTimeout(t);
   }, [mode]);   // eslint-disable-line
   useEffect(() => { if (KEEPABLE.has(mode) && !keptList.includes(mode)) setKeptList((l) => [...l.filter((x) => x !== mode), mode].slice(-KEEP_MAX)); }, [mode]);   // eslint-disable-line
@@ -9590,7 +9599,7 @@ export default function App() {
     const question = (q || askQ).trim();
     if (!question || askBusy || !canUseAI()) return;
     setAskBusy(true);
-    const mine = ASK_PERSONAL.test(question);
+    const mine = isPersonalAsk(question);
     const found = mine ? memSearch(memory, memIndex, question, { now: Date.now(), limit: 4 }) : [];
     // The answer streams into a placeholder turn as it is written, so a long
     // answer (or a long think) shows progress instead of a frozen screen.
@@ -10077,7 +10086,7 @@ export default function App() {
     } : null,
     rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
     rankAll: (question, hits, o) => rankPassages(question, hits, o),
-    isPersonal: (q) => ASK_PERSONAL.test(q),
+    isPersonal: (q) => isPersonalAsk(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     // v9.9.2 S1 (Ali picked: "Chat always checks your own things first"): a note in Shelf / Mind that clearly fits ANY question
     // (most of its words in one record) — not only "my…" questions
@@ -10827,7 +10836,7 @@ export default function App() {
         {/* v6.43: Business as its own app — its own icon on the home screen */}
         {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => { const ok = NATIVE.pinTool("business", tr("Business")); flash(ok ? tr("Android asks you to add it — then Business has its own icon") : tr("This phone's home screen can't add icons")); }}
           className="min-h-[40px] text-[12.5px] font-extrabold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
-        {(() => { const pageFor = (mode) => (<Guard key={"g-" + mode + (pageGen[mode] ? "-" + pageGen[mode] : "")} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
+        {(() => { const pageFor = (mode) => (<Guard key={"g-" + mode + ((pageGen[mode] || 0) + (genRef.current[mode] || 0) ? "-" + ((pageGen[mode] || 0) + (genRef.current[mode] || 0)) : "")} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide && dayset.simple ? (
           <SimpleHome navTo={navTo} openMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} />
@@ -11891,8 +11900,8 @@ export default function App() {
           </div>
         )}</Guard>);
           // v10.9.2: the kept pages, hidden and frozen, and the one on the screen
-          return keptOrder(mode).map((m) => { const on = m === mode, frozen = !on || pageFrozen || pageThaw === m || justShown === m, mounted = keptMounted.current.has(m);
-            if (!frozen || !mounted) keptMounted.current.add(m);
+          return keptOrder(mode).map((m) => { const on = m === mode, frozen = !on || pageFrozen || ((pageThaw === m || justShown === m) && !(on && staleShown)), mounted = keptMounted.current.has(m);
+            if (!frozen || !mounted) { keptMounted.current.add(m); keptStamp.current[m] = dataStamp(); }
             return <div key={m} style={on ? KEEP_ON : KEEP_OFF} data-kept={on ? undefined : m} aria-hidden={on ? undefined : "true"} inert={on ? undefined : ""}>
               <FrozenPage freeze={frozen && mounted} k={m + "|" + (wide ? 1 : 0)}>{frozen && mounted ? null : pageFor(m)}</FrozenPage></div>; }); })()}
 

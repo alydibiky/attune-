@@ -23,7 +23,7 @@ with sync_playwright() as p:
     page.click("[data-testid=life-save]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=life-item]:has-text('Maid')").count() == 1, "saved under Comes regularly")
     # Home: today's box
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000); page.wait_for_timeout(300)   # (v10.9.2 kept page: shown at once, then built fresh)
     row = page.locator("[data-testid=home-regular]")
     check(row.count() == 1 and "Maid" in row.inner_text() and "600" in row.inner_text(), "Home: a checkbox for the maid today")
     page.click("[data-testid=home-regular-tick]"); page.wait_for_timeout(300)
@@ -32,7 +32,7 @@ with sync_playwright() as p:
     led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")
     check(len(led["txns"]) == 1 and led["txns"][0]["amount"] == 600 and led["txns"][0]["type"] == "expense" and "Maid" in led["txns"][0]["note"], "…the expense is in Money's ledger: %s" % led["txns"])
     check(page.locator("[data-testid=home-regular]").count() == 0, "…and the box is gone for today")
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'life'}}))"); page.wait_for_selector("[data-testid=life-page]", timeout=5000)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'life'}}))"); page.wait_for_selector("[data-testid=life-page]", timeout=5000); page.wait_for_timeout(300)
     check(page.locator("[data-testid=life-item]:has-text('Maid') [data-testid=life-tick][aria-pressed=true]").count() == 1, "People & plans shows today ticked")
     # untick there → out of Money again
     page.locator("[data-testid=life-item]:has-text('Maid') [data-testid=life-tick][aria-pressed=true]").click(); page.wait_for_timeout(300)

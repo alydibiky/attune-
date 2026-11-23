@@ -25,8 +25,8 @@ with sync_playwright() as p:
     # teaching is still there when YOU ask for it: Chat «علمني اشعاراتي»
     def teach_chat():
         open_mode(page, "chat", "textarea[placeholder='Message Attune']")
-        page.locator("textarea[placeholder='Message Attune']").fill("علمني اشعاراتي"); page.locator("button[title='Send']").first.click()
-        page.wait_for_selector("[data-testid=chat-teach] [data-testid=note-ask]", timeout=5000)
+        page.locator("textarea[placeholder='Message Attune']").fill("علمني اشعاراتي"); page.locator("button[title='Send'] >> visible=true").first.click()
+        page.wait_for_selector("[data-testid=chat-teach] [data-testid=note-ask] >> visible=true", timeout=5000)
     teach_chat()
     T = "[data-testid=chat-teach] "
     check("ما يخص المرتبات" in page.locator("[data-testid=chat-teach]").inner_text(), "Chat «علمني اشعاراتي» → asks about the WhatsApp group (two messages = one question)")
@@ -40,7 +40,7 @@ with sync_playwright() as p:
     rules = page.evaluate("JSON.parse(localStorage.getItem('attune:noteteach:v1')).rules")
     check(len(rules) == 1 and rules[0]["meaning"] == "work" and page.locator("[data-testid=teach-chat-done]").count() == 1, "Save → learnt (work talk) — “That's all for now — I learnt 1”")
     open_mode(page, "timeline", "[data-testid=fu-thread]")
-    page.click("[data-testid=learned-open]"); page.wait_for_selector("[data-testid=learned-sheet]")
+    page.click("[data-testid=learned-open] >> visible=true"); page.wait_for_selector("[data-testid=learned-sheet] >> visible=true")
     row = page.locator("[data-testid=learned-row][data-type=label]")
     check(row.count() == 1 and "ما يخص المرتبات" in row.inner_text(), "What Attune learned lists it")
     row.locator("[data-testid=learned-undo]").click(); page.wait_for_timeout(300)

@@ -70,6 +70,7 @@ export function TimelinePage({ navTo, doIt, flash }) {
   const [chip, setChip] = useState("all");
   const [thingsOpen, setThingsOpen] = useState(() => { try { return localStorage.getItem("attune:fu:things") === "1"; } catch (e) { return false; } });
   useEffect(() => { try { localStorage.setItem("attune:fu:things", thingsOpen ? "1" : "0"); } catch (e) {} }, [thingsOpen]);
+  useEffect(() => { const on = () => setThingsOpen(true); window.addEventListener("attune-fu-things", on); return () => window.removeEventListener("attune-fu-things", on); }, []);   // v10.9.5 "where is my warranty?" → Things I own, unfolded
   const thingsN = (() => { try { return (JSON.parse(localStorage.getItem("attune:things:v1") || "{}").items || []).length; } catch (e) { return 0; } })();
   const [say, setSay] = useState("");
   const [pay, setPay] = useState(null);   // { key, i, v } — v8.3: what really came for this payment

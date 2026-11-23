@@ -9,6 +9,7 @@ import json
 env = Env(); errors = []
 
 def box(page, text):
+    page.wait_for_timeout(150)   # (v10.9.2: a kept page shown again is rebuilt ~80 ms later — a person never types that fast)
     page.fill("[data-testid=home-ask]", text); page.click("[data-testid=home-send]"); page.wait_for_timeout(350)
 
 with sync_playwright() as p:
@@ -26,7 +27,7 @@ with sync_playwright() as p:
     page.fill("[data-testid=home-ask]", "/mon"); page.wait_for_timeout(200)
     check(page.locator("[data-testid='slash-open:money']").count() == 1, "typing /mon lists the Money app under Open")
     page.click("[data-testid='slash-open:money']"); page.wait_for_timeout(500)
-    check(page.locator("[data-testid=phone-home]").count() == 0, "tapping it opens Money")
+    check(page.locator("[data-testid=phone-home] >> visible=true").count() == 0, "tapping it opens Money")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     # v6.50 option C: Home is calm; "See all" → My report (the numbers, what needs you, the whole day); "my report" from the box too
     check(page.locator("[data-testid=home-numbers]").count() == 0 and page.locator("[data-testid=home-see-report]").count() == 1, "Home is calm: no number tiles, a See all · My report button")
@@ -37,7 +38,7 @@ with sync_playwright() as p:
     check(True, "“my report” in the box opens it")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=home-box]", timeout=3000)
     page.fill("[data-testid=home-ask]", "open money"); page.click("[data-testid=home-send]"); page.wait_for_timeout(500)   # v9.1: Fit is archived
-    check(page.locator("[data-testid=phone-home]").count() == 0, "“open money” opens Money")
+    check(page.locator("[data-testid=phone-home] >> visible=true").count() == 0, "“open money” opens Money")
     page.evaluate("window.__attuneBack()"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     # the / list
     page.fill("[data-testid=home-ask]", "/tr"); page.wait_for_timeout(200)
@@ -106,7 +107,7 @@ with sync_playwright() as p:
     # Web from the box (v6.50: "/web …" — no Web chip)
     box(page, "/web price of gold today in Egypt")
     page.wait_for_timeout(500)
-    check(page.locator("[data-testid=phone-home]").count() == 0, "Web on → the question goes to Chat with the web search")
+    check(page.locator("[data-testid=phone-home] >> visible=true").count() == 0, "Web on → the question goes to Chat with the web search")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
     # /travel pinned
     box(page, "/travel Turkey"); page.wait_for_timeout(500)
