@@ -87,7 +87,7 @@ function BankWorking({ c }) {
     {c.last ? <p className="m-0 text-[12.5px] c-sub tabular-nums" dir="auto">{tr("The last one: {x}", { x: [c.last.note, Math.round(c.last.amount).toLocaleString("en-US"), c.last.date].filter(Boolean).join(" · ") })}</p> : null}
     <div className="flex flex-wrap gap-2 pt-0.5">
       <button onClick={() => setMsg(bankAct(c.asleep ? "fix" : c.smsoff ? "smson" : "check"))} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="bank-working-check">{tr(c.asleep ? "Fix it now" : c.smsoff ? "Turn SMS on" : "Check now")}</button>
-      <button onClick={() => bankAct("review")} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]" data-testid="bank-working-money">{tr("Review in Money")}</button></div>
+      <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-readlog")); } catch (e) {} }} className="h-9 px-3 rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)]" data-testid="bank-working-read">{tr("See what was read")}</button></div>
     {msg ? <p className="m-0 text-[12px] font-bold text-[var(--c-acc)]" dir="auto">{msg}</p> : null}
   </div>;
 }

@@ -869,6 +869,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun smsNotifs(): Boolean = try { Prefs.smsNotifs(ctx) } catch (e: Exception) { false }
     @JavascriptInterface
     fun setSmsNotifs(on: Boolean) { try { Prefs.setSmsNotifs(ctx, on) } catch (e: Exception) {} }
+    /** v10.9.3 BK3: the words of the "stopped reading" notification (in the person's language) + the hourly check on (ReadWatch.kt). */
+    @JavascriptInterface
+    fun readWatchSet(words: String) { try { ReadWatch.setup(ctx, words) } catch (e: Throwable) {} }
 
     /** v8.7 the old bank SMS (full APK only, SmsInbox.kt): {declared, granted}; ask once (event 'attune-sms-perm'); the money SMS. */
     @JavascriptInterface

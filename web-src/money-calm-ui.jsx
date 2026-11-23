@@ -10,6 +10,7 @@ import { tr, getLang, dateLocale } from "./i18n.js";
 import { fmt } from "./money-calm.js";
 import { donutArcs, shiftMonth } from "./money-report.js";
 import { SafeSpend } from "./safespend-ui.jsx";
+import { MoneyLiveLine } from "./readlog-ui.jsx";   // v10.9.3 BK2
 import * as U from "./ui-kit.jsx";
 
 // numbers inside a translated sentence are isolated left-to-right, so «صافي ‎+16,455 EGP» and «حوّشت 91.4% منه» read right in Arabic
@@ -136,6 +137,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
     sub={wide ? T("Net saved: {a}", { a: amt(rep.month.net, rep.cur) }) : rep.month.rate != null ? (rep.month.rate >= 0 ? T("{p}% of it kept", { p: rep.month.rate }) : T("Spent {a} more than earned", { a: amt(-rep.month.net, rep.cur) })) : tr("No income logged yet")} testid="money-kpi-in" />;
   if (!wide) return (
     <div className="flex flex-col gap-3" data-testid="money-calm">
+      <MoneyLiveLine />
       {box}
       <BoxResult res={result} clear={clearResult} openLedger={openLedger} />
       <SafeSpend card />
@@ -152,6 +154,7 @@ export function MoneyCalm({ rep, all, account, setAccount, wide, box, result, cl
   return (
     <div className="grid gap-[18px] items-start att-2col" data-testid="money-calm">
       <div className="flex flex-col gap-3.5 min-w-0">
+        <MoneyLiveLine />
         {box}
         <BoxResult res={result} clear={clearResult} openLedger={openLedger} />
         <BalanceHero rep={rep} all={all} account={account} setAccount={setAccount} wide safe={safe} />

@@ -1,5 +1,19 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, night — v10.9.3: OK-BK built; OK-SS next)
+> Ali OK'd **OK-BK** and **OK-SS** ("will be good if done right and accurate, accuracy is everything"); OK-PW not answered yet.
+> **Built (v10.9.3)**: "Read from your messages" (web-src/readlog.js + readlog-ui.jsx): every bank SMS / notification read, the FULL
+> message and where it went (→ Money · category · shop · amount) with Undo / ✎ Change (opens that payment's sheet) / Open; waiting ones
+> Add / Not mine; left-alone ones greyed with WHY (paylog.js readNotification(n, opts, why) now says why). BK2: the line on top of Money
+> (green / amber + Fix it now; on the computer "Read on your phone"). BK3: ReadWatch.kt — hourly WorkManager check, same rule as
+> readlog.js stopAlert (access off / money SMS while the SMS switch is off / 6 h silent while the screen is on; ≤1 a day, never 23–08),
+> Fix it now → reconnect + read the shade + "reading again ✓" (tap opens the list). Set up's bank row: "See what was read".
+> Tests: tests/readlog/gen.mjs 10,000 HARD composed (100 %, 73 % shapes; held-out SEED_SHIFT=1 100 %), tests/unit/v1093readlog.test.mjs,
+> tests/e2e_v1093readlog.py (390 + 1366). Honest note: after "Fix it now" the notification says "reading again — tap to see"; the
+> payments it then adds are saved by the page when Attune opens (not named in the notification itself as the mock-up showed).
+> **Next: OK-SS** (SS1 📎 Scan, SS2 new screenshots, SS3 Share → Attune; SS4 order: subscriptions + passports (mrz.js exists) + bank
+> cards first; 10,000 hard cases per reader; accuracy first).
+
 > ## START HERE (23 Nov 2026, evening — Ali's picks on quick input)
 > Picks: PW1 PW2 · SS1 SS2 SS3 SS4 ("do as you wish") · BK1 + note ("see the message saved and saved to what") BK2 BK3; PW3 not
 > understood (explained), PW4 not now. Combined page (OK-PW, OK-SS, OK-BK): https://claude.ai/artifact/FBuHWjYDtYYC2uoaoPPsK7

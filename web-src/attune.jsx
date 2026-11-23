@@ -9,6 +9,7 @@ import { usesFleet } from "./industry.js";
 import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
+import { ReadLogHost } from "./readlog-ui.jsx";
 import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost, TipBulb } from "./setup-ui.jsx";
 import { BrainPage, brainKnown } from "./brain-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
@@ -6582,6 +6583,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
 <h3>${esc(tr("Entries"))}</h3><table><tr><th>${esc(tr("Date"))}</th><th>${esc(tr("Description"))}</th><th>${esc(tr("Category"))}</th><th>${esc(tr("Account"))}</th><th>${esc(tr("Amount"))}</th></tr>${repR.rows.map((t) => `<tr><td>${t.date}</td><td>${esc(t.note || t.catName)}</td><td>${esc(t.catName)}</td><td>${esc(t.account)}</td><td class="n">${t.type === "expense" ? "−" : "+"}${f(t.amount)} ${t.currency}</td></tr>`).join("")}</table></body></html>`;
     sharePdf({ html, name: "attune-money-" + repR.month.from.slice(0, 7), text: tr("Money Report"), flash });
   };
+  // v10.9.3: "✎ Change" on Read from your messages opens that payment's sheet here
+  const openLedgerRef = React.useRef(null);
+  React.useEffect(() => { const go = (id) => { if (id && openLedgerRef.current) { window.__attuneMoneyTx = null; openLedgerRef.current("tx:" + id); } };
+    go(window.__attuneMoneyTx); const on = (e) => go(e && e.detail && e.detail.id); window.addEventListener("attune-money-tx", on); return () => window.removeEventListener("attune-money-tx", on); }, []);
   const openLedger = (sc) => {
     setMoreOpen(false); setAddOpen(false); const s = String(sc || "home");
     if (s.startsWith("tx:")) return setMsheet({ k: "tx", id: s.slice(3) });
@@ -6598,6 +6603,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
     if (MONEY_PANES.some((x) => x[0] === s && s !== "home")) return setPane(s);
     setListAcc(null); setView("list");
   };
+  openLedgerRef.current = openLedger;
   // v9.9.23 N1: a person's page opened one of their payments → its sheet opens on it
   React.useEffect(() => { try { const v = localStorage.getItem("attune:money:open"); if (v) { localStorage.removeItem("attune:money:open"); openLedger(v); } } catch (e) {} }, []);
   const saveText = async (name, text, mime) => {
@@ -7886,7 +7892,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8987,6 +8993,7 @@ export default function App() {
       if (d.kind === "privacy") { navTo("privacy"); return; }
       if (d.kind === "artifact" && d.id) { const a = loadArtifacts().find((x) => x.id === d.id); if (a) setArtifact(a); else flash(tr("That page was deleted")); return; }   // v6.40 a page pinned to the home screen
       if (d.kind === "wake") { setQuietWake(true); return; }   // voice option C: «يا أتيون» heard with Attune on screen → the quiet orb
+      if (d.kind === "open" && d.mode === "readlog") { window.dispatchEvent(new CustomEvent("attune-readlog")); return; }   // v10.9.3 BK3: the "stopped / reading again" notification
       if (d.kind === "open" && d.mode === "voice" && d.text) { setVoiceText(String(d.text)); setVoiceOpen(true); return; }   // the quiet orb heard words
       if (d.kind === "open" && d.mode === "agents" && d.check) { try { localStorage.setItem("attune:agents:openchat", String(d.check)); localStorage.setItem("attune:agents:checknow", String(d.check)); } catch (e) {} navTo("agents"); return; }   // v9.9.13 AC3 "tap and I'll check"
       if (d.kind === "open" && d.mode) { navTo(String(d.mode)); return; }   // v6.37 the Instant quick-settings tile   // v6.29 Health Connect: "why this app reads your data"
@@ -9119,7 +9126,7 @@ export default function App() {
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
   // v6.27 Job ready: a missing skill starts a Learn daily course on it
   // v6.28: a card in Chat ("Open Money", "Open Family health" — Ask your life) opens that tool
-  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; const tx = e.detail && typeof e.detail.text === "string" ? e.detail.text.trim().slice(0, 4000) : ""; if (m === "chat" && tx) setChatSeed("\u0002" + tx); if (m === "settings") { setMoreOpen(true); return; } if (m && /^(panel:)?[a-z]+$/.test(m)) { if (m !== "voice") setVoiceOpen(false); navTo(m); } }; window.addEventListener("attune-open", on);   /* v9.9.38 (the 1M test): a screen opened from a notification / widget is not left under the voice call screen */ return () => window.removeEventListener("attune-open", on); }, []);   // v9.3: + text → a new chat that asks it (the Ramadan box)
+  useEffect(() => { const on = (e) => { const m = e.detail && e.detail.mode; const tx = e.detail && typeof e.detail.text === "string" ? e.detail.text.trim().slice(0, 4000) : ""; if (m === "chat" && tx) setChatSeed("\u0002" + tx); if (m === "settings") { setMoreOpen(true); return; } if (m === "readlog") { window.dispatchEvent(new CustomEvent("attune-readlog")); return; } if (m && /^(panel:)?[a-z]+$/.test(m)) { if (m !== "voice") setVoiceOpen(false); navTo(m); } }; window.addEventListener("attune-open", on);   /* v9.9.38 (the 1M test): a screen opened from a notification / widget is not left under the voice call screen */ return () => window.removeEventListener("attune-open", on); }, []);   // v9.3: + text → a new chat that asks it (the Ramadan box)
   useEffect(() => { const on = (e) => { const m = e.detail; if (typeof m === "string" && m) flash(m.slice(0, 300)); }; window.addEventListener("attune-flash", on); return () => window.removeEventListener("attune-flash", on); }, []);   // v9.3: a page with no flash of its own (Home's Your day) says things through this
   // v8.6: a save that didn't fit is never silent — the person is told once a minute at most, and where to make room
   useEffect(() => { let last = 0; const on = () => { if (Date.now() - last < 60000) return; last = Date.now(); flash(tr("Your phone's space for Attune is full — the last change may not be saved. Settings → Backup, then delete old photos or chats.")); };
@@ -11925,6 +11932,7 @@ export default function App() {
       <div className="calm" style={{ display: "contents" }}>
       <Guard name="focus"><FocusHost /></Guard>
       <Guard name="weekplan"><WeekPlanHost flash={flash} /></Guard>
+      <Guard name="readlog"><ReadLogHost /></Guard>   {/* v10.9.3 Read from your messages */}
       <Guard name="setup"><SetupDriver trial={{ left: trialLeft, bought: isPro(tier), first: (() => { try { return +localStorage.getItem(FIRST_RUN_KEY) || 0; } catch (e) { return 0; } })() }} /></Guard>   {/* v9.9.35 the "Set up your life" interview */}
       {wide ? <Guard name="coach"><CoachHost mode={mode} hold={showOnboard || showUpgrade} /></Guard> : null}   {/* v9.9.35 GD-5 one-time tips */}
       <Guard name="braindump"><BrainDumpHost flash={flash} /></Guard>

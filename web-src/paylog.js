@@ -52,21 +52,28 @@ export const fromChats = (ledger, kept = []) => (((ledger && ledger.txns) || [])
   && (CHAT_APP.test(String((t.evidence && t.evidence.app) || "")) || / · (whatsapp|telegram|messenger|signal|viber|instagram)$/i.test(String(t.note || "")))));
 
 /** One stored notification {id, pkg, app, title, text, ts} → an entry, or null when it isn't a payment. */
-export function readNotification(n, opts) {
-  n = cleanNote(n); if (!n) return null;   // v10.2: spaces, direction marks, Arabic-Indic digits — cleaned once
+/* v10.9.3 (Ali's note on BK1: "make me able to see the message or the notifications that were saved, and saved to what"): `why`, when
+   given, is filled with the reason a message was left alone — the "Read from your messages" page (readlog.js) shows it, greyed. */
+export function readNotification(n, opts, why) {
+  const no = (r) => { if (why) why.r = r; return null; };
+  n = cleanNote(n); if (!n) return no("empty");   // v10.2: spaces, direction marks, Arabic-Indic digits — cleaned once
   // v9.9.11 what the person taught about this source: "work talk" / "not money" / "ads" / "ignore" → never money; "my money" /
   // "my bank" → it counts as a money source (a chat too — the person said so)
   let lab = null; try { lab = labelOf(n, opts && opts.teach !== undefined ? opts.teach : loadTeach()); } catch (e) {}
-  if (lab && notMoney(lab)) return null;
-  if (isChatApp(n) && !countsAsMoney(lab)) return null;
+  if (lab && notMoney(lab)) return no("taught");
+  if (isChatApp(n) && !countsAsMoney(lab)) return no("chat");
   // v10.9 (real SMS from a bank's short code — "19623", "16999" — read 19623 as the amount): a sender that is only a number is not part
   // of the message
   const text = [/^\s*\+?[\d\s-]{3,16}\s*$/.test(String(n.title || "")) ? "" : n.title, n.text].filter(Boolean).join(" — ").trim();
-  if (!text || OTP.test(text) || BALANCE_ONLY.test(text) || FUTURE.test(text) || (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text))) return null;
+  if (!text) return no("empty");
+  if (OTP.test(text)) return no("code");
+  if (BALANCE_ONLY.test(text)) return no("balance");
+  if (FUTURE.test(text)) return no("notyet");
+  if (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text)) return no("offer");
   // v9.9.17 (the 10,000-notification run): a code that names its purchase, a declined / failed payment, a bill that is only due, a
   // fine, "you will be billed", an offer, a price moving, a prize text, an SMS from a person's number — none of them is money that
   // moved (what the person taught as "my bank / my money" is still read); a video's title or an advert is never a payment
-  if (!countsAsMoney(lab)) { if (notAPayment(text, n)) return null; let m = null; try { m = readMeaning(n); } catch (e) {} if (m && m.sure && (m.meaning === "ads" || m.meaning === "notmoney")) return null; }
+  if (!countsAsMoney(lab)) { const np = notAPayment(text, n); if (np) return no(np); let m = null; try { m = readMeaning(n); } catch (e) {} if (m && m.sure && (m.meaning === "ads" || m.meaning === "notmoney")) return no(m.meaning === "ads" ? "offer" : "notmoney"); }
   // v9.9.16: the person's own currency decides what "$", "Rs", «دينار», «ريال» mean (a Canadian's $ is CAD, a Jordanian's دينار JOD)
   let home = {}; try { home = payOpts() || {}; } catch (e) {}
   const p = parsePayment(text, { ...home, ...(opts || {}), now: n.ts || undefined });
@@ -77,7 +84,7 @@ export function readNotification(n, opts) {
   const known = MONEY_SRC.test(String(n.app || "") + " " + String(n.title || ""));
   // v9.9.17 (the held-out check): a bank app's short notice "💸 £8.50 at Pret A Manger" has no verb — from a money source, an amount "at" a shop was spent
   if (p && p.amount > 0 && !p.direction && known && /^[^\p{L}\d]*[$€£]?\s?[\d.,]+\s*(?:[A-Z]{3}\s+)?(?:at|@)\s+\S/iu.test(String(n.text || ""))) { p.direction = "out"; p.ok = true; if (p.confidence === "low") p.confidence = "medium"; }
-  if (!p || !p.ok || !(p.amount > 0) || !p.direction || (p.confidence === "low" && !(known && !p.currency && home.home))) return null;
+  if (!p || !p.ok || !(p.amount > 0) || !p.direction || (p.confidence === "low" && !(known && !p.currency && home.home))) return no("unsure");
   if (!p.currency && home.home) p.currency = home.home;
   // v9.9.17: a shop's own "Payment received: EGP 1,879 for your stay" / "We've received your payment" is money the person PAID
   if (p.direction === "in" && !known && /payment (?:was |has been )?received|received your payment|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|تم استلام (?:دفعتك|مدفوعاتك)/i.test(text)) p.direction = "out";
