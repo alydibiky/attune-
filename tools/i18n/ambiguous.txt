@@ -538,6 +538,7 @@ yourday-ui.jsx: <T2 icon="💰" label={tr("Money")} onClick={() => navTo("money"
 attune.jsx: {tr("Read it")}
 care-ui.jsx: {typing === "rx" ? <div className={cardPad + " space-y-2"}><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="au
 care-ui.jsx: {typing === "lab" ? <div className={cardPad + " space-y-2"}><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="a
+pw-ui.jsx: <button onClick={readPaste} disabled={!text.trim()} className={BP} style={{ background: "var(--c-acc)" }} data-testid="pw-paste-read">{tr("R
 
 ## Reading…
 attune.jsx: {reading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} {reading ? tr("Reading…") : tr("From a photo")}
@@ -629,7 +630,7 @@ attune.jsx: <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_O
 chatxray-ui.jsx: <button onClick={() => { setSaved([]); saveSaved([]); }} aria-label={tr("Clear")} className="w-11 h-11 grid place-items-center rounded-[12px
 pdfchat-ui.jsx: {find ? <button onClick={() => setFind("")} className="absolute top-2 end-2 text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={14} /></b
 pdfedit-ui.jsx: <button onClick={() => { const c = cv.current; c.getContext("2d").clearRect(0, 0, c.width, c.height); setAny(false); }} className="min-h-[44
-shelf-ui.jsx: <button onClick={() => { const c = ref.current, x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); setUse
+pw-ui.jsx: {q ? <button onClick={() => setQ("")} aria-label={tr("Clear")} className="c-sub"><X size={15} /></button> : null}</label> : null}
 
 ## Imported notes
 attune.jsx: if (!bk) { const r = SH.addBook(sh, tr("Imported notes"), "ocean"); bk = { ...r.book, imported: true }; sh = { ...r.shelf, books: r.shelf.bo
@@ -1469,6 +1470,10 @@ money-sheets-ui.jsx: {!a ? <Field label={tr("Kind")}><Pills value={kind} onChang
 ## Other
 money-report.js: list = [...top, { id: "_rest", name: ar ? "أخرى" : tr("Other"), amount: r2(list.filter((c) => !top.includes(c)).reduce((a, c) => a + c.amoun
 planner-ui.jsx: {sel.items.length ? sel.items.map((x, i) => <div key={i} className="flex justify-between gap-2 text-[13.5px] font-semibold"><span dir="auto"
+
+## New account
+money-sheets-ui.jsx: return <Sheet title={a ? tr("Edit account") : tr("New account")} onClose={() => onClose()} testid="money-account-sheet"
+pw-ui.jsx: const addOne = () => { const r = S.addAccounts(S.loadPw(), [{ title: tr("New account"), lines: [{ name: "Password", value: "", secret: true 
 
 ## Every month
 money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange={setFreq} items={[["daily", tr("Every day")], ["weekly", tr("Every week")], ["mo
