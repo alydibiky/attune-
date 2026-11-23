@@ -209,7 +209,7 @@ export function SetupPage({ back }) {
             : <span className="text-[12.5px] font-extrabold text-[var(--c-acc)] shrink-0 px-1" data-testid="setup-open">{tr(s.id === "bank" ? "Check" : "Open")} <span className="inline-block rtl:-scale-x-100">›</span></span>)
           : bankOn ? <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)] shrink-0" data-testid="setup-bank-check">{bankOpen ? tr("Hide") : tr("Check")}</span>
           : s.locked ? <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold border border-[var(--c-acc)] text-[var(--c-acc)] shrink-0">{tr("See Pro")}</span>
-          : <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold shrink-0" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr(s.id === "backup" ? "Turn on backup" : "Do it")}</span>}
+          : <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold shrink-0" style={{ background: "var(--c-acc)", color: "var(--c-on-acc, #fff)" }} data-testid="setup-do">{tr("Do it")}</span>}
       </div>{(bankOn || (s.id === "bank" && s.done)) && bankOpen ? (s.done && !lost ? <BankWorking c={bc} /> : <BankCheckBox bump={() => bump((x) => x + 1)} />) : null}</React.Fragment>; })}
     </div>
     {pro ? <div className="c-card space-y-1.5" data-testid="setup-checkup"><b className="block text-[14px]">{tr("This month's check-up")}</b>

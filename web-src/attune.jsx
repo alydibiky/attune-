@@ -7886,9 +7886,27 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.1";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.2";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
+
+/** v10.9.2: the page, kept exactly as it was while something over it (the phone's side menu) opens or closes — same page (k), frozen → no re-draw. */
+const KEEPABLE = new Set(["home", "money", "timeline", "shelf", "agents", "lists", "care", "travel", "tools", "memory", "life", "reminders", "radar", "people", "planner", "guardian", "booklib", "projects"]);
+const PREWARM = ["lists", "timeline", "agents", "shelf", "care", "travel", "tools", "home", "money"];   // Money (its ledger frame) is the heaviest: last
+const KEEP_MAX = 12, KEEP_ON = { display: "contents" }, KEEP_OFF = { display: "none" };
+/* A kept page must never show old data: every save to the phone's storage (except what moving around writes — recent tools, tips)
+   bumps DATA_VER; a kept page shown again after something was saved is shown at once and then BUILT AGAIN fresh, right after the frame
+   (as every visit was before). Money's own frame writes from its window — the ledger's length is checked too. */
+let DATA_VER = 0;
+const NOT_DATA = /^attune:(?:tools:recent|guide:tried|fu:things|coach:|tip|start$|box:mode|seen|scroll|hist|test:|widget)/;   // (the home-screen widget's copies are made FROM the data)
+try { const S = Storage.prototype, s0 = S.setItem, r0 = S.removeItem;
+  const note = (k) => { DATA_VER++; try { const l = (window.__attuneDataKeys = window.__attuneDataKeys || []); l.push(String(k)); if (l.length > 30) l.shift(); } catch (e) {} };   // (the last 30, for a problem report)
+  S.setItem = function (k, v) { try { if (this === window.localStorage && !NOT_DATA.test(String(k)) && this.getItem(k) !== String(v)) note(k); } catch (e) {} return s0.apply(this, arguments); };
+  S.removeItem = function (k) { try { if (this === window.localStorage && !NOT_DATA.test(String(k)) && this.getItem(k) != null) note(k); } catch (e) {} return r0.apply(this, arguments); };
+  window.addEventListener("storage", (e) => { if (!e || !e.key || !NOT_DATA.test(e.key)) note("(other window) " + ((e && e.key) || "")); });
+} catch (e) {}
+const dataStamp = () => { let n = 0; try { n = (localStorage.getItem("ledger.v3") || "").length; } catch (e) {} return DATA_VER + ":" + n; };
+const FrozenPage = React.memo(function FrozenPage({ children }) { return children; }, (a, b) => b.freeze && a.k === b.k);
 
 /** v10.2: "· 66 s" while a model loads — ticks by itself, so the rest of the app is not re-drawn every second. */
 function LoadSecs({ e }) {
@@ -8120,6 +8138,48 @@ export default function App() {
   }, [mode]);
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
   const [phoneSide, setPhoneSide] = useState(false);     // v6.29: the sidebar on a phone (chats, search, places), from Home's ☰
+  /* v10.9.2 (Ali, 23 Nov: "I want to reach 50 ms minimum"): opening the phone's side menu re-drew the WHOLE app — the page under it too —
+     so the menu took ~125 ms to appear. While the menu is open (and for one moment after it closes without going anywhere) the page is
+     frozen: React keeps the page as it was and draws only the menu; the page catches up right after. */
+  const sideWas = useRef(false), sideJustClosed = sideWas.current && !phoneSide; sideWas.current = phoneSide;
+  const [, thawPage] = useState(0);
+  useEffect(() => { if (!sideJustClosed) return undefined; const t = setTimeout(() => thawPage((x) => x + 1), 60); return () => clearTimeout(t); }, [sideJustClosed]);
+  const pageFrozen = phoneSide || sideJustClosed;
+  /* v10.9.2 (Ali: "50 ms"): the main pages are KEPT once built — hidden and frozen when you leave them, shown at once when you come back
+     (only a show / hide), then brought up to date a moment after (pageThaw). The side menu's pages are built quietly in the background
+     after Attune opens (one at a time, while nothing else runs), so even the first tap on them is a show / hide. Pages with a camera,
+     a map, a call or a long answer are never kept. */
+  const keptMounted = useRef(new Set()), [keptList, setKeptList] = useState([]);
+  const modeWas = useRef(mode), justShown = modeWas.current !== mode && keptMounted.current.has(mode) ? mode : null; modeWas.current = mode;
+  const [pageThaw, setPageThaw] = useState(null);
+  const keptStamp = useRef({}), lastMode = useRef(mode), [pageGen, setPageGen] = useState({});
+  useEffect(() => {
+    const left = lastMode.current; lastMode.current = mode;
+    if (left && left !== mode) keptStamp.current[left] = dataStamp();   // what the page you left had seen
+    if (!justShown) return undefined;
+    const stale = keptStamp.current[justShown] !== dataStamp();
+    setPageThaw(justShown);
+    // shown at once as it was; then brought up to date (re-drawn), or built again if something was saved meanwhile
+    const t = setTimeout(() => { if (stale) setPageGen((g) => ({ ...g, [justShown]: (g[justShown] || 0) + 1 })); setPageThaw(null); }, 80);
+    return () => clearTimeout(t);
+  }, [mode]);   // eslint-disable-line
+  useEffect(() => { if (KEEPABLE.has(mode) && !keptList.includes(mode)) setKeptList((l) => [...l.filter((x) => x !== mode), mode].slice(-KEEP_MAX)); }, [mode]);   // eslint-disable-line
+  // (a FIXED order: moving a page in the document reloads anything framed inside it — Money's ledger frame reloaded on every tap)
+  const keptOrder = (m) => { const l = keptList.filter((x) => KEEPABLE.has(x)); return l.includes(m) ? l : [...l, m]; };
+  useEffect(() => {   // build the side menu's pages quietly, one at a time, after the first screen
+    let stop = false, t = 0;
+    const quiet = () => { try { return navigator.webdriver && localStorage.getItem("attune:test:prewarm") !== "1"; } catch (e) { return true; } };
+    const next = () => { if (stop) return; const todo = PREWARM.filter((m) => !keptMounted.current.has(m) && KEEPABLE.has(m) && m !== modeRef.current);
+      if (!todo.length || quiet()) return;
+      if (Date.now() - lastTouch < 2500) { t = setTimeout(next, 1500); return; }   // never while a finger is on the screen
+      if (document.hidden || (LocalEngine && (LocalEngine._nativeId || (LocalEngine._bg && LocalEngine._bg.size)))) { t = setTimeout(next, 3000); return; }
+      setKeptList((l) => (l.includes(todo[0]) ? l : [...l, todo[0]].slice(-KEEP_MAX)));
+      t = setTimeout(() => (window.requestIdleCallback ? window.requestIdleCallback(next, { timeout: 2000 }) : next()), 400); };
+    let lastTouch = 0; const touch = () => { lastTouch = Date.now(); };
+    window.addEventListener("pointerdown", touch, true); window.addEventListener("keydown", touch, true); window.addEventListener("scroll", touch, true);
+    t = setTimeout(next, 3500);
+    return () => { stop = true; clearTimeout(t); window.removeEventListener("pointerdown", touch, true); window.removeEventListener("keydown", touch, true); window.removeEventListener("scroll", touch, true); };
+  }, []);
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
   // v6.24: a computer-sized screen gets a sidebar like Claude / ChatGPT instead of the bottom bar
   const wide = useDesktopWide();
@@ -10154,7 +10214,9 @@ export default function App() {
   // whole app". Code reads it; each action writes into its tool's own store (the old values kept for Undo); a question about your
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   // v8.7 (P5-C): every page's box reaches Home's reader for what isn't its own (Money's box: "remind me tomorrow at 9")
-  useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHome(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; });
+  // (v10.9.2 speed: set once — it was deleted and set again after EVERY render of the app; the latest doFromHome is read through a ref)
+  const doFromHomeRef = useRef(null);   // (set to the latest doFromHome just before the app is drawn)
+  useEffect(() => { window.__attuneDo = (t0) => { const t = UND.looksFranco(t0) ? UND.francoToArabic(t0) : t0; const u = doUnderstand(t, { now: Date.now(), stores: loadLifeStores() }); return u.ask || u.actions.some((a) => a.kind !== "note") ? doFromHomeRef.current(t) : null; }; return () => { try { delete window.__attuneDo; } catch (e) {} }; }, []);
   const doRef = useRef(null);
   // v9.8 (Ali, 8 Nov: "I made an agent to research a car — it went to Chat, so I have to keep the app open"): an agent's research runs
   // by itself — searched on the web, the pages read, the report written by the phone's model — and is kept ON the agent; a
@@ -10672,6 +10734,7 @@ export default function App() {
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mouseup", onMouse); window.removeEventListener("attune-back", back); };
   }, []);
 
+  doFromHomeRef.current = doFromHome;
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown && side.rail ? <Guard name="rail"><SideRail mode={mode} places={LEGACY_NAV ? [] : SIDE_PLACES} activePlace={LEGACY_NAV ? null : mode === "chat" ? "home" : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} navTo={(m) => { setMoreOpen(false); navTo(m); }}
@@ -10753,7 +10816,7 @@ export default function App() {
         {/* v6.43: Business as its own app — its own icon on the home screen */}
         {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => { const ok = NATIVE.pinTool("business", tr("Business")); flash(ok ? tr("Android asks you to add it — then Business has its own icon") : tr("This phone's home screen can't add icons")); }}
           className="min-h-[40px] text-[12.5px] font-extrabold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
-        <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
+        {(() => { const pageFor = (mode) => (<Guard key={"g-" + mode + (pageGen[mode] ? "-" + pageGen[mode] : "")} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide && dayset.simple ? (
           <SimpleHome navTo={navTo} openMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} />
@@ -11813,7 +11876,12 @@ export default function App() {
               </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">{tr("Paste a wordy prompt and hit")} <span className="text-teal-400 mx-1">{tr("AI Compress")}</span> {tr("— it thinks about meaning, not just filler words.")}</div>)}
             </section>
           </div>
-        )}</Guard>
+        )}</Guard>);
+          // v10.9.2: the kept pages, hidden and frozen, and the one on the screen
+          return keptOrder(mode).map((m) => { const on = m === mode, frozen = !on || pageFrozen || pageThaw === m || justShown === m, mounted = keptMounted.current.has(m);
+            if (!frozen || !mounted) keptMounted.current.add(m);
+            return <div key={m} style={on ? KEEP_ON : KEEP_OFF} data-kept={on ? undefined : m} aria-hidden={on ? undefined : "true"} inert={on ? undefined : ""}>
+              <FrozenPage freeze={frozen && mounted} k={m + "|" + (wide ? 1 : 0)}>{frozen && mounted ? null : pageFor(m)}</FrozenPage></div>; }); })()}
 
         {history.length > 0 && mode === "improve" && !writeRep && (
           <div className="mt-5 bg-slate-900 rounded-[20px] border border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] p-5">

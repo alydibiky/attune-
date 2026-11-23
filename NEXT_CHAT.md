@@ -1,5 +1,19 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, later — v10.9.2: Ali: "I want to reach 50 ms minimum")
+> Tap → next drawn frame, 8,000 payments, CPU slowed 4× (tests/e2e_v1091speed.py, phone 390 + computer 1366):
+> - **The side menu opens in ~25 ms** (was ~125): while it opens / closes the page under it is FROZEN (FrozenPage, React.memo that skips
+>   while `freeze`) — before, opening the menu re-drew the whole app.
+> - **Every side-menu page shows in ~20–40 ms** (Money was 322, Home 437): the main pages are KEPT built (attune.jsx KEEPABLE / keptList):
+>   hidden (display:none, aria-hidden, inert) and frozen when you leave; shown at once when you come back, brought up to date 80 ms later;
+>   built AGAIN fresh if anything was saved meanwhile (DATA_VER = every localStorage write except moving-around keys, + the ledger's
+>   length for Money's own frame) — so a kept page never shows old data (tests/e2e_v1092keep.py). FIXED order in the document (moving a
+>   page reloads Money's frame). Pages with a camera / map / call are never kept.
+> - **The first tap too**: after Attune opens, the side menu's pages are built quietly one at a time (PREWARM, Money last), pausing 2.5 s
+>   after any touch / key / scroll, never while the model answers. Browser tests skip it (navigator.webdriver) unless
+>   `attune:test:prewarm` = 1.
+> - Also: `window.__attuneDo` was deleted and set again after every render (an effect without deps) → once.
+>
 > ## START HERE (23 Nov 2026 — v10.9.1: Ali's 10-point list with 7 screenshots — "I am extremely tired")
 > **Fixed by code, each with a test (tests/unit/v1091fixes.test.mjs, tests/e2e_v1091themes.py, tests/e2e_v1091speed.py):**
 > 1 Free/Pro option A (Ali agreed): bank / wallet messages go to Money by themselves in FREE (plan.js: autoMoney no longer Pro); Pro =
