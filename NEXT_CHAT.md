@@ -1,5 +1,17 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, night, latest — OK-PW with notes)
+> Ali: "OK-PW — it doesn't have to have a username, I just want it as it is, with the option to add screenshots also, and if I ask Home chat
+> for it it should recall anything; passwords should have a dedicated place, view all together but also toggles like Notion" (+ OK-SS, OK-BK
+> again). New screen → mock-up OK-PW2: https://claude.ai/artifact/Qt98jErEkWSfYFiiof6H3t (docs/mockups/passwords.html) — **waiting for his OK**.
+> Built meanwhile (invisible): web-src/pwpaste.js — readPastedPage (Notion toggles / Markdown export / headings / numbered / plain blocks,
+> every line kept as written, passwords locked) + readPasswordFile (.csv of Google / Chrome / Firefox / Bitwarden / 1Password / Apple /
+> LastPass / Dashlane). tests/pw/gen.mjs 10,000 composed (paste-real hardening — harden() changes case, a pasted password never does):
+> first run 69.2 % (the test called a security question's answer "not secret" — wrong, fixed in the test) → 97.6 % (REAL bug: a password with
+> @ and . looked like an e-mail and stayed open — fixed: an e-mail needs a real domain ending) → 100 %; held-out seed 2 100 %.
+> After his OK: the Passwords page (Toggles / All together, search), add screenshots per account (phone only), Home chat recall with the
+> fingerprint, 20 languages, phone + computer, e2e test. Accounts are radar items doc "account" (docfields.js keeps secrets apart).
+
 > ## START HERE (23 Nov 2026, night, later — OK-SS in progress)
 > Ali re-sent "OK-SS (accuracy is everything) · OK-BK" and asked: **"Add a specific model for each thing and make them work together"** →
 > SCAN_PLAN.md (one model per job + code judges every number). Done: web-src/subread.js (subscriptions; tests/scan/gen.mjs 10,000 HARD 100 %,
