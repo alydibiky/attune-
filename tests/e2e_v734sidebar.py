@@ -23,7 +23,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=phone-side] [data-testid=side-pins] button").count() == 0, "…and no extra pinned list")
     shot(page, "side-phone")
     page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
-    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
+    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].filter(b => !b.closest('[data-kept]')).map(b => b.dataset.testid.slice(8))")
     check(tabs == ["money", "planner"], "Money: Money · Month plan (v9.1: Deal Check archived): %s" % tabs)
     page.click("[data-testid=hub-tab-planner]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-planner][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
@@ -49,7 +49,7 @@ with sync_playwright() as p:
     # (v9.1: the Work → Business tabs check is archived with Business)
     # Create: Assistants · Skills · Artifacts · Studio · Code
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'assistants'}}))"); page.wait_for_timeout(600)   # v6.50: from the box, not the sidebar
-    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
+    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].filter(b => !b.closest('[data-kept]')).map(b => b.dataset.testid.slice(8))")
     check(tabs == [], "Create has no tabs: %s (v9.1: Studio and Code archived; Assistants, Skills, Artifacts live inside Projects — design D)" % tabs)
     shot(page, "create-tabs")
     # Chat's menu opens the same sidebar (the chat history)

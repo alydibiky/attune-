@@ -49,7 +49,7 @@ with sync_playwright() as p:
     # Scout tab: opening the goal marks its finds seen, so Home stops saying "new"
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000)   # v9.1: from an Agent card; page.wait_for_timeout(300)
     check(json.loads(page.evaluate("localStorage.getItem('attune:scout:v1')"))["goals"][0]["unseen"] == [], "Scout opened → its new finds are seen")
-    page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+    page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000); page.wait_for_timeout(400)   # (v10.9.2: a kept Home shows at once, then is brought up to date)
     check("new finds" not in page.locator("[data-testid=phone-home]").inner_text(), "…and Home no longer says new finds")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()

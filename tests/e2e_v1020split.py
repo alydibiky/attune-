@@ -28,7 +28,7 @@ with sync_playwright() as p:
     page.fill("[data-testid=travel-split-find]", "mor"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=travel-split-row]").count() >= 1 and "Morocco" in page.inner_text("[data-testid=travel-split-list]"), "the search finds Morocco")
     # Family health → Medicines
-    go(page, "care"); page.click("[data-testid=care-tab-meds]"); page.wait_for_selector("[data-testid=care-split]", timeout=8000)
+    go(page, "care"); page.click("[data-testid=care-tab-meds]"); page.wait_for_selector("[data-testid=care-split]", timeout=8000); page.wait_for_timeout(400)
     check(page.locator("[data-testid=care-split-row]").count() == 2 and "Concor" in page.inner_text("[data-testid=care-split-pane]"), "Medicines: both on the left, the first (Concor) open on the right")
     page.locator("[data-testid=care-split-row]").first.focus(); page.keyboard.press("ArrowDown"); page.wait_for_timeout(300)
     check("Glucophage" in page.inner_text("[data-testid=care-split-pane]"), "↓ opens the next medicine")

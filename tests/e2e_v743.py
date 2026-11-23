@@ -38,7 +38,7 @@ with sync_playwright() as p:
     check("85" in p2.inner_text("[data-testid=home-line-money]") and p2.locator("[data-testid=home-line-fit]").count() == 0, "one sentence: the money on Today's line, no food diary (v9.1: Fit archived)") or None  # was: "one sentence: logged in Food and in Money, both on Today's line")
     p2.reload(); p2.wait_for_selector("[data-testid=home-ask]", timeout=15000)
     p2.fill("[data-testid=home-ask]", "open money"); p2.click("[data-testid=home-send]"); p2.wait_for_timeout(600)
-    check(p2.locator("[data-testid=phone-home]").count() == 0, "“open money” in the box opens Money (v9.1: Business archived)")
+    check(p2.locator("[data-testid=phone-home] >> visible=true").count() == 0, "“open money” in the box opens Money (v9.1: Business archived)")
     ctx2.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()

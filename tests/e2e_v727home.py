@@ -45,7 +45,7 @@ with sync_playwright() as p:
             page.keyboard.press("Escape"); page.mouse.click(200, 8); page.wait_for_timeout(200)
             page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
             page.fill("[data-testid=home-ask]", "hello"); page.press("[data-testid=home-ask]", "Enter"); page.wait_for_timeout(500)
-            check(page.locator("[data-testid=phone-home]").count() == 0, "the ask box goes to Chat")
+            check(page.locator("[data-testid=phone-home] >> visible=true").count() == 0, "the ask box goes to Chat")
         ctx.close()
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()

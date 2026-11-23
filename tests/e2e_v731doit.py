@@ -51,7 +51,7 @@ with sync_playwright() as p:
     say(page, "who owes me money?")
     check(page.locator("[data-testid=do-answer]").count() == 1 and "9,000" in page.locator("[data-testid=do-answer]").inner_text(), "a question about my data: answered on Home (9,000 EGP)")
     say(page, "What is the capital of France?")
-    check(page.locator("[data-testid=phone-home]").count() == 0, "a general question goes to Chat, as before")
+    check(page.locator("[data-testid=phone-home] >> visible=true").count() == 0, "a general question goes to Chat, as before")
     ctx.close()
     # computer
     ctx, page = new_page(br, env, errors, extra_init=INIT % ("home", J(FIT), J(LEDGER), J(CARE), J(LIFE)), desktop=(1366, 860))   # v9.8: a real computer (mouse) — Enter sends there
