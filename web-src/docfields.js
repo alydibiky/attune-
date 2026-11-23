@@ -75,8 +75,10 @@ export function mergeFields(old = [], add = []) {
 
 // ---- secrets kept apart: { itemId: { fieldId: value } } -------------------------------------------------------------------------------
 const ls = () => (typeof localStorage !== "undefined" ? localStorage : null);
-export function loadSecrets(st = ls()) { try { return JSON.parse((st && st.getItem(SECRETS_KEY)) || "{}") || {}; } catch (e) { return {}; } }
-export function saveSecrets(s, st = ls()) { try { st && st.setItem(SECRETS_KEY, JSON.stringify(s)); } catch (e) {} return s; }
+// (v10.9.4: `key` — the Passwords page keeps its own secrets apart, never in sync or the backup file: PW_SECRETS_KEY)
+export const PW_SECRETS_KEY = "attune:pw:secret:v1";
+export function loadSecrets(st = ls(), key = SECRETS_KEY) { try { return JSON.parse((st && st.getItem(key)) || "{}") || {}; } catch (e) { return {}; } }
+export function saveSecrets(s, st = ls(), key = SECRETS_KEY) { try { st && st.setItem(key, JSON.stringify(s)); } catch (e) {} return s; }
 /** The item keeps the rows WITHOUT the values of locked ones; the values go to the secrets store. → { fields, secrets } */
 export function split(itemId, fields, secrets = {}) {
   const mine = { ...(secrets[itemId] || {}) }, keep = [];

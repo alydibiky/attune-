@@ -25,6 +25,10 @@ export function readBankCard(text0) {
     if (digits.length < 12 || digits.length > 19) continue;
     if (groups.length < 3 && !(digits.length >= 15 && digits.length <= 16)) continue;
     if (groups.length < 3 && /^(?:2|3)\d{13}$/.test(digits)) continue;   // an Egyptian national ID (14 digits), not a card
+    // v10.9.4 (Ali's Google Play receipt: "Order number: SOP.3339-9808-7181-66103..6" was read as a card): an order / receipt / invoice /
+    // reference number is never a card number
+    if (/(?:order|receipt|invoice|ref(?:erence)?|transaction|booking|tracking|sop)\s*(?:no\.?|number|#|id)?\s*[:#.]?\s*[A-Z]{0,4}\.?\s*$/i.test(text.slice(Math.max(0, m.index - 24), m.index))) continue;
+    if (groups.some((g) => g.length > 4 && groups.length >= 4)) continue;   // card groups are 4 digits (Amex 4-6-5 has 3 groups)
     if (!num || digits.length > num.length) num = digits;
   }
   const net = (NETS.find(([, re]) => re.test(text)) || [""])[0], bank = (BANKS.find(([, re]) => re.test(text)) || [""])[0];

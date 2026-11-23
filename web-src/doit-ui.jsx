@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Check, Undo2, ChevronRight, AlertTriangle, Sparkles } from "lucide-react";
 import { tr } from "./i18n.js";
 import { cardPad, btnP, btnS, muted } from "./ui-kit.jsx";
+import { PwAnswer } from "./pw-ui.jsx";
 
 const TOOL_NAME = { fit: "Fit & Food", money: "Money", care: "Family health", life: "People & plans", radar: "Deadline Radar", reminders: "Reminders", memory: "Mind", cycle: "Cycle", scout: "Scout" };
 /** v6.28 "Do it from Home": what was done (each line opens its tool), Undo for all of it; or the answer to a question about your data. */
@@ -17,6 +18,9 @@ export function DoResult({ r, navTo, onClose, onUndo }) {
     try { const last = window.__attuneMoneyFix; if (r && last && last.key === r.key && last.state !== "same") setFix(last); } catch (e) {}   // it may have started before this card
     window.addEventListener("attune-moneyfix", on); return () => window.removeEventListener("attune-moneyfix", on); }, [r && r.key]);
   if (!r) return null;
+  // v10.9.4 OK-PW2: a password question → the account card (the password itself after the fingerprint)
+  if (r.pw) return <div className={cardPad + " space-y-2"} data-testid="do-answer"><PwAnswer ans={r.pw} native={typeof window !== "undefined" ? window.AttuneNative : null} navTo={navTo} />
+    <button className={"min-h-[44px] px-3 rounded-[12px] text-[13.5px] font-bold " + muted} onClick={onClose}>{tr("Close")}</button></div>;
   if (r.answer) {
     const a = r.answer;
     return (

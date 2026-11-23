@@ -11,3 +11,22 @@ ok(a[2].lines[1].name === "باسورد" && a[2].lines[1].secret && !a[0].lines[
 ok(P.looksLikePassword("A84dCjPU@7dtu.XY") && !P.looksLikePassword("aly.d@gmail.com"), "a password with @ and . is never mistaken for an e-mail (it stays locked)");
 const f = P.readPasswordFile('name,url,username,password,note\nGoogle,https://accounts.google.com,aly.d@gmail.com,"p,ass""1",\n,https://www.netflix.com/login,aly.d@gmail.com,nf1!,"line1\nline2"\nGoogle,https://accounts.google.com,aly.d@gmail.com,"p,ass""1",\n');
 ok(f.length === 2 && f[0].lines.find((l) => l.name === "Password").value === 'p,ass"1' && f[1].title === "netflix.com", "Google Passwords .csv: quotes / commas / line breaks inside, the same login twice kept once, no name → the site");
+
+// OK-PW2: the page's store and Home chat
+const mem = {}; globalThis.localStorage = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => { delete mem[k]; }, key: (i) => Object.keys(mem)[i], get length() { return Object.keys(mem).length; } };
+const S = await import("../../web-src/pwstore.js");
+const BK = await import("../../web-src/backup.js");
+const acc = P.readPastedPage("▸ Microsoft\n    email: aly.d@outlook.com\n    pass: Sk!ttlz#2024\n▸ discord account\n    user: skittlz\n    باسورد: dsc_9981x\n▸ Xbox\n    email: aly.d@outlook.com\n    pass: xb0x!!77");
+let rr = S.addAccounts({ items: [] }, acc); S.savePw(rr.data);
+ok(rr.added.length === 3 && S.addAccounts(rr.data, acc).same === 3, "3 accounts saved; the same page pasted again adds nothing");
+ok(!mem[S.PW_KEY].includes("Sk!ttlz#2024"), "the account list's store holds no password (they are kept apart)");
+const keys = BK.collectData(localStorage);
+ok(!Object.keys(keys).some((k) => k.startsWith("attune:pw:")), "the backup file / sync never carry the Passwords page (attune:pw:* skipped)");
+const ask = (q) => { const a = S.pwAsk(q, rr.data); return a ? a.kind + ":" + a.items.map((x) => x.title).join(",") : "null"; };
+ok(ask("what's my discord password?") === "account:discord account", "Home chat: \"what's my discord password?\" → that account");
+ok(ask("which accounts use my outlook email?") === "list:Microsoft,Xbox", "Home chat: \"which accounts use my outlook email?\" → Microsoft, Xbox");
+ok(ask("باسورد ديسكورد") !== "null" || ask("باسورد discord") === "account:discord account", "Home chat in Arabic: «باسورد discord»");
+ok(ask("remind me to change my netflix password tomorrow") === "null" && ask("my wifi password is 1234") === "null", "an order that mentions a password is not a lookup (a reminder / saving stays an order)");
+ok(ask("pin this note") === "null" && ask("what time is it") === "null", "\"pin this\" and other questions are not about passwords");
+const lines = ["Passwords", "All together", "▸ Toggles", "Paste a page", "Import file", "Saved {n} accounts — each password locked", "Kept only on this phone — never in sync, the backup file or any AI. Each password opens with your fingerprint."];
+for (const l of "ar arb es fr de pt it ru tr id hi ur fa bn sw th vi zh ja ko".split(" ")) { const d = (await import("fs")).readFileSync(new URL("../../web-src/i18n-" + l + ".js", import.meta.url), "utf8"); ok(lines.every((x) => d.includes(JSON.stringify(x) + ":")), "the Passwords lines are in " + l); }

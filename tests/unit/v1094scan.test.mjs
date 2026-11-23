@@ -20,3 +20,17 @@ ok(!rd("Netflix raises its Standard plan to $17.99 a month in the US").sure, "a 
 ok(!rd("Choose your plan\nNetflix\nBasic $6.99/month\nStandard $15.49/month\nPremium $22.99/month").sure, "a plans page with several prices → ask, never guess");
 ok(!rd("Shahid VIP يبدأ من ٤٩ ج.م شهريًا — اشترك الآن").sure, "an advert → not saved");
 ok(rd("Hello Ahmed, see you tomorrow at 5") === null, "a chat screenshot is not a subscription");
+
+// Ali's own screenshots (23 Nov 2026) — tests/scan/real/ali-2026-11-23.mjs: each must read exactly right
+const R = await import("../../web-src/scanread.js");
+const { REAL } = await import("../scan/real/ali-2026-11-23.mjs");
+for (const c of REAL) {
+  const r = R.readScan(c.text, { now: Date.parse("2026-11-23T19:30:00"), home: "EGP", order: "dmy" }), d = r.data || {}, w = c.want;
+  const bad = [];
+  if (r.kind !== w.kind) bad.push("kind " + r.kind);
+  if (!r.sure) bad.push("not sure (" + r.why + ")");
+  for (const k of ["service", "amount", "currency", "cycle", "next", "last4"]) if (w[k] != null && d[k] !== w[k]) bad.push(k + " " + d[k]);
+  if (w.due && d.due !== w.due) bad.push("due " + d.due);
+  if (w.original && !(d.original && d.original.amount === w.original.amount && d.original.currency === w.original.currency)) bad.push("original price");
+  ok(!bad.length, `Ali's screenshot "${c.id}" → ${w.kind} ${w.service || ""} ${w.amount} ${w.currency}${bad.length ? " — WRONG: " + bad.join(", ") : ""}`);
+}

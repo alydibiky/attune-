@@ -1,5 +1,20 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, night — v10.9.4: the Passwords page + Ali's real screenshots)
+> **OK-PW2 built**: side menu → Passwords (web-src/pw-ui.jsx, pwstore.js, pwpaste.js): Toggles like Notion / All together (remembered), search,
+> Paste a page (every line as written; no user name needed), Import file (.csv of 8 password apps), check list → Save 🔒 → Undo, screenshots per
+> account (DocPhotos), Home chat "what's my discord password?" / "which accounts use my outlook email?" → the account card (password after the
+> fingerprint) — on the phone Home BEFORE the router (a password never goes to the chat model) and on the computer through doFromHome.
+> Passwords' secrets in attune:pw:secret:v1; backup.js SKIP /^attune:pw:/ → never in the backup file or sync (as OK'd). tests/e2e_v1094pw.py
+> (390 + 1366), tests/unit/v1094pw.test.mjs, 23 new lines × 20 languages.
+> **Ali sent 7 real screenshots** (PayPal → Enzu, Claude Pro receipt, Enzu invoice, Google Play AI Pro) → tests/scan/real/ali-2026-11-23.mjs.
+> On them the reader was WRONG 4 / 4 although the generated tests were 100 % → fixed in the readers: an order number is not a card (bankcard.js),
+> "Total excluding tax" / "Subtotal" are not the price, "Amount paid" / "Total" are; a label on the line above; the billing period "Nov 12–Dec 12"
+> gives the next date; "Mastercard-2969" / "with - 2969" / "x-2969" give the card; an unpaid invoice → kind "bill" (due date, US date order
+> read from the paper itself: 11/17/2026 → month/day); a PayPal receipt → the pounds that left the card (the exchange line) with the dollars
+> as the original price. Now 4 / 4, kept in tests/unit/v1094scan.test.mjs. Generators still 100 % (subscriptions, passwords, read log).
+> Next: OK-SS S2 (📎 Scan + Share → the "What I understood" card), the mixed-kind 10,000 test, more of Ali's real screenshots.
+
 > ## START HERE (23 Nov 2026, night, latest — OK-PW with notes)
 > Ali: "OK-PW — it doesn't have to have a username, I just want it as it is, with the option to add screenshots also, and if I ask Home chat
 > for it it should recall anything; passwords should have a dedicated place, view all together but also toggles like Notion" (+ OK-SS, OK-BK

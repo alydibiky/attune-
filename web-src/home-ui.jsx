@@ -57,6 +57,7 @@ import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
+import * as PWS from "./pwstore.js";
 import { tickRegular, payRadar, payPerson, notYet } from "./regular.js";
 import { MissionsLine, useTopMission } from "./missions-ui.jsx";
 import { route as cmdRoute } from "./cmdrun.js";
@@ -266,6 +267,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     let t = text.trim();
     if (!t && !files.length && !kindPicked) return;
     setLife(null);
+    // v10.9.4 (Ali's OK-PW2: "if I ask Home chat for it it should recall anything"): "what's my discord password?" → the account card here
+    // (before the router, which sends a question to Chat — a password is never sent to the chat model)
+    if (t && !t.startsWith("/") && boxMode !== "translate" && !tr2 && !web) { let pa = null; try { pa = PWS.pwAsk(t, PWS.loadPw()); } catch (e) {} if (pa) { setText(""); setPanel(null); setDone({ pw: pa, lines: [], id: Date.now() }); return; } }
     if (boxMode === "life" && t && !t.startsWith("/")) {
       setText(""); setPanel(null); setDone(null);
       let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; }

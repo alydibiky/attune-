@@ -10,6 +10,8 @@ import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   //
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
 import { ReadLogHost } from "./readlog-ui.jsx";
+import * as PWS from "./pwstore.js";
+import { PasswordsPage } from "./pw-ui.jsx";   // v10.9.4 OK-PW2
 import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost, TipBulb } from "./setup-ui.jsx";
 import { BrainPage, brainKnown } from "./brain-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
@@ -135,12 +137,12 @@ const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCi
 // (v8.7, Ali 29 Oct: "why is there Home and Chat — we agreed only Home"): Home IS the chat (v7.6, he picked A) — no Chat row
 const SIDE_PLACES = [["home", "Home", House],
   // v9.2 (Ali, 1A: "a part where I add my list … clear and visible"): To-dos & lists first under My life
-  ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar],   // v9.1: Health = Family health (Fit archived)
+  ["@", "My life"], ["lists", "To-dos & lists", ListChecks], ["money", "Money", Wallet], ["timeline", "Follow-ups", Bell], ["care", "Health", Heart], ["agents", "Agents", Radar], ["passwords", "Passwords", KeyRound],   // v10.9.4 OK-PW2   // v9.1: Health = Family health (Fit archived)
   // v9.9.39 UI-1 (Ali picked it): "Learn & daily" had one row left (My things) — the rest of the places are one "More" group
   ["@", "More"], ["coach", "Students", GraduationCap], ["learn", "Daily", CalendarDays], ["shelf", "My things", BookOpen],
   ["travel", "Go", Plane], ["tools", "Tools", Wrench]];   // v9.9.16 (Ali: keep the groups): only "Work" left — it opened Projects, which has its own row under Workspaces   // v9.1: Business archived — Work = Projects
 /** v9.2 round 3: the places of the side menu (and what they open) — their header shows ☰; every other page shows ‹ back. */
-const TOP_PLACES = new Set(["home", "lists", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools", "memory", "booklib", "people", "coach", "learn"]);
+const TOP_PLACES = new Set(["home", "passwords", "lists", "money", "timeline", "care", "agents", "shelf", "travel", "projects", "tools", "memory", "booklib", "people", "coach", "learn"]);
 // v9.1: archived / folded tools leave the sidebar (and a group heading with nothing under it goes too)
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] !== "@" && hiddenFromMenus(SIDE_PLACES[i][0])) SIDE_PLACES.splice(i, 1);
 for (let i = SIDE_PLACES.length - 1; i >= 0; i--) if (SIDE_PLACES[i][0] === "@" && (!SIDE_PLACES[i + 1] || SIDE_PLACES[i + 1][0] === "@")) SIDE_PLACES.splice(i, 1);
@@ -188,7 +190,7 @@ function boughtFromLists(text) {
 }
 import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
 import { addShared as addSharedToProject } from "./projlinks.js";   // v10.1 P4
-import { ListChecks } from "lucide-react";
+import { ListChecks, KeyRound } from "lucide-react";
 import { WritingStudio } from "./writing-ui.jsx";   // v10.7 OK-WR
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
@@ -7892,12 +7894,12 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.3";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.4";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 /** v10.9.2: the page, kept exactly as it was while something over it (the phone's side menu) opens or closes — same page (k), frozen → no re-draw. */
-const KEEPABLE = new Set(["home", "money", "timeline", "shelf", "agents", "lists", "care", "travel", "tools", "memory", "life", "reminders", "radar", "people", "planner", "guardian", "booklib", "projects"]);
+const KEEPABLE = new Set(["home", "passwords", "money", "timeline", "shelf", "agents", "lists", "care", "travel", "tools", "memory", "life", "reminders", "radar", "people", "planner", "guardian", "booklib", "projects"]);
 const PREWARM = ["lists", "timeline", "agents", "shelf", "care", "travel", "tools", "home", "money"];   // Money (its ledger frame) is the heaviest: last
 const KEEP_MAX = 12, KEEP_ON = { display: "contents" }, KEEP_OFF = { display: "none" };
 /* A kept page must never show old data: every save to the phone's storage (except what moving around writes — recent tools, tips)
@@ -10335,6 +10337,8 @@ export default function App() {
     let text = text0;
     if (UND.looksFranco(text0)) { const a = UND.francoToArabic(text0); try { const u = doUnderstand(a, { now: Date.now(), stores: loadLifeStores() }); if (a !== text0 && (u.ask || u.actions.length)) text = a; } catch (e) {} }
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v10.9.4 (Ali's OK-PW2: "if I ask Home chat for it it should recall anything"): "what's my discord password?" → the account card
+    { let pa = null; try { pa = PWS.pwAsk(text0, PWS.loadPw()); } catch (e) {} if (pa) return { pw: pa, lines: [] }; }
     // v9.9.3 L2: "tell me when my wife gets home" / "never show Yazio" is teaching Attune — not an agent or a message alert
     let teachFirst = false; try { const tx = NT.readTeach(text, loadPeopleDir()); teachFirst = !!(tx && (tx.kind === "rule" || (tx.kind === "ask" && tx.needRole != null))); } catch (e) {}
     // v9.9.6 N1: "track my cranes: name, tonnage, next inspection" → a table; "add Grove GMK, 100 tons, inspection 4 Dec" → its row
@@ -11367,6 +11371,8 @@ export default function App() {
         ) : mode === "lists" ? (
           <ListsPage records={memory} flash={flash} onTickTodo={(x) => updateRec(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
             onAddTodo={(t0) => { const t = cleanTodo(t0); return remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } }); }} />
+        ) : mode === "passwords" ? (
+          <PasswordsPage native={NATIVE} flash={flash} wide={wide} />
         ) : mode === "agents" ? (
           <AgentsPage native={NATIVE} nativeCall={nativeCall} navTo={navTo} flash={flash} country={agentCountry()} pro={proActive} openPlan={() => setShowUpgrade(true)}
             understandRule={modelUsable ? async (rule) => {   // v9.2 (Ali: "set any rules I want and it understands"): a rule code can't read → the phone's model, as JSON (agent-rules.js cleans it)

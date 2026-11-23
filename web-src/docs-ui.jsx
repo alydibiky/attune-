@@ -46,14 +46,14 @@ export function DocPhotos({ x, onPatch, edit = true, start = -1, onClose, hideSt
 }
 
 /** D2 + S1: the details — each row shown, tap-to-show or fingerprint, with its own time; Copy; add by name or by a sentence. */
-export function DocDetails({ x, onPatch, unlock, edit = true }) {
-  const [secrets, setSecrets] = useState(F.loadSecrets);
+export function DocDetails({ x, onPatch, unlock, edit = true, skey = F.SECRETS_KEY }) {
+  const [secrets, setSecrets] = useState(() => F.loadSecrets(undefined, skey));
   const rows = F.joined(x.id, x.fields || [], secrets);
   const [shown, setShown] = useState({}), [gear, setGear] = useState(""), [adding, setAdding] = useState(false), [name, setName] = useState(""), [val, setVal] = useState(""), [say, setSay] = useState(""), [msg, setMsg] = useState("");
   const timers = useRef({});
   useEffect(() => () => Object.values(timers.current).forEach(clearTimeout), []);
   useEffect(() => { const h = () => { if (document.visibilityState !== "visible") setShown({}); }; document.addEventListener("visibilitychange", h); return () => document.removeEventListener("visibilitychange", h); }, []);
-  const save = (fields) => { const s = F.split(x.id, fields, F.loadSecrets()); F.saveSecrets(s.secrets); setSecrets(s.secrets); onPatch(x.id, { fields: s.fields }); };
+  const save = (fields) => { const s = F.split(x.id, fields, F.loadSecrets(undefined, skey)); F.saveSecrets(s.secrets, undefined, skey); setSecrets(s.secrets); onPatch(x.id, { fields: s.fields }); };
   const show = async (f) => {
     if (f.lock === "finger") { try { await unlock({ title: tr("Show {n}", { n: f.name }), subtitle: x.title || "", cancel: tr("Cancel") }); } catch (e) { setMsg(tr("Not unlocked")); return; } }
     setShown((s) => ({ ...s, [f.id]: true })); clearTimeout(timers.current[f.id]);
@@ -68,7 +68,7 @@ export function DocDetails({ x, onPatch, unlock, edit = true }) {
   return <div className="mt-2 space-y-1.5" data-testid={edit ? "doc-details" : "doc-details-view"}>
     {rows.map((f) => <div key={f.id} className="rounded-[12px] border border-[var(--c-ln)] px-2.5 py-1.5" data-testid="doc-field" data-lock={f.lock}>
       <div className="flex items-center gap-2">
-        <span className="flex-1 min-w-0 text-[13px]"><b dir="auto">{tr(f.name)}</b> <span className="c-sub">·</span> <span className="tabular-nums" dir="auto" data-testid="doc-field-value">{F.isLocked(f) && !shown[f.id] ? F.masked(f) : f.value}</span></span>
+        <span className="flex-1 min-w-0 text-[13px]">{f.name ? <><b dir="auto">{tr(f.name)}</b> <span className="c-sub">·</span> </> : null}<span className="tabular-nums" dir="auto" data-testid="doc-field-value">{F.isLocked(f) && !shown[f.id] ? F.masked(f) : f.value}</span></span>
         {F.isLocked(f) && !shown[f.id] ? <button onClick={() => show(f)} className={B2} data-testid="doc-field-show">{f.lock === "finger" ? <Lock size={12} /> : <Eye size={12} />}{tr("Show")}</button> : null}
         <button onClick={() => copy(f)} aria-label={tr("Copy")} className={B2 + " w-9 justify-center px-0"} data-testid="doc-field-copy"><Copy size={12} /></button>
         {edit ? <button onClick={() => setGear(gear === f.id ? "" : f.id)} aria-label={tr("Settings")} aria-expanded={gear === f.id} className={B2 + " w-9 justify-center px-0"} data-testid="doc-field-gear"><Settings2 size={12} /></button> : null}

@@ -108,6 +108,12 @@ export function readSubscription(text0, { now = Date.now(), order = "dmy", home 
     else if (MONTH_W.test(own) || YEAR_W.test(own) || WEEK_W.test(own)) s += 2;
     if (PRICE_W.test(left) || PRICE_W.test(prev)) s += 2;
     if (TOTAL_W.test(left) || (TOTAL_W.test(prev) && !PRICE_W.test(left))) s += 2;
+    // (Ali's Claude Pro receipt: "Total excluding tax $20.00" … "Total $22.80" · "Amount paid $22.80") — a total before tax / a subtotal is
+    // never the price; what was paid in the end is
+    const lab = (/\p{L}/u.test(left) ? left : left + " " + prev).toLowerCase();   // ("$22.80" alone on its line: its label is the line above)
+    if (/excluding tax|before tax|excl\.? (?:tax|vat)|without (?:tax|vat)|sub-?\s?total|net amount|قبل الضريبة|بدون ضريبة|المجموع الفرعي/i.test(lab)) s -= 5;
+    if (/amount paid|total paid|you paid|paid|المدفوع|تم دفع/i.test(lab)) s += 2;
+    if (/^\s*(?:total|الإجمالي|الاجمالي|إجمالي)\s*:?\s*$/i.test(/\p{L}/u.test(left) ? left : prev)) s += 1;
     if (NOT_PRICE.test(left.slice(-30)) || (alone && NOT_PRICE.test(right.slice(0, 30)) && !TOTAL_W.test(own))) s -= 6;
     if (/\bnow\b|الآن|دلوقتي|(?<![\p{L}])(?:maintenant|ahora|jetzt|agora|ora|şimdi|sekarang|сейчас|अब|اکنون|এখন|sasa|ตอนนี้|bây giờ|现在|今なら|지금)(?![\p{L}])/iu.test(left)) s += 2;
     if (FREE_W.test(left) && !THEN_W.test(left)) s -= 3;
@@ -132,19 +138,27 @@ export function readSubscription(text0, { now = Date.now(), order = "dmy", home 
     const ds = datesIn(zoneD, { now, order }).filter((d) => d.kind !== "monthyear" || /\b\d{4}\b/.test(zoneD));
     if (ds.length) { const d = new Date(ds[0].t); next = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
   }
+  if (!next) {   // the period paid for: "Nov 12–Dec 12, 2026" → it renews 12 Dec
+    const m = all.match(/([A-Za-z\u0600-\u06FF]{3,10}\.?\s\d{1,2}|\d{1,2}\s[A-Za-z\u0600-\u06FF]{3,10}|\d{1,2}\/\d{1,2}\/\d{4})\s?[–—-]\s?([A-Za-z\u0600-\u06FF]{3,10}\.?\s\d{1,2}(?:,?\s\d{4})?|\d{1,2}\s[A-Za-z\u0600-\u06FF]{3,10}(?:\s\d{4})?|\d{1,2}\/\d{1,2}\/\d{4})/);
+    if (m) { const yr = (all.slice(m.index, m.index + m[0].length + 8).match(/\b20\d{2}\b/) || [""])[0]; const ds = datesIn(m[2] + (/\d{4}/.test(m[2]) ? "" : " " + yr), { now, order });
+      const a = datesIn(m[1] + (/\d{4}/.test(m[1]) ? "" : " " + yr), { now, order });
+      if (ds.length && a.length && ds[0].t > a[0].t) { const d = new Date(ds[0].t); next = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const span = (ds[0].t - a[0].t) / 864e5; if (!cycle) { if (span >= 26 && span <= 32) cycle = "month"; else if (span >= 360 && span <= 370) cycle = "year"; } } }
+  }
   if (!cycle && next) {   // "next billing 4 Dec" a month after today's payment → monthly
     const days = (Date.parse(next + "T12:00:00") - now) / 864e5;
     if (days > 300 && days < 380) cycle = "year"; else if (days > 0 && days <= 32) { cycle = "month"; cycleGuessed = true; }
   }
   if (!cycle && svc) { cycle = "month"; cycleGuessed = true; }
-  const card = all.match(/(?:[•*xX#]{2,}\s?|ending(?: in)?\s|ends in\s|card\s(?:no\.?\s)?\**\s?|المنتهية بـ?\s?|تنتهي بـ?\s?)(\d{4})(?!\d)/i);
+  const card = all.match(/(?:[•*xX#]{2,}\s?|ending(?: in)?\s|ends in\s|card\s(?:no\.?\s)?\**\s?|المنتهية بـ?\s?|تنتهي بـ?\s?)(\d{4})(?!\d)/i)
+    || all.match(/(?:master\s?card|visa|meeza|amex|maestro)\s?[-–x]\s?(\d{4})(?!\d)|\bx-(\d{4})(?!\d)|\bwith\s*[-–]\s*\n?\s*(\d{4})(?!\d)/i);
   const plan = (all.match(PLAN_W) || [])[1] || (all.match(PLAN_W) || [])[0] || "";
   const r = { service: svc ? svc[0] : "", plan: plan ? plan.replace(/^\w/, (c) => c.toUpperCase()) : "", amount: best ? best.v : 0, currency: best ? best.cur : "",
-    cycle, cycleGuessed, next, last4: card ? card[1] : "", cancelled };
+    cycle, cycleGuessed, next, last4: card ? (card[1] || card[2] || card[3] || "") : "", cancelled };
   // it must be YOUR subscription (a receipt, your plan, a renewal) — never a news post, an advert or a plans page
   const personal = PERSONAL.test(all) || NEXT_W.test(all) || (/\bsub-?total\b|المجموع الفرعي|(?<![\p{L}])(?:sous-total|zwischensumme|ara toplam)(?![\p{L}])/iu.test(all) && TOTAL_W.test(all)) || /\bpaid on\b|تم الدفع في|(?<![\p{L}])(?:payé le|pagado el|bezahlt am|pago em|ödendi)(?![\p{L}])/iu.test(all), offer = OFFER_W.test(all);
   // sure = yours, a known service, ONE price with a price word or a period next to it, a period
   const alone = best && cands.filter((c) => c.s > -3 && Math.abs(c.v - best.v) > 0.005).length === 0;   // the only amount that isn't an old price / a saving
   const why = offer && !STRONG_PERSONAL.test(all) ? "offer" : !personal ? "notyours" : !svc ? "service" : !best ? "price" : rivals.length ? "twoprices" : (best.s < 2 && !(alone && best.s >= 0)) ? "price" : !cycle ? "cycle" : "";
-  return { ...r, sure: !why, why, prices: cands.slice(0, 4).map((c) => ({ v: c.v, cur: c.cur, s: c.s })) };
+  return { ...r, sure: !why, why, prices: cands.slice(0, 6).map((c) => ({ v: c.v, cur: c.cur, s: c.s, li: c.li })) };
 }

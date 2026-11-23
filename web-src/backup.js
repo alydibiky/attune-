@@ -27,7 +27,8 @@ export const LAST_BACKUP_KEY = "attune:backup:last";
 
 // Keys never worth saving: caches that rebuild themselves, and per-launch state.
 const SKIP = [/^attune:net:/, /^attune:store$/, /^attune:loaded$/, /^attune:backend$/, /^attune:barmin$/,
-  /^attune:backup:last$/, /\.pre-import$/, /^attune:autobackup:/];   // v8.7: the daily backup's own settings (its password) stay on this phone
+  /^attune:backup:last$/, /\.pre-import$/, /^attune:autobackup:/,
+  /^attune:pw:/];   // v10.9.4 (Ali's OK-PW2): the Passwords page stays on this phone — never in the backup file or sync   // v8.7: the daily backup's own settings (its password) stay on this phone
 
 /* v8.7 (Ali: "messages in Recall stay forever, with offline and online backup like WhatsApp"): Recall's messages live in the
    phone's own database (RecallLog.kt), not in the page's storage — the backup carries them under one extra key, and a restore
