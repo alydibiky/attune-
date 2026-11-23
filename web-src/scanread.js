@@ -61,7 +61,7 @@ export function readScan(text0, opts = {}) {
   // 4. a subscription
   const sb = readSubscription(text, { ...opts, order: orderOf(text, opts.order || "dmy") });
   if (sb && (sb.service || sb.sure)) return { kind: "subscription", sure: sb.sure, data: sb, why: sb.why, ask: sb.sure ? "" : sb.why };
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean), order = orderOf(text, opts.order || "dmy");
+  const lines = text.split(/\r?\n/).map((l) => l.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069\ufeff]/g, "").replace(/\s+/g, " ").trim()).filter(Boolean), order = orderOf(text, opts.order || "dmy");   // (direction marks, doubled spaces)
   // 5a. a bill not paid yet → a reminder on its due date (never an expense in Money)
   if (BILL_W.test(text) && !PAID_W.test(text)) {
     const due = labelled(lines, /amount due|balance due|المبلغ المستحق/i) || labelled(lines, /^total\b|\btotal:/i);
@@ -78,7 +78,7 @@ export function readScan(text0, opts = {}) {
       let inHome = null;
       if (home && total.currency !== home) {
         // the exchange line ties the two: "3,531.67 EGP = 65.00 USD" (its dollars must be the total's)
-        for (const l of lines) { const m = ARD(l).match(/(\d[\d,]*(?:\.\d+)?)\s*([A-Z]{3}|ج\.?\s?م)\s*=\s*[$€£]?\s?(\d[\d,]*(?:\.\d+)?)\s*([A-Z]{3})?/);
+        for (const l of [...lines, lines.join(" ")]) { const m = ARD(l).match(/(\d[\d,]*(?:\.\d+)?)\s*([A-Z]{3}|ج\.?\s?م)\s*=\s*[$€£]?\s?(\d[\d,]*(?:\.\d+)?)\s*([A-Z]{3})?/);
           if (!m) continue; const a = +m[1].replace(/,/g, ""), b = +m[3].replace(/,/g, ""), ca = (CURS.find(([, re]) => re.test(m[2])) || [""])[0];
           if (ca === home && Math.abs(b - total.amount) < 0.005 && a > 0) { inHome = { amount: a, currency: home }; break; } }
       }

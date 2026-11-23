@@ -34,3 +34,10 @@ for (const c of REAL) {
   if (w.original && !(d.original && d.original.amount === w.original.amount && d.original.currency === w.original.currency)) bad.push("original price");
   ok(!bad.length, `Ali's screenshot "${c.id}" → ${w.kind} ${w.service || ""} ${w.amount} ${w.currency}${bad.length ? " — WRONG: " + bad.join(", ") : ""}`);
 }
+
+// Ali (23 Nov): "train it on more generated screenshots like mine" — tests/scan/reallike.mjs: his layouts (Stripe, Google Play, Apple, Netflix,
+// PayPal, WHMCS invoices, Gmail's card) with every value random
+const RL = await import("../scan/reallike.mjs");
+const rl = RL.run(2500, 4, { quiet: true });
+ok(rl.right / rl.total >= 0.995, `2,500 screenshots in the layouts of Ali's real ones: ${rl.right}/${rl.total} (mark 99.5 %)`);
+ok(rl.share >= 0.6, `…${(100 * rl.share).toFixed(1)} % different shapes (bar 60 %)`);
