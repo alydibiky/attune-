@@ -49,7 +49,7 @@ with sync_playwright() as p:
         store = page.evaluate("localStorage.getItem('attune:pw:v1')")
         check("Sk!ttlz#2024" not in store and "dsc_9981x" not in store, "%d: the account list's store holds no password" % w)
         bk = page.evaluate("() => { const ks = []; for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); return ks.filter((k) => k.startsWith('attune:pw:')); }")
-        check(set(bk) >= {"attune:pw:v1", "attune:pw:secret:v1"}, "%d: the two password stores exist (%s) — backup.js skips attune:pw:* (unit test)" % (w, bk))
+        check(set(bk) >= {"attune:pw:v1", "attune:pw:secret:v1"}, "%d: the two password stores exist (%s) — in the locked backup, never in sync (unit test)" % (w, bk))
         # Home chat
         go(page, w, "home")
         box = page.locator("[data-testid=home-ask]" + V).first

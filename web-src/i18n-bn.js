@@ -15179,4 +15179,5 @@ export const BN = {
   "They were all already here": "সবগুলো আগেই এখানে ছিল",
   "{n} accounts:": "{n}টি অ্যাকাউন্ট:",
   "{n} were already here": "{n}টি আগেই ছিল",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "কখনো সিঙ্ক বা কোনো AI-তে নয় — শুধু আপনার লক করা ব্যাকআপে। প্রতিটি পাসওয়ার্ড আঙুলের ছাপে খোলে।",
 };

@@ -15171,4 +15171,5 @@ export const ARB = {
   "They were all already here": "كانت كلها موجودة بالفعل",
   "{n} accounts:": "{n} حسابًا:",
   "{n} were already here": "{n} كانت موجودة",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "لا تدخل المزامنة ولا أي ذكاء اصطناعي — فقط في نسختك الاحتياطية المقفلة. تُفتح كل كلمة مرور ببصمتك.",
 };

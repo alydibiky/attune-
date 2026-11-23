@@ -27,8 +27,11 @@ export const LAST_BACKUP_KEY = "attune:backup:last";
 
 // Keys never worth saving: caches that rebuild themselves, and per-launch state.
 const SKIP = [/^attune:net:/, /^attune:store$/, /^attune:loaded$/, /^attune:backend$/, /^attune:barmin$/,
-  /^attune:backup:last$/, /\.pre-import$/, /^attune:autobackup:/,
-  /^attune:pw:/];   // v10.9.4 (Ali's OK-PW2): the Passwords page stays on this phone — never in the backup file or sync   // v8.7: the daily backup's own settings (its password) stay on this phone
+  /^attune:backup:last$/, /\.pre-import$/, /^attune:autobackup:/];
+/* v10.9.4 (Ali, 23 Nov: "yes" — passwords in the backup): the Passwords page IS in the backup file (always encrypted with the backup password,
+   AES-GCM) so a lost phone doesn't lose them — and NEVER in sync (sync.js deviceKeys, cloud.js SYNC_SKIP). A sync / restore that brings no
+   passwords never deletes the ones on this phone (restoreData). */
+export const NEVER_SYNC = /^attune:pw:/;   // v8.7: the daily backup's own settings (its password) stay on this phone
 
 /* v8.7 (Ali: "messages in Recall stay forever, with offline and online backup like WhatsApp"): Recall's messages live in the
    phone's own database (RecallLog.kt), not in the page's storage — the backup carries them under one extra key, and a restore
@@ -224,7 +227,8 @@ export function restoreData(keys, mode = "replace", storage) {
   const before = collectData(s);
   try {
     const target = mode === "merge" ? mergeKeys(before, keys) : keys;
-    if (mode === "replace") for (const k of Object.keys(before)) if (!(k in target)) s.removeItem(k);
+    const bringsPw = Object.keys(target).some((k) => NEVER_SYNC.test(k));
+    if (mode === "replace") for (const k of Object.keys(before)) if (!(k in target) && !(NEVER_SYNC.test(k) && !bringsPw)) s.removeItem(k);
     for (const [k, v] of Object.entries(target)) if (typeof v === "string" && v !== before[k]) s.setItem(k, v);
   } catch (e) {
     try { for (const k of Object.keys(keys)) s.removeItem(k); for (const [k, v] of Object.entries(before)) s.setItem(k, v); } catch (e2) {}

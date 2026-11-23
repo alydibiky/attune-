@@ -12400,4 +12400,5 @@ export const AR = {
   "They were all already here": "كلهم كانوا موجودين",
   "{n} accounts:": "{n} حساب:",
   "{n} were already here": "{n} كانوا موجودين",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "عمرها ما تروح للمزامنة ولا لأي ذكاء اصطناعي — بس في النسخة الاحتياطية المقفولة بتاعتك. كل باسورد بيتفتح ببصمتك.",
 };

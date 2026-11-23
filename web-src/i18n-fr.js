@@ -15180,4 +15180,5 @@ export const FR = {
   "They were all already here": "Ils étaient tous déjà là",
   "{n} accounts:": "{n} comptes :",
   "{n} were already here": "{n} étaient déjà là",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Jamais dans la synchro ni dans une IA — seulement dans votre sauvegarde verrouillée. Chaque mot de passe s'ouvre avec votre empreinte.",
 };

@@ -15179,4 +15179,5 @@ export const JA = {
   "They were all already here": "すべて既に保存済みです",
   "{n} accounts:": "{n} 件のアカウント：",
   "{n} were already here": "{n} 件は保存済み",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "同期や AI には一切入りません — 鍵付きのバックアップにだけ保存。パスワードは指紋で開きます。",
 };

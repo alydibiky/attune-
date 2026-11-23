@@ -1,5 +1,13 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (23 Nov 2026, late — v10.9.5)
+> Ali: "1. what do you think [sync free or Pro] 2. yes [passwords in the backup]". → 1: recommended sync stays FREE (his option A rule:
+> what people use every day is free; Pro = depth) — nothing changed unless he disagrees. → 2: the Passwords page is now IN the backup file
+> (manual + daily; always AES-GCM with the backup password) and still NEVER in sync (sync.js deviceKeys + cloud.js SYNC_SKIP drop
+> attune:pw:*); restoreData "replace" never deletes the phone's passwords when the incoming data has none (a sync from the computer), but a
+> backup restore with passwords replaces them. backup.js NEVER_SYNC. The page's line: "Never in sync or any AI — only in your locked backup".
+> Also in this version: tests/scan/reallike.mjs (10,000 in the layouts of Ali's real screenshots, 75.2 % → 100 %, held-out 100 %).
+
 > ## START HERE (23 Nov 2026, night — v10.9.4: the Passwords page + Ali's real screenshots)
 > **OK-PW2 built**: side menu → Passwords (web-src/pw-ui.jsx, pwstore.js, pwpaste.js): Toggles like Notion / All together (remembered), search,
 > Paste a page (every line as written; no user name needed), Import file (.csv of 8 password apps), check list → Save 🔒 → Undo, screenshots per

@@ -15179,4 +15179,5 @@ export const FA = {
   "They were all already here": "همه از قبل اینجا بودند",
   "{n} accounts:": "{n} حساب:",
   "{n} were already here": "{n} از قبل بودند",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "هرگز در همگام‌سازی یا هیچ هوش مصنوعی — فقط در پشتیبان قفل‌شدهٔ شما. هر رمز با اثر انگشت باز می‌شود.",
 };

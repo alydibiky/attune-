@@ -15180,4 +15180,5 @@ export const SW = {
   "They were all already here": "Zote zilikuwepo tayari",
   "{n} accounts:": "Akaunti {n}:",
   "{n} were already here": "{n} zilikuwepo tayari",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Kamwe kwenye usawazishaji au AI yoyote — ni kwenye nakala rudufu yako iliyofungwa tu. Kila nenosiri hufunguka kwa alama ya kidole.",
 };

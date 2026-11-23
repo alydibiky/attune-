@@ -15179,4 +15179,5 @@ export const VI = {
   "They were all already here": "Tất cả đã có sẵn",
   "{n} accounts:": "{n} tài khoản:",
   "{n} were already here": "{n} đã có sẵn",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Không bao giờ vào đồng bộ hay AI nào — chỉ trong bản sao lưu đã khóa của bạn. Mỗi mật khẩu mở bằng vân tay.",
 };

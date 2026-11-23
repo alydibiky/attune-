@@ -15180,4 +15180,5 @@ export const IDN = {
   "They were all already here": "Semuanya sudah ada",
   "{n} accounts:": "{n} akun:",
   "{n} were already here": "{n} sudah ada",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Tidak pernah di sinkronisasi atau AI mana pun — hanya di cadangan terkunci Anda. Tiap kata sandi dibuka dengan sidik jari.",
 };

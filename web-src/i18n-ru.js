@@ -15179,4 +15179,5 @@ export const RU = {
   "They were all already here": "Все уже были здесь",
   "{n} accounts:": "Аккаунтов: {n}:",
   "{n} were already here": "{n} уже были здесь",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Никогда в синхронизации или ИИ — только в вашей защищённой резервной копии. Каждый пароль открывается отпечатком.",
 };

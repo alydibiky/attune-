@@ -15179,4 +15179,5 @@ export const KO = {
   "They were all already here": "모두 이미 있어요",
   "{n} accounts:": "계정 {n}개:",
   "{n} were already here": "{n}개는 이미 있어요",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "동기화나 AI에 절대 들어가지 않아요 — 잠긴 백업에만 있어요. 비밀번호는 지문으로 열려요.",
 };

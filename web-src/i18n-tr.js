@@ -15180,4 +15180,5 @@ export const TRK = {
   "They were all already here": "Hepsi zaten buradaydı",
   "{n} accounts:": "{n} hesap:",
   "{n} were already here": "{n} zaten buradaydı",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Asla eşitlemede ya da yapay zekâda değil — yalnızca kilitli yedeğinde. Her şifre parmak izinle açılır.",
 };

@@ -21,12 +21,17 @@ let rr = S.addAccounts({ items: [] }, acc); S.savePw(rr.data);
 ok(rr.added.length === 3 && S.addAccounts(rr.data, acc).same === 3, "3 accounts saved; the same page pasted again adds nothing");
 ok(!mem[S.PW_KEY].includes("Sk!ttlz#2024"), "the account list's store holds no password (they are kept apart)");
 const keys = BK.collectData(localStorage);
-ok(!Object.keys(keys).some((k) => k.startsWith("attune:pw:")), "the backup file / sync never carry the Passwords page (attune:pw:* skipped)");
+ok(keys["attune:pw:secret:v1"] && keys["attune:pw:secret:v1"].includes("Sk!ttlz#2024"), "the backup file carries the passwords (Ali: \"yes\" — it is always encrypted)");
+const SY = await import("../../web-src/sync.js"); const CL = await import("../../web-src/cloud.js");
+ok(!Object.keys(CL.syncKeys(keys)).some((k) => k.startsWith("attune:pw:")), "Google sync never carries them");
+ok(/NEVER_SYNC\.test\(x\)/.test((await import("fs")).readFileSync(new URL("../../web-src/sync.js", import.meta.url), "utf8")), "phone ↔ computer sync never carries them");
+{ const before = mem[S.PW_KEY]; BK.restoreData({ "attune:other": "1" }, "replace", localStorage); ok(mem[S.PW_KEY] === before && !!mem["attune:pw:secret:v1"], "a sync / restore that brings no passwords never deletes the phone's (replace mode)"); }
+{ BK.restoreData({ ...keys, "attune:pw:v1": JSON.stringify({ items: [] }) }, "replace", localStorage); ok(JSON.parse(mem[S.PW_KEY]).items.length === 0, "a restore of a backup that has passwords does replace them"); BK.restoreData(keys, "replace", localStorage); }
 const ask = (q) => { const a = S.pwAsk(q, rr.data); return a ? a.kind + ":" + a.items.map((x) => x.title).join(",") : "null"; };
 ok(ask("what's my discord password?") === "account:discord account", "Home chat: \"what's my discord password?\" → that account");
 ok(ask("which accounts use my outlook email?") === "list:Microsoft,Xbox", "Home chat: \"which accounts use my outlook email?\" → Microsoft, Xbox");
 ok(ask("باسورد ديسكورد") !== "null" || ask("باسورد discord") === "account:discord account", "Home chat in Arabic: «باسورد discord»");
 ok(ask("remind me to change my netflix password tomorrow") === "null" && ask("my wifi password is 1234") === "null", "an order that mentions a password is not a lookup (a reminder / saving stays an order)");
 ok(ask("pin this note") === "null" && ask("what time is it") === "null", "\"pin this\" and other questions are not about passwords");
-const lines = ["Passwords", "All together", "▸ Toggles", "Paste a page", "Import file", "Saved {n} accounts — each password locked", "Kept only on this phone — never in sync, the backup file or any AI. Each password opens with your fingerprint."];
+const lines = ["Passwords", "All together", "▸ Toggles", "Paste a page", "Import file", "Saved {n} accounts — each password locked", "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint."];
 for (const l of "ar arb es fr de pt it ru tr id hi ur fa bn sw th vi zh ja ko".split(" ")) { const d = (await import("fs")).readFileSync(new URL("../../web-src/i18n-" + l + ".js", import.meta.url), "utf8"); ok(lines.every((x) => d.includes(JSON.stringify(x) + ":")), "the Passwords lines are in " + l); }

@@ -15179,4 +15179,5 @@ export const TH = {
   "They were all already here": "มีอยู่แล้วทั้งหมด",
   "{n} accounts:": "{n} บัญชี:",
   "{n} were already here": "{n} มีอยู่แล้ว",
+  "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "ไม่เข้าการซิงก์หรือ AI ใดๆ — อยู่ในไฟล์สำรองที่ล็อกไว้ของคุณเท่านั้น ทุกรหัสผ่านเปิดด้วยลายนิ้วมือ",
 };

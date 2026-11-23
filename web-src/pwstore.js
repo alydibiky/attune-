@@ -1,7 +1,7 @@
 /* ---- v10.9.4 the Passwords page's store (Ali's OK-PW2, 23 Nov 2026: "as it is", screenshots, Home chat recalls, its own place, all
    together + toggles like Notion). Accounts: { id: "pw:…", title, fields: [{ id, name, value, lock, secs }], photos: [], created, updated }.
-   The values of locked lines live in PW_SECRETS_KEY (docfields.js) — both keys start with "attune:pw:", which backup.js skips: never in the
-   backup file, never in sync, never sent to any AI. Pure apart from localStorage; tests: tests/unit/v1094pw.test.mjs, e2e_v1094pw.py. */
+   The values of locked lines live in PW_SECRETS_KEY (docfields.js) — both keys start with "attune:pw:": in the encrypted backup file (Ali:
+   "yes", 23 Nov), never in sync (backup.js NEVER_SYNC), never sent to any AI. Pure apart from localStorage; tests: tests/unit/v1094pw.test.mjs, e2e_v1094pw.py. */
 import * as F from "./docfields.js";
 
 export const PW_KEY = "attune:pw:v1", PW_VIEW = "attune:pw:view";
