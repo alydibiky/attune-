@@ -785,6 +785,10 @@ attune.jsx: <div><span className="block text-[12px] font-extrabold uppercase tra
 attune.jsx: <span className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-3 mb-2">{tr("Your country")}</span>
 country-ui.jsx: <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-[var(--c-ink)]">{tr("Your country")}</span>
 
+## Do it
+attune.jsx: : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] f
+setup-ui.jsx: : <span className="h-9 px-3 inline-flex items-center rounded-full text-[12.5px] font-extrabold shrink-0" style={{ background: "var(--c-acc)"
+
 ## Save
 attune.jsx: <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-[var(--c-bt
 attune.jsx: <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 min-h-[48px] rounded-[20px] bg-tea
