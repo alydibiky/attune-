@@ -14,7 +14,7 @@ DIR = {"v": 1, "skip": [], "items": [
   {"id": "nada", "kind": "person", "name": "Nada", "aliases": [], "role": "sister", "contact": {"name": "Nada", "phone": "+201001112223"}, "lang": "ar", "created": now - 90 * D, "dates": [{"kind": "birthday", "md": t.strftime("%m-%d"), "year": 1996}]},
   {"id": "karim", "kind": "person", "name": "Karim", "aliases": [], "role": "friend", "created": now - 90 * D, "touch": {"every": 30, "since": now - 40 * D}},
   {"id": "mum", "kind": "person", "name": "Mum", "aliases": ["mama"], "role": "mother", "created": now - 90 * D, "touch": {"every": 3, "since": now - 10 * D}}]}
-INBOX = [{"key": "w1", "who": "Mum", "app": "WhatsApp", "ts": now - 3600000, "text": "call me later"}]
+INBOX = [{"key": "w1", "who": "Mum", "app": "WhatsApp", "ts": now - 60000, "text": "call me later"}]   # (a minute ago: "an hour ago" is yesterday when the test runs just after midnight)
 INIT = ("try{localStorage.setItem('attune:start','home');if(!localStorage.getItem('t:seeded')){localStorage.setItem('t:seeded','1');localStorage.setItem('ledger.v3',%s);localStorage.setItem('attune:people:v1',%s);localStorage.setItem('attune:people:seeded','1')}}catch(e){}"
         "(() => { function w(){ const N = window.AttuneNative; if (!N) return setTimeout(w, 5); window.__opened = []; N.chatInbox = () => %s; N.openUrl = (u) => { window.__opened.push(u); return true; }; } w(); })();") % (json.dumps(json.dumps(LEDGER)), json.dumps(json.dumps(DIR)), json.dumps(json.dumps(INBOX)))
 with sync_playwright() as p:
