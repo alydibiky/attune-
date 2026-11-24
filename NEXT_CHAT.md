@@ -34,8 +34,23 @@
 > income". **Built:** W5 (actions.titleFrom drops "I have / عندي / 3andi / ana 3andi" in front, "el khamees", a weekday that is the date —
 > kept after for / before / by; also fixed "remind me friday to call mom" → «friday to call mom») and W6 (firstmin keeps refunds —
 > refund / reversal / cash back / «تم رد مبلغ» / استرداد — and All right saves them as INCOME "NOON ↩", "Back to you · added to income"
-> row, 20 languages). **Waiting for OK-W1…W4** on the combined mock-up https://claude.ai/artifact/QyVASEWtv17cc8a8QhtGcE (W4 needs its own
-> 10,000 HARD generator when built).
+> row, 20 languages).
+> **Ali OK'd W1–W4 (+ W5/W6 as built) → BUILT** (combined mock-up https://claude.ai/artifact/QyVASEWtv17cc8a8QhtGcE).
+> W1 — firstmin-ui: on a computer with no phone messages (spaces.isBigScreen && !canSms) the money step is "Connect your phone" (opens
+> Backup on its Sync tab: attune:backup:tab = "sync"; the phone shows a code, the computer types it) + "Skip — I'll type on the computer".
+> W2 — monthcard.js (pure) + monthcard-ui.jsx: "This month" on Home under the to-dos (phone) and in the same place on the computer
+> (desk-ui): spent per currency (never added), top 3 categories, "Back to you" (refunds "↩"); it notices Money changing (attune-ledger,
+> visible again, every 4 s while visible — recomputes only when ledger.v3 changed). W3 — safespend.js fromTomorrow / over / afterToday;
+> once something is spent today the line is "You spent 4,140 today, 2,070 over today's share · From tomorrow: about … a day until …"
+> (from what is really left; never promises more). W4 — autolist.js readShopping (EN / Egyptian / Franco; "buy / get / we need / we're
+> out of / shopping list:", «هات / اشتري / محتاج / ناقصنا / طلبات البيت:», "hat / e4tery / me7tag"; items split on , / and / & / "/" /
+> w / «و»; bullets, numbers, one per line; "when you go out", «وانت راجع», "law nzelt" dropped) → Groceries / Pharmacy / Home & cleaning
+> / Clothes / Electronics / Gifts lists (list.auto = kind, made once in the person's language, reused; bought items needed again are
+> unticked; the person's own lists never filled by themselves; an unknown item stays a to-do); never: money spent, a reminder at a
+> time, an agent's price / order, a question. cmdrun.route "autolist" (after a named list), Home (Undo) + Chat. tests/autolist/gen.mjs
+> NEW 10,000 HARD composed: 84.1 % → (made harder: list shapes) 76.5 % → 100 %, held-out seeds 1, 2: 100 %, 62 % shapes; one generator
+> fix (a Franco word used for two things). Real bugs found on the way: «بروفين» held «فين», «فيتامينات» «مين» (Arabic words now whole),
+> «و» with a space. "bring" is not a shopping word. All lines in 20 languages. Tests: unit v1098walk, e2e_v1098walk (390 + 1366).
 
 > ## START HERE (24 Nov 2026 later — v10.9.7: the first minute, Ali's OK-FM)
 > Ali OK'd https://claude.ai/artifact/SRbHba7CwMVSndiLqD7LX7 (FM1 + Gmail + ✎ edit, FM3; FM2 = Organise this; FM5 after the win; S1 note: "Gmail
