@@ -1,0 +1,156 @@
+<title>Attune First Minute Combined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a column of options; each option = its store line + two phones (the store page · the first minute) + plus/minus + pick */
+:root{
+  --bg:#F6F3F4; --surf:#FFFFFF; --ink:#24171C; --sub:#6E5C63; --ln:#E7DDE1;
+  --acc:#7A1F3D; --soft:#F3E6EB; --pos:#2F6B4F; --neg:#A8323E; --phone:#FBF8F9; --frame:#2A2226;
+  --f-disp:"Space Grotesk",Inter,system-ui,sans-serif; --f-body:Inter,system-ui,sans-serif; --f-app:Nunito,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151113;--surf:#211B1E;--ink:#F2E9EC;--sub:#B5A3AA;--ln:#3A2F34;--acc:#E0849F;--soft:#3A2530;--pos:#7CC4A0;--neg:#F08A93;--phone:#1C1719;--frame:#0B0909;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151113;--surf:#211B1E;--ink:#F2E9EC;--sub:#B5A3AA;--ln:#3A2F34;--acc:#E0849F;--soft:#3A2530;--pos:#7CC4A0;--neg:#F08A93;--phone:#1C1719;--frame:#0B0909;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 120px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:28px}
+h1{font-family:var(--f-disp);font-size:clamp(26px,5vw,38px);line-height:1.1;margin:0;text-wrap:balance}
+.lede{color:var(--sub);max-width:64ch;margin:8px 0 0}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fact{font-size:12.5px;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--acc);font-weight:600}
+.opt{background:var(--surf);border:1px solid var(--ln);border-radius:22px;padding:20px;display:grid;gap:16px}
+.opt.rec{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.head{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--f-disp);font-weight:700;font-size:15px;background:var(--acc);color:#fff;border-radius:10px;padding:4px 10px}
+.name{font-family:var(--f-disp);font-size:21px;font-weight:700;margin:0;flex:1;min-width:200px}
+.badge{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pos);border:1px solid var(--pos);border-radius:99px;padding:3px 10px}
+.what{margin:0;color:var(--sub);max-width:70ch}
+.store{display:grid;gap:4px;padding:12px 14px;border-radius:14px;background:var(--soft)}
+.store b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.store .en{font-size:16px;font-weight:700}
+.store .ar{font-size:16px;font-weight:700;font-family:var(--f-app)}
+.phones{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.ph{width:250px;max-width:100%;border-radius:34px;background:var(--frame);padding:9px;flex:0 0 auto}
+.scr{background:var(--phone);border-radius:26px;min-height:470px;padding:14px 12px;font-family:var(--f-app);font-size:12.5px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.cap{text-align:center;font-size:12px;color:var(--sub);margin-top:6px;font-weight:600}
+.bar{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);font-weight:700}
+.t{font-weight:900;font-size:16px;margin:2px 0 0}
+.s{color:var(--sub);font-size:11.5px;margin:0}
+.card{background:var(--surf);border:1px solid var(--ln);border-radius:14px;padding:10px;display:grid;gap:5px}
+.lbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
+.big{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:6px;font-variant-numeric:tabular-nums}
+.row span:first-child{min-width:0}
+.btn{background:var(--acc);color:#fff;border-radius:99px;text-align:center;font-weight:800;padding:8px}
+.ghost{border:1px solid var(--ln);border-radius:99px;text-align:center;font-weight:700;padding:7px;color:var(--ink)}
+.chip{display:inline-block;background:var(--soft);color:var(--acc);border-radius:99px;padding:2px 8px;font-weight:800;font-size:10.5px}
+.ok{color:var(--pos);font-weight:800}
+.box{border:1px solid var(--ln);border-radius:14px;padding:9px;background:var(--surf);color:var(--ink)}
+.ar-t{direction:rtl;text-align:right}
+.store-ph .icon{width:54px;height:54px;border-radius:14px;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:900;font-size:22px}
+.shot{height:92px;border-radius:10px;background:var(--soft);display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;color:var(--acc);font-size:11px}
+.pm{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.pm p{margin:0;padding:10px 12px;border-radius:12px;background:var(--bg);font-size:14px}
+.pm .plus b{color:var(--pos)} .pm .minus b{color:var(--neg)}
+.pick{display:grid;gap:8px;border-top:1px solid var(--ln);padding-top:12px}
+.pick label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.pick input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
+.pick textarea{width:100%;min-height:52px;border-radius:12px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);padding:10px;font:inherit;font-size:14px;resize:vertical}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:5}
+.sticky .in{max-width:1040px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#picked{flex:1;min-width:0;font-size:13.5px;white-space:pre-wrap;color:var(--sub);max-height:72px;overflow:auto}
+#copy{background:var(--acc);color:#fff;border:0;border-radius:99px;padding:11px 18px;font-weight:800;font:inherit;font-weight:700;cursor:pointer}
+#copy:focus-visible,.pick input:focus-visible,.pick textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#fallback{width:100%;min-height:60px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;font-size:13px}
+.note{font-size:13px;color:var(--sub);margin:0}
+.flow{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.und{display:grid;gap:6px;margin:0;padding:12px 14px 12px 30px;border-radius:14px;background:var(--bg);font-size:14px}
+.src{font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 5px;background:var(--bg);color:var(--sub);border:1px solid var(--ln)}
+.ed{color:var(--acc);font-weight:900}
+.warn{border-color:#C98A1B;background:color-mix(in srgb,#C98A1B 10%,var(--surf))}
+.warn .lbl{color:#9A6A12}
+.field{display:grid;gap:2px;border:1px solid var(--ln);border-radius:10px;padding:6px 8px;background:var(--surf)}
+.field small{color:var(--sub);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.answer{background:var(--soft);border-radius:14px;padding:12px 14px;font-size:14px}
+.answer b{color:var(--acc)}
+.honest{border:1px dashed var(--ln);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--sub)}
+</style>
+<div class="wrap">
+<header><h1>The first minute: FM1 + FM3</h1>
+<p class="lede">One flow from your picks: FM1 (money from messages, now with Gmail too) with FM3's yearly subscriptions number inside it, ✎ on every line, and FM5's choice moved to after the first win. Your real numbers: Enzu 65 USD = 3,531.67 EGP, Claude Pro 22.80 USD, Google AI Pro 939.99, Talabat koshary 185, Sheikh 19,500.</p>
+<div class="store" style="margin-top:14px"><b>Store line</b><span class="en">Your money, subscriptions and dates organise themselves — from your messages and Gmail, offline.</span><span class="ar" dir="rtl">فلوسك واشتراكاتك ومواعيدك بتترتب لوحدها — من رسايلك والجيميل، ومن غير نت.</span></div></header>
+<div class="answer"><b>Your question on FM2:</b> Yes, it's already in the app: write several things in Home's box and “Organise this” sorts them. It stays as the way in for anyone who taps “Not now”.</div>
+<section class="opt" data-code="S1"><div class="head"><span class="code">S1</span><h2 class="name">1 · Two sources</h2></div>
+<div class="phones"><div><div class="ph"><div class="scr"><div class="bar"><span>9:41</span><span>Attune</span></div>
+<p class="t">Let Attune organise your money?</p>
+<p class="s">Read on this phone only. Nothing is sent anywhere.</p>
+<div class="card"><div class="row"><b>Bank &amp; wallet messages</b><span class="ok">● On</span></div><span class="s">CIB, InstaPay, Vodafone Cash…</span></div>
+<div class="card"><div class="row"><b>Gmail receipts &amp; bills</b><span class="ok">● On</span></div><span class="s">Google Play, PayPal, Stripe, invoices. Only money emails are kept.</span></div>
+<div style="flex:1"></div>
+<div class="btn">Show my month</div><div class="ghost">Not now — let me type</div></div></div><p class="cap">1 · One question, two sources</p></div><ul class="und"><li>Bank messages AND Gmail are both on by default (your FM1 note). Either can be switched off.</li><li>Only money emails are kept (receipts, bills, invoices). Other emails are never stored.</li><li>“Not now — let me type” opens the box you already have (Organise this), which is FM2. So FM2 isn't a new thing, just the way in for people who say no.</li></ul></div></section><section class="opt" data-code="S2"><div class="head"><span class="code">S2</span><h2 class="name">2 · Accuracy first</h2></div>
+<div class="phones"><div><div class="ph"><div class="scr"><div class="bar"><span>9:41</span><span>Reading…</span></div>
+<p class="t">Reading the last 30 days</p>
+<div class="card"><div class="row"><span>Bank messages</span><span class="ok">46 ✓</span></div><div class="row"><span>Gmail money emails</span><span class="ok">12 ✓</span></div><div class="row"><span>Same payment in both</span><span>2 joined</span></div></div>
+<div class="card"><span class="lbl">Checking every number</span><span class="s">Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.</span></div>
+<div style="flex:1"></div><div class="ghost">Reading 58 of 58…</div></div></div><p class="cap">2 · Reading (about 40 seconds)</p></div><ul class="und"><li>Every amount is read by code from the message itself (the readers trained on your real screenshots), then checked: total vs. tax lines, currency, date order.</li><li>The same payment found in an SMS and an email is joined once, never counted twice.</li><li>Anything not sure is never saved silently; it goes to step 3 as “Check this one”.</li></ul></div></section><section class="opt" data-code="S3"><div class="head"><span class="code">S3</span><h2 class="name">3 · FM1 + FM3 together</h2></div>
+<div class="phones"><div><div class="ph"><div class="scr"><div class="bar"><span>9:42</span><span>November</span></div>
+<div class="card"><span class="lbl">November so far</span><span class="big">7,275.38 EGP</span><span class="s">from 46 messages and 12 emails, nothing typed</span></div>
+<div class="card"><span class="lbl">Subscriptions · 68,524.56 a year</span><span class="s">5,710.38 a month</span>
+<div class="row"><span>Claude Pro <span class="src">Gmail</span></span><span>1,238.72 <span class="ed">✎</span></span></div>
+<div class="row"><span>Google AI Pro <span class="src">Gmail</span></span><span>939.99 <span class="ed">✎</span></span></div></div>
+<div class="card warn"><span class="lbl">Check this one</span><div class="row"><span>Dash Networks (Enzu) <span class="src">PayPal</span></span><span>3,531.67 <span class="ed">✎</span></span></div><span class="s">A monthly invoice too (due 1 Dec). Is it the same plan?</span><div class="row"><span class="chip">Yes, same</span><span class="chip">No, two</span></div></div>
+<div class="card"><span class="lbl">Also</span><div class="row"><span>Carrefour <span class="src">SMS</span></span><span>1,240 <span class="ed">✎</span></span></div><div class="row"><span>Talabat · koshary <span class="src">SMS</span></span><span>185 <span class="ed">✎</span></span></div><div class="row"><span>Uber <span class="src">Gmail</span></span><span>140 <span class="ed">✎</span></span></div></div>
+<div class="btn">All right ✓</div></div></div><p class="cap">3 · The month + the yearly number</p></div><ul class="und"><li>The month first (FM1), with the yearly subscriptions number inside it (FM3): 5,710.38 × 12 = 68,524.56.</li><li>Every line shows where it came from (SMS / Gmail / PayPal) and has ✎.</li><li>Your Enzu charge is the example of a “Check this”: a PayPal payment AND an invoice; Attune asks instead of guessing.</li></ul></div></section><section class="opt" data-code="S4"><div class="head"><span class="code">S4</span><h2 class="name">4 · Edit anything (your note)</h2></div>
+<div class="phones"><div><div class="ph"><div class="scr"><div class="bar"><span>9:42</span><span>Claude Pro</span></div>
+<p class="t">Is this right?</p>
+<div class="field"><small>Name</small><span>Claude Pro</span></div>
+<div class="field"><small>Amount</small><span>22.80 USD = 1,238.72 EGP</span></div>
+<div class="field"><small>Every</small><span>month · renews 12 Dec</span></div>
+<div class="field"><small>Category</small><span>Subscriptions</span></div>
+<div class="field"><small>Card</small><span>Mastercard ··2969</span></div>
+<div class="ghost">Show the email it came from</div>
+<div class="row"><span class="chip">Not a subscription</span><span class="chip">Not mine</span></div>
+<div class="btn">Save</div>
+<p class="s">Attune learns: the next Anthropic receipt is read the same way.</p></div></div><p class="cap">4 · Tap ✎ — fix anything</p></div><ul class="und"><li>✎ opens name, amount, how often, next date, category and card. Each one can be changed.</li><li>“Show the email it came from” shows the whole message behind the line.</li><li>Not a subscription / Not mine remove it. What you fix is learned for the next message from the same sender.</li></ul></div></section><section class="opt" data-code="S5"><div class="head"><span class="code">S5</span><h2 class="name">5 · FM5, done better</h2></div>
+<div class="phones"><div><div class="ph"><div class="scr"><div class="bar"><span>9:43</span><span>Done ✓</span></div>
+<p class="t">Your month is organised.</p>
+<p class="s">Want Attune to do one more? (any time later from Home)</p>
+<div class="card"><b>🤝 Who owes me</b><span class="s">Attune found “Sheikh” in your messages. Add his 19,500?</span></div>
+<div class="card"><b>📄 Papers and their dates</b><span class="s">passport, ID, car licence — a photo each</span></div>
+<div class="card"><b>🔑 Passwords</b><span class="s">paste your page, kept locked</span></div>
+<div style="flex:1"></div><div class="ghost">Later — take me Home</div></div></div><p class="cap">5 · After the win: what next?</p></div><ul class="und"><li>The choice comes AFTER the person has seen value, not before. Nobody has to decide anything at second 0.</li><li>Each tile says what Attune already found (for example Sheikh from your messages), so it's a quick yes, not a new setup.</li><li>“Later” always takes them Home; the tiles stay in Set up your life.</li></ul></div></section>
+<div class="honest"><b>Two honest notes.</b> (1) Gmail on everyone's phone: Google checks every app that reads Gmail before it can be public (a security review of the app, with a fee). Until it passes, Gmail works for you and testers only; the bank-messages part works for everyone from day one. (2) “No mistakes”: Attune will never save a line it isn't sure of. It asks (“Check this one”) instead, so in the worst case a new person answers one or two questions, and wrong numbers never go in silently.</div>
+<section class="opt" data-code="OK-FM"><div class="head"><span class="code">OK-FM</span><h2 class="name">Build exactly this</h2></div><p class="what">Tick OK-FM if this is what you want. To change a screen, tick it and write what to change in its note.</p></section>
+</div>
+<div class="sticky"><div class="in"><div id="picked">Nothing picked yet</div><button id="copy" type="button">Copy my picks</button></div><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div>
+<script>
+(function () {
+  var KEY = "attune-first-minute-combined";
+  var saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  var opts = [].slice.call(document.querySelectorAll(".opt"));
+  opts.forEach(function (o) {
+    var code = o.getAttribute("data-code"), s = saved[code] || {};
+    var div = document.createElement("div"); div.className = "pick";
+    div.innerHTML = '<label for="pk-' + code + '"><input type="checkbox" id="pk-' + code + '"> ' + (code === 'OK-FM' ? 'OK — build it' : 'Change something on ' + code) + '</label>' +
+      '<textarea id="nt-' + code + '" placeholder="Your note on this option"></textarea>';
+    o.appendChild(div);
+    var cb = div.querySelector("input"), ta = div.querySelector("textarea");
+    cb.checked = !!s.on; ta.value = s.note || "";
+    cb.addEventListener("change", update); ta.addEventListener("input", update);
+  });
+  function collect() {
+    var out = [], st = {};
+    opts.forEach(function (o) { var c = o.getAttribute("data-code"), on = document.getElementById("pk-" + c).checked, n = document.getElementById("nt-" + c).value.trim();
+      st[c] = { on: on, note: n }; if (on || n) out.push(c + (on ? "" : (c === "OK-FM" ? " (not OK yet)" : "")) + (n ? " — " + n : "")); });
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
+    return out.join("\n");
+  }
+  function update() { var t = collect(); document.getElementById("picked").textContent = t || "Nothing picked yet"; }
+  document.getElementById("copy").addEventListener("click", function () {
+    var t = collect() || "No picks"; var b = this, fb = document.getElementById("fallback");
+    function done() { b.textContent = "Copied ✓"; setTimeout(function () { b.textContent = "Copy my picks"; }, 1600); }
+    function manual() { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); b.textContent = "Select and copy"; }
+    try { navigator.clipboard.writeText(t).then(done, manual); } catch (e) { manual(); }
+  });
+  update();
+})();
+</script>
