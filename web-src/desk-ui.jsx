@@ -62,7 +62,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
   // v7.6 (Ali): Chat · Your life · Translate as pills in the box (the separate pages are gone)
   const [boxMode, setBoxMode] = useState(takeBoxMode);
   const [life, setLife] = useState(null);
-  useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
+  useEffect(() => { const on = (e) => { const kept = takeBoxMode(); setBoxMode((e && e.detail) || kept); setLife(null); };   /* (v10.9.5: the event says the mode — the stored one may already be taken by a Home built again) */ window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
   const send = () => {
     const t = text.trim(); if (!t) return; setText(""); setLife(null); setDone(null); setListAns(null);
     if (boxMode === "life") { let a = null; try { a = LA.askLife(t, LA.loadStores()); } catch (e) { a = null; } if (a && a.kind === "world") return onAsk(t); return setLife({ q: t, a }); }   // v8.7: the world → the chat

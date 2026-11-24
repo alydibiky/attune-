@@ -9,8 +9,9 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 now = int(datetime.datetime.now().timestamp() * 1000)
+SOON = min(now + 3600000, int(datetime.datetime.combine(datetime.date.today(), datetime.time(23, 59, 0)).timestamp() * 1000))   # (later TODAY — at 23:30 "in an hour" is tomorrow)
 LEDGER = {"accounts": [{"id": "a1", "name": "Cash", "currency": "EGP"}], "txns": [], "recurring": []}
-REM = [{"id": "r1", "title": "Ask about maid in address east Whatsapp group", "at": now + 3600000, "repeat": "none", "created": now - 86400000}]
+REM = [{"id": "r1", "title": "Ask about maid in address east Whatsapp group", "at": SOON, "repeat": "none", "created": now - 86400000}]
 DIR = {"items": [{"id": "p1", "kind": "person", "name": "Nada", "role": "wife"}], "skip": []}
 NOTES = [{"id": "n1", "app": "Life360", "pkg": "com.life360.android.safetymapd", "title": "Nada", "text": "Arrived at Home", "ts": now - 600000}]
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:test:quiet','0');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));"

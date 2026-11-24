@@ -9,8 +9,9 @@ from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 now = int(datetime.datetime.now().timestamp() * 1000)
-REM = [{"id": "r1", "title": "Call the crane yard", "at": now + 3600000, "repeat": "none", "created": now - 86400000},
-       {"id": "r2", "title": "Pay the maid", "at": now + 7200000, "repeat": "none", "created": now - 86400000}]
+SOON = min(now + 3600000, int(datetime.datetime.combine(datetime.date.today(), datetime.time(23, 59, 0)).timestamp() * 1000))   # (later TODAY — at 23:30 "in an hour" is tomorrow)
+REM = [{"id": "r1", "title": "Call the crane yard", "at": SOON, "repeat": "none", "created": now - 86400000},
+       {"id": "r2", "title": "Pay the maid", "at": SOON + 15000, "repeat": "none", "created": now - 86400000}]
 INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:coach:v1',JSON.stringify({seen:['*']}));"
         "localStorage.setItem('attune:reminders:v1',%s);}catch(e){};") % json.dumps(json.dumps(REM))
 LONG = ("I would really like you to please write for me a very detailed and very long explanation, if it is possible, of how the hydraulic "

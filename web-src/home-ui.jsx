@@ -157,7 +157,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   // v7.6 (Ali): Chat · Your life · Translate are three pills in the box (the separate pages are gone)
   const [boxMode, setBoxMode] = useState(takeBoxMode);
   const [life, setLife] = useState(null);   // { q, a } — Your life's answer, under the box
-  useEffect(() => { const on = (e) => { setBoxMode(takeBoxMode() || e.detail); setLife(null); }; window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
+  useEffect(() => { const on = (e) => { const kept = takeBoxMode(); setBoxMode((e && e.detail) || kept); setLife(null); };   /* (v10.9.5: the event says the mode — the stored one may already be taken by a Home built again) */ window.addEventListener("attune-box-mode", on); return () => window.removeEventListener("attune-box-mode", on); }, []);
   const tr2 = boxMode === "translate";
   const [panel, setPanel] = useState(null);       // the outcome being shown (cmdrun.js)
   // v8.7 (persona 4, idea 10): something shared from another app — one line, Yes does it, No keeps it as a note
