@@ -7,6 +7,14 @@
 > attune:pw:*); restoreData "replace" never deletes the phone's passwords when the incoming data has none (a sync from the computer), but a
 > backup restore with passwords replaces them. backup.js NEVER_SYNC. The page's line: "Never in sync or any AI — only in your locked backup".
 > Also in this version: tests/scan/reallike.mjs (10,000 in the layouts of Ali's real screenshots, 75.2 % → 100 %, held-out 100 %).
+> **Kept-page fixes found by the full suite (same version):** a kept page (v10.9.2) whose data changed while you were away is BUILT AGAIN AT
+> ONCE (the stamp is taken when the page is built, not when you leave — the maid / renewal rows were missing on Home); unchanged pages still
+> show instantly. Home closes My report when you leave it ("attune-page-left"); the side-menu search "warranty" unfolds Things I own on a kept
+> Follow-ups ("attune-fu-things"); "Your life" from anywhere keeps its pill (the event's mode wins over the stored one). Arabic "my…" questions
+> (ASK_PERSONAL_AR: «الشهر اللي فات», «دفعت», «امبارح»…) reach the meaning search — it was English-only (tests/unit/v1095personal). 16 old e2e
+> tests now pick only visible elements (kept pages hide copies) and follow v10.9.1's flows (backup step opens the panel itself); reminders in
+> tests land "later today" (they failed after 23:00). Note: the Plan table lists "Sync with your computer" under Pro — phone↔phone Google sync
+> is free, the computer app itself is Pro.
 
 > ## START HERE (23 Nov 2026, night — v10.9.4: the Passwords page + Ali's real screenshots)
 > **OK-PW2 built**: side menu → Passwords (web-src/pw-ui.jsx, pwstore.js, pwpaste.js): Toggles like Notion / All together (remembered), search,
