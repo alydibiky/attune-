@@ -5,7 +5,7 @@
    Gmail is then read by itself every 3 hours (gmail.js gmailDue; Ali: "read automatically"). firstmin.js does the reading. */
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Pencil, Check, Mail, MessageSquare, Loader2 } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import * as FM from "./firstmin.js";
 import { readGmail, loadGmail } from "./gmail.js";
 import { appendToLedger, alreadyIn } from "./paylog.js";
@@ -20,6 +20,7 @@ const fmt = (v, cur) => `${(Math.round(v * 100) / 100).toLocaleString("en-US", {
 const CATS = ["food", "groceries", "shopping", "transport", "bills", "subscriptions", "health", "other"];
 const CAT_EN = { food: "Food", groceries: "Groceries", shopping: "Shopping", transport: "Transport", bills: "Bills", subscriptions: "Subscriptions", health: "Health", other: "Other" };
 const SRC = { sms: "SMS", gmail: "Gmail" };
+const day = (iso) => { try { return iso ? new Date(iso + "T12:00:00").toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) : "—"; } catch (e) { return iso || "—"; } };
 const btn = "min-h-[48px] rounded-full font-extrabold text-[15.5px] px-5";
 const solid = btn + " bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]";
 const ghost = btn + " border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)]";
@@ -133,7 +134,7 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
       {edit.cur !== home && edit.home != null ? <p className="m-0 text-[12.5px] c-sub" dir="ltr">= {fmt(edit.home, home)}</p> : null}
       {field("Every", <div className="flex gap-1.5 flex-wrap">{[["spend", "Once"], ["month", "Month"], ["year", "Year"], ["week", "Week"]].map(([k, t]) => { const on = k === "spend" ? edit.kind !== "sub" : edit.kind === "sub" && (edit.cycle || "month") === k;
         return <button key={k} onClick={() => upd(k === "spend" ? { kind: "spend" } : { kind: "sub", cycle: k })} aria-pressed={on} className={"min-h-[40px] px-4 rounded-full border text-[13.5px] font-bold " + (on ? "border-[var(--c-acc)] bg-[var(--c-soft)] c-acc" : "border-[var(--c-ln)]")} data-testid={"fm-edit-every-" + k}>{tr(t)}</button>; })}</div>)}
-      {edit.kind === "sub" && edit.next ? <p className="m-0 text-[13px] c-sub">{tr("Renews {d}", { d: edit.next })}</p> : null}
+      {edit.kind === "sub" && edit.next ? <p className="m-0 text-[13px] c-sub">{tr("Renews {d}", { d: day(edit.next) })}</p> : null}
       {field("Category", <select value={edit.cat || "other"} onChange={(e) => upd({ cat: e.target.value })} className={inp} data-testid="fm-edit-cat">{CATS.map((c) => <option key={c} value={c}>{tr(CAT_EN[c])}</option>)}</select>)}
       {edit.last4 ? <p className="m-0 text-[13px] c-sub" dir="auto">{tr("Card")} ··{edit.last4}</p> : null}
       <button onClick={() => setShowMsg(!showMsg)} className={ghost + " w-full"} data-testid="fm-edit-show">{edit.src.includes("gmail") ? tr("Show the email it came from") : tr("Show the message it came from")}</button>
@@ -154,8 +155,8 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
   </>, <button onClick={() => { onClose(); navTo && navTo("home"); }} className={ghost + " w-full"} data-testid="fm-home">{tr("Later — take me Home")}</button>);
 
   // S3 the month
-  const subs = res.subs, spend = res.spend, total = res.total, foreign = Object.entries(res.foreign);
-  const ask = res.check;
+  const ask = res.check, asked = new Set(ask.map((c) => c.with).filter(Boolean));   // (the line a question is about shows once, in the question)
+  const subs = res.subs.filter((l) => !asked.has(l.id)), spend = res.spend.filter((l) => !asked.has(l.id)), total = res.total, foreign = Object.entries(res.foreign);
   const answer = (c, a) => {
     if (c.q === "same") { const sib = [...res.spend, ...res.subs].find((x) => x.id === c.with); let l = FM.fixLine(learn, c.line, { billSame: a });
       if (a && sib) l = FM.fixLine(l, sib, { sub: true, cycle: "month" }); putLearn(l); }
@@ -170,8 +171,8 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
     {empty ? <div className={card} data-testid="fm-empty"><b className="block text-[15px]">{tr("No payments found in the last 30 days")}</b><span className="block text-[13px] c-sub">{got.note === "gmail" ? tr("Gmail could not be read — you can connect it later from Money.") : tr("New bank messages are read as they arrive, from now on.")}</span></div> : null}
     {ask.map((c) => <div key={c.id} className={card + " border-[#C98A1B] bg-[color-mix(in_srgb,#C98A1B_10%,var(--c-surf))]"} data-testid="fm-check" data-q={c.q}>
       <span className={lbl + " !text-[#9A6A12]"}>{tr("Check this one")}</span>
-      {row(c.q === "same" ? [...spend, ...subs].find((x) => x.id === c.with) || c.line : c.line)}
-      <p className="m-0 text-[13.5px]" dir="auto">{c.q === "same" ? tr("{n} also sent an invoice for {a} (due {d}). Is it the same plan?", { n: c.line.name, a: fmt(c.line.amount, c.line.cur), d: c.line.due || "—" })
+      {row(c.q === "same" ? [...res.spend, ...res.subs].find((x) => x.id === c.with) || c.line : c.line)}
+      <p className="m-0 text-[13.5px]" dir="auto">{c.q === "same" ? tr("{n} also sent an invoice for {a} (due {d}). Is it the same plan?", { n: c.line.name, a: fmt(c.line.amount, c.line.cur), d: day(c.line.due) })
         : c.q === "cycle" ? tr("How often is {n} paid?", { n: c.line.name }) : tr("Is this amount right?")}</p>
       <div className="flex gap-2 flex-wrap">{(c.q === "same" ? [[true, "Yes, same"], [false, "No, two"]] : c.q === "cycle" ? [["cycle-month", "Every month"], ["cycle-year", "Every year"]] : [["ok", "Right ✓"]]).map(([a, t]) =>
         <button key={String(a)} onClick={() => answer(c, a)} className="min-h-[40px] px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-soft)] c-acc text-[13.5px] font-extrabold" data-testid="fm-check-answer">{tr(t)}</button>)}</div></div>)}
