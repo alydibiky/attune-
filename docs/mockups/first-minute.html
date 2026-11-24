@@ -1,0 +1,243 @@
+<title>Attune First Minute</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a column of options; each option = its store line + two phones (the store page · the first minute) + plus/minus + pick */
+:root{
+  --bg:#F6F3F4; --surf:#FFFFFF; --ink:#24171C; --sub:#6E5C63; --ln:#E7DDE1;
+  --acc:#7A1F3D; --soft:#F3E6EB; --pos:#2F6B4F; --neg:#A8323E; --phone:#FBF8F9; --frame:#2A2226;
+  --f-disp:"Space Grotesk",Inter,system-ui,sans-serif; --f-body:Inter,system-ui,sans-serif; --f-app:Nunito,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151113;--surf:#211B1E;--ink:#F2E9EC;--sub:#B5A3AA;--ln:#3A2F34;--acc:#E0849F;--soft:#3A2530;--pos:#7CC4A0;--neg:#F08A93;--phone:#1C1719;--frame:#0B0909;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151113;--surf:#211B1E;--ink:#F2E9EC;--sub:#B5A3AA;--ln:#3A2F34;--acc:#E0849F;--soft:#3A2530;--pos:#7CC4A0;--neg:#F08A93;--phone:#1C1719;--frame:#0B0909;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 120px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:28px}
+h1{font-family:var(--f-disp);font-size:clamp(26px,5vw,38px);line-height:1.1;margin:0;text-wrap:balance}
+.lede{color:var(--sub);max-width:64ch;margin:8px 0 0}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fact{font-size:12.5px;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--acc);font-weight:600}
+.opt{background:var(--surf);border:1px solid var(--ln);border-radius:22px;padding:20px;display:grid;gap:16px}
+.opt.rec{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.head{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--f-disp);font-weight:700;font-size:15px;background:var(--acc);color:#fff;border-radius:10px;padding:4px 10px}
+.name{font-family:var(--f-disp);font-size:21px;font-weight:700;margin:0;flex:1;min-width:200px}
+.badge{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pos);border:1px solid var(--pos);border-radius:99px;padding:3px 10px}
+.what{margin:0;color:var(--sub);max-width:70ch}
+.store{display:grid;gap:4px;padding:12px 14px;border-radius:14px;background:var(--soft)}
+.store b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.store .en{font-size:16px;font-weight:700}
+.store .ar{font-size:16px;font-weight:700;font-family:var(--f-app)}
+.phones{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.ph{width:250px;max-width:100%;border-radius:34px;background:var(--frame);padding:9px;flex:0 0 auto}
+.scr{background:var(--phone);border-radius:26px;min-height:470px;padding:14px 12px;font-family:var(--f-app);font-size:12.5px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.cap{text-align:center;font-size:12px;color:var(--sub);margin-top:6px;font-weight:600}
+.bar{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);font-weight:700}
+.t{font-weight:900;font-size:16px;margin:2px 0 0}
+.s{color:var(--sub);font-size:11.5px;margin:0}
+.card{background:var(--surf);border:1px solid var(--ln);border-radius:14px;padding:10px;display:grid;gap:5px}
+.lbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
+.big{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:6px;font-variant-numeric:tabular-nums}
+.row span:first-child{min-width:0}
+.btn{background:var(--acc);color:#fff;border-radius:99px;text-align:center;font-weight:800;padding:8px}
+.ghost{border:1px solid var(--ln);border-radius:99px;text-align:center;font-weight:700;padding:7px;color:var(--ink)}
+.chip{display:inline-block;background:var(--soft);color:var(--acc);border-radius:99px;padding:2px 8px;font-weight:800;font-size:10.5px}
+.ok{color:var(--pos);font-weight:800}
+.box{border:1px solid var(--ln);border-radius:14px;padding:9px;background:var(--surf);color:var(--ink)}
+.ar-t{direction:rtl;text-align:right}
+.store-ph .icon{width:54px;height:54px;border-radius:14px;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:900;font-size:22px}
+.shot{height:92px;border-radius:10px;background:var(--soft);display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;color:var(--acc);font-size:11px}
+.pm{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.pm p{margin:0;padding:10px 12px;border-radius:12px;background:var(--bg);font-size:14px}
+.pm .plus b{color:var(--pos)} .pm .minus b{color:var(--neg)}
+.pick{display:grid;gap:8px;border-top:1px solid var(--ln);padding-top:12px}
+.pick label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.pick input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
+.pick textarea{width:100%;min-height:52px;border-radius:12px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);padding:10px;font:inherit;font-size:14px;resize:vertical}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:5}
+.sticky .in{max-width:1040px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#picked{flex:1;min-width:0;font-size:13.5px;white-space:pre-wrap;color:var(--sub);max-height:72px;overflow:auto}
+#copy{background:var(--acc);color:#fff;border:0;border-radius:99px;padding:11px 18px;font-weight:800;font:inherit;font-weight:700;cursor:pointer}
+#copy:focus-visible,.pick input:focus-visible,.pick textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#fallback{width:100%;min-height:60px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;font-size:13px}
+.note{font-size:13px;color:var(--sub);margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>The first minute in Attune</h1>
+    <p class="lede">Same app, same features: organise your life, with money, subscriptions, dates and people. What changes is the one line people read in the store and what they see in their first minute. Every example uses your real numbers: the Enzu charge (65 USD = 3,531.67 EGP), Google AI Pro 939.99 EGP, Claude Pro 22.80 USD, Talabat koshary, the maid every Saturday 600, Sheikh's 19,500 in instalments of 2,500.</p>
+    <div class="facts"><span class="fact">Exchange used: 1 USD = 54.33 EGP (from your PayPal line)</span><span class="fact">Subscriptions: 939.99 + 1,238.72 + 3,531.67 = 5,710.38 EGP a month</span></div>
+  </header>
+
+  <!-- FM1 -->
+  <section class="opt rec" data-code="FM1">
+    <div class="head"><span class="code">FM1</span><h2 class="name">Your money sorts itself</h2><span class="badge">Recommended</span></div>
+    <p class="what">One tap allows bank messages. Attune reads the last 30 days on the phone and shows this month at once: spending, subscriptions and what renews next. The person sees the value before typing anything.</p>
+    <div class="store"><b>Store line</b><span class="en">Your money, subscriptions and dates organise themselves — from your messages, offline.</span><span class="ar" dir="rtl">فلوسك واشتراكاتك ومواعيدك بتترتب لوحدها — من رسايلك، ومن غير نت.</span></div>
+    <div class="phones">
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:41</span><span>Attune</span></div>
+        <p class="t">Let Attune read your bank messages?</p>
+        <p class="s">Only bank and wallet messages. Read on this phone, never sent anywhere.</p>
+        <div class="card"><span class="lbl">It will find</span><span>• What you spent and where</span><span>• Subscriptions and when they renew</span><span>• Money people owe you</span></div>
+        <div style="flex:1"></div>
+        <div class="btn">Allow and show my month</div><div class="ghost">Not now — let me type</div>
+      </div></div><p class="cap">Second 0: one question</p></div>
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:42</span><span>Read 46 messages</span></div>
+        <div class="card"><span class="lbl">November so far</span><span class="big">7,275.38 EGP</span><span class="s">from your messages — nothing typed</span></div>
+        <div class="card"><span class="lbl">3 subscriptions · 5,710.38 a month</span>
+          <div class="row"><span>Dash Networks (Enzu)</span><span>3,531.67</span></div>
+          <div class="row"><span>Claude Pro · 22.80 USD</span><span>1,238.72</span></div>
+          <div class="row"><span>Google AI Pro</span><span>939.99</span></div></div>
+        <div class="card"><span class="lbl">Also</span><div class="row"><span>Carrefour</span><span>1,240</span></div><div class="row"><span>Talabat · koshary</span><span>185</span></div><div class="row"><span>Uber</span><span>140</span></div></div>
+        <div class="card"><span class="lbl">Next</span><span>Google AI Pro renews <b>3 Dec</b></span></div>
+        <div class="btn">Looks right ✓</div>
+      </div></div><p class="cap">Second 40: the month, already organised</p></div>
+    </div>
+    <div class="pm"><p class="plus"><b>+</b> Shows the value with zero typing, and it's the core you already agreed on (money, subscriptions, dates).</p><p class="minus"><b>−</b> A person who says "Not now" to messages gets the slower start (FM2's box).</p></div>
+  </section>
+
+  <!-- FM2 -->
+  <section class="opt" data-code="FM2">
+    <div class="head"><span class="code">FM2</span><h2 class="name">Just say it</h2></div>
+    <p class="what">The first screen is one box. The person writes a few things the way they'd say them, and Attune puts each in its place right away: money, people, reminders.</p>
+    <div class="store"><b>Store line</b><span class="en">Say it the way you'd say it — Attune puts your life in order.</span><span class="ar" dir="rtl">قولها زي ما بتقولها — Attune بيرتب حياتك.</span></div>
+    <div class="phones">
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:41</span><span>Attune</span></div>
+        <p class="t">Tell Attune 3 things about your week</p>
+        <div class="box ar-t" dir="rtl">الشغالة كل سبت ب ٦٠٠<br>شيخ عليه ١٩٬٥٠٠ أقساط ٢٬٥٠٠<br>كشري طلبات ١٨٥</div>
+        <p class="s">Examples you can tap: “lunch 150, taxi 60” · “Ahmed owes me 500”</p>
+        <div style="flex:1"></div>
+        <div class="btn">Organise it</div>
+      </div></div><p class="cap">Second 0: one box</p></div>
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:42</span><span>3 put away</span></div>
+        <div class="card"><span class="lbl">People &amp; plans</span><span>Maid · 600 every Saturday <span class="chip">tick box on Home</span></span></div>
+        <div class="card"><span class="lbl">Debts</span><span>Sheikh owes 19,500 · 7 instalments of 2,500 + a last one of 2,000</span></div>
+        <div class="card"><span class="lbl">Money</span><span>Talabat · koshary −185 EGP</span></div>
+        <div class="card"><span class="lbl">Your Saturday</span><span><span class="ok">☐</span> Maid 600</span></div>
+        <div style="flex:1"></div>
+        <div class="ghost">Also read my bank messages →</div>
+      </div></div><p class="cap">Second 30: three things in place</p></div>
+    </div>
+    <div class="pm"><p class="plus"><b>+</b> Shows the "life organiser" idea directly and works without any permission.</p><p class="minus"><b>−</b> Needs the person to type first, and many people won't on day one.</p></div>
+  </section>
+
+  <!-- FM3 -->
+  <section class="opt" data-code="FM3">
+    <div class="head"><span class="code">FM3</span><h2 class="name">Subscriptions check</h2></div>
+    <p class="what">The hook is saving money. The first minute finds every subscription from messages or receipt screenshots and shows the yearly total and what renews next.</p>
+    <div class="store"><b>Store line</b><span class="en">Find every subscription you pay — and what renews next. Then organise the rest of your life.</span><span class="ar" dir="rtl">اعرف كل اشتراك بتدفعه — وإيه اللي هيتجدد. وبعدين رتب باقي حياتك.</span></div>
+    <div class="phones">
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:41</span><span>Attune</span></div>
+        <p class="t">How much do your subscriptions cost?</p>
+        <div class="shot">Messages<br>or<br>receipt screenshots</div>
+        <p class="s">Attune reads them on the phone: Google Play, PayPal, Stripe receipts, bank SMS.</p>
+        <div style="flex:1"></div>
+        <div class="btn">Find my subscriptions</div>
+      </div></div><p class="cap">Second 0: one question</p></div>
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:42</span><span>3 found</span></div>
+        <div class="card"><span class="lbl">A year of subscriptions</span><span class="big">68,524.56 EGP</span><span class="s">5,710.38 a month</span></div>
+        <div class="card"><div class="row"><span>Dash Networks (Enzu)</span><span>3,531.67</span></div><span class="s">renews 1 Dec · invoice due</span></div>
+        <div class="card"><div class="row"><span>Claude Pro</span><span>1,238.72</span></div><span class="s">22.80 USD · renews 12 Dec</span></div>
+        <div class="card"><div class="row"><span>Google AI Pro</span><span>939.99</span></div><span class="s">renews 3 Dec · Mastercard 2969</span></div>
+        <div class="ghost">Remind me 2 days before each</div>
+      </div></div><p class="cap">Second 40: the yearly number</p></div>
+    </div>
+    <div class="pm"><p class="plus"><b>+</b> The strongest "wow" number. People share "I pay 68,000 a year?!"</p><p class="minus"><b>−</b> It makes Attune look like a subscriptions app; the life organiser comes second.</p></div>
+  </section>
+
+  <!-- FM4 -->
+  <section class="opt" data-code="FM4">
+    <div class="head"><span class="code">FM4</span><h2 class="name">Your day on one page</h2></div>
+    <p class="what">Three quick taps (salary day, someone who comes regularly, one bill), then Home shows "Your day" with real things on it straight away.</p>
+    <div class="store"><b>Store line</b><span class="en">Your day, your money and your dates on one page — organised for you.</span><span class="ar" dir="rtl">يومك وفلوسك ومواعيدك في صفحة واحدة — متظبطين ليك.</span></div>
+    <div class="phones">
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:41</span><span>1 of 3</span></div>
+        <p class="t">Who comes regularly?</p>
+        <div class="card"><span>Maid</span><span class="s">every Saturday · 600 EGP</span></div>
+        <div class="card"><span class="s">Driver · tutor · gym — tap to add</span></div>
+        <div style="flex:1"></div>
+        <div class="btn">Next</div><div class="ghost">Skip</div>
+      </div></div><p class="cap">Seconds 0–30: three taps</p></div>
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>Sat 9:42</span><span>Home</span></div>
+        <p class="t">Good morning</p>
+        <div class="card"><span class="lbl">Your day</span><span><span class="ok">☐</span> Maid · 600</span><span>Sheikh's instalment 2,500 · 1 Dec</span><span>Google AI Pro renews 3 Dec · 939.99</span></div>
+        <div class="card"><span class="lbl">Money</span><div class="row"><span>Salary day</span><span>in 6 days</span></div><div class="row"><span>Spent this month</span><span>7,275.38</span></div></div>
+        <div style="flex:1"></div>
+        <div class="box s">Just say it: «drank 2 glasses of water»</div>
+      </div></div><p class="cap">Second 45: a full Home</p></div>
+    </div>
+    <div class="pm"><p class="plus"><b>+</b> Home is full on day one, which shows the "organiser" idea best.</p><p class="minus"><b>−</b> Three screens of questions; some people quit setups.</p></div>
+  </section>
+
+  <!-- FM5 -->
+  <section class="opt" data-code="FM5">
+    <div class="head"><span class="code">FM5</span><h2 class="name">Start with what matters to you</h2></div>
+    <p class="what">One screen with four tiles. The person picks what to organise first, and Attune opens that flow (FM1, FM3, papers, or people who owe money).</p>
+    <div class="store"><b>Store line</b><span class="en">Organise your life your way — money, subscriptions, papers and people, offline.</span><span class="ar" dir="rtl">رتب حياتك على طريقتك — فلوس، اشتراكات، ورق، وناس، من غير نت.</span></div>
+    <div class="phones">
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:41</span><span>Attune</span></div>
+        <p class="t">What should Attune organise first?</p>
+        <div class="card"><b>💳 My money from bank messages</b><span class="s">this month in 40 seconds</span></div>
+        <div class="card"><b>🔁 My subscriptions</b><span class="s">what renews and the yearly total</span></div>
+        <div class="card"><b>📄 My papers and their dates</b><span class="s">passport, ID, car licence</span></div>
+        <div class="card"><b>🤝 Who owes me</b><span class="s">debts and instalments</span></div>
+      </div></div><p class="cap">Second 0: pick one</p></div>
+      <div><div class="ph"><div class="scr">
+        <div class="bar"><span>9:42</span><span>Who owes me</span></div>
+        <div class="card"><span class="lbl">Sheikh</span><span class="big">19,500 EGP</span><span class="s">7 × 2,500 + 2,000 · next 1 Dec</span></div>
+        <div class="card"><span class="lbl">On Home</span><span>A tick box on each instalment day. When he pays, tap it and Money records it.</span></div>
+        <div style="flex:1"></div>
+        <div class="ghost">Now organise my money →</div>
+      </div></div><p class="cap">Second 40: their pick, done</p></div>
+    </div>
+    <div class="pm"><p class="plus"><b>+</b> Respects each person's reason for downloading.</p><p class="minus"><b>−</b> A choice before any value. Choices on minute one slow people down.</p></div>
+  </section>
+
+  <p class="note">Tick one or more (for example FM1 + FM3: the store line of FM1, the yearly subscription number inside it) and write a note on any option. "Copy my picks" copies the codes with your notes.</p>
+</div>
+
+<div class="sticky"><div class="in"><div id="picked">Nothing picked yet</div><button id="copy" type="button">Copy my picks</button></div><textarea id="fallback" hidden readonly aria-label="Your picks to copy"></textarea></div>
+
+<script>
+(function () {
+  var KEY = "attune-first-minute-picks";
+  var saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  var opts = [].slice.call(document.querySelectorAll(".opt"));
+  opts.forEach(function (o) {
+    var code = o.getAttribute("data-code"), s = saved[code] || {};
+    var div = document.createElement("div"); div.className = "pick";
+    div.innerHTML = '<label for="pk-' + code + '"><input type="checkbox" id="pk-' + code + '"> Pick ' + code + '</label>' +
+      '<textarea id="nt-' + code + '" placeholder="Your note on this option"></textarea>';
+    o.appendChild(div);
+    var cb = div.querySelector("input"), ta = div.querySelector("textarea");
+    cb.checked = !!s.on; ta.value = s.note || "";
+    cb.addEventListener("change", update); ta.addEventListener("input", update);
+  });
+  function collect() {
+    var out = [], st = {};
+    opts.forEach(function (o) { var c = o.getAttribute("data-code"), on = document.getElementById("pk-" + c).checked, n = document.getElementById("nt-" + c).value.trim();
+      st[c] = { on: on, note: n }; if (on || n) out.push(c + (on ? "" : " (not picked)") + (n ? " — " + n : "")); });
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
+    return out.join("\n");
+  }
+  function update() { var t = collect(); document.getElementById("picked").textContent = t || "Nothing picked yet"; }
+  document.getElementById("copy").addEventListener("click", function () {
+    var t = collect() || "No picks"; var b = this, fb = document.getElementById("fallback");
+    function done() { b.textContent = "Copied ✓"; setTimeout(function () { b.textContent = "Copy my picks"; }, 1600); }
+    function manual() { fb.hidden = false; fb.value = t; fb.focus(); fb.select(); b.textContent = "Select and copy"; }
+    try { navigator.clipboard.writeText(t).then(done, manual); } catch (e) { manual(); }
+  });
+  update();
+})();
+</script>
