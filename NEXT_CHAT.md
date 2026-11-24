@@ -8,7 +8,8 @@
 > cleans leftovers when Passwords opens. The restore guard stays (a restore without passwords never deletes them). Chat page (chat.jsx):
 > pwAsk first → a `pw` message (only account ids + titles kept in the chat) rendered by PwAnswer — worked out by code, never sent to the
 > model or the web, each password hidden until the fingerprint. Page line in 20 languages. Tests: v1094pw unit (+7), e2e_v1094pw (Chat, 390 + 1366).
-> **Waiting for Ali's pick: the first minute + store line** (FM1–FM5, FM1 recommended): https://claude.ai/artifact/JwH7j35mybQxfMK8kvjEd7 —
+> **First minute:** Ali picked FM1 (+ Gmail, accurate, ✎ edit) + FM3; FM2 = Organise this (already there); FM5 → after the win.
+> Combined mock-up waiting for **OK-FM**: https://claude.ai/artifact/SRbHba7CwMVSndiLqD7LX7 (options were https://claude.ai/artifact/JwH7j35mybQxfMK8kvjEd7) —
 > Ali agreed the scope is right (organise life: money, subscriptions, dates…); this is only how a NEW user sees it in minute one.
 
 > ## (23 Nov 2026, late — v10.9.5)
