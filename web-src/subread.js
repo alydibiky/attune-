@@ -109,7 +109,8 @@ export function readSubscription(text0, { now = Date.now(), order = "dmy", home 
   }
   const subWords = /subscription|membership|your plan|renews?|auto-?renew|billing|اشتراك|الاشتراك|باقة|الباقة|تجديد|abonnement|suscripci|abo\b|assinatura|abbonamento|abonelik|langganan|подписк|सदस्यता|اشتراک|সাবস্ক্রিপশন|usajili|สมาชิก|gói|订阅|サブスク|구독/i.test(all);
   if (!svc && !subWords) return null;
-  const cancelled = CANCEL_W.test(all);
+  // (v10.9.7, Ali's Google Play receipt: "charged … until cancelled. Learn how to cancel." is the terms, not a cancellation)
+  const cancelled = CANCEL_W.test(all.replace(/\buntil (?:you )?cancel(?:l?ed)?\b|\b(?:learn )?how to cancel\b|\bcancel (?:at )?any ?time\b|\byou (?:can|may) cancel\b[^.\n]*|\bto cancel\b[^.\n]*|\bunless (?:you )?cancel(?:l?ed)?\b|حتى (?:يتم )?(?:الإلغاء|الالغاء)|يمكنك (?:الإلغاء|الالغاء)/giu, " "));
   // the price: score each amount by its own line and the lines next to it
   const cands = amounts(lines).map((a) => {
     const own = a.line, prev = lines[a.li - 1] || "", next = lines[a.li + 1] || "";
