@@ -15181,4 +15181,5 @@ export const TRK = {
   "{n} accounts:": "{n} hesap:",
   "{n} were already here": "{n} zaten buradaydı",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Asla eşitlemede ya da yapay zekâda değil — yalnızca kilitli yedeğinde. Her şifre parmak izinle açılır.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "Diğer cihazlarınla eşitlenir ve yedeğinde saklanır — her zaman kilitli, hiçbir yapay zekâya gönderilmez. Her şifre parmak izinle açılır.",
 };

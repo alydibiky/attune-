@@ -1,7 +1,7 @@
 /* ---- v10.9.4 the Passwords page's store (Ali's OK-PW2, 23 Nov 2026: "as it is", screenshots, Home chat recalls, its own place, all
    together + toggles like Notion). Accounts: { id: "pw:…", title, fields: [{ id, name, value, lock, secs }], photos: [], created, updated }.
    The values of locked lines live in PW_SECRETS_KEY (docfields.js) — both keys start with "attune:pw:": in the encrypted backup file (Ali:
-   "yes", 23 Nov), never in sync (backup.js NEVER_SYNC), never sent to any AI. Pure apart from localStorage; tests: tests/unit/v1094pw.test.mjs, e2e_v1094pw.py. */
+   "yes", 23 Nov), in sync too (Ali, 24 Nov — the same encrypted file; backup.js mergePwSecrets), never sent to any AI. Pure apart from localStorage; tests: tests/unit/v1094pw.test.mjs, e2e_v1094pw.py. */
 import * as F from "./docfields.js";
 
 export const PW_KEY = "attune:pw:v1", PW_VIEW = "attune:pw:view";
@@ -34,6 +34,9 @@ export function removeAccounts(data, ids, st = ls()) {
   F.saveSecrets(sec, st, F.PW_SECRETS_KEY);
   return { ...data, items: data.items.filter((x) => !drop.has(x.id)) };
 }
+/** v10.9.6 sync: a password whose account was deleted (on this device or the other) is not kept. */
+export function pruneSecrets(data, st = ls()) { try { const sec = F.loadSecrets(st, F.PW_SECRETS_KEY), ids = new Set(data.items.map((x) => x.id)), out = {}; let gone = 0;
+  for (const [k, v] of Object.entries(sec)) { if (ids.has(k)) out[k] = v; else gone++; } if (gone) F.saveSecrets(out, st, F.PW_SECRETS_KEY); return gone; } catch (e) { return 0; } }
 export const patchAccount = (data, id, patch, now = Date.now()) => ({ ...data, items: data.items.map((x) => (x.id === id ? { ...x, ...patch, updated: now } : x)) });
 
 /** The search box and Home chat: accounts whose title or a SHOWN line (an e-mail, a user name — never a password) matches every word. */

@@ -4,7 +4,7 @@
   3. All together: everything open; the choice is remembered; search finds by name or e-mail;
   4. Undo takes the batch back;
   5. Home chat: "what's my discord password?" → the account card (password hidden until Show);
-  6. the passwords are never in the backup file / sync (backup.js collectData skips attune:pw:*), and never in the account list's own store.
+  6. the passwords: in the encrypted backup and sync (v10.9.6), never in the account list's own store; 7. the Chat page answers too (v10.9.6).
   PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v1094pw.py
 """
 import json
@@ -49,7 +49,7 @@ with sync_playwright() as p:
         store = page.evaluate("localStorage.getItem('attune:pw:v1')")
         check("Sk!ttlz#2024" not in store and "dsc_9981x" not in store, "%d: the account list's store holds no password" % w)
         bk = page.evaluate("() => { const ks = []; for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); return ks.filter((k) => k.startsWith('attune:pw:')); }")
-        check(set(bk) >= {"attune:pw:v1", "attune:pw:secret:v1"}, "%d: the two password stores exist (%s) — in the locked backup, never in sync (unit test)" % (w, bk))
+        check(set(bk) >= {"attune:pw:v1", "attune:pw:secret:v1"}, "%d: the two password stores exist (%s) — in the locked backup and the encrypted sync (unit test)" % (w, bk))
         # Home chat
         go(page, w, "home")
         box = page.locator("[data-testid=home-ask]" + V).first
@@ -59,6 +59,19 @@ with sync_playwright() as p:
         if ans.count():
             ans.locator("[data-testid=doc-field-show]").first.click(); page.wait_for_timeout(250)
             check("dsc_9981x" in ans.inner_text(), "%d: Show in the answer → the password" % w)
+        # v10.9.6 (Ali: "for chat to be able to answer from it"): the Chat page answers by code — the card, the password hidden until Show,
+        # nothing sent to the model, and the chat keeps no password
+        page.evaluate("() => { window.__mock && (window.__mock.bodies = []); window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}})); }"); page.wait_for_timeout(600)
+        page.locator("textarea >> visible=true").first.fill("what's my discord password?"); page.wait_for_timeout(150)
+        page.evaluate("() => [...document.querySelectorAll('button[title=Send]')].find((b) => b.offsetParent).click()"); page.wait_for_timeout(700)
+        cp = page.locator("[data-testid=chat-pw]" + V)
+        check(cp.count() == 1 and "discord account" in cp.inner_text() and "dsc_9981x" not in cp.inner_text(), "%d: Chat → the discord account card, its password hidden" % w)
+        if cp.count():
+            cp.locator("[data-testid=doc-field-show]").first.click(); page.wait_for_timeout(250)
+            check("dsc_9981x" in cp.inner_text(), "%d: Show in Chat → the password" % w)
+        sent = page.evaluate("() => JSON.stringify((window.__mock && window.__mock.bodies) || [])")
+        chats = page.evaluate("() => { let t = ''; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/chat/i.test(k)) t += localStorage.getItem(k); } return t; }")
+        check("dsc_9981x" not in sent and "dsc_9981x" not in chats, "%d: the password never reached the model, and no chat keeps it" % w)
         # Undo
         go(page, w, "passwords")
         page.click("[data-testid=pw-paste]"); page.fill("[data-testid=pw-paste-text]", "▸ Telda\n    pin code: 4455"); page.click("[data-testid=pw-paste-read]"); page.click("[data-testid=pw-review-save]"); page.wait_for_timeout(300)

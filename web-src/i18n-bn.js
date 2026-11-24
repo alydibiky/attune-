@@ -15180,4 +15180,5 @@ export const BN = {
   "{n} accounts:": "{n}টি অ্যাকাউন্ট:",
   "{n} were already here": "{n}টি আগেই ছিল",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "কখনো সিঙ্ক বা কোনো AI-তে নয় — শুধু আপনার লক করা ব্যাকআপে। প্রতিটি পাসওয়ার্ড আঙুলের ছাপে খোলে।",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "আপনার অন্য ডিভাইসগুলোর সাথে সিঙ্ক হয় এবং আপনার ব্যাকআপে থাকে — সবসময় লক করা, কখনো কোনো AI-কে পাঠানো হয় না। প্রতিটি পাসওয়ার্ড আপনার আঙুলের ছাপে খোলে।",
 };

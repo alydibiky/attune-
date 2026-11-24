@@ -15172,4 +15172,5 @@ export const ARB = {
   "{n} accounts:": "{n} حسابًا:",
   "{n} were already here": "{n} كانت موجودة",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "لا تدخل المزامنة ولا أي ذكاء اصطناعي — فقط في نسختك الاحتياطية المقفلة. تُفتح كل كلمة مرور ببصمتك.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "تتم مزامنتها مع أجهزتك الأخرى وتُحفظ في نسختك الاحتياطية — مقفلة دائمًا، ولا تُرسل إلى أي ذكاء اصطناعي. تُفتح كل كلمة مرور ببصمتك.",
 };

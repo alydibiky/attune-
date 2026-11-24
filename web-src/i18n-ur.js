@@ -15181,4 +15181,5 @@ export const UR = {
   "{n} accounts:": "{n} اکاؤنٹس:",
   "{n} were already here": "{n} پہلے سے یہاں تھے",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "کبھی سنک یا کسی AI میں نہیں — صرف آپ کے لاک بیک اپ میں۔ ہر پاس ورڈ آپ کے فنگر پرنٹ سے کھلتا ہے۔",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "آپ کے دوسرے آلات کے ساتھ سنک اور آپ کے بیک اپ میں محفوظ — ہمیشہ مقفل، کسی AI کو کبھی نہیں بھیجے جاتے۔ ہر پاس ورڈ آپ کے فنگر پرنٹ سے کھلتا ہے۔",
 };

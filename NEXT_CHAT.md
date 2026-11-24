@@ -1,6 +1,15 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
-> ## START HERE (23 Nov 2026, late — v10.9.5)
+> ## START HERE (24 Nov 2026 — v10.9.6: passwords sync + Chat answers from them)
+> Ali: "I want passwords to be sync and for chat to be able to answer from it". → attune:pw:* now travels in BOTH syncs (Wi-Fi + Google),
+> inside the same encrypted file (PBKDF2 + AES-GCM, locked on the phone first — the unit test checks the file shows no password).
+> backup.js mergePwSecrets: the values have no dates, so each account's values come from the side whose ACCOUNT was changed last (an edit
+> on the computer reaches the phone, the older copy never wins back); a deleted account's values are dropped, and pwstore.pruneSecrets
+> cleans leftovers when Passwords opens. The restore guard stays (a restore without passwords never deletes them). Chat page (chat.jsx):
+> pwAsk first → a `pw` message (only account ids + titles kept in the chat) rendered by PwAnswer — worked out by code, never sent to the
+> model or the web, each password hidden until the fingerprint. Page line in 20 languages. Tests: v1094pw unit (+7), e2e_v1094pw (Chat, 390 + 1366).
+
+> ## (23 Nov 2026, late — v10.9.5)
 > Ali: "1. what do you think [sync free or Pro] 2. yes [passwords in the backup]". → 1: recommended sync stays FREE (his option A rule:
 > what people use every day is free; Pro = depth) — nothing changed unless he disagrees. → 2: the Passwords page is now IN the backup file
 > (manual + daily; always AES-GCM with the backup password) and still NEVER in sync (sync.js deviceKeys + cloud.js SYNC_SKIP drop

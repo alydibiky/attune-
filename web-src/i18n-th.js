@@ -15180,4 +15180,5 @@ export const TH = {
   "{n} accounts:": "{n} บัญชี:",
   "{n} were already here": "{n} มีอยู่แล้ว",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "ไม่เข้าการซิงก์หรือ AI ใดๆ — อยู่ในไฟล์สำรองที่ล็อกไว้ของคุณเท่านั้น ทุกรหัสผ่านเปิดด้วยลายนิ้วมือ",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "ซิงก์กับอุปกรณ์อื่นของคุณและเก็บไว้ในข้อมูลสำรอง — ล็อกไว้เสมอ ไม่ส่งให้ AI ใดๆ รหัสผ่านแต่ละอันเปิดด้วยลายนิ้วมือของคุณ",
 };

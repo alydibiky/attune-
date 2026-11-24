@@ -15180,4 +15180,5 @@ export const RU = {
   "{n} accounts:": "Аккаунтов: {n}:",
   "{n} were already here": "{n} уже были здесь",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Никогда в синхронизации или ИИ — только в вашей защищённой резервной копии. Каждый пароль открывается отпечатком.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "Синхронизируются с другими вашими устройствами и хранятся в резервной копии — всегда зашифрованы и никогда не отправляются ИИ. Каждый пароль открывается отпечатком пальца.",
 };

@@ -15181,4 +15181,5 @@ export const HI = {
   "{n} accounts:": "{n} खाते:",
   "{n} were already here": "{n} पहले से यहाँ थे",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "कभी सिंक या किसी AI में नहीं — सिर्फ़ आपके लॉक किए बैकअप में। हर पासवर्ड आपके फ़िंगरप्रिंट से खुलता है।",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "आपके दूसरे डिवाइस के साथ सिंक और आपके बैकअप में सुरक्षित — हमेशा लॉक, किसी AI को कभी नहीं भेजे जाते। हर पासवर्ड आपके फ़िंगरप्रिंट से खुलता है।",
 };

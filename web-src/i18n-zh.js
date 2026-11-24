@@ -15180,4 +15180,5 @@ export const ZH = {
   "{n} accounts:": "{n} 个账户：",
   "{n} were already here": "{n} 个已存在",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "从不进入同步或任何 AI——只在你加密的备份里。每个密码都要用指纹打开。",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "已同步到你的其他设备并保存在备份中——始终加密，绝不发送给任何 AI。每个密码都用你的指纹打开。",
 };

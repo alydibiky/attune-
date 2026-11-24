@@ -15180,4 +15180,5 @@ export const DE = {
   "{n} accounts:": "{n} Konten:",
   "{n} were already here": "{n} waren schon da",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Nie in Sync oder bei einer KI — nur in deinem gesperrten Backup. Jedes Passwort öffnet sich mit deinem Fingerabdruck.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "Mit deinen anderen Geräten synchronisiert und in deiner Sicherung — immer verschlüsselt, nie an eine KI gesendet. Jedes Passwort öffnet sich mit deinem Fingerabdruck.",
 };

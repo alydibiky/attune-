@@ -15180,4 +15180,5 @@ export const KO = {
   "{n} accounts:": "계정 {n}개:",
   "{n} were already here": "{n}개는 이미 있어요",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "동기화나 AI에 절대 들어가지 않아요 — 잠긴 백업에만 있어요. 비밀번호는 지문으로 열려요.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "다른 기기와 동기화되고 백업에 보관됩니다 — 항상 잠겨 있으며 어떤 AI에도 보내지지 않습니다. 각 비밀번호는 지문으로 열립니다.",
 };

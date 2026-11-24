@@ -32,6 +32,23 @@ const SKIP = [/^attune:net:/, /^attune:store$/, /^attune:loaded$/, /^attune:back
    AES-GCM) so a lost phone doesn't lose them — and NEVER in sync (sync.js deviceKeys, cloud.js SYNC_SKIP). A sync / restore that brings no
    passwords never deletes the ones on this phone (restoreData). */
 export const NEVER_SYNC = /^attune:pw:/;   // v8.7: the daily backup's own settings (its password) stay on this phone
+/* v10.9.6 (Ali, 24 Nov: "I want passwords to be sync"): passwords travel in sync now — inside the same encrypted file (AES-GCM, locked on the
+   phone before it leaves). The values sit in their own store keyed by account, with no dates of their own: for each account the side
+   whose account was changed last brings its values (an edited password reaches the other device), and a value whose account is gone
+   on both sides is dropped. NEVER_SYNC stays as the restore guard (a restore that brings no passwords never deletes them). */
+export const PW_ITEMS_KEY = "attune:pw:v1", PW_SECRET_KEY = "attune:pw:secret:v1";
+export function mergePwSecrets(mine, theirs, mergedItems) {
+  const j = (v) => { try { return JSON.parse(v || "null"); } catch (e) { return null; } };
+  const sa = j(mine[PW_SECRET_KEY]) || {}, sb = j(theirs[PW_SECRET_KEY]) || {};
+  const ia = new Map(((j(mine[PW_ITEMS_KEY]) || {}).items || []).map((x) => [x.id, x])), ib = new Map(((j(theirs[PW_ITEMS_KEY]) || {}).items || []).map((x) => [x.id, x]));
+  const keep = new Set((((j(mergedItems) || {}).items) || []).map((x) => x.id)), out = {};
+  for (const id of new Set([...Object.keys(sa), ...Object.keys(sb)])) {
+    if (mergedItems != null && !keep.has(id)) continue;
+    const ta = Number((ia.get(id) || {}).updated || 0), tb = Number((ib.get(id) || {}).updated || 0);
+    out[id] = !(id in sa) ? sb[id] : !(id in sb) ? sa[id] : tb > ta ? { ...sa[id], ...sb[id] } : { ...sb[id], ...sa[id] };
+  }
+  return JSON.stringify(out);
+}
 
 /* v8.7 (Ali: "messages in Recall stay forever, with offline and online backup like WhatsApp"): Recall's messages live in the
    phone's own database (RecallLog.kt), not in the page's storage — the backup carries them under one extra key, and a restore
@@ -212,6 +229,7 @@ export function mergeKeys(phone, backup) {
     else if (k === "attune:cycle:v1" && a && b && a.days && b.days) out[k] = JSON.stringify({ ...b, ...a, days: { ...b.days, ...a.days } });
     // else: keep the phone's value
   }
+  if (phone[PW_SECRET_KEY] != null && backup[PW_SECRET_KEY] != null) out[PW_SECRET_KEY] = mergePwSecrets(phone, backup, out[PW_ITEMS_KEY]);
   return out;
 }
 

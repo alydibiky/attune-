@@ -10,7 +10,7 @@
    "Replace the other device" still makes the other device exactly like this one.
    Pure where it can be (tests/unit/v740sync.test.mjs); the native side only carries text (LocalSync.kt, GoogleDrive.kt,
    desktop/main.js).                                                                                                    */
-import { collectData, encryptBackup, decryptBackup, restoreData, NEVER_SYNC } from "./backup.js";
+import { collectData, encryptBackup, decryptBackup, restoreData, mergePwSecrets, PW_SECRET_KEY, PW_ITEMS_KEY } from "./backup.js";
 
 export const SYNC_KEY = "attune:sync:me:v1";       // { pass (Drive passphrase, this device only), last, lastHow } (cloud.js keeps attune:sync:v1)
 const ALPHA = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";    // no 0/O, 1/I: easy to read out loud
@@ -61,6 +61,8 @@ export function syncMerge(mine, theirs) {
     if (a === undefined || b === undefined || typeof a !== "object" || typeof b !== "object") continue;   // a plain value: this device's
     out[k] = JSON.stringify(mergeValue(a, b));
   }
+  // v10.9.6: passwords travel — each account's values from the side that changed it last (backup.js mergePwSecrets)
+  if (mine[PW_SECRET_KEY] != null && theirs && theirs[PW_SECRET_KEY] != null) out[PW_SECRET_KEY] = mergePwSecrets(mine, theirs, out[PW_ITEMS_KEY]);
   return out;
 }
 
@@ -137,7 +139,7 @@ function applyGone(keys, gone) {
 }
 
 const parseSeen = (s) => { try { return JSON.parse(s.getItem(SEEN_KEY) || "null") || {}; } catch (e) { return {}; } };
-const deviceKeys = (s) => { const k = collectData(s); for (const x of Object.keys(k)) if (x.startsWith("attune:sync:") || NEVER_SYNC.test(x)) delete k[x]; return k; };   // v10.9.4: passwords never travel
+const deviceKeys = (s) => { const k = collectData(s); for (const x of Object.keys(k)) if (x.startsWith("attune:sync:")) delete k[x]; return k; };   // v10.9.6: passwords travel too (Ali), in the same encrypted file
 const ITER = 600000;
 /** What this device sends: all its data, locked with the code or passphrase. `opts.extra` = stores that are not in
     localStorage (Fleet's IndexedDB state): { read: async () => ({ key: text }), write: async (key, text) => {} }. */

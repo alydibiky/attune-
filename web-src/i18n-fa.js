@@ -15180,4 +15180,5 @@ export const FA = {
   "{n} accounts:": "{n} حساب:",
   "{n} were already here": "{n} از قبل بودند",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "هرگز در همگام‌سازی یا هیچ هوش مصنوعی — فقط در پشتیبان قفل‌شدهٔ شما. هر رمز با اثر انگشت باز می‌شود.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "با دستگاه‌های دیگرت همگام می‌شوند و در پشتیبانت نگه داشته می‌شوند — همیشه قفل، هرگز برای هیچ هوش مصنوعی فرستاده نمی‌شوند. هر رمز با اثر انگشتت باز می‌شود.",
 };

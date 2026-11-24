@@ -15181,4 +15181,5 @@ export const IDN = {
   "{n} accounts:": "{n} akun:",
   "{n} were already here": "{n} sudah ada",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Tidak pernah di sinkronisasi atau AI mana pun — hanya di cadangan terkunci Anda. Tiap kata sandi dibuka dengan sidik jari.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "Disinkronkan ke perangkat Anda yang lain dan disimpan di cadangan Anda — selalu terkunci, tidak pernah dikirim ke AI mana pun. Setiap kata sandi dibuka dengan sidik jari Anda.",
 };

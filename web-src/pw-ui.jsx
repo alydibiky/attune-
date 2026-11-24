@@ -51,7 +51,7 @@ function Account({ x, open, toggle, onPatch, onDelete, unlock, toggles }) {
 }
 
 export function PasswordsPage({ native, flash, wide }) {
-  const [data, setData0] = useState(() => S.loadPw()), [view, setView0] = useState(view0), [q, setQ] = useState("");
+  const [data, setData0] = useState(() => { const d = S.loadPw(); S.pruneSecrets(d); return d; }), [view, setView0] = useState(view0), [q, setQ] = useState("");
   const [opened, setOpened] = useState(() => new Set()), [mode, setMode] = useState(""), [text, setText] = useState(""), [found, setFound] = useState(null), [undo, setUndo] = useState(null);
   const put = (d) => { setData0(d); S.savePw(d); };
   const setView = (v) => { setView0(v); try { localStorage.setItem(S.PW_VIEW, v); } catch (e) {} };
@@ -69,7 +69,7 @@ export function PasswordsPage({ native, flash, wide }) {
   return <div className={U.page + " rounded-[20px] p-4 md:p-6 space-y-3"} style={{ minHeight: "70vh" }} data-testid="pw-page">
     <div className="flex items-center gap-2"><h2 className={U.pageH1 + " flex items-center gap-2 flex-1 min-w-0"}><KeyRound size={20} className="text-[var(--c-acc)] shrink-0" /><span className="truncate">{tr("Passwords")}</span></h2>
       <span className="text-[13px] c-sub tabular-nums" data-testid="pw-count">{data.items.length}</span></div>
-    <p className="m-0 text-[12.5px] c-sub" dir="auto">{tr("Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.")}</p>
+    <p className="m-0 text-[12.5px] c-sub" dir="auto">{tr("Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.")}</p>
     <div className="flex gap-1.5" role="tablist" data-testid="pw-views">{[["toggles", tr("▸ Toggles")], ["all", tr("All together")]].map(([v, l]) =>
       <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)} className={"flex-1 h-10 rounded-full text-[13px] font-extrabold border " + (view === v ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)]")} data-testid={"pw-view-" + v}>{l}</button>)}</div>
     {data.items.length > 3 ? <label className="flex items-center gap-2 h-11 px-3 rounded-full border border-[var(--c-ln)] bg-[var(--c-bg)]"><Search size={16} className="c-sub shrink-0" />

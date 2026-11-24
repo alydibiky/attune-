@@ -15181,4 +15181,5 @@ export const PT = {
   "{n} accounts:": "{n} contas:",
   "{n} were already here": "{n} já estavam aqui",
   "Never in sync or any AI — only in your locked backup. Each password opens with your fingerprint.": "Nunca na sincronização nem em IA — só no seu backup bloqueado. Cada senha abre com sua digital.",
+  "Synced to your other devices and kept in your backup — always locked, never sent to any AI. Each password opens with your fingerprint.": "Sincronizadas com os seus outros aparelhos e guardadas no seu backup — sempre trancadas, nunca enviadas a nenhuma IA. Cada senha abre com a sua digital.",
 };

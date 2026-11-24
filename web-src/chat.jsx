@@ -96,6 +96,8 @@ import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 import { summary as sideSummary } from "./side-ui.jsx";
 import { mergeFound } from "./relay.js";   // v9.9.8 M2
 import { TeachChat } from "./notelabels-ui.jsx";   // v9.9.11 A4
+import * as PWS from "./pwstore.js";
+import { PwAnswer } from "./pw-ui.jsx";   // v10.9.6 (Ali: "chat to be able to answer from it")
 const KEY = "attune:chats:v1";
 const MAX_CHATS = 100;
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
@@ -1170,6 +1172,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     };
     // v10.1 F3 (Ali picked F3: "where is …" in the Home box): a question about where a feature is → its place, what it does, Open —
     // or, when not sure, the 2–3 closest to tap (features.js; "where did I put my keys" is Mind's, never this)
+    // v10.9.6 (Ali, 24 Nov: "for chat to be able to answer from it"): "what's my discord password?" → the account card, worked out by code —
+    // the password is never sent to the model or the web, and the chat keeps only which accounts (the card reads them from Passwords,
+    // each password still hidden until the fingerprint)
+    if (route && !img && !fileAtt) { let pa = null; try { pa = PWS.pwAsk(typed, PWS.loadPw()); } catch (e) {}
+      if (pa) { const cid = ensureChat(typed);
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: said }, { id: newId(), role: "assistant", pw: { kind: pa.kind, items: pa.items.map((x) => ({ id: x.id, title: x.title })) } }] }));
+        setText(""); return; } }
     if (route && !img) { const wf = FT.whereAsk(typed, tr);
       if (wf) { const cid = ensureChat(typed);
         const card = wf.f ? { tone: "emerald", title: tr("{n} is in {p}", { n: tr(wf.f.name), p: FT.placeLine(wf.f, tr) }), detail: tr(wf.f.does), actions: [[tr("Open {n}", { n: tr(wf.f.name) }), "feature:" + wf.f.id]] }
@@ -2537,6 +2546,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             }} />
         ) : m.teachChat ? (
           <div key={m.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="chat-teach"><TeachChat flash={api.flash} /></div>
+        ) : m.pw ? (
+          <div key={m.id} className="rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-4" data-testid="chat-pw"><PwAnswer ans={m.pw} native={NATIVE} navTo={(x) => { try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: x } })); } catch (e) {} }} /></div>
         ) : m.card ? (
           <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-[20px] border p-4 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
             <p dir="auto" className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0"><CheckCircle2 size={16} className={m.card.tone === "rose" ? "text-[var(--c-neg)]" : m.card.tone === "violet" ? "text-[var(--c-acc)]" : "text-[var(--c-pos)]"} /> {tr(m.card.title)}</p>
