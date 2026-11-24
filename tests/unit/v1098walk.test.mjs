@@ -54,6 +54,29 @@ for (const t of ["A refund of EGP 300.00 from NOON.COM has been credited to your
   const rf = F.firstMonth({ sms: [{ id: "rf", app: "SMS", title: "CIB", text: t, ts: now - H }], emails: [], now, home: "EGP" });
   ok(rf.refunds.length === 1 && rf.refunds[0].amount === 300 && rf.total === 0, "a refund is kept for income, not spending: " + t + " → " + JSON.stringify(rf.refunds.map((x) => [x.name, x.amount])));
 }
+// OK-W3: "Safe to spend today 0 · about 2,070 a day until Nov 30" — now "From tomorrow" from what is really left after today
+{ const { safeToSpend } = await import("../../web-src/safespend.js");
+  const day = (d) => `2026-11-${String(d).padStart(2, "0")}`, at = Date.parse("2026-11-25T15:00:00");   // 6 days to Nov 30 (25…30)
+  const base = { currency: "EGP", accounts: [{ id: "a", name: "Cash", currency: "EGP", start: 0 }], recurring: [], debts: [] };
+  const mk = (spentToday) => ({ ...base, txns: [{ id: "i", type: "income", amount: 12420, cat: "salary", account: "a", date: day(1) }, ...(spentToday ? [{ id: "t", type: "expense", amount: spentToday, cat: "shopping", account: "a", date: day(25) }] : [])] });
+  const a = safeToSpend({ ledger: mk(0), now: at }), b = safeToSpend({ ledger: mk(4140), now: at }), c = safeToSpend({ ledger: mk(1000), now: at });
+  ok(a.perDay === 2070 && a.today === 2070 && a.days === 6, `nothing spent: 2,070 today, 2,070 a day (${a.today}, ${a.perDay}, ${a.days} days)`);
+  ok(b.today === 0 && b.over === 2070 && b.fromTomorrow === Math.floor((12420 - 4140) / 5), `4,140 spent today: 0 left, 2,070 over, from tomorrow ${b.fromTomorrow} (= 8,280 ÷ 5)`);
+  ok(c.today === 1070 && c.over === 0 && c.fromTomorrow === 2070, `1,000 spent: 1,070 left today, still 2,070 from tomorrow (${c.today}, ${c.fromTomorrow})`);
+  ok(b.fromTomorrow * b.afterToday <= 12420 - 4140 && c.today + c.fromTomorrow * c.afterToday <= 12420 - 1000, "never promises more than is left");
+}
+// OK-W2: "This month" on Home — per currency (never added together), top 3 categories, refunds back
+{ const { monthSummary } = await import("../../web-src/monthcard.js");
+  const L = { currency: "EGP", accounts: [{ id: "e", currency: "EGP" }, { id: "u", currency: "USD" }], txns: [
+    { type: "expense", amount: 2300, cat: "shopping", account: "e", date: "2026-11-24" }, { type: "expense", amount: 1500, cat: "other", account: "e", date: "2026-11-23" },
+    { type: "expense", amount: 450, cat: "groceries", account: "e", date: "2026-11-22" }, { type: "expense", amount: 89, cat: "transport", account: "e", date: "2026-11-24" },
+    { type: "expense", amount: 9.99, cat: "bills", account: "u", date: "2026-11-16" }, { type: "expense", amount: 999, cat: "fun", account: "e", date: "2026-10-30" },
+    { type: "income", amount: 300, cat: "other", account: "e", date: "2026-11-24", note: "NOON ↩" }, { type: "income", amount: 18500, cat: "salary", account: "e", date: "2026-11-20", note: "salary" }] };
+  const m = monthSummary(L, Date.parse("2026-11-24T20:00:00"));
+  ok(m && JSON.stringify(m.spent) === JSON.stringify([["EGP", 4339], ["USD", 9.99]]) && m.top.map((x) => x[0]).join() === "shopping,other,groceries" && m.back === 300 && m.n === 5,
+    "This month: 4,339 EGP + 9.99 USD (October's 999 not counted), top Shopping · Other · Groceries, 300 back: " + JSON.stringify(m));
+  ok(monthSummary({ currency: "EGP", accounts: [{ id: "e", currency: "EGP" }], txns: [] }, Date.now()) === null, "no spending this month → no card");
+}
 const L0 = { currency: "EGP", accounts: [{ id: "c", name: "Cash", currency: "EGP", start: 0 }], txns: [] };
 const L = appendToLedger(L0, [{ type: "expense", amount: 9.99, currency: "USD", note: "NETFLIX", cat: "bills" }, { type: "expense", amount: 450, currency: "EGP", note: "SPINNEYS" }, { type: "expense", amount: 5, currency: "USD", note: "x" }, { type: "expense", amount: 7, note: "no currency" }], now).ledger;
 const usd = L.accounts.find((a) => a.currency === "USD");
@@ -65,5 +88,18 @@ const W = await import("../walk/gen.mjs");
 for (const [cnt, shift, label] of [[2500, 0, "sample"], [1000, 7, "held-out"]]) {
   const r = W.run(cnt, shift, { quiet: true });
   ok(r.ok / r.total >= 0.995 && r.shapes.share >= 0.6, `own-data questions ${label}: ${r.ok}/${r.total} right, ${(100 * r.shapes.share).toFixed(1)} % different shapes ${r.bad.slice(0, 3).join(" ‖ ")}`);
+}
+// OK-W4: things to buy sorted into lists by themselves — tests/autolist/gen.mjs (HARD, composed): a 2,500 sample + a held-out seed
+{ const A = await import("../autolist/gen.mjs");
+  for (const [cnt, shift, label] of [[2500, 0, "sample"], [1000, 9, "held-out"]]) { const r = A.run(cnt, shift, { quiet: true });
+    ok(r.ok / r.total >= 0.995 && r.shapes.share >= 0.6, `shopping lists ${label}: ${r.ok}/${r.total}, ${(100 * r.shapes.share).toFixed(1)} % shapes ${r.bad.slice(0, 2).join(" ‖ ")}`); }
+  const AL = await import("../../web-src/autolist.js");
+  const r1 = AL.applyAuto({ lists: [] }, AL.readShopping("buy milk, eggs and bread")), g = r1.st.lists.find((l) => l.auto === "groceries");
+  ok(g && g.items.map((x) => x.text).join() === "Milk,Eggs,Bread" && !g.items.some((x) => x.done), "3 checkboxes in Groceries: " + JSON.stringify(g && g.items.map((x) => x.text)));
+  const r2 = AL.applyAuto(r1.st, AL.readShopping("buy rice and milk")), g2 = r2.st.lists.find((l) => l.auto === "groceries");
+  ok(r2.st.lists.length === 1 && g2.items.map((x) => x.text).join() === "Milk,Eggs,Bread,Rice", "the next time joins the same list, milk not twice: " + JSON.stringify(g2.items.map((x) => x.text)));
+  const own = { lists: [{ id: "t", name: "Talabat", items: [], repeat: { every: "once" } }] }, r3 = AL.applyAuto(own, AL.readShopping("buy milk"));
+  ok(r3.st.lists.find((l) => l.id === "t").items.length === 0 && r3.st.lists.some((l) => l.auto === "groceries"), "the person's own list (Talabat) is never filled by itself");
+  for (const t of ["bring the charger", "I bought milk 50", "buy me a Kindle under 5000", "remind me to buy milk at 5", "buy tickets to Dubai", "call the bank"]) ok(AL.readShopping(t) == null, "not a list: " + t);
 }
 console.log(fail ? `FAIL ${fail} of ${n}` : `ALL PASSED v1098walk: ${n} checks (${hard} hard versions)`);

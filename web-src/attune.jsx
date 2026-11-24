@@ -1,6 +1,7 @@
 import { recallRaw, forgetRecallCache } from "./notecache.js";
 import { pageIn } from "./motion.js";   // v10.7 OK-AN   // v10.6 one fetch shared
 import { readable, negatedOrder } from "./wrapclean.js";
+import * as AUTOL from "./autolist.js";   // v10.9.8 OK-W4
 import { enterSends } from "./keys.js";
 import { typedPayment } from "./sense.js";
 import React, { useState, useMemo, useEffect, useRef } from "react";
@@ -10687,6 +10688,9 @@ export default function App() {
         return { tone: "emerald", title: tr("Added to {p}: {t}", { p: o.name, t: o.text }), detail: "", actions: [["Open the project", "open:projects"]] }; }
       case "list": { const r = LISTS.applyListCommand(LISTS.loadLists(), o.cmd); if (!r) return null; if (r.st) LISTS.saveLists(r.st);
         return { tone: "emerald", title: listLine(r.line), detail: r.list ? r.list.items.map((x) => (x.done ? "☑ " : "☐ ") + x.text).join("\n") : "", actions: [["Open my lists", "open:lists"]] }; }
+      case "autolist": { const before = LISTS.loadLists(), r = AUTOL.applyAuto(before, o.read, { name: (c) => tr(AUTOL.CAT_NAME[c]) }); LISTS.saveLists(r.st);   // v10.9.8 OK-W4
+        for (const it of o.read.rest || []) { const t = cleanTodo("buy " + it); remember({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false } }); }
+        return { tone: "emerald", title: r.added.map((a) => tr("Added to {l}: {i}", { l: a.name, i: a.items.join(", ") })).join("\n"), detail: (o.read.rest || []).length ? tr("Added to your to-do list") + ": " + o.read.rest.join(", ") : "", actions: [["Open my lists", "open:lists"]] }; }
       case "todoAdd": { const it = cleanTodo(o.item); remember({ kind: "todo", title: it.slice(0, 90), text: it, tags: ["todo"], meta: { todo: true, done: false } });
         return { tone: "emerald", title: tr("Added to your to-do list"), detail: it, actions: [["Open in Mind", "open:memory"]] }; }
       case "todos": return { tone: "emerald", title: tr("Your to-do list") + " · " + o.items.length, detail: o.items.map((x) => "☐ " + (x.title || x.text)).join("\n") || tr("Nothing left — say “add … to my to-do list” to add one."), actions: [["Open in Mind", "open:memory"]] };

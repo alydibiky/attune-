@@ -15239,4 +15239,11 @@ export const JA = {
   "Nothing planned for today ({d}).": "今日の予定はありません（{d}）。",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "「{w}」はまだ保存されていません — 日付を追加すると Attune がお知らせします。",
   "Back to you · added to income": "返金 · 収入に追加",
+  "You spent {s} today, {o} over today's share": "今日は {s} 使いました。今日の分より {o} 多いです",
+  "From tomorrow: about {x} a day until {d}": "明日から：{d} まで1日約 {x}",
+  "Back to you": "返金",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "銀行のSMSはスマホにあります。一度つなぐと、このパソコンにも同じ月が表示されます。",
+  "Connect your phone": "スマホをつなぐ",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "スマホで：設定 → 同期 → Wi-Fi → コードを表示。ここに入力します。",
+  "Skip — I'll type on the computer": "スキップ — パソコンで入力する",
 };

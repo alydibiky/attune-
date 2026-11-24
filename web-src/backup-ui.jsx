@@ -49,7 +49,8 @@ function PwBox({ value, onChange, placeholder, show, autoFocus, testid }) {
 }
 
 export function BackupPanel({ close, flash, nativeCall, native }) {
-  const [tab, setTab] = useState("backup");
+  // v10.9.8 OK-W1: "Connect your phone" on a computer opens this panel on Sync (asked once, then forgotten)
+  const [tab, setTab] = useState(() => { try { const t = localStorage.getItem("attune:backup:tab"); localStorage.removeItem("attune:backup:tab"); return t === "sync" ? "sync" : "backup"; } catch (e) { return "backup"; } });
   const [pw, setPw] = useState(""); const [pw2, setPw2] = useState(""); const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(""); const [err, setErr] = useState(""); const [done, setDone] = useState("");
   const [file, setFile] = useState(null);      // { name, text, head }

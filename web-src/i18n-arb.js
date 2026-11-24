@@ -15231,4 +15231,11 @@ export const ARB = {
   "Nothing planned for today ({d}).": "لا شيء مخطط له اليوم ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "لا يوجد شيء محفوظ لـ«{w}» بعد — أضف تاريخه وسيذكّرك Attune.",
   "Back to you · added to income": "عاد إليك · أُضيف إلى الدخل",
+  "You spent {s} today, {o} over today's share": "أنفقت {s} اليوم، بزيادة {o} عن حصة اليوم",
+  "From tomorrow: about {x} a day until {d}": "من الغد: نحو {x} يوميًا حتى {d}",
+  "Back to you": "عاد إليك",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "رسائل البنك على هاتفك. اربطه مرة واحدة وسيعرض هذا الحاسوب الشهر نفسه.",
+  "Connect your phone": "اربط هاتفك",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "على الهاتف: الإعدادات ← المزامنة ← Wi-Fi ← اعرض رمزًا. ثم اكتبه هنا.",
+  "Skip — I'll type on the computer": "تخطٍّ — سأكتب على الحاسوب",
 };

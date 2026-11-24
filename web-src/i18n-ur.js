@@ -15240,4 +15240,11 @@ export const UR = {
   "Nothing planned for today ({d}).": "آج کے لیے کچھ طے نہیں ({d})۔",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” کے لیے ابھی کچھ محفوظ نہیں — اس کی تاریخ شامل کریں، Attune یاد دلائے گا۔",
   "Back to you · added to income": "آپ کو واپس ملا · آمدنی میں شامل",
+  "You spent {s} today, {o} over today's share": "آج آپ نے {s} خرچ کیے، آج کے حصے سے {o} زیادہ",
+  "From tomorrow: about {x} a day until {d}": "کل سے: {d} تک روزانہ تقریباً {x}",
+  "Back to you": "واپس ملا",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "آپ کے بینک میسجز فون پر ہیں۔ ایک بار جوڑیں، یہ کمپیوٹر وہی مہینہ دکھائے گا۔",
+  "Connect your phone": "اپنا فون جوڑیں",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "فون پر: ترتیبات ← سنک ← Wi-Fi ← کوڈ دکھائیں۔ پھر یہاں لکھیں۔",
+  "Skip — I'll type on the computer": "چھوڑیں — میں کمپیوٹر پر لکھوں گا",
 };

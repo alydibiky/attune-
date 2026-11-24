@@ -16,6 +16,7 @@
      { type: "todoAdd", item } · { type: "whereSave", set } · { type: "travel", code } · { type: "rememberNote", text }
      { type: "rememberFiles", files, label }  → the page saves it in Mind / starts the trip / starts a "remember" job
    The page passes `api` (the apps' own readers and stores), so this file stays testable. Tests: tests/unit/v748cmdrun.test.mjs. */
+import { readShopping } from "./autolist.js";   // v10.9.8 OK-W4
 import { tr } from "./i18n.js";
 import * as K from "./commands.js";
 import { isEmailAsk } from "./emaildraft.js";
@@ -86,7 +87,9 @@ export function route(text, { files = [], api = {}, prefs = {}, kind = null } = 
   // v9.2 (Ali picked 1A): a list — make one, a trip date for it, or show it (lists.js reads it; the page saves it)
   // v9.2 (Ali picked 6): "add buy tiles to the renovation" → a task on that project's board (only when such a project exists)
   { const pt = api.projectTask ? api.projectTask(t) : null; if (pt && !files.length) return { type: "projectTask", projectId: pt.project.id, name: pt.project.name, text: pt.text }; }
-  { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
+  { const lc = parseListCommand(t); if (lc && !files.length) return { type: "list", cmd: lc }; }
+  // v10.9.8 (Ali's OK-W4): "buy milk, eggs and bread" → 3 checkboxes in Groceries, by itself (a named list above wins)
+  { let al = null; try { al = readShopping(t); } catch (e) { al = null; } if (al && al.groups.length && !files.length) return { type: "autolist", read: al, text: t }; }   // v8.7: "email Ahmed that …" → a ready email to check, then Send
   // v10.8 (the persona walk: "pro" alone asked "What did you mean? to-do / note / web / Chat") — a page's name alone opens it
   //   ("pro", "upgrade", «الاشتراك», "money", "settings"); "open …" sentences were already understood further on
   if (!files.length && t.split(/\s+/).length <= 3) { let pg = ""; try { pg = pageOf("open " + t.replace(/[.!?؟]+$/, "")); } catch (e) { pg = ""; } if (pg) return { type: "open", mode: pg }; }

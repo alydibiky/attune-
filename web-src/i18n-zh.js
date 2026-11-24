@@ -15239,4 +15239,11 @@ export const ZH = {
   "Nothing planned for today ({d}).": "今天没有安排（{d}）。",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”还没有保存任何内容——添加日期，Attune 会提醒你。",
   "Back to you · added to income": "退还给你 · 已计入收入",
+  "You spent {s} today, {o} over today's share": "今天花了 {s}，比今天的额度多 {o}",
+  "From tomorrow: about {x} a day until {d}": "从明天起：每天约 {x}，直到 {d}",
+  "Back to you": "退还",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "你的银行短信在手机上。连接一次，这台电脑就会显示同一个月。",
+  "Connect your phone": "连接你的手机",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "在手机上：设置 → 同步 → Wi-Fi → 显示代码。然后在这里输入。",
+  "Skip — I'll type on the computer": "跳过——我在电脑上输入",
 };

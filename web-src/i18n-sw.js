@@ -15240,4 +15240,11 @@ export const SW = {
   "Nothing planned for today ({d}).": "Hakuna kilichopangwa leo ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Bado hakuna kilichohifadhiwa kwa “{w}” — ongeza tarehe yake na Attune itakukumbusha.",
   "Back to you · added to income": "Umerudishiwa · imeongezwa kwenye mapato",
+  "You spent {s} today, {o} over today's share": "Leo umetumia {s}, {o} zaidi ya fungu la leo",
+  "From tomorrow: about {x} a day until {d}": "Kuanzia kesho: takriban {x} kwa siku hadi {d}",
+  "Back to you": "Umerudishiwa",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "Ujumbe wa benki uko kwenye simu yako. Iunganishe mara moja na kompyuta hii itaonyesha mwezi uleule.",
+  "Connect your phone": "Unganisha simu yako",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Kwenye simu: Mipangilio → Sawazisha → Wi-Fi → Onyesha msimbo. Kisha uandike hapa.",
+  "Skip — I'll type on the computer": "Ruka — nitaandika kwenye kompyuta",
 };

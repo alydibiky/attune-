@@ -84,7 +84,12 @@ export function SafeSpend({ calm = false, card = false, inline = false }) {
   const setCushion = (v) => { try { localStorage.setItem(KEY, JSON.stringify({ ...j(KEY, {}), cushion: v })); } catch (e) {} setNonce((x) => x + 1); };
   const line = s.short > 0
     ? tr("Short by {x} before {d}").replace("{x}", s.cur + " " + fmt(s.short)).replace("{d}", dayName(s.income ? s.income.d : s.until))
-    : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until))
+    // v10.9.8 OK-W3: once something is spent today, two clear parts — today (why it's 0, when it is) and FROM TOMORROW, worked out from
+    // what is left after today (never "0 today · about 2,070 a day")
+    : (s.spentToday > 0 && s.afterToday > 0
+      ? (s.over > 0 ? tr("You spent {s} today, {o} over today's share", { s: fmt(s.spentToday), o: fmt(s.over) }) + " · " : "")
+        + tr("From tomorrow: about {x} a day until {d}", { x: fmt(s.fromTomorrow), d: dayName(s.until) })
+      : tr("about {x} a day until {d}").replace("{x}", fmt(s.perDay)).replace("{d}", dayName(s.until)))
       + (s.basis === "month" ? " · " + tr("from this month's income — savings not counted") : "");
   const good = s.short > 0 ? "text-[var(--c-warn)]" : "text-[var(--c-pos)]";
   if (inline) return (

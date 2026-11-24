@@ -51,6 +51,8 @@ with sync_playwright() as p:
         check(len(usd) == 1 and len(nf) == 1 and nf[0]["account"] == usd[0]["id"] and nf[0]["amount"] == 9.99, "%d: Netflix 9.99 USD in a dollar account (never 9.99 EGP): %s" % (w, json.dumps(nf)[:160]))
         check(nf and nf[0]["cat"] != "transport", "%d: Netflix is not 'transport' (tfl inside neTFLix)" % w)
         page.click("[data-testid=fm-home]"); page.wait_for_timeout(1200)
+        mc = page.locator("[data-testid=home-month]")
+        check(mc.count() == 1 and "3,600 EGP" in mc.inner_text() and "9.99 USD" in mc.inner_text(), "%d: OK-W2 — Home shows This month: 3,600 EGP + 9.99 USD (never added together): %s" % (w, mc.inner_text().replace("\n", " · ") if mc.count() else "missing"))
         # Ali's sample records for the questions: Ahmed owes 500 (English letters), a passport, a reminder tomorrow
         page.evaluate("""() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0);
           localStorage.setItem('attune:life:v1', JSON.stringify({ items: [{ id: 'c1', person: 'Ahmed', currency: 'EGP', start: '', every: null, paid: [], title: '', kind: 'debt', dir: 'in', amount: 500, count: 1, total: 500, created: Date.now() - 86400000 }] }));
@@ -62,12 +64,32 @@ with sync_playwright() as p:
         t = say(page, "fakarny ba3d bokra el sa3a 5 adfa3 el egar")
         rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1') || '[]')")
         check(any("إيجار" in r.get("title", "") for r in rem) and "What did you mean?" not in t, "%d: Franco 'fakarny ba3d bokra … el egar' → the reminder «ادفع الإيجار»: %s" % (w, json.dumps([r.get("title") for r in rem], ensure_ascii=False)))
+        # OK-W4: "buy milk, eggs and bread" → 3 checkboxes in Groceries, by itself
+        page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_timeout(600)
+        t = say(page, "buy milk, eggs and bread")
+        ls = page.evaluate("JSON.parse(localStorage.getItem('attune:lists:v1') || '{\"lists\":[]}').lists")
+        g = [l for l in ls if l.get("auto") == "groceries"]
+        check(len(g) == 1 and [x["text"] for x in g[0]["items"]] == ["Milk", "Eggs", "Bread"] and "Added to Groceries" in t, "%d: OK-W4 — Groceries: Milk, Eggs, Bread as 3 checkboxes" % w)
         for q, want in [("when does my passport expire?", "Passport: 2027-03-03"), ("what do I have tomorrow?", "call the bank"),
                         ("أحمد عليه كام؟", "500"), ("how much did I spend on food this month?", "Related: Groceries 85")]:
             page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_timeout(600)
             t = say(page, q)
             check(want in t, "%d: «%s» → %s" % (w, q, want))
         ctx.close()
+    # OK-W1: a computer with no phone messages — "Connect your phone" (opens Sync) or Skip; never the two phone rows switched off
+    plain = "try{localStorage.setItem('attune:start','home');if(!sessionStorage.getItem('t-fresh')){sessionStorage.setItem('t-fresh','1');localStorage.removeItem('attune:onboarded');}}catch(e){}"
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=plain, desktop=(1366, 860))
+    page.goto(env.url); page.wait_for_selector("[data-testid=first-minute]", timeout=10000); page.click("[data-testid=first-next]")
+    page.wait_for_selector("[data-testid=fm-connect-phone]", timeout=8000)
+    check(page.locator("[data-testid=fm-src-sms]").count() == 0 and page.locator("[data-testid=fm-skip-computer]").count() == 1, "1366: OK-W1 — Connect your phone + Skip, no switched-off phone rows")
+    page.click("[data-testid=fm-connect-phone]"); page.wait_for_timeout(1200)
+    check(page.locator("[data-testid=sync-host-start]").count() >= 1 or "Connect to the other device" in page.evaluate("document.body.innerText"), "1366: Connect your phone opens Backup on Sync")
+    ctx.close()
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=plain, desktop=(1366, 860))
+    page.goto(env.url); page.wait_for_selector("[data-testid=first-minute]", timeout=10000); page.click("[data-testid=first-next]")
+    page.click("[data-testid=fm-skip-computer]"); page.wait_for_timeout(600)
+    check(page.locator("[data-testid=fm]").count() == 0, "1366: Skip leaves the money step")
+    ctx.close()
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()
 env.close(); finish()

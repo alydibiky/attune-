@@ -15239,4 +15239,11 @@ export const KO = {
   "Nothing planned for today ({d}).": "오늘 예정된 일이 없어요 ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”에 저장된 것이 아직 없어요 — 날짜를 추가하면 Attune이 알려 드려요.",
   "Back to you · added to income": "돌려받음 · 수입에 추가됨",
+  "You spent {s} today, {o} over today's share": "오늘 {s} 썼어요. 오늘 몫보다 {o} 많아요",
+  "From tomorrow: about {x} a day until {d}": "내일부터: {d}까지 하루 약 {x}",
+  "Back to you": "돌려받음",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "은행 문자는 휴대폰에 있어요. 한 번 연결하면 이 컴퓨터에 같은 달이 보여요.",
+  "Connect your phone": "휴대폰 연결",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "휴대폰에서: 설정 → 동기화 → Wi-Fi → 코드 표시. 그다음 여기에 입력하세요.",
+  "Skip — I'll type on the computer": "건너뛰기 — 컴퓨터에서 입력할게요",
 };

@@ -15239,4 +15239,11 @@ export const BN = {
   "Nothing planned for today ({d}).": "আজকের জন্য কিছু নেই ({d})।",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”-এর জন্য এখনও কিছু সেভ করা নেই — তারিখ যোগ করুন, Attune মনে করিয়ে দেবে।",
   "Back to you · added to income": "আপনাকে ফেরত · আয়ে যোগ হয়েছে",
+  "You spent {s} today, {o} over today's share": "আজ আপনি {s} খরচ করেছেন, আজকের ভাগের চেয়ে {o} বেশি",
+  "From tomorrow: about {x} a day until {d}": "কাল থেকে: {d} পর্যন্ত দিনে প্রায় {x}",
+  "Back to you": "ফেরত পেয়েছেন",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "আপনার ব্যাংকের মেসেজ ফোনে আছে। একবার যুক্ত করুন, এই কম্পিউটার একই মাস দেখাবে।",
+  "Connect your phone": "আপনার ফোন যুক্ত করুন",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "ফোনে: সেটিংস → সিঙ্ক → Wi-Fi → কোড দেখান। তারপর এখানে লিখুন।",
+  "Skip — I'll type on the computer": "এড়িয়ে যান — কম্পিউটারে লিখব",
 };

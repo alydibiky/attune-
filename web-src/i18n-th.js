@@ -15239,4 +15239,11 @@ export const TH = {
   "Nothing planned for today ({d}).": "วันนี้ไม่มีอะไรในแผน ({d})",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "ยังไม่มีข้อมูลสำหรับ “{w}” — เพิ่มวันที่แล้ว Attune จะเตือนคุณ",
   "Back to you · added to income": "ได้คืน · เพิ่มในรายรับแล้ว",
+  "You spent {s} today, {o} over today's share": "วันนี้ใช้ไป {s} เกินส่วนของวันนี้ {o}",
+  "From tomorrow: about {x} a day until {d}": "ตั้งแต่พรุ่งนี้: ประมาณวันละ {x} จนถึง {d}",
+  "Back to you": "ได้คืน",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "ข้อความธนาคารอยู่ในโทรศัพท์ของคุณ เชื่อมต่อครั้งเดียว คอมพิวเตอร์นี้จะแสดงเดือนเดียวกัน",
+  "Connect your phone": "เชื่อมต่อโทรศัพท์",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "บนโทรศัพท์: การตั้งค่า → ซิงค์ → Wi-Fi → แสดงรหัส แล้วพิมพ์ที่นี่",
+  "Skip — I'll type on the computer": "ข้าม — จะพิมพ์บนคอมพิวเตอร์",
 };

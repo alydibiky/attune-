@@ -15240,4 +15240,11 @@ export const IT = {
   "Nothing planned for today ({d}).": "Niente in programma oggi ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Non c’è ancora niente salvato per «{w}» — aggiungi la data e Attune te lo ricorderà.",
   "Back to you · added to income": "Rimborsato · aggiunto alle entrate",
+  "You spent {s} today, {o} over today's share": "Oggi hai speso {s}, {o} oltre la quota di oggi",
+  "From tomorrow: about {x} a day until {d}": "Da domani: circa {x} al giorno fino al {d}",
+  "Back to you": "Rimborsato",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "I messaggi della banca sono sul telefono. Collegalo una volta e questo computer mostrerà lo stesso mese.",
+  "Connect your phone": "Collega il telefono",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Sul telefono: Impostazioni → Sincronizza → Wi-Fi → Mostra un codice. Poi scrivilo qui.",
+  "Skip — I'll type on the computer": "Salta — scriverò sul computer",
 };

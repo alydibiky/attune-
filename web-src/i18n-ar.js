@@ -12461,4 +12461,11 @@ export const AR = {
   "Nothing planned for today ({d}).": "مفيش حاجة النهارده ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "مفيش حاجة متسجلة لـ«{w}» — ضيف تاريخها و Attune هيفكرك.",
   "Back to you · added to income": "رجعلك · اتضاف للدخل",
+  "You spent {s} today, {o} over today's share": "صرفت {s} النهارده، زيادة {o} عن نصيب النهارده",
+  "From tomorrow: about {x} a day until {d}": "من بكره: حوالي {x} في اليوم لحد {d}",
+  "Back to you": "رجعلك",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "رسايل البنك على موبايلك. وصّله مرة واحدة والكمبيوتر هيوريك نفس الشهر.",
+  "Connect your phone": "وصّل موبايلك",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "على الموبايل: الإعدادات ← المزامنة ← Wi-Fi ← اعرض كود. وبعدين اكتبه هنا.",
+  "Skip — I'll type on the computer": "تخطي — هكتب على الكمبيوتر",
 };

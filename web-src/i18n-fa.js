@@ -15239,4 +15239,11 @@ export const FA = {
   "Nothing planned for today ({d}).": "برای امروز برنامه‌ای نیست ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "هنوز چیزی برای «{w}» ذخیره نشده — تاریخش را اضافه کنید تا Attune یادآوری کند.",
   "Back to you · added to income": "به شما برگشت · به درآمد اضافه شد",
+  "You spent {s} today, {o} over today's share": "امروز {s} خرج کردید، {o} بیشتر از سهم امروز",
+  "From tomorrow: about {x} a day until {d}": "از فردا: حدود {x} در روز تا {d}",
+  "Back to you": "برگشتی",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "پیامک‌های بانک روی گوشی شماست. یک بار وصلش کنید تا این رایانه همان ماه را نشان دهد.",
+  "Connect your phone": "گوشی‌تان را وصل کنید",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "روی گوشی: تنظیمات ← همگام‌سازی ← Wi-Fi ← نمایش کد. سپس اینجا بنویسید.",
+  "Skip — I'll type on the computer": "رد شدن — روی رایانه می‌نویسم",
 };

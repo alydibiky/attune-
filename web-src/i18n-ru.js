@@ -15239,4 +15239,11 @@ export const RU = {
   "Nothing planned for today ({d}).": "На сегодня ничего не запланировано ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Для «{w}» пока ничего не сохранено — добавьте дату, и Attune напомнит.",
   "Back to you · added to income": "Вернули вам · добавлено в доходы",
+  "You spent {s} today, {o} over today's share": "Сегодня потрачено {s}, на {o} больше дневной доли",
+  "From tomorrow: about {x} a day until {d}": "С завтра: около {x} в день до {d}",
+  "Back to you": "Вернули вам",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "SMS от банка — на вашем телефоне. Подключите его один раз, и компьютер покажет тот же месяц.",
+  "Connect your phone": "Подключить телефон",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "На телефоне: Настройки → Синхронизация → Wi-Fi → Показать код. Затем введите его здесь.",
+  "Skip — I'll type on the computer": "Пропустить — буду вводить на компьютере",
 };

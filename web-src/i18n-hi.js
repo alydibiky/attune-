@@ -15240,4 +15240,11 @@ export const HI = {
   "Nothing planned for today ({d}).": "आज के लिए कुछ तय नहीं है ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” के लिए अभी कुछ सेव नहीं है — उसकी तारीख जोड़ें, Attune याद दिलाएगा.",
   "Back to you · added to income": "आपको वापस मिला · आय में जोड़ा",
+  "You spent {s} today, {o} over today's share": "आज आपने {s} खर्च किए, आज के हिस्से से {o} ज़्यादा",
+  "From tomorrow: about {x} a day until {d}": "कल से: {d} तक रोज़ लगभग {x}",
+  "Back to you": "वापस मिला",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "आपके बैंक मैसेज फ़ोन पर हैं। एक बार जोड़ें, यह कंप्यूटर वही महीना दिखाएगा।",
+  "Connect your phone": "अपना फ़ोन जोड़ें",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "फ़ोन पर: सेटिंग्स → सिंक → Wi-Fi → कोड दिखाएँ। फिर यहाँ लिखें।",
+  "Skip — I'll type on the computer": "छोड़ें — मैं कंप्यूटर पर लिखूँगा",
 };

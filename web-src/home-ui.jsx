@@ -38,6 +38,8 @@ import { setChequeStatus } from "./fleet.js";
 import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
 import { HomeTodo, ListCard, lineText } from "./lists-ui.jsx";
+import { MonthCard as ThisMonthCard } from "./monthcard-ui.jsx";   // v10.9.8 OK-W2
+import * as AUTO from "./autolist.js";   // v10.9.8 OK-W4
 import * as LISTS from "./lists.js";
 import { loadProjects, upsertProject, addTasks } from "./spaces.js";
 import { useSubBack } from "./backstack.js";
@@ -246,6 +248,13 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       case "chat": if (o.web && cmd && cmd.chatWeb) cmd.chatWeb(o.text); else onAsk(o.text); return;
       case "open": return /^panel:/.test(o.mode) ? window.dispatchEvent(new CustomEvent("attune-panel", { detail: o.mode.slice(6) })) : o.mode === "report" ? setRep(true) : o.mode === "food-photo" ? (openFitAdd ? openFitAdd() : navTo("fit")) : o.mode === "read" ? openRead() : o.mode === "all" ? openAll() : openLine(o.mode);
       case "job": cmd.jobs.add(o.spec); setFiles([]); return;
+      // v10.9.8 (Ali's OK-W4): things to buy go into their kind's list (Groceries, Pharmacy…) as checkboxes, by themselves, with Undo
+      case "autolist": { const before = LISTS.loadLists(), r = AUTO.applyAuto(before, o.read, { name: (c) => tr(AUTO.CAT_NAME[c]) }); LISTS.saveLists(r.st);
+        const ids = []; for (const it of o.read.rest || []) { const t = K.cleanTodo("buy " + it); ids.push(t); cmd.mind.add({ kind: "todo", title: t.slice(0, 90), text: t, tags: ["todo"], meta: { todo: true, done: false, autolist: true } }); }
+        const ls = r.added.map((a) => ({ en: tr("Added to {l}: {i}", { l: a.name, i: a.items.join(", ") }), ar: `اتضافت لـ${a.name}: ${a.items.join("، ")}`, open: "lists" }));
+        if (ids.length) ls.push({ en: `Added to your to-do list: ${ids.join(", ")}`, ar: `اتضافت للمهام: ${ids.join("، ")}`, open: "memory" });
+        if (ls.length) ls[0].act = { label: tr("Undo"), run: () => { LISTS.saveLists(before); return tr("Undone"); } };
+        return lines(ls); }
       case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
       // v9.2 (Ali, 1A): "make my travel checklist: …", "every Saturday: …", "I'm travelling Thursday", "what's my travel list?"
       case "projectTask": { const pr = loadProjects().find((x) => x.id === o.projectId); if (!pr) return; upsertProject(addTasks(pr, o.text));
@@ -400,6 +409,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         onTickTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))}
         onEditTodo={(x, t) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, title: t.slice(0, 90), text: t }))}
         onDeleteTodo={(x) => cmd && cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, deleted: true, doneAt: Date.now() } }))} /> : null}
+      {/* v10.9.8 OK-W2: "This month" — spent, top 3 categories, back to you — under the to-dos */}
+      {minimal && !rep ? <ThisMonthCard navTo={navTo} tick={tick} /> : null}
       {/* v9.9.19 T2 (Ali picked A): habits with this week's dots */}
       {minimal && !rep ? <HabitsCard /> : null}
       {/* v9.9.40 the new Autopilot (Ali's OK on K1–K6): chats by their role — the list chat's Shopping line, Done for you with the full

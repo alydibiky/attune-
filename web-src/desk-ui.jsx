@@ -14,6 +14,7 @@ import { BoxModes, takeBoxMode, BOX_HINT } from "./cmdbox-ui.jsx";
 import { LifeAnswer } from "./lifeask-ui.jsx";
 import * as LA from "./lifeask.js";
 import { WeekCalendar, UnderWeek } from "./weekcal-ui.jsx";
+import { MonthCard } from "./monthcard-ui.jsx";   // v10.9.8 OK-W2
 import { CrashCard } from "./crash-ui.jsx";   // v10.8 CR3 (the computer too)   // v10.3 K1 + C1 (Ali's picks)
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
@@ -112,6 +113,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt, reco
       <UnderWeek navTo={navTo} />
       {/* v9.2 (Ali picked 1A): what is due or not finished, and the lists needed today — the same card as the phone's Home */}
       <HomeTodo records={records} navTo={navTo} onTickTodo={onTickTodo} onEditTodo={onEditTodo} onDeleteTodo={onDeleteTodo} />
+      <MonthCard navTo={navTo} />
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
         {cards.map(([id, label, sub, Icon]) => <Card key={id} id={id} label={label} sub={sub} Icon={Icon} onClick={() => navTo(id)} />)}
         <Card id="tools" label="All tools" sub={tr("{n} tools", { n: toolsN != null ? toolsN : tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />

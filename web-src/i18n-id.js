@@ -15240,4 +15240,11 @@ export const IDN = {
   "Nothing planned for today ({d}).": "Tidak ada rencana hari ini ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Belum ada yang disimpan untuk “{w}” — tambahkan tanggalnya dan Attune akan mengingatkanmu.",
   "Back to you · added to income": "Dikembalikan · ditambahkan ke pemasukan",
+  "You spent {s} today, {o} over today's share": "Hari ini kamu belanja {s}, {o} lebih dari jatah hari ini",
+  "From tomorrow: about {x} a day until {d}": "Mulai besok: sekitar {x} per hari sampai {d}",
+  "Back to you": "Dikembalikan",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "Pesan bank ada di ponselmu. Hubungkan sekali dan komputer ini menampilkan bulan yang sama.",
+  "Connect your phone": "Hubungkan ponselmu",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Di ponsel: Pengaturan → Sinkron → Wi-Fi → Tampilkan kode. Lalu ketik di sini.",
+  "Skip — I'll type on the computer": "Lewati — saya ketik di komputer",
 };

@@ -93,6 +93,11 @@ export function safeToSpend({ ledger: L, life = null, radar = null, now = Date.n
   if (incomeMonth > 0) { const monthPool = incomeMonth - spentBefore - dueTotal - (Number(cushion) || 0); if (monthPool < pool) { kept = pool - Math.max(0, monthPool); pool = monthPool; basis = "month"; } }
   const perDay = pool > 0 ? pool / days : 0;
   const r2 = (v) => Math.round(v * 100) / 100;
-  return { cur, balance: r2(balance), perDay: Math.floor(perDay), today: Math.max(0, Math.floor(perDay - spentToday)), spentToday: r2(spentToday),
+  // v10.9.8 (Ali's OK-W3: "Safe to spend today 0 EGP · about 2,070 a day until Nov 30" read as a contradiction): what is left for the
+  // days AFTER today, from what is really left — today's share if it isn't spent yet, else what was spent today — so it goes down after
+  // a big day and never promises money that isn't there; `over` = how much today went past today's share
+  const afterToday = days - 1, fromTomorrow = afterToday > 0 && pool > 0 ? Math.floor(Math.max(0, pool - Math.max(perDay, spentToday)) / afterToday) : 0;
+  const over = Math.max(0, Math.floor(spentToday - perDay));
+  return { cur, balance: r2(balance), perDay: Math.floor(perDay), today: Math.max(0, Math.floor(perDay - spentToday)), spentToday: r2(spentToday), fromTomorrow, over, afterToday,
     until, days, due, dueTotal: r2(dueTotal), short: pool < 0 ? r2(-pool) : 0, income: nextIncome, basis, kept: r2(kept), incomeMonth: r2(incomeMonth) };
 }

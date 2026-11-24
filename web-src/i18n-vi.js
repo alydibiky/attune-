@@ -15239,4 +15239,11 @@ export const VI = {
   "Nothing planned for today ({d}).": "Hôm nay không có gì ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Chưa có gì được lưu cho “{w}” — thêm ngày và Attune sẽ nhắc bạn.",
   "Back to you · added to income": "Được hoàn lại · đã thêm vào thu nhập",
+  "You spent {s} today, {o} over today's share": "Hôm nay bạn đã chi {s}, vượt phần hôm nay {o}",
+  "From tomorrow: about {x} a day until {d}": "Từ ngày mai: khoảng {x} mỗi ngày đến {d}",
+  "Back to you": "Được hoàn lại",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "Tin nhắn ngân hàng ở trên điện thoại. Kết nối một lần là máy tính này hiện cùng tháng.",
+  "Connect your phone": "Kết nối điện thoại",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Trên điện thoại: Cài đặt → Đồng bộ → Wi-Fi → Hiện mã. Rồi nhập ở đây.",
+  "Skip — I'll type on the computer": "Bỏ qua — tôi sẽ nhập trên máy tính",
 };

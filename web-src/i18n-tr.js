@@ -15240,4 +15240,11 @@ export const TRK = {
   "Nothing planned for today ({d}).": "Bugün için planlanmış bir şey yok ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” için henüz kayıt yok — tarihini ekle, Attune sana hatırlatsın.",
   "Back to you · added to income": "Size geri döndü · gelire eklendi",
+  "You spent {s} today, {o} over today's share": "Bugün {s} harcadın, bugünkü payın {o} üstünde",
+  "From tomorrow: about {x} a day until {d}": "Yarından itibaren: {d} tarihine kadar günde yaklaşık {x}",
+  "Back to you": "Geri gelen",
+  "Your bank messages are on your phone. Connect it once and this computer shows the same month.": "Banka mesajların telefonunda. Bir kez bağla, bu bilgisayar aynı ayı göstersin.",
+  "Connect your phone": "Telefonunu bağla",
+  "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Telefonda: Ayarlar → Eşitleme → Wi-Fi → Kod göster. Sonra buraya yaz.",
+  "Skip — I'll type on the computer": "Atla — bilgisayarda yazacağım",
 };

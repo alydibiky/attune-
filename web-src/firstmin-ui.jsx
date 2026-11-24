@@ -4,7 +4,8 @@
    S5 what next, after the win. "Not now — let me type" = the Home box's Organise this (Ali: "isn't this already in the app?").
    Gmail is then read by itself every 3 hours (gmail.js gmailDue; Ali: "read automatically"). firstmin.js does the reading. */
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Pencil, Check, Mail, MessageSquare, Loader2 } from "lucide-react";
+import { ChevronLeft, Pencil, Check, Mail, MessageSquare, Loader2, Smartphone } from "lucide-react";
+import { isBigScreen as bigScreen } from "./spaces.js";   // v10.9.8 OK-W1
 import { tr, dateLocale } from "./i18n.js";
 import * as FM from "./firstmin.js";
 import { readGmail, loadGmail } from "./gmail.js";
@@ -79,6 +80,7 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
         evidence: { app: "SMS", from: (f.from || "").slice(0, 200), text: (f.full || "").slice(0, 2000), at: f.ts } }); }
     const r = appendToLedger(led, txns);
     try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("attune-ledger")); } catch (e) {}   // (Home's This month card, OK-W2)
     let radar = loadRadar(), plans = 0;
     for (const s of res.subs) {
       if (s.unsure) continue;
@@ -100,6 +102,16 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
       {foot ? <div className="pt-3 space-y-2">{foot}</div> : null}
     </div></div>;
 
+  // v10.9.8 (Ali's OK-W1: "connect your phone and an option to skip"): on a computer the bank messages live on the phone — connect it
+  // once (the Wi-Fi sync: the phone shows a code, this computer types it) and the computer shows the month the phone organised; or skip
+  if (step === "ask" && bigScreen() && !canSms) return shell(<>
+    <h2 className="m-0 text-[26px] font-black leading-tight pt-4">{tr("Let Attune organise your money?")}</h2>
+    <p className="m-0 text-[14px] c-sub">{tr("Your bank messages are on your phone. Connect it once and this computer shows the same month.")}</p>
+    <button onClick={() => { try { localStorage.setItem("attune:backup:tab", "sync"); } catch (e) {} onClose(); setTimeout(() => { try { window.dispatchEvent(new CustomEvent("attune-panel", { detail: "backup" })); } catch (e) {} }, 150); }}
+      className={card + " w-full text-start flex items-center gap-3"} data-testid="fm-connect-phone">
+      <Smartphone size={22} className="c-acc shrink-0" /><span className="flex-1 min-w-0"><b className="block text-[15px]">{tr("Connect your phone")}</b>
+        <span className="block text-[12.5px] c-sub">{tr("On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.")}</span></span></button>
+  </>, <button onClick={onType} className={ghost + " w-full"} data-testid="fm-skip-computer">{tr("Skip — I'll type on the computer")}</button>);
   if (step === "ask") return shell(<>
     <h2 className="m-0 text-[26px] font-black leading-tight pt-4">{tr("Let Attune organise your money?")}</h2>
     <p className="m-0 text-[14px] c-sub">{tr("Read on this phone only. Nothing is sent anywhere.")}</p>
