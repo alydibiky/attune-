@@ -12,6 +12,7 @@ import { setProNow, historyFrom, allowed as allowedPlan } from "./plan.js";
 import { ReadLogHost } from "./readlog-ui.jsx";
 import * as PWS from "./pwstore.js";
 import { PasswordsPage } from "./pw-ui.jsx";   // v10.9.4 OK-PW2
+import { MoneyFirstMinute } from "./firstmin-ui.jsx";   // v10.9.7 OK-FM
 import { SetupDriver, SetupPage, setupAnswer, startSetup, CoachHost, TipBulb } from "./setup-ui.jsx";
 import { BrainPage, brainKnown } from "./brain-ui.jsx";
 import { openPlan as openPlanUI } from "./plan-ui.jsx";
@@ -7898,7 +7899,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.6";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.7";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9236,6 +9237,9 @@ export default function App() {
   const [hzSample, setHzSample] = useState("");
   const [hzResult, setHzResult] = useState("");
   const [cPct, setCPct] = useState(50);
+  // v10.9.7 OK-FM: "Organise my month from my messages" again, any time (Set up your life)
+  const [fmOpen, setFmOpen] = useState(false);
+  useEffect(() => { const on = () => setFmOpen(true); window.addEventListener("attune-firstmin", on); return () => window.removeEventListener("attune-firstmin", on); }, []);
   const [showOnboard, setShowOnboard] = useState(() => {
     try { return !localStorage.getItem("attune:onboarded"); } catch (e) { return true; }
   });
@@ -12084,6 +12088,7 @@ export default function App() {
       {/* v9.3 (Ali picked D6 A): the first minute — 3 short screens that end with one real thing done. The longer "Make Attune yours"
           questions (Onboard, below) stay in the code, not shown at first run. */}
       {showOnboard && <FirstMinute close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} navTo={navTo} />}
+      {fmOpen && <MoneyFirstMinute native={NATIVE} nativeCall={nativeCall} onClose={() => setFmOpen(false)} onType={() => { setFmOpen(false); navTo("home"); }} navTo={navTo} />}
       {false && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash}
         brain={{ rec: recommendEngine(device), ready: modelState === "ready" || modelState === "downloading", go: () => { const r = recommendEngine(device); if (r && r.tier) { setTierId(r.tier.id); downloadModel(r.tier); } } }} />}
       {showEngine && <EngineModal device={device} setRamOverride={setRamOverride} bestTier={bestTier} activeTier={activeTier} setTierId={setTierId} plan={plan}
@@ -12434,6 +12439,9 @@ const FIRST_THINGS = [
 ];
 function FirstMinute({ close, navTo }) {
   const [step, setStep] = useState(0);
+  // v10.9.7 (Ali's OK-FM): after the language and the country, the money from the messages and Gmail — "Not now — let me type" comes
+  // back here to the typing screens (the Home box does the same: Organise this)
+  const [money, setMoney] = useState(false);
   const [pick, setPick] = useState("list");
   const [ctry, setCtry] = useState(() => countryOfPerson() || "eg");
   const [text, setText] = useState("");
@@ -12442,6 +12450,7 @@ function FirstMinute({ close, navTo }) {
   const ex = (FIRST_THINGS.find((x) => x[0] === pick) || FIRST_THINGS[0])[3];
   const doIt = () => { const t = (text || tr(ex)).trim(); close(); navTo("home"); setTimeout(() => { try { window.dispatchEvent(new CustomEvent("attune-box-say", { detail: t })); } catch (e) {} }, 400); };
   const bar = (i) => <i key={i} className={"h-1.5 flex-1 rounded-full " + (i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} />;
+  if (money) return <MoneyFirstMinute native={NATIVE} nativeCall={nativeCall} onClose={close} onType={() => { setMoney(false); setStep(1); }} navTo={navTo} />;
   return <div className="fixed inset-0 z-[60] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="first-minute" data-step={step}>
     <div className="calm w-full max-w-lg flex flex-col p-5 pt-[max(20px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-[var(--c-ink)]">
       <div className="flex items-center gap-3"><div className="flex gap-1 flex-1">{[0, 1, 2].map(bar)}</div>
@@ -12468,7 +12477,7 @@ function FirstMinute({ close, navTo }) {
       </div>}
       <div className="flex gap-2 pt-4">
         {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[52px] px-5 rounded-full border border-[var(--c-ln)] font-bold" data-testid="first-back">{tr("Back")}</button> : null}
-        {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[16px]" data-testid="first-next">{tr("Next")}</button>
+        {step < 2 ? <button onClick={() => (step === 0 ? setMoney(true) : setStep(step + 1))} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[16px]" data-testid="first-next">{tr("Next")}</button>
           : <button onClick={doIt} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))] font-extrabold text-[16px]" data-testid="first-do">{tr("Do it")}</button>}
       </div>
     </div>

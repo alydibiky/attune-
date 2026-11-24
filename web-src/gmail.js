@@ -13,8 +13,9 @@ const DAY = 864e5;
 const ls = () => (typeof localStorage !== "undefined" ? localStorage : null);
 export const loadGmail = (s = ls()) => { try { return { on: false, last: 0, emails: [], ...(JSON.parse((s && s.getItem(GMAIL_KEY)) || "null") || {}) }; } catch (e) { return { on: false, last: 0, emails: [] }; } };
 const saveGmail = (g, s = ls()) => { try { s && s.setItem(GMAIL_KEY, JSON.stringify(g)); } catch (e) {} return g; };
-/** Time for the daily read: connected, and the last read was 20 hours ago or more. */
-export const gmailDue = (g = loadGmail(), now = Date.now()) => !!g.on && now - (g.last || 0) >= 20 * 3600e3;
+/** Time for the next read: connected, and the last read was 3 hours ago or more. */
+// v10.9.7 (Ali's note on OK-FM S1: "Gmail should be read automatically"): every 3 hours while Attune is used, not once a day
+export const gmailDue = (g = loadGmail(), now = Date.now()) => !!g.on && now - (g.last || 0) >= 3 * 3600e3;
 
 // a payment (not a newsletter that mentions prices): a money word AND an amount with a currency, near the start
 const PAY = /\b(debited|credited|charged|payment (?:of|received|confirmed)|you paid|you sent|you received|receipt|order (?:total|confirmed)|amount)\b|تم خصم|تم إيداع|تم ايداع|تم تحويل|إيصال|ايصال|إجمالي|اجمالي|المبلغ/i;
@@ -41,12 +42,14 @@ export function takeEmails(list, { s = ls(), now = Date.now() } = {}) {
 }
 
 /** Read Gmail now. silent = the daily read (no Google screen). `call` = nativeCall. → { added, payments } */
-export async function readGmail(call, { silent = false, days, now = Date.now(), s = ls() } = {}) {
+export async function readGmail(call, { silent = false, days, now = Date.now(), s = ls(), raw = false } = {}) {
   const g = loadGmail(s);
   const d = days || (g.last ? Math.min(30, Math.max(2, Math.ceil((now - g.last) / DAY) + 1)) : 365);   // the first read: the last year
   const r = await call("gmailRead", { days: d, max: g.last ? 40 : 100, silent });
   if (!silent) saveGmail({ ...loadGmail(s), on: true, reconnect: false }, s);
-  return takeEmails((r && r.emails) || [], { s, now });
+  // (v10.9.7 the first minute reads the year's money emails as they came — `emails` — besides putting them where they belong)
+  const out = takeEmails((r && r.emails) || [], { s, now });
+  return raw ? { ...out, emails: (r && r.emails) || [] } : out;
 }
 /** The daily read could not sign in silently (Google asks again — while the app is in Google's testing mode that is once a
  *  week): the card says "Tap to reconnect" instead of failing quietly. */

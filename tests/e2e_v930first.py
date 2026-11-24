@@ -13,6 +13,8 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("[data-testid=first-minute]", timeout=15000)
     check(page.locator("[data-testid=first-country]").count() == 1, "screen 1: language and country")
     page.click("[data-testid=first-next]")
+    # v10.9.7 (Ali's OK-FM): after the country comes the money's first minute; "Not now — let me type" → these typing screens
+    page.wait_for_selector("[data-testid=fm-type]", timeout=5000); page.click("[data-testid=fm-type]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid^=first-pick-]").count() == 4 and page.locator("[data-testid=first-pick-list][aria-pressed=true]").count() == 1, "screen 2: “What should Attune do first?” — 4 choices")
     page.click("[data-testid=first-next]")
     check("travel checklist" in page.input_value("[data-testid=first-text]"), "screen 3: the example, ready to change or keep")

@@ -74,7 +74,7 @@ function readEmail(e, { now, home, order }) {
  * The first minute's month. sms: [{id, pkg, app, title, text, ts}] · emails: [{id, from, title, text, at}] (gmail.js) ·
  * learn: what the person fixed before (by sender). → { month, total, spend, subs, subsMonthly, subsYearly, foreign, check, counts }
  */
-export function firstMonth({ sms = [], emails = [], now = Date.now(), home = "EGP", order = "dmy", teach, learn = {} } = {}) {
+export function firstMonth({ sms = [], emails = [], now = Date.now(), home = "EGP", order = "dmy", teach, learn = {}, fix = {} } = {}) {
   const lines = [], counts = { sms: 0, emails: 0, joined: 0, skipped: 0 };
   const opts = { home, ...(teach !== undefined ? { teach } : {}) };
   for (const n of sms) {
@@ -149,6 +149,8 @@ export function firstMonth({ sms = [], emails = [], now = Date.now(), home = "EG
     if (t && t.sub === false && l.kind === "sub") { l.kind = "spend"; l.cat = t.cat || "other"; }
     if (t && t.sub === true && l.kind === "spend") { l.kind = "sub"; l.cycle = t.cycle || "month"; l.cat = "subscriptions"; }
     if (t) l.sure = true;
+    // ✎ an amount the person corrected is theirs (in the line's own currency)
+    if (fix[l.id] > 0) { l.amount = fix[l.id]; if (l.original && l.cur === home) l.original = null; l.sure = true; }
     final.push(l);
   }
   // "Check this one" — a bill from a service that is also a subscription (Ali's Enzu: a PayPal payment AND an invoice), or a line read

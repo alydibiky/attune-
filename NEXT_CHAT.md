@@ -1,6 +1,22 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
-> ## START HERE (24 Nov 2026 — v10.9.6: passwords sync + Chat answers from them)
+> ## START HERE (24 Nov 2026 later — v10.9.7: the first minute, Ali's OK-FM)
+> Ali OK'd https://claude.ai/artifact/SRbHba7CwMVSndiLqD7LX7 (FM1 + Gmail + ✎ edit, FM3; FM2 = Organise this; FM5 after the win; S1 note: "Gmail
+> should be read automatically"). Built: web-src/firstmin.js (pure) — the last 30 days of bank SMS (old SMS in the full APK + kept bank
+> notifications) and Gmail's money emails (a YEAR on the first read: yearly plans, earlier renewals, an older PayPal rate) → this month's
+> spending, subscriptions (one per plan, newest receipt; a plan overdue past its period + 7 days has stopped), monthly + yearly, twins
+> joined (an SMS and its email: the same amount in the same currency and no clashing shop names; dollars via the person's OWN rate, a
+> PayPal "EGP = USD" line, never an invented one), PayPal receipts named by the shop (+ the "*ENZU.COM" statement alias), "Check this one"
+> (a shop's invoice for the same amount as a payment → same plan?; unsure reads; a period only guessed). firstmin-ui.jsx: S1–S5 as the
+> mock-up; All right → Money (the home currency, "Claude · 22.80 USD", with the message as evidence, never twice) + Dates renewals, Undo;
+> learned per sender (attune:fm:learn:v1). Opens after the first-run country screen and from Set up your life ("Organise my month from my
+> messages"). Gmail now read by itself every 3 h (was 20 h). Real bug fixed on the way: subread read Google Play's "until cancelled. Learn
+> how to cancel." as CANCELLED (Ali's Google One renewal). Tests: tests/firstmin/gen.mjs 10,000 HARD composed people 100 %, held-out
+> (8 more sets written after the fixes) 100 %, 99.7 % different shapes; unit v1097firstmin (Ali's real month 7,135.46; yes-same → 68,525.52 a
+> year); e2e_v1097firstmin (390 + 1366). Honest: Gmail for everyone needs Google's review (docs/GMAIL_VERIFICATION.md); the Play build has
+> no READ_SMS → only bank notifications kept since access (the full APK reads the last 30 days of SMS).
+
+> ## (24 Nov 2026 — v10.9.6: passwords sync + Chat answers from them)
 > Ali: "I want passwords to be sync and for chat to be able to answer from it". → attune:pw:* now travels in BOTH syncs (Wi-Fi + Google),
 > inside the same encrypted file (PBKDF2 + AES-GCM, locked on the phone first — the unit test checks the file shows no password).
 > backup.js mergePwSecrets: the values have no dates, so each account's values come from the side whose ACCOUNT was changed last (an edit

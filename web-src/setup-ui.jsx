@@ -186,6 +186,8 @@ export function SetupPage({ back }) {
   // (v9.9.38, the 1M test: outside .calm the accent was undefined — every "Do it" was white on white, every ✓ invisible)
   return <div className="calm space-y-3 p-4 max-w-[640px] mx-auto" data-testid="setup-page">
     <div className="flex items-center gap-2">{back ? <button onClick={back} className="min-h-[44px] min-w-[44px] px-2 text-[18px]" aria-label={tr("Back")}>‹</button> : null}<h2 className="m-0 text-[20px] font-black">{tr("Set up your life")}</h2></div>
+    {/* v10.9.7 (Ali's OK-FM): the month from bank messages and Gmail, any time */}
+    <button onClick={() => { try { window.dispatchEvent(new CustomEvent("attune-firstmin")); } catch (e) {} }} className="w-full min-h-[52px] rounded-[16px] font-extrabold text-[15px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on-btn,var(--c-on-acc))]" data-testid="setup-firstmin">{tr("Organise my month from my messages")}</button>
     <div className="c-card space-y-1.5"><b className="block text-[14px]">{tr("Done · {n} of {t}", { n: p.done, t: p.total })}</b>
       <div className="h-1.5 rounded-full bg-[var(--c-ln)] overflow-hidden"><i className="block h-full bg-[var(--c-acc)]" style={{ width: (100 * p.done / p.total) + "%" }} /></div>
       <p className="m-0 text-[12.5px] c-sub" dir="auto">{tr("A step counts only when Attune really has it — a real salary, a real bank message, real papers.")}</p></div>

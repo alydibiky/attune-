@@ -159,7 +159,7 @@ with sync_playwright() as pw:
     # 1. v9.3 (Ali picked D6 A): the first minute — 3 short screens that end with one real thing done (the longer profile questions
     #    are no longer asked at first run; the profile is set any time from Settings → Profile)
     check(page.locator("[data-testid=first-minute]").count() == 1, "the first minute is shown on first launch")
-    page.click("[data-testid=first-next]"); page.click("[data-testid=first-pick-spend]"); page.click("[data-testid=first-next]")
+    page.click("[data-testid=first-next]"); page.click("[data-testid=fm-type]"); page.click("[data-testid=first-pick-spend]"); page.click("[data-testid=first-next]")   # (v10.9.7: the money's first minute → "Not now — let me type")
     check("150" in page.input_value("[data-testid=first-text]"), "…pick “Track my spending” → its example to keep or change")
     page.click("[data-testid=first-skip]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=first-minute]").count() == 0 and page.evaluate("localStorage.getItem('attune:onboarded')") == "1", "Skip closes it for good")

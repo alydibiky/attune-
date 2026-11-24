@@ -20,7 +20,7 @@ let n = 0;
   const wait = JSON.parse(s.getItem(G.WAIT_KEY));
   assert.equal(wait.length, 1); assert.equal(wait[0].app, "Gmail"); assert.match(wait[0].text, /charged EGP 850/);
   assert.equal(G.gmailNotes(s)[0].app, "Gmail"); assert.match(G.gmailNotes(s).map((x) => x.title).join("|"), /CIB · Card transaction/);
-  assert.equal(G.gmailDue(G.loadGmail(s), now + 3600e3), false); assert.equal(G.gmailDue(G.loadGmail(s), now + 21 * 3600e3), true, "the next day: due");
+  assert.equal(G.gmailDue(G.loadGmail(s), now + 3600e3), false); assert.equal(G.gmailDue(G.loadGmail(s), now + 3.5 * 3600e3), true, "3 hours later: due (v10.9.7, Ali: read automatically)");
   const r2 = await G.readGmail(async (m, a) => { calls.push([m, a]); return { emails: E }; }, { silent: true, now: now + 864e5, s });
   assert.deepEqual(calls[1][1], { days: 2, max: 40, silent: true }, "the daily read: silent, only the last days");
   assert.equal(r2.added, 0, "an email is never taken twice"); n += 9; }

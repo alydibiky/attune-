@@ -21,7 +21,7 @@ const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) 
 export const autoOn = () => { try { return localStorage.getItem(AUTO_KEY) !== "0"; } catch (e) { return true; } };   // on unless turned off
 // v9.9.34 FP-4: saved by themselves only with Pro (or the trial); in Free each one waits for a tap — the switch keeps its own setting
 const autoNow = () => autoOn() && allowed("autoMoney");
-const markDone = (N, ids) => {
+export const markDone = (N, ids) => {
   try { localStorage.setItem(DONE_KEY, JSON.stringify([...readDone(), ...ids].slice(-500))); } catch (e) {}
   try { N && N.payForget && N.payForget(JSON.stringify(ids)); } catch (e) {}
 };
