@@ -27,9 +27,14 @@ const MERCHANTS = [
   [/vodafone|orange|etisalat|e&|\bwe\b|telecom egypt|fawry|فوري|electricity|كهرباء|water|مياه|gas|غاز|netflix|shahid|spotify|osn|watch it|at&t|verizon|t-mobile|sprint|comcast|xfinity|spectrum|\bee\b|o2\b|three|bt\b|sky\b|virgin media|telekom|telefónica|movistar|vivo\b|claro|tim\b|free mobile|bouygues|sfr\b|jio|airtel|vi\b|bsnl|turkcell|türk telekom|stc\b|mobily|zain|du\b|ooredoo|safaricom|mtn\b|glo\b|telkomsel|indosat|globe|smart\b|ais\b|dtac|singtel|starhub|optus|telstra|rogers|bell\b|telus|utility|utilities|edf|engie|iberdrola|endesa|enel|e\.on|british gas|octopus|con ?ed|pg&e|duke energy|internet|broadband|wifi|disney|hulu|hbo|max\b|paramount|prime video|apple\.com\/bill|itunes|google play|youtube|deezer|tidal|anghami|crunchyroll|xbox|playstation|nintendo|microsoft|adobe|dropbox|icloud|google one|chatgpt|openai|canva|notion|duolingo|audible|kindle|linkedin|patreon|onlyfans|tinder|bumble|insurance|assurance|seguro|versicherung|sigorta|rent\b|loyer|alquiler|aluguel|miete|kira/i, "bills"],
   [/salary|payroll|راتب|مرتب|salaire|salario|salário|gehalt|lohn|maaş|gaji|stipendio|salaris|зарплата|wynagrodzenie|工资|월급|給与/i, "salary"],
 ];
+// v10.9.8 (new-user walk-through, 24 Nov): a brand matches only where a word starts — "tfl" inside "neTFLix" made Netflix transport,
+// "ola" (the ride app) would catch "Coca-Cola", "tier" "frontier". Latin letters / digits only: Arabic words keep their و / ب / ال in front.
+for (const m of MERCHANTS) m[0] = new RegExp("(?<![a-z0-9])(?:" + m[0].source + ")", m[0].flags);
 /** The category of a payment from its party / note (merchants first, then Money's own words), else "other". */
 export function categorise(text, direction) {
-  const t = String(text || "");
+  // v10.9.8: a bank's own "your balance is …" line says nothing about what was bought («رصيدك» made every InstaPay transfer and ATM
+  // withdrawal a bill — Money's word list reads «رصيد» as phone credit). «شحن رصيد 100» (airtime) keeps its «رصيد».
+  const t = String(text || "").replace(/(?:رصيدك|الرصيد|رصيد (?:محفظتك|حسابك|المحفظة|الحساب)|(?:available |current |your |new )?balance)[^.\n]*/giu, " ");
   for (const [re, c] of MERCHANTS) if (re.test(t)) return direction === "in" && c !== "salary" ? "other" : c;
   const c = catOf(t);
   return c && c !== "other" && !(direction === "in" && c !== "salary") ? c : "other";
@@ -196,7 +201,14 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
   for (const t of (txns || []).slice(0, 50)) {
     const a = parseFloat(t.amount);
     if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
-    const acc = (t.account && L.accounts.find((x) => x.id === t.account)) || L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];   // v9.9.14: the account chosen for it first
+    let acc = (t.account && L.accounts.find((x) => x.id === t.account)) || L.accounts.find((x) => t.currency && x.currency === t.currency);   // v9.9.14: the account chosen for it first
+    // v10.9.8 (new-user walk-through: a 9.99 USD Netflix charge landed as 9.99 EGP): a currency no account holds gets its own account —
+    // never dollars written into a pound account. (No currency given = the first account, as before.)
+    if (!acc && t.currency && /^[A-Z]{3}$/.test(t.currency) && t.currency !== (L.accounts[0].currency || L.currency)) {
+      acc = { id: "a" + now.toString(36) + t.currency.toLowerCase(), name: t.currency, emoji: "💳", currency: t.currency, start: 0 };
+      L.accounts = [...L.accounts, acc];
+    }
+    if (!acc) acc = L.accounts[0];
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
     const dg = digitsOf(acc.currency || t.currency || "EGP");   // v9.9.18: KWD / BHD / OMR / JOD / TND keep 3 decimals, JPY none
     L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: catFor(CR.rules, { note: t.note, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other" }) /* v9.9.18 M5: "always put Seoudi in Groceries" */, account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });

@@ -90,7 +90,7 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
   };
   const undo = () => { if (!saved) return; try { saved.before.led == null ? localStorage.removeItem("ledger.v3") : localStorage.setItem("ledger.v3", saved.before.led); saved.before.radar == null ? localStorage.removeItem("attune:radar:v1") : localStorage.setItem("attune:radar:v1", saved.before.radar); } catch (e) {} setSaved(null); setStep("month"); };
 
-  const shell = (body, foot) => <div className="fixed inset-0 z-[61] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="fm" data-step={step}>
+  const shell = (body, foot) => <div role="dialog" aria-modal="true" className="calm fixed inset-0 z-[61] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="fm" data-step={step}>
     <div className="calm w-full max-w-lg flex flex-col p-5 pt-[max(20px,env(safe-area-inset-top))] pb-[max(16px,env(safe-area-inset-bottom))] text-[var(--c-ink)] min-h-0">
       <div className="flex-1 min-h-0 overflow-y-auto space-y-3">{body}</div>
       {foot ? <div className="pt-3 space-y-2">{foot}</div> : null}

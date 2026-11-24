@@ -15,7 +15,8 @@ import { nameKey, fold } from "./entities.js";
 
 /** The category a question is about ("how much on food this week?" → "food"), or "". Salary only for income questions. */
 export function catAsked(q) {
-  for (const [id, re] of Object.entries(CAT_WORDS)) if (id !== "salary" && re.test(q)) return id;
+  const q2 = String(q || "").replace(/[إآ]/g, "ا");   // (v10.9.8: «الإكل» typed with the wrong alef is «الاكل»)
+  for (const [id, re] of Object.entries(CAT_WORDS)) if (id !== "salary" && (re.test(q) || re.test(q2))) return id;
   return "";
 }
 
@@ -130,6 +131,13 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
     return { text: [head, ...(short || !lines.length ? [] : ["", ...lines])].join("\n").trim(), total: inSpan.reduce((a, x) => a + (+x.amount || 0), 0), count: inSpan.length, empty: !inSpan.length, span, who };
   }
   const out = [], sums = {};
+  // v10.9.8 (new-user walk-through: "how much did I spend on food?" → "No expenses are recorded this month" with bread & cheese under
+  // Groceries): a category with nothing says so by NAME, and names the close ones that do have spending
+  const RELATED = { food: ["groceries", "coffee"], groceries: ["food"], coffee: ["food"], fun: ["gifts"], gifts: ["fun"] };
+  const related = () => { const rel = RELATED[onlyCat] || []; if (!rel.length) return "";
+    const by = {}; for (const x of ledger.txns || []) if (x && x.type === "expense" && x.date >= span.from && x.date <= span.to && rel.includes(x.cat)) { const k = cur(x) + "|" + x.cat; by[k] = (by[k] || 0) + (+x.amount || 0); }
+    const xs = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => { const [c, cat] = k.split("|"); return `${catName(cat)} ${money(v, c)}`; }).join(" · ");
+    return xs ? "\n" + T("Related: {x}.", { x: xs }, `قريب منه: ${xs}.`) : ""; };
   const part = (type) => {
     const rows = inSpan.filter((x) => x.type === type).sort((a, b) => (a.date < b.date ? 1 : -1));
     const by = {};
@@ -137,7 +145,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
     const curs = [...new Set(rows.map(cur))];
     const head = type === "expense" ? L("You spent", "صرفت") : L("You received", "دخلك");
     if (short) {   // v6.13: a chat-sized answer for Yusr's write-or-ask bar
-      if (!rows.length) { out.push(type === "expense" ? T(onlyCat ? "Nothing spent on {c} {p}." : "Nothing spent {p}.", { c: catName(onlyCat), p: P }, `لا توجد مصروفات${onlyCat ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])}.`) : T("No income {p}.", { p: P }, `لا يوجد دخل ${inAr(span.label[1])}.`)); return; }
+      if (!rows.length) { out.push(type === "expense" ? T(onlyCat ? "Nothing spent on {c} {p}." : "Nothing spent {p}.", { c: catName(onlyCat), p: P }, `مفيش مصاريف${onlyCat ? " على " + catName(onlyCat) : ""} ${inAr(span.label[1])}.`) + (onlyCat ? related() : "") : T("No income {p}.", { p: P }, `لا يوجد دخل ${inAr(span.label[1])}.`)); return; }
       const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => { const [c, cat] = k.split("|"); return `${catName(cat)} ${money(v, c)}`; });
       const big = rows.reduce((m, x) => (+x.amount > +m.amount ? x : m), rows[0]);
       const amt = curs.map((c) => money(sums[type + "|" + c], c)).join(" + "), one = rows.length === 1;
@@ -149,7 +157,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
         + (rows.length > 1 ? "\n" + L("Biggest: ", "الأكبر: ") + (big.note ? String(big.note).slice(0, 40) + " " : catName(big.cat) + " ") + money(+big.amount, cur(big)) + " · " + big.date : ""));
       return;
     }
-    if (!rows.length) { out.push(type === "expense" ? T("No expenses are recorded {p} ({f} → {t}).", { p: P, f: span.from, t: span.to }, `لا توجد مصروفات مسجّلة ${inAr(span.label[1])} (${span.from} → ${span.to}).`) : T("No income is recorded {p}.", { p: P }, `لا يوجد دخل مسجّل ${inAr(span.label[1])}.`)); return; }
+    if (!rows.length) { out.push(type === "expense" ? (onlyCat ? T("Nothing spent on {c} {p}.", { c: catName(onlyCat), p: P }, `مفيش مصاريف على ${catName(onlyCat)} ${inAr(span.label[1])}.`) + related() : T("No expenses are recorded {p} ({f} → {t}).", { p: P, f: span.from, t: span.to }, `مفيش مصاريف متسجلة ${inAr(span.label[1])} (${span.from} → ${span.to}).`)) : T("No income is recorded {p}.", { p: P }, `لا يوجد دخل مسجّل ${inAr(span.label[1])}.`)); return; }
     { const amt = curs.map((c) => money(sums[type + "|" + c], c)).join(" + "), one = rows.length === 1;
       out.push(ar ? `**${head} ${amt}** ${inAr(span.label[1])} (${span.from} → ${span.to}) · ${rows.length} عملية`
         : tr(type === "income" ? (one ? "**You received {a}** {p} ({f} → {t}) · 1 entry" : "**You received {a}** {p} ({f} → {t}) · {n} entries") : (one ? "**You spent {a}** {p} ({f} → {t}) · 1 entry" : "**You spent {a}** {p} ({f} → {t}) · {n} entries"),

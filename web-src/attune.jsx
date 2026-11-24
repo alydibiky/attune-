@@ -10600,7 +10600,11 @@ export default function App() {
         const now = Date.now(); let doActions = 0;
         // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
         let spentDone = false;
-        try { const u0 = doUnderstand(text, { now, stores: loadLifeStores() }); doActions = u0.actions.filter((a) => a.kind !== "note").length;
+        try { let u0 = doUnderstand(text, { now, stores: loadLifeStores() });
+          // v10.9.8 (new-user walk-through: "fakarny ba3d bokra el sa3a 5 adfa3 el egar" asked "What did you mean?" while the same words in
+          // Arabic set the reminder): Franco is read as Arabic here too, the way doFromHome then does it
+          if (!u0.actions.length && !u0.ask && UND.looksFranco(text)) { const a = UND.francoToArabic(text); if (a !== text) { const u1 = doUnderstand(a, { now, stores: loadLifeStores() }); if (u1.actions.length || u1.ask) u0 = u1; } }
+          doActions = u0.actions.filter((a) => a.kind !== "note").length;
           // v10.8 (Ali's «25000 egp expense under masroof nada for shopping winter clothes» asked "Give it to an agent?"): money the sentence
           // says was SPENT, or put under one of his categories, is a record — never an order for an agent
           spentDone = u0.actions.some((a) => a.kind === "money") && (MCAT.SPENT.test(text) || (() => { const L = loadLedger(); const h = L && MCAT.catNamed(text, L); return !!(h && h.own); })()); } catch (e) {}
@@ -12451,7 +12455,7 @@ function FirstMinute({ close, navTo }) {
   const doIt = () => { const t = (text || tr(ex)).trim(); close(); navTo("home"); setTimeout(() => { try { window.dispatchEvent(new CustomEvent("attune-box-say", { detail: t })); } catch (e) {} }, 400); };
   const bar = (i) => <i key={i} className={"h-1.5 flex-1 rounded-full " + (i <= step ? "bg-[var(--c-acc)]" : "bg-[var(--c-ln)]")} />;
   if (money) return <MoneyFirstMinute native={NATIVE} nativeCall={nativeCall} onClose={close} onType={() => { setMoney(false); setStep(1); }} navTo={navTo} />;
-  return <div className="fixed inset-0 z-[60] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="first-minute" data-step={step}>
+  return <div role="dialog" aria-modal="true" className="calm fixed inset-0 z-[60] bg-[var(--c-bg)] flex items-stretch sm:items-center justify-center" data-testid="first-minute" data-step={step}>
     <div className="calm w-full max-w-lg flex flex-col p-5 pt-[max(20px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-[var(--c-ink)]">
       <div className="flex items-center gap-3"><div className="flex gap-1 flex-1">{[0, 1, 2].map(bar)}</div>
         <button onClick={close} className="min-h-[44px] px-3 text-[13.5px] font-bold c-sub" data-testid="first-skip">{tr("Skip")}</button></div>

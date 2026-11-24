@@ -1,5 +1,35 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (24 Nov 2026 night — v10.9.8: the new-user walk-through)
+> Ali asked for a "real user" walk: Claude used Attune as a NEW person (customer mode, no test presets) on a typical Egyptian phone that
+> is NOT Ali's (12 bank / wallet SMS: InstaPay, Vodafone Cash, NBE, Banque Misr, CIB, an OTP, an advert, a refund, an ATM, a declined
+> one, a dollar charge), typed 30 everyday sentences in English / Egyptian / Franco, asked Chat about its own records, at 390 and 1366.
+> Found and FIXED (each with a test): **money** — a 9.99 USD Netflix charge was saved as 9.99 EGP (paylog.appendToLedger: a currency no
+> account holds now gets its own account); Netflix was "transport" ("tfl" inside "neTFLix" — every merchant brand now matches only where a
+> word starts; Coca-Cola / frontier too); «إلى محمد سامي بنجاح» kept «بنجاح» in the name; «ماكينة الصراف الآلي فرع» → "ATM"; a transfer /
+> ATM were "bills" (the bank's «رصيدك» read as phone credit — balance lines are left out of the category); «تم شحن رصيد 100» (Vodafone Cash
+> top-up) was missed (the balance in the NEXT sentence pulled the 100 down); names lost when a bank writes «ألى» or in CAPITALS;
+> «عشان» (because) contained «عشا» (dinner) → «دفعت 200 عشان الكهربا» was food. **Chat answers** (lifeask.js / myledger.js) — "when does my
+> passport expire?" answered "call the bank on 25 Nov" (now: the paper NAMED, any language — «جواز السفر», "el basbor" — or "Nothing saved
+> for “car licence” yet"; "car licence" never picks "Car insurance"; reminders never answer an expiry); "what do I have tomorrow / today?"
+> went to the model (now: that day, with times); "how much on food?" said "No expenses are recorded this month" (now: "Nothing spent on Food
+> this month. Related: Groceries 535 EGP · Coffee/Tea 45 EGP."); «أحمد عليه كام؟» with Ahmed saved in English letters → "owes you nothing"
+> (names matched across scripts, entities.nameKey); Franco questions ("Ahmed 3aleh kam?", "3andi eh bokra?", "el basbor beyentehy emta?");
+> \b never matched beside an Arabic letter in the question check («… امتى» with no "?" wasn't a question); «قولي عندي» read as «لي عند»;
+> «؟» sat inside the "Arabic letter" range so «عليه فلوس ليا؟» failed; direction marks / double spaces / "2 questions:" / "remind me, what…"
+> cleaned first. **Home box** — Franco "fakarny ba3d bokra el sa3a 5 adfa3 el egar" asked "What did you mean?" (Home's detect now reads
+> Franco as Arabic like doFromHome; "egar" added). **Computer** — the first-run screens sat SEE-THROUGH over Home (a new computer starts in
+> the Glass look, where only role=dialog panels get a solid ground — both are dialogs now). 11 new answer lines in all 20 languages.
+> Tests: tests/unit/v1098walk.test.mjs (the 12 SMS plain + 2,200 HARD versions; the first minute; the dollar account; a 2,500 sample + a
+> held-out of tests/walk/gen.mjs), tests/walk/gen.mjs (NEW: 10,000 HARD composed own-data questions — 67.2 % at first → 100 %, held-out
+> seeds 1 and 2: 100 %, 90 % different shapes; one generator change was unrealistic and removed: a time stamp in front of a question, and
+> doubled punctuation "remind me,,"), tests/e2e_v1098walk.py (390 + 1366). The 10,000 notification + first-minute runs are unchanged.
+> **Waiting for Ali (look & feel — his pick):** (W1) on a COMPUTER the first-run money screen still offers "Bank & wallet messages … on this
+> phone" with both rows off — skip it on a computer, or word it "connect your phone"? (W2) after "All right ✓" Home shows nothing of the
+> month just organised (no money line) — a "This month 6,339 EGP" line on Home? (W3) Money's "Safe to spend today 0 EGP · about 2,070 a day
+> until Nov 30" reads as a contradiction. (W4) "buy milk, eggs and bread" became ONE to-do — split into a list of 3? (W5) a Franco reminder
+> keeps "3andi" in its title ("3andi doctor appointment"). (W6) a refund (+300 from NOON) is not taken off the month's spending.
+
 > ## START HERE (24 Nov 2026 later — v10.9.7: the first minute, Ali's OK-FM)
 > Ali OK'd https://claude.ai/artifact/SRbHba7CwMVSndiLqD7LX7 (FM1 + Gmail + ✎ edit, FM3; FM2 = Organise this; FM5 after the win; S1 note: "Gmail
 > should be read automatically"). Built: web-src/firstmin.js (pure) — the last 30 days of bank SMS (old SMS in the full APK + kept bank

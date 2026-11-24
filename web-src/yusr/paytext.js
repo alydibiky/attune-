@@ -153,6 +153,8 @@ const DIRECTION = [
   // v9.9.17 (the 10,000-notification run): «تم رد مبلغ ٥٨٬٦٣١ جنيه الى بطاقتك» is a refund — money back IN (the «الى» made it "out")
   ["in",  /تم\s+(?:رد|استرداد|ارجاع|إرجاع)\s|رد مبلغ|استرداد مبلغ|مبلغ مسترد/],
   ["out", /(تم\s+)?(خصم|سحب|دفع|شراء|سداد)|حولت|قمت بتحويل|تم التحويل/],
+  // v10.9.8: a wallet's «تم شحن رصيد 100 جنيه لرقم …» is airtime bought — money out (the wallet's balance line comes after it)
+  ["out", /(?:تم\s+)?شحن\s+(?:رصيد|كارت|باقة)|recharge (?:of|successful)|top[- ]?up (?:of|successful)/i],
   ["in",  /(تم\s+)?(استلام|إضافة|اضافة|ايداع|إيداع|توريد)|اضيف|أضيف|وردك/],
   // v9.9.17: «تم تحويل راتبك بمبلغ … الى حسابك» — a transfer TO your account / card / wallet is money in
   ["in",  /تحويل (?:راتبك|مرتبك)|(?:الى|إلى)\s*(?:حسابك|حسابكم|بطاقتك|محفظتك)(?!\s*(?:الاخر|الآخر))/],
@@ -231,7 +233,7 @@ function payAmount(text, home) {
     if (/(?:الحالي|الحالى|الجديد|المتبقي)\s*:?\s*$/.test(before) && /رصيد/.test(t.slice(Math.max(0, at - 60), at))) score -= 14;
     // a fee next to a purchase ("fees EGP 15.00 and purchase EGP 300.00", «مصاريف الخدمة 1 جنيه») is not the payment
     if (/(?:fees?|charges?|commission|رسوم|مصاريف|عموله|عمولة)[^\d]{0,14}$/iu.test(before)) score -= 6;
-    if (NEAR_BALANCE.test(after)) score -= 3;
+    if (NEAR_BALANCE.test(after.split(/[.،;\n!](?=\s)|\.\s/)[0])) score -= 3;   // (v10.9.8: a balance in the NEXT sentence says nothing about this number)
     // reference numbers — v10.9 (real NBE SMS: «حسابكم رقم 0130 بمبلغ 3000.0 جم» lost its amount to the «رقم» of the account): only a
     // reference word with no other number between it and this one counts
     if (NEAR_REF.test(before.replace(/^[\s\S]*\d/, ""))) score -= 9;
@@ -254,7 +256,8 @@ function payAmount(text, home) {
     if (/^[-\/.]\d{1,2}[-\/.]\d{1,2}/.test(after) && /^(?:19|20)\d{2}$/.test(raw)) score -= 12;   // v10.2: the year of 2026-07-26 is not the amount
     // v9.9.16 (the world corpus): "A/c **3545", "card ending 4521", "kart 1234", «بطاقة *4321», "Acct XX789" — a tail is not money
     if (/(?:a\/c|acc(?:oun)?t|acct?|card(?:\s+no\.?)?|ending|ends? (?:in|with)|biten|nolu|kart\w*|rek(?:ening)?|conto|carta|tarjeta|terminaci[oó]n|cuenta|compte|carte|konto|cheq|بطاقة|بطاقتك|حساب\w*|المنتهي[ةه]?\s*(?:ب|بـ|برقم)\s*|المنتهي[ةه]?|ينتهي\s*(?:ب|بـ)|رقم\s+(?:الحساب|البطاقة|المحفظة))[\s.:#-]*[xX*•.]*\s*$/iu.test(before) || /[*•xX]{1,6}\s?$/.test(before.slice(-7))) score -= 12;
-    if (/(?:avl\.?|avail(?:able)?|limit|lmt|kullan[ıi]labilir|bakiye|saldo|solde|kontostand|رصيد|الرصيد|المتاح|المتوفر|\bbal\b)[^\d]{0,22}$/iu.test(before)) score -= 10;
+    if (/(?:avl\.?|avail(?:able)?|limit|lmt|kullan[ıi]labilir|bakiye|saldo|solde|kontostand|رصيد|الرصيد|المتاح|المتوفر|\bbal\b)[^\d]{0,22}$/iu.test(before) && !/شحن\s+رصيد\s*$/.test(before)) score -= 10;   // (v10.9.8: «شحن رصيد 100» — the 100 is the top-up, not a balance)
+    if (/شحن\s+(?:رصيد|كارت|باقة)\s*$/.test(before)) score += 4;
     if (/^\s*(?:today|so far|this (?:week|month))\b/i.test(after) && /spent\s[^\d]{0,6}$/i.test(before)) score -= 6;   // "You've spent £48.20 today"
     // the number that TOUCHES a currency is the amount ("Rs 2500.00", "245,90 TL", «45.00 ر.س») — a date or a count beside it is not
     if (/(?:(?<![A-Za-z])(?:(?!ATM|POS|REF|PIN|OTP|TXN|ACC|NUM|SMS|VAT|ID\b)[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م|جم(?![\u0621-\u064A])|ج(?![\u0621-\u064A]))/.test(after)) score += 4;
@@ -347,19 +350,21 @@ const PARTY_RE = [
   // A Latin name inside an Arabic sentence is the ordinary InstaPay case, and
   // it is followed by an Arabic word rather than punctuation — so the list of
   // terminators has to include those words.
-  /(?:to|from|إلى|الى|من)\s+((?:[A-Z][A-Za-z'’-]+\s*){1,4})/,
-  /(?:إلى|الى|من)\s+((?:[ء-ي]+\s*){1,4})/,
-  /(?:\bat\b|في)\s+([A-Z][A-Za-z0-9'’&-]+(?:\s+[A-Z][A-Za-z0-9'’&-]+){0,3})/,
+  /(?:\b(?:to|TO|To|from|FROM|From)\b|[إأا]لى|من)\s+((?:[A-Z][A-Za-z'’-]+\s*){1,4})/,   // (v10.9.8: «ألى», and a bank that writes in CAPITALS)
+  /(?:[إأا]لى|من)\s+((?:[ء-ي]+\s*){1,4})/,
+  /(?:\b(?:at|AT|At)\b|في)\s+([A-Z][A-Za-z0-9'’&-]+(?:\s+[A-Z][A-Za-z0-9'’&-]+){0,3})/,
 ];
 // Words that are grammar, not a counterparty. "من حسابك" means "from your
 // account" — writing "حسابك" into the ledger as the person you paid is the
 // kind of small wrongness that makes a user stop trusting the whole feature.
 const PARTY_STOP = /^(egp|usd|eur|sar|aed|gbp|kwd|qar|arabic|english|حساب|حسابك|حسابي|حسابنا|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
 // Trailing fragments the greedy capture can pick up.
-const PARTY_TRIM = /\s+(?:(on|at|ref|reference)\b|(في|بتاريخ|رقم)(?![ء-ي]))[\s\S]*$/i;   // (\b doesn't end an Arabic word: «كارفور في 28/10» kept «في»)
+const PARTY_TRIM = /\s+(?:(on|at|ref|reference|successfully|via)\b|(في|بتاريخ|رقم|بنجاح|عبر|بقيمة|بمبلغ)(?![ء-ي]))[\s\S]*$/i;   // v10.9.8: «إلى محمد سامي بنجاح» → «محمد سامي»   // (\b doesn't end an Arabic word: «كارفور في 28/10» kept «في»)
 
 function payParty(text) {
   const t = payNormalize(text).replace(/\s+/g, " ");
+  // v10.9.8 (new-user walk-through): cash from a machine is "ATM", never «ماكينة الصراف الآلي فرع» cut half-way
+  if (/(?<![A-Za-z])ATM(?![A-Za-z])|ماكين[ةه] (?:ال)?صراف|(?:ال)?صراف (?:ال)?[آا]لي|cash withdrawal|سحب نقدي/i.test(t)) return "ATM";
   for (const re of PARTY_RE) {
     const m = t.match(re);
     if (!m || !m[1]) continue;

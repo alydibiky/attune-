@@ -16,6 +16,7 @@ export const sayAnswer = (a, ar = getLang() === "ar") => (!a ? "" : ar ? a.ar : 
 const pl = (n, one, many) => (n === 1 ? one : many);
 import { lexSignals } from "./understand.js";
 import { progressOf, dueSoon } from "./life.js";
+import { nameKey as nKey } from "./entities.js";   // v10.9.8 «أحمد» = Ahmed
 import { trendOf, labTestOf, dosesOn, activeOn, isoDay, mgdl } from "./care.js";
 import { moneyTrend, chartOfRows } from "./lifecharts.js";
 import { isLive, isScoreQuestion, fromNotes } from "./livefacts.js";
@@ -27,9 +28,12 @@ const DAY = 86400000;
 const iso = (t) => isoDay(t);
 
 // ---- what kind of question -------------------------------------------------------------------------------------------------------
-const OWED_IN = /\b(owes? me|owe me|owed to me|am i owed|i'?m owed|what i'?m owed|lent|i lent|who owes|money (?:people|others) owe)\b|ليا عند|لي عند|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0600-\u06ff])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند/i;
+const OWED_IN = /\b(owes? me|owe me|owed to me|am i owed|i'?m owed|what i'?m owed|lent|i lent|who owes|money (?:people|others) owe)\b|(?<![\u0621-\u064a])(?:ليا عند|لي عند)|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0621-\u064a])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند|\b(?:3aleh|3aleha|3aleih)\s+(?:lessa\s+)?(?:kam|kaam|felos|flos)\b|\bmeen 3aleh\b|\b(?:leya|liya) (?:3and|3nd)\b/i;   // (v10.9.8 Franco: "Ahmed 3aleh kam?")
 const OWED_OUT = /\b(i owe|do i owe|my debts?|installments?|instalments?|i still pay|left to pay)\b|عليا|علي فلوس|ديوني|اقساط|أقساط|القسط|فاضل عليا|باقي عليا|جمعيه|جمعية/i;
-const DUE = /\b(due|deadline|deadlines|coming up|upcoming|expir\w*|renew\w*|what(?:'s| is) (?:on|next)|this week|next week|this month|to pay|bills? due|reminders?)\b|مواعيد|موعد|مستحق|هينتهي|ينتهي|تجديد|الاسبوع ده|الأسبوع ده|الجاي|ايه اللي عليا|المطلوب مني/i;
+// v10.9.8 (new-user walk-through: "what do I have tomorrow?" went to the model): a day asked about with "have / planned / on"
+const DAY_Q = /\b(tomorrow|today|tonight)\b|بكر[هة]|النهارد[هة]|انهارد[هة]|\bbokra\b|\bel ?naharda\b|\bennaharda\b/i;
+const DAY_HAVE = /\b(do i have|have i got|i have|i got|what'?s on|what is on|anything on|planned|plans?|schedule|agenda|due)\b|عندي|ورايا|ورايه|مواعيد|\b3andi\b|\b3ndi\b|\bwaraya\b/i;
+const DUE = /\b(beyentehy|byentehy|hayentehy|haye?ntehi|beyentehi|due|deadline|deadlines|coming up|upcoming|expir\w*|renew\w*|what(?:'s| is) (?:on|next)|this week|next week|this month|to pay|bills? due|reminders?)\b|مواعيد|موعد|مستحق|هينتهي|ينتهي|تجديد|الاسبوع ده|الأسبوع ده|الجاي|ايه اللي عليا|المطلوب مني/i;
 const MEDS = /\b(medicines?|medications?|meds|pills?|tablets?|doses?|insulin|take (?:my|her|his)|when do (?:i|we|they|she|he) take)\b|دوا|ادويه|أدوية|ادوية|العلاج|جرعه|جرعة|حبوب|انسولين|إنسولين/i;
 const FOOD = /\b(calories|kcal|protein|carbs?|carbohydrates?|fat|fibre|fiber|did i eat|i ate|eaten|my meals?|diet)\b|سعرات|سعر حراري|بروتين|كربوهيدرات|كارب|دهون|اكلت|أكلت|اكلي|أكلي/i;
 const LAB_Q = /\b(lab|labs|test results?|results?|level|levels|blood test|getting better|improv\w*|trend)\b|تحليل|تحاليل|نتيجه|نتيجة|نسبه|نسبة|اتحسن|اتحسنت/i;
@@ -134,8 +138,16 @@ function subs(q, s, now) {
     ar: `${out.length === 1 ? "اشتراك واحد" : out.length === 2 ? "اشتراكين" : out.length <= 10 ? out.length + " اشتراكات" : out.length + " اشتراك"} · حوالي ${num(total)} ${cur} في الشهر (${num(total * 12)} في السنة). أكبرهم: ${out[0].name}.`,
     rows: out.slice(0, 12).map((x) => [x.name, num(Math.round(x.monthly)) + " " + x.cur + " / month"]), open: out[0].src, sources: [...new Set(out.map((x) => x.src))] };
 }
+// v10.9.8 (the walk-through's HARD run): direction marks a phone adds and doubled spaces never change the question ("owes  me")
+const clean = (q) => String(q || "").replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\u061c]/g, "").replace(/[ \t]+/g, " ").trim()
+  // ("remind me, what do I have today?" / "tell me, …" asks — the comma and the question after it say so; "remind me to …" is untouched)
+  // (a numbered question — "2 questions:", "1)", "Q2:", «سؤال ٢:» — is still the question)
+  .replace(/^(?:\d+\)|[١-٩]\)|#\d+|q\d+\s*:|\d+\s+questions?\s*:|one more(?:\s*\([\d٠-٩]+\/[\d٠-٩]+\))?\s*:|سؤالين\s*:|سؤال\s*[\d٠-٩]+\s*:|تاني مرة\s*:|so2al\s*:|\d+\s+so2alat\s*:)\s*/iu, "")
+  .replace(/(?<![\p{L}])(?:remind me|tell me|fakarny|fakarni|فكرني|قولي)\s*[,،:—\-|.…]+\s*(?:(?:يا [أإا]تيون|معلش|بص|please|ok|sorry)\s*[,،:—\-|.…]*\s*)?(?=(?:what|when|do|does|did|how|anything|who|which|is|are)\b|(?:عندي|ورايا|امت[يى]|كام|ايه|مين)(?![\p{L}]))/iu, "");
 export function kindOf(q, stores = {}) {
-  const t = String(q || "");
+  const t = clean(q);
+  // (a paper's expiry is a date question even when the paper is the rent contract — never "money on rent")
+  if (/\b(expir\w*|renew\w*)\b|هينتهي|بينتهي|ينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) && DUE.test(t)) return "due";
   if (HISTORY.test(t)) return "history";
   if (LAST.test(t)) return "last";
   if (PAID_FOR.test(t) && !catAsked(termOf(t))) return "paid-for";
@@ -150,6 +162,7 @@ export function kindOf(q, stores = {}) {
   if (SUBS_Q.test(t) && (/[?؟]\s*$/.test(t) || /^(?:what|which|list|show|how many|tell me|كام|ايه|إيه|وريني|قولي)\b/i.test(t.trim()))) return "subs";   // v9.9.38
   if (myMoneyIntent(t) || catAsked(t) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance|went on|go on|goes on)\b|صرفت|مصاريف|دخل|رصيد/i.test(t)) return "money";
   if (DUE.test(t)) return "due";
+  if (DAY_Q.test(t) && DAY_HAVE.test(t)) return "due";   // v10.9.8 "what do I have tomorrow?"
   return "search";
 }
 
@@ -160,6 +173,8 @@ const prog = (c, now) => { const p = progressOf(c, now); if (p.left == null && !
 function owedIn(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir === "in");
   let who = items.map((c) => c.person).filter(Boolean).find((p) => fold(q).includes(fold(p)));
+  // v10.9.8 (new-user walk-through: «أحمد عليه كام؟» → "أحمد owes you nothing" with "Ahmed" saved): the same name in the other script
+  if (!who) { const qk = new Set(fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 2).map((w) => nKey(w.replace(/^(?:ول|وب|ل|و|ب)(?=[\u0621-\u064a]{3})/, "")))); who = items.map((c) => c.person).filter(Boolean).find((p) => fold(p).split(/\s+/).every((w) => qk.has(nKey(w)))); }
   // v9.9.38 (the 1M test, part D: "how much does Hany owe me?" answered with EVERYONE's total when Hany owed nothing): a person named in
   // the question who has nothing in People & plans owes nothing — never the others' total
   if (!who) { const m = /\b(?:does|did|is|has)\s+([\p{L}][\p{L}'’-]{1,24})\s+(?:still\s+)?(?:owe|owes|have to pay|need to pay)\b|\bhow much (?:does|do)\s+([\p{L}][\p{L}'’-]{1,24})\s+owe\b/iu.exec(q)
@@ -240,6 +255,59 @@ function food(q, s, now) {
     rows: per.slice(-7).map(([k, v]) => [k, `${Math.round(v.kcal)} kcal · P ${Math.round(v.p)} · C ${Math.round(v.c)} · F ${Math.round(v.f)}`]), open: "fit", sources: ["fit"] };
 }
 function due(q, s, now) {
+  // "what do I have tomorrow / today?" → that day only
+  if (DAY_Q.test(q) && DAY_HAVE.test(q)) {
+    const tmr = /\b(tomorrow)\b|بكر[هة]|\bbokra\b/i.test(q), day = iso(now + (tmr ? DAY : 0)), list = [];
+    const hm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+    for (const r of s.reminders || []) if (r.at && iso(r.at) === day) list.push({ k: hm(r.at), what: `${hm(r.at)} ${r.title}`, src: "reminders" });
+    for (const x of ((s.radar && s.radar.items) || [])) if (x.status !== "done" && x.date === day) list.push({ k: "", what: x.title, src: "radar" });
+    for (const d of dueSoon(s.life || { items: [] }, now, 2)) if (d.date === day) list.push({ k: "", what: `${d.c.dir === "in" ? "+" : "−"}${num(d.amount)} ${d.c.currency || ""} · ${d.c.person || d.c.title || d.c.kind}`, src: "life" });
+    list.sort((a, b) => a.k.localeCompare(b.k));
+    const w = list.map((x) => x.what).join("; ");
+    const t = list.length ? (tmr ? "Tomorrow ({d}): {w}." : "Today ({d}): {w}.") : (tmr ? "Nothing planned for tomorrow ({d})." : "Nothing planned for today ({d}).");
+    return { kind: "due", t, v: { d: day, w }, en: t.replace("{d}", day).replace("{w}", w),
+      ar: list.length ? `${tmr ? "بكره" : "النهارده"} (${day}): ${w}.` : `مفيش حاجة ${tmr ? "بكره" : "النهارده"} (${day}).`,
+      rows: list.map((x) => [day, x.what]), open: list.length ? list[0].src : "reminders", sources: [...new Set(list.map((x) => x.src))] };
+  }
+  // v10.9.8 (new-user walk-through: "when does my passport expire?" → "call the bank on 25 Nov"): a thing NAMED in the question is
+  // answered by itself, whatever its date
+  const STOPW = /^(when|what|which|does|did|do|will|my|the|is|are|expire|expires|expiry|expiring|expired|due|renew|renewal|renews|end|ends|date|next|have|got|anything|planned|plans|tomorrow|today|tonight|this|week|month|year|امتي|إمتى|امتى|ميعاد|معاد|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|بتاع|بتاعي|بتاعتي|عندي|ايه|إيه|بكره|بكرة|النهارده|emta|emte|el|bta3|bta3i|beyentehy|hayentehy|byentehy|3andi|3ndi|eh|bokra|naharda|ennaharda)$/i;
+  // (the paper's name in the other language: «جواز السفر» asks about the "Passport" saved in English, "licence" about «رخصة»)
+  const SYN = [["passport", "جواز", "باسبور", "basbor", "gawaz"], ["licence", "license", "رخصه", "رخصة", "rokhsa"], ["visa", "فيزا", "تاشيره", "تأشيرة"], ["insurance", "تامين", "تأمين", "ta2meen"], ["id", "بطاقه", "بطاقة", "beta2a", "national"], ["contract", "عقد"], ["rent", "ايجار", "إيجار", "egar"], ["subscription", "اشتراك", "eshtrak"]].map((g) => g.map(fold));
+  const qw0 = fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => (w.length >= 3 || w === "id") && !STOPW.test(w));
+  const qw = [...new Set(qw0.flatMap((w) => [w, ...(SYN.find((g) => g.some((x) => x === w || w === "ال" + x || (x.length >= 4 && w.startsWith(x)))) || [])]))];
+  const today0 = iso(now), daysTo = (d) => Math.round((Date.parse(d + "T12:00:00") - Date.parse(today0 + "T12:00:00")) / DAY);
+  if (qw.length) {
+    const cand = [];
+    for (const x of ((s.radar && s.radar.items) || [])) if (x.status !== "done" && x.date && x.title) cand.push({ date: x.date, title: x.title, src: "radar" });
+    // (a reminder doesn't expire: "when does the rent contract expire?" is never answered with "pay the rent")
+    const expiryQ = /\b(expir\w*|renew\w*)\b|هينتهي|بينتهي|ينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(q);
+    if (!expiryQ) for (const r of s.reminders || []) if (r.at && r.title) cand.push({ date: iso(r.at), title: r.title, src: "reminders" });
+    // (a word's «ال» / "el" in front never decides — «الفيزا» is «فيزا»; a prefix counts only from 4 letters — "car" is not "card")
+    const bare = (w) => (w.length > 4 ? w.replace(/^ال/, "") : w);
+    const same = (w, t) => t === w || (t.length >= 4 && w.length >= 4 && (t.startsWith(w) || w.startsWith(t)));
+    // each word asked counts once (with its other-language names); "car" / «العربية» alone never picks a paper ("car licence" is not
+    // "Car insurance") — the paper with the most of the asked words wins
+    const GENERIC = /^(car|cars|my|el|عربيه|العربيه|3arabeya|3arabiya|el3arabeya)$/;
+    const groups = qw0.map((w) => ({ g: GENERIC.test(w) ? 0 : 1, ws: [w, ...(SYN.find((g) => g.some((x) => x === w || w === "ال" + x || (x.length >= 4 && w.startsWith(x)))) || [])].map(bare) }));
+    const score = (c) => { const tw = fold(c.title).split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(bare); return groups.reduce((a, gr) => a + (gr.ws.some((w) => tw.some((t) => same(w, t))) ? gr.g : 0), 0); };
+    const best = Math.max(0, ...cand.map(score));
+    const hit = cand.filter((c) => best > 0 && score(c) === best)
+      .sort((a, b) => (a.date >= today0) - (b.date >= today0) || a.date.localeCompare(b.date)).reverse();
+    const up = hit.filter((c) => c.date >= today0).sort((a, b) => a.date.localeCompare(b.date)), one = up[0] || hit[0];
+    if (one) {
+      const n = daysTo(one.date), a = Math.abs(n);
+      const t = n === 0 ? "{w}: today ({d})." : n > 0 ? pl(a, "{w}: {d} — in 1 day.", "{w}: {d} — in {n} days.") : pl(a, "{w}: {d} — 1 day ago.", "{w}: {d} — {n} days ago.");
+      const en = t.replace("{w}", one.title).replace("{d}", one.date).replace("{n}", a);
+      return { kind: "due", t, v: { w: one.title, d: one.date, n: a }, en, ar: n === 0 ? `${one.title}: النهارده (${one.date}).` : n > 0 ? `${one.title}: ${one.date} — كمان ${a} يوم.` : `${one.title}: ${one.date} — من ${a} يوم.`,
+        rows: [...up, ...hit.filter((c) => c.date < today0)].slice(0, 6).map((c) => [c.date, c.title]), open: one.src, sources: [one.src] };
+    }    // a paper asked about by name that has no date saved: say so — never answer with something else ("call the bank on 25 Nov")
+    if (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy|\bemta\b/i.test(q) && !DAY_Q.test(q)) {
+      const w = qw0.join(" ");
+      return { kind: "due", t: "Nothing saved for “{w}” yet — add its date and Attune will remind you.", v: { w }, en: `Nothing saved for “${w}” yet — add its date and Attune will remind you.`,
+        ar: `مفيش حاجة متسجلة لـ«${w}» — ضيف تاريخها وأتيون هيفكرك.`, open: "radar", sources: ["radar"] };
+    }
+  }
   const span = /\bmonth\b|الشهر/i.test(q) ? 31 : /\bweek\b|الاسبوع|الأسبوع/i.test(q) ? 7 : 30;
   const today = iso(now), until = iso(now + span * DAY), out = [];
   for (const x of ((s.radar && s.radar.items) || [])) if (x.status !== "done" && x.date && x.date <= until) out.push({ date: x.date, what: x.title + (x.amount ? ` · ${num(x.amount)} ${x.currency || ""}` : ""), src: "radar" });
@@ -316,7 +384,7 @@ function moneyExtra(q, s, now) {
 }
 /** The answer, or null when nothing in your data fits (the page then offers Chat). */
 export function askLife(question, stores = {}, { now = Date.now() } = {}) {
-  const q = String(question || "").trim(); if (!q) return null;
+  const q = clean(question); if (!q) return null;
   const k = kindOf(q, stores);
   if (k === "money" || k === "paid-for") { const x = moneyExtra(q, stores, now); if (x) return x; }
   if (k === "money") {
@@ -373,17 +441,18 @@ export const EXAMPLES = [
 ];
 
 // ---- in Chat: only questions about YOUR OWN things ("what is HbA1c?" stays a normal answer; "is my HbA1c better?" is answered here)
-const QUESTION = /\?|؟|^(how|what|who|when|which|is|are|did|do|does|have|has|show|list)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|\b(كام|ايه|مين|امتى)\b/i;
-const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد/i;
+const QUESTION = /\?|؟|^(how|what|who|when|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
+const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد|(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|فلوس)|ورايا|ورايه|\b(3andi|3ndi|bta3i|bta3y|bta3ty|leya|liya|3alaya|3aleh|3aleha|sraft|dafa3t)\b/i;   // v10.9.8 «أحمد عليه كام؟» / Franco
 export function chatAsk(q, stores, { now = Date.now() } = {}) {
-  const t = String(q || "").trim();
+  const t = clean(q);
   if (!t || t.length > 160 || !QUESTION.test(t)) return null;
   // v10.9 (the real phone model run: "what should I eat before the gym" was answered "Nothing spent on Health this month"): a request for
   // advice is not a question about your records
   if (/\bwhat (?:should|can|could) (?:i|we) (?:eat|do|wear|buy|cook|say|read|watch|drink|take)\b|\b(?:any )?tips\b|\badvice\b|\bhow (?:do|can|should) i (?:start|stop|get|lose|gain|improve|learn)\b|(?<![\p{L}])(?:آكل|اكل|ألبس|البس|أطبخ|اطبخ|أشرب|اشرب) (?:ايه|إيه)|نصايح|نصيحة|انصحني/iu.test(t)) return null;
   const members = (stores && stores.care && stores.care.members) || [];
-  if (!MINE.test(t) && !memberAsked(t, members)) return null;
   const k = kindOf(t, stores);
+  // (v10.9.8: "when does the passport expire?" names no "my" — a paper's expiry is always the person's own)
+  if (!MINE.test(t) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
   if (k === "search") return null;
   return askLife(t, stores, { now });
 }

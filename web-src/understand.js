@@ -233,6 +233,7 @@ const CMD = { a7san: "أحسن", ahsan: "أحسن", aw7ash: "أوحش", "2a7san"
   lama: "لما", lamma: "لما", law: "لو", "yewsal": "يوصل", "yewsl": "يوصل", talab: "طلب", "talaby": "طلبي", "gamaeya": "جمعية", "gam3eya": "جمعية", "gam3ya": "جمعية", dayman: "دايما",
   // v9.9.18 (the hard run: "rakna 110 geneh", "dawa b 950 geneh", "el 7ala2 kan b 3200" went to the AI) — money words and everyday things
   geneh: "جنيه", gneh: "جنيه", geneih: "جنيه", genih: "جنيه", genieh: "جنيه", ginih: "جنيه", gnih: "جنيه", kan: "كان", kanet: "كانت", kalefny: "كلفني", kallefny: "كلفني", kalefni: "كلفني", kalefetny: "كلفتني",
+  egar: "إيجار", igar: "إيجار", eegar: "إيجار",   // v10.9.8 (walk-through: «ادفع el egar»)
   rakna: "ركنة", ragna: "ركنة", dawa: "دوا", hodoom: "هدوم", hodom: "هدوم", sabak: "سباك", "7ala2": "حلاق", hala2: "حلاق", hedeya: "هدية", hedeyya: "هدية", hdeya: "هدية", ahwa: "قهوة", "2ahwa": "قهوة",
   makwagy: "مكوجي", mekaneeky: "ميكانيكي", mekaniky: "ميكانيكي", saydaleya: "صيدلية", "3arabeya": "عربية", "3arabiya": "عربية", b: "ب", bi: "ب", lel: "على", "3al": "على",
   kaman: "كمان", kamaan: "كمان", kman: "كمان", "de2e2a": "دقيقة", "de2ee2a": "دقيقة", "d2e2a": "دقيقة", "da2aye2": "دقايق", "da2ayi2": "دقايق", "sa3ten": "ساعتين", "sa3teen": "ساعتين", "sa3tein": "ساعتين",
