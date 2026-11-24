@@ -15238,4 +15238,5 @@ export const TH = {
   "Nothing planned for tomorrow ({d}).": "พรุ่งนี้ไม่มีอะไรในแผน ({d})",
   "Nothing planned for today ({d}).": "วันนี้ไม่มีอะไรในแผน ({d})",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "ยังไม่มีข้อมูลสำหรับ “{w}” — เพิ่มวันที่แล้ว Attune จะเตือนคุณ",
+  "Back to you · added to income": "ได้คืน · เพิ่มในรายรับแล้ว",
 };

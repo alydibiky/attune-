@@ -15230,4 +15230,5 @@ export const ARB = {
   "Nothing planned for tomorrow ({d}).": "لا شيء مخطط له غدًا ({d}).",
   "Nothing planned for today ({d}).": "لا شيء مخطط له اليوم ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "لا يوجد شيء محفوظ لـ«{w}» بعد — أضف تاريخه وسيذكّرك Attune.",
+  "Back to you · added to income": "عاد إليك · أُضيف إلى الدخل",
 };

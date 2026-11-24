@@ -15238,4 +15238,5 @@ export const JA = {
   "Nothing planned for tomorrow ({d}).": "明日の予定はありません（{d}）。",
   "Nothing planned for today ({d}).": "今日の予定はありません（{d}）。",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "「{w}」はまだ保存されていません — 日付を追加すると Attune がお知らせします。",
+  "Back to you · added to income": "返金 · 収入に追加",
 };

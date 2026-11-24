@@ -15238,4 +15238,5 @@ export const BN = {
   "Nothing planned for tomorrow ({d}).": "আগামীকালের জন্য কিছু নেই ({d})।",
   "Nothing planned for today ({d}).": "আজকের জন্য কিছু নেই ({d})।",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”-এর জন্য এখনও কিছু সেভ করা নেই — তারিখ যোগ করুন, Attune মনে করিয়ে দেবে।",
+  "Back to you · added to income": "আপনাকে ফেরত · আয়ে যোগ হয়েছে",
 };

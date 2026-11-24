@@ -15239,4 +15239,5 @@ export const SW = {
   "Nothing planned for tomorrow ({d}).": "Hakuna kilichopangwa kesho ({d}).",
   "Nothing planned for today ({d}).": "Hakuna kilichopangwa leo ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Bado hakuna kilichohifadhiwa kwa “{w}” — ongeza tarehe yake na Attune itakukumbusha.",
+  "Back to you · added to income": "Umerudishiwa · imeongezwa kwenye mapato",
 };

@@ -15238,4 +15238,5 @@ export const KO = {
   "Nothing planned for tomorrow ({d}).": "내일 예정된 일이 없어요 ({d}).",
   "Nothing planned for today ({d}).": "오늘 예정된 일이 없어요 ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”에 저장된 것이 아직 없어요 — 날짜를 추가하면 Attune이 알려 드려요.",
+  "Back to you · added to income": "돌려받음 · 수입에 추가됨",
 };

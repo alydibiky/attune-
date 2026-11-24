@@ -521,7 +521,13 @@ function titleFrom(text, kind, contact) {
     .replace(/^[\s📌,:;.!…—–\-]+/u, "")
     .replace(/^\s*(?:(?:hey|hi|hello|ok(?:ay)?|so|um+|uh+|btw|yo|pls|plz|please|can you|could you|would you|quick one|note)[\s,!:.…—–\-]+)+/i, "")
     .replace(/(?:[\s,]+(?:ok(?:ay)?|thanks?|thank you|thx|pls|plz|please|asap|:\)|شكرا|تمام|ماشي))+\s*[.!]*\s*$/i, "")
-    .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "").replace(/^\s*(about|عن)\s+/i, "");
+    .replace(/\s+(and|و)\s*$/i, "").replace(/^\s*(to|and|و)\s+/i, "").replace(/^\s*(about|عن)\s+/i, "")
+    // v10.9.8 (Ali's W5: "3andi doctor appointment"): "I have", «عندي», "3andi" in front say it's yours, not what it is — and a weekday
+    // left by "on Thursday" is the date, not the title
+    .replace(/^\s*(?:i(?:'ve| have)(?: got)?|i got|ana\s+3andi|3andi|3ndi|(?:انا\s+|أنا\s+)?عندي|ورايا)\s+(?:(?:a|an)\s+)?(?=\S)/i, "")
+    .replace(/(?<!\b(?:for|before|until|till|by|from|after))\s+(?:on\s+)?(?:sun|mon|tues?|wednes|thurs?|fri|satur)(?:day)?\s*$/i, "")
+    .replace(/(^|\s)el\s+(khamees|5amis|gom3a|sabt|7ad|etnen|talat|arba3)(?=\s|$)/gi, " ")
+    .replace(/^\s*(?:on\s+)?(?:sun|mon|tues?|wednes|thurs?|fri|satur)(?:day)?(?:\s+(?:morning|evening|afternoon|night))?\s+(?:to\s+)?(?=\S)/i, "");   // ("remind me friday to call mom")
   s = cleanText(s.replace(/^\s*[:\-–,]+\s*/, ""), 60);   // v9.9.15: "set a reminder tomorrow at 9: send the report" kept ": send the report"
   if (!s && contact) s = (kind === "call" ? "Call " : "Message ") + contact;
   return s || { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Appointment", whatsapp: "WhatsApp", call: "Call" }[kind] || "Reminder";

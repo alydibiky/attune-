@@ -15239,4 +15239,5 @@ export const IDN = {
   "Nothing planned for tomorrow ({d}).": "Tidak ada rencana besok ({d}).",
   "Nothing planned for today ({d}).": "Tidak ada rencana hari ini ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Belum ada yang disimpan untuk “{w}” — tambahkan tanggalnya dan Attune akan mengingatkanmu.",
+  "Back to you · added to income": "Dikembalikan · ditambahkan ke pemasukan",
 };

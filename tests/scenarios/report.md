@@ -1,4 +1,4 @@
-# Scenario run — 2500 sentences, 2482 right (99.3%)
+# Scenario run — 2500 sentences, 2484 right (99.4%)
 
 | group | sentences | wrong | right % |
 |---|---|---|---|
@@ -10,7 +10,6 @@
 | note | 12 | 1 | 91.7 |
 | gk_en | 42 | 2 | 95.2 |
 | multi | 145 | 2 | 98.6 |
-| spend_fr | 153 | 2 | 98.7 |
 | debt_ar | 131 | 0 | 100.0 |
 | spend_en | 373 | 0 | 100.0 |
 | debt_en | 144 | 0 | 100.0 |
@@ -20,6 +19,7 @@
 | todo | 29 | 0 | 100.0 |
 | remind_ar | 163 | 0 | 100.0 |
 | mixed | 64 | 0 | 100.0 |
+| spend_fr | 153 | 0 | 100.0 |
 | questions_with_amounts | 135 | 0 | 100.0 |
 | agent | 85 | 0 | 100.0 |
 | remind_en | 212 | 0 | 100.0 |
@@ -46,9 +46,6 @@
 ### gk_en
 - **→ email** × 1: «write a short email asking for a day off»
 - **→ ask:world** × 1: «what's the price of gold today?»
-
-### spend_fr
-- **→ confirm** × 2: «egar 1000» · «egar 3200»
 
 ### moneyask
 - **→ ask:owed-in** × 2: «who owes me money?» · «مين عليه فلوس ليا؟»

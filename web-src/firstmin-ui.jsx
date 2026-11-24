@@ -73,6 +73,10 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
       txns.push({ nid, type: "expense", amount: inHome ? l.home : l.amount, currency: inHome ? home : l.cur, cat: l.cat || "other", note: (inHome ? `${l.name} · ${fmt(l.amount, l.cur)}` : l.name).slice(0, 80), date: isoDay(l.ts), source: "notification", ts: l.ts,
         evidence: { app: l.src.map((x) => SRC[x]).join(" + "), from: (l.from || "").slice(0, 200), text: (l.full || "").slice(0, 2000), at: l.ts } });
     }
+    // (W6: a refund this month → income, with the message it came from)
+    for (const f of res.refunds || []) { if (Date.now() - f.ts > 31 * DAY) continue; const nid = "fm:" + f.ids.join("+"); if (have.has(nid)) continue;
+      txns.push({ nid, type: "income", amount: f.amount, currency: f.cur, cat: "other", note: (f.name + " ↩").slice(0, 80), date: isoDay(f.ts), source: "notification", ts: f.ts,
+        evidence: { app: "SMS", from: (f.from || "").slice(0, 200), text: (f.full || "").slice(0, 2000), at: f.ts } }); }
     const r = appendToLedger(led, txns);
     try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) {}
     let radar = loadRadar(), plans = 0;
@@ -178,6 +182,8 @@ export function MoneyFirstMinute({ native: N, nativeCall, onClose, onType, navTo
         <button key={String(a)} onClick={() => answer(c, a)} className="min-h-[40px] px-4 rounded-full border border-[var(--c-ln)] bg-[var(--c-soft)] c-acc text-[13.5px] font-extrabold" data-testid="fm-check-answer">{tr(t)}</button>)}</div></div>)}
     {subs.length ? <div className={card} data-testid="fm-subs"><span className={lbl}>{tr("Subscriptions · {y} a year", { y: fmt(res.subsYearly, home) })}</span>
       <span className="block text-[12.5px] c-sub">{tr("{m} a month", { m: fmt(res.subsMonthly, home) })}</span>{subs.filter((l) => !l.unsure).map(row)}</div> : null}
+    {(res.refunds || []).length ? <div className={card} data-testid="fm-refunds"><span className={lbl}>{tr("Back to you · added to income")}</span>
+      {res.refunds.slice(0, 10).map((f) => <div key={f.id} className="flex items-center gap-2 min-h-[40px]" data-testid="fm-refund"><span className="flex-1 min-w-0 truncate font-bold" dir="auto">{f.name}</span><span className="font-extrabold tabular-nums text-[var(--c-pos,#2F6B4F)]" dir="ltr">+{fmt(f.amount, f.cur)}</span></div>)}</div> : null}
     {spend.filter((l) => !l.unsure).length ? <div className={card} data-testid="fm-spend"><span className={lbl}>{tr("Also")}</span>{spend.filter((l) => !l.unsure).slice(0, 30).map(row)}</div> : null}
   </>, <>
     <button onClick={saveAll} disabled={ask.length > 0 || empty} className={solid + " w-full disabled:opacity-50"} data-testid="fm-ok">{ask.length ? tr("Answer the questions above first") : tr("All right ✓")}</button>

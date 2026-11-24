@@ -15239,4 +15239,5 @@ export const TRK = {
   "Nothing planned for tomorrow ({d}).": "Yarın için planlanmış bir şey yok ({d}).",
   "Nothing planned for today ({d}).": "Bugün için planlanmış bir şey yok ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” için henüz kayıt yok — tarihini ekle, Attune sana hatırlatsın.",
+  "Back to you · added to income": "Size geri döndü · gelire eklendi",
 };

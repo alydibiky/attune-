@@ -305,7 +305,7 @@ function due(q, s, now) {
     if (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy|\bemta\b/i.test(q) && !DAY_Q.test(q)) {
       const w = qw0.join(" ");
       return { kind: "due", t: "Nothing saved for “{w}” yet — add its date and Attune will remind you.", v: { w }, en: `Nothing saved for “${w}” yet — add its date and Attune will remind you.`,
-        ar: `مفيش حاجة متسجلة لـ«${w}» — ضيف تاريخها وأتيون هيفكرك.`, open: "radar", sources: ["radar"] };
+        ar: `مفيش حاجة متسجلة لـ«${w}» — ضيف تاريخها و Attune هيفكرك.`, open: "radar", sources: ["radar"] };
     }
   }
   const span = /\bmonth\b|الشهر/i.test(q) ? 31 : /\bweek\b|الاسبوع|الأسبوع/i.test(q) ? 7 : 30;

@@ -49,6 +49,11 @@ const r = F.firstMonth({ sms, emails: [], now, home: "EGP" });
 const names = [...r.spend, ...r.subs].map((l) => l.name);
 ok(names.includes("ATM") && names.includes("محمد سامي") && !names.some((x) => /بنجاح|ماكينة/.test(x)), "first minute names: " + names.join(", "));
 ok(r.total === 2300 + 89 + 1500 + 450 + 2000 + 100 && r.foreign.USD === 9.99, `this month ${r.total} EGP + ${JSON.stringify(r.foreign)} (no rate known → the dollars stay dollars)`);
+// W6 (Ali: a refund "can be added to income"): NOON's 300 back is kept as a refund (never spending), in any wording
+for (const t of ["A refund of EGP 300.00 from NOON.COM has been credited to your card ending 7710", "تم رد مبلغ 300 جنيه من NOON إلى بطاقتك", "Refund: EGP 300.00 from NOON.COM credited to your card ending 7710"]) {
+  const rf = F.firstMonth({ sms: [{ id: "rf", app: "SMS", title: "CIB", text: t, ts: now - H }], emails: [], now, home: "EGP" });
+  ok(rf.refunds.length === 1 && rf.refunds[0].amount === 300 && rf.total === 0, "a refund is kept for income, not spending: " + t + " → " + JSON.stringify(rf.refunds.map((x) => [x.name, x.amount])));
+}
 const L0 = { currency: "EGP", accounts: [{ id: "c", name: "Cash", currency: "EGP", start: 0 }], txns: [] };
 const L = appendToLedger(L0, [{ type: "expense", amount: 9.99, currency: "USD", note: "NETFLIX", cat: "bills" }, { type: "expense", amount: 450, currency: "EGP", note: "SPINNEYS" }, { type: "expense", amount: 5, currency: "USD", note: "x" }, { type: "expense", amount: 7, note: "no currency" }], now).ledger;
 const usd = L.accounts.find((a) => a.currency === "USD");

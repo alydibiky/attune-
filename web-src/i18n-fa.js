@@ -15238,4 +15238,5 @@ export const FA = {
   "Nothing planned for tomorrow ({d}).": "برای فردا برنامه‌ای نیست ({d}).",
   "Nothing planned for today ({d}).": "برای امروز برنامه‌ای نیست ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "هنوز چیزی برای «{w}» ذخیره نشده — تاریخش را اضافه کنید تا Attune یادآوری کند.",
+  "Back to you · added to income": "به شما برگشت · به درآمد اضافه شد",
 };

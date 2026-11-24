@@ -12459,5 +12459,6 @@ export const AR = {
   "Today ({d}): {w}.": "النهارده ({d}): {w}.",
   "Nothing planned for tomorrow ({d}).": "مفيش حاجة بكره ({d}).",
   "Nothing planned for today ({d}).": "مفيش حاجة النهارده ({d}).",
-  "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "مفيش حاجة متسجلة لـ«{w}» — ضيف تاريخها وأتيون هيفكرك.",
+  "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "مفيش حاجة متسجلة لـ«{w}» — ضيف تاريخها و Attune هيفكرك.",
+  "Back to you · added to income": "رجعلك · اتضاف للدخل",
 };

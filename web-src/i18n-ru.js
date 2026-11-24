@@ -15238,4 +15238,5 @@ export const RU = {
   "Nothing planned for tomorrow ({d}).": "На завтра ничего не запланировано ({d}).",
   "Nothing planned for today ({d}).": "На сегодня ничего не запланировано ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Для «{w}» пока ничего не сохранено — добавьте дату, и Attune напомнит.",
+  "Back to you · added to income": "Вернули вам · добавлено в доходы",
 };

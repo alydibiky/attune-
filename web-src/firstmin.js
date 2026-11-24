@@ -11,6 +11,7 @@
 import { readNotification, categorise } from "./paylog.js";
 import { readScan } from "./scanread.js";
 
+const REFUND = /\brefund(?:ed)?\b|\breversal\b|\breversed\b|\bcash ?back\b|استرداد|مسترد|رد مبلغ|تم رد|ارجاع|إرجاع|remboursement|reembolso|rückerstattung|iade/i;   // v10.9.8 W6
 export const FM_LEARN_KEY = "attune:fm:learn:v1";   // { senderKey: { name?, cat?, sub?: true|false, notMine?: true } }
 export const FM_DONE_KEY = "attune:fm:done:v1";
 const DAY = 864e5;
@@ -75,11 +76,13 @@ function readEmail(e, { now, home, order }) {
  * learn: what the person fixed before (by sender). → { month, total, spend, subs, subsMonthly, subsYearly, foreign, check, counts }
  */
 export function firstMonth({ sms = [], emails = [], now = Date.now(), home = "EGP", order = "dmy", teach, learn = {}, fix = {} } = {}) {
-  const lines = [], counts = { sms: 0, emails: 0, joined: 0, skipped: 0 };
+  const lines = [], refunds = [], counts = { sms: 0, emails: 0, joined: 0, skipped: 0 };
   const opts = { home, ...(teach !== undefined ? { teach } : {}) };
   for (const n of sms) {
     if (!n || (n.ts && n.ts < now - 31 * DAY)) continue;
     let r = null; try { r = readNotification(n, opts); } catch (e) { r = null; }
+    // v10.9.8 (Ali's W6: "it can be added to income"): money a shop sends BACK (a refund, a reversal) is kept — saved as income
+    if (r && r.direction === "in" && REFUND.test(String(r.full || n.text || ""))) { refunds.push({ id: "r:" + n.id, ids: [n.id], name: nameOf(r.party || "") || nameOf(n.title) || "Refund", amount: r.amount, cur: r.currency || home, ts: r.ts || n.ts || now, full: r.full || n.text || "", from: r.from || n.title || "" }); continue; }
     if (!r || r.direction !== "out") { counts.skipped++; continue; }
     counts.sms++;
     let who = r.party || "";
@@ -180,7 +183,7 @@ export function firstMonth({ sms = [], emails = [], now = Date.now(), home = "EG
     if (l.kind === "sub") { const mv = toHome(monthly(l.amount, l.cycle), l.cur); if (mv != null) subsMonthly += mv; }
   }
   subsMonthly = r2(subsMonthly);
-  return { month: m0.getMonth(), year: m0.getFullYear(), total: r2(total), foreign, spend, subs, bills, ended, subsMonthly, subsYearly: r2(subsMonthly * 12), check, counts, rate };
+  return { month: m0.getMonth(), year: m0.getFullYear(), total: r2(total), foreign, spend, subs, bills, ended, subsMonthly, subsYearly: r2(subsMonthly * 12), check, counts, rate, refunds: refunds.sort((a, b) => b.ts - a.ts) };
 }
 
 /** ✎ Save: the line changed by the person + what is learned for the next message from the same sender. */

@@ -15239,4 +15239,5 @@ export const HI = {
   "Nothing planned for tomorrow ({d}).": "कल के लिए कुछ तय नहीं है ({d}).",
   "Nothing planned for today ({d}).": "आज के लिए कुछ तय नहीं है ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” के लिए अभी कुछ सेव नहीं है — उसकी तारीख जोड़ें, Attune याद दिलाएगा.",
+  "Back to you · added to income": "आपको वापस मिला · आय में जोड़ा",
 };

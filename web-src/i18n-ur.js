@@ -15239,4 +15239,5 @@ export const UR = {
   "Nothing planned for tomorrow ({d}).": "کل کے لیے کچھ طے نہیں ({d})۔",
   "Nothing planned for today ({d}).": "آج کے لیے کچھ طے نہیں ({d})۔",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}” کے لیے ابھی کچھ محفوظ نہیں — اس کی تاریخ شامل کریں، Attune یاد دلائے گا۔",
+  "Back to you · added to income": "آپ کو واپس ملا · آمدنی میں شامل",
 };

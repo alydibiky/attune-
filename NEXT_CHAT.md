@@ -29,6 +29,13 @@
 > month just organised (no money line) — a "This month 6,339 EGP" line on Home? (W3) Money's "Safe to spend today 0 EGP · about 2,070 a day
 > until Nov 30" reads as a contradiction. (W4) "buy milk, eggs and bread" became ONE to-do — split into a list of 3? (W5) a Franco reminder
 > keeps "3andi" in its title ("3andi doctor appointment"). (W6) a refund (+300 from NOON) is not taken off the month's spending.
+> **Ali answered (same night):** 1 "connect your phone and an option to skip" · 2 yes · 3 "do what's best" · 4 "things by categories that
+> seem similar under 1 category, e.g. a groceries list, each a checkbox like the to-do, done automatically" · 5 yes · 6 "it can be added to
+> income". **Built:** W5 (actions.titleFrom drops "I have / عندي / 3andi / ana 3andi" in front, "el khamees", a weekday that is the date —
+> kept after for / before / by; also fixed "remind me friday to call mom" → «friday to call mom») and W6 (firstmin keeps refunds —
+> refund / reversal / cash back / «تم رد مبلغ» / استرداد — and All right saves them as INCOME "NOON ↩", "Back to you · added to income"
+> row, 20 languages). **Waiting for OK-W1…W4** on the combined mock-up https://claude.ai/artifact/QyVASEWtv17cc8a8QhtGcE (W4 needs its own
+> 10,000 HARD generator when built).
 
 > ## START HERE (24 Nov 2026 later — v10.9.7: the first minute, Ali's OK-FM)
 > Ali OK'd https://claude.ai/artifact/SRbHba7CwMVSndiLqD7LX7 (FM1 + Gmail + ✎ edit, FM3; FM2 = Organise this; FM5 after the win; S1 note: "Gmail

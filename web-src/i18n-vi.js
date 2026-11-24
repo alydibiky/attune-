@@ -15238,4 +15238,5 @@ export const VI = {
   "Nothing planned for tomorrow ({d}).": "Ngày mai không có gì ({d}).",
   "Nothing planned for today ({d}).": "Hôm nay không có gì ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Chưa có gì được lưu cho “{w}” — thêm ngày và Attune sẽ nhắc bạn.",
+  "Back to you · added to income": "Được hoàn lại · đã thêm vào thu nhập",
 };

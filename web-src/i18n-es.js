@@ -15239,4 +15239,5 @@ export const ES = {
   "Nothing planned for tomorrow ({d}).": "Nada previsto para mañana ({d}).",
   "Nothing planned for today ({d}).": "Nada previsto para hoy ({d}).",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "Aún no hay nada guardado para «{w}»: añade su fecha y Attune te lo recordará.",
+  "Back to you · added to income": "Te devolvieron · añadido a ingresos",
 };

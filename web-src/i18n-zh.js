@@ -15238,4 +15238,5 @@ export const ZH = {
   "Nothing planned for tomorrow ({d}).": "明天没有安排（{d}）。",
   "Nothing planned for today ({d}).": "今天没有安排（{d}）。",
   "Nothing saved for “{w}” yet — add its date and Attune will remind you.": "“{w}”还没有保存任何内容——添加日期，Attune 会提醒你。",
+  "Back to you · added to income": "退还给你 · 已计入收入",
 };
