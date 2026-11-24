@@ -15186,7 +15186,7 @@ export const SW = {
   "Answer the questions above first": "Jibu maswali ya juu kwanza",
   "Attune learns: the next message from the same sender is read the same way.": "Attune hujifunza: ujumbe unaofuata kutoka kwa mtumaji huyo husomwa vivyo hivyo.",
   "Bank & wallet messages": "Ujumbe wa benki na pochi",
-  "CIB, InstaPay, Vodafone Cash…": "CIB, InstaPay, Vodafone Cash…",
+  "CIB, InstaPay, Vodafone Cash…": "k.m. CIB, InstaPay, Vodafone Cash…",
   "Check this one": "Kagua hiki",
   "Debts and instalments — a tick box on each payment day": "Madeni na awamu — kisanduku cha kuweka alama kila siku ya malipo",
   "Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.": "Kila kiasi husomwa kutoka kwenye ujumbe wenyewe na kukaguliwa dhidi ya jumla, sarafu na tarehe. Kisicho na uhakika unaonyeshwa, hakihifadhiwi.",

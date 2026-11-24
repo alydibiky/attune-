@@ -15186,7 +15186,7 @@ export const ES = {
   "Answer the questions above first": "Responde primero las preguntas de arriba",
   "Attune learns: the next message from the same sender is read the same way.": "Attune aprende: el próximo mensaje del mismo remitente se lee igual.",
   "Bank & wallet messages": "Mensajes del banco y la billetera",
-  "CIB, InstaPay, Vodafone Cash…": "CIB, InstaPay, Vodafone Cash…",
+  "CIB, InstaPay, Vodafone Cash…": "p. ej., CIB, InstaPay, Vodafone Cash…",
   "Check this one": "Revisa este",
   "Debts and instalments — a tick box on each payment day": "Deudas y cuotas: una casilla en cada día de pago",
   "Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.": "Cada importe se lee del propio mensaje y se comprueba con el total, la moneda y la fecha. Lo que no es seguro se te muestra, no se guarda.",

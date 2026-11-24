@@ -13,7 +13,9 @@ import subprocess
 env = Env(); errors = []
 now = int(time.time() * 1000)
 # Ali's real screenshots as emails (tests/scan/real/ali-2026-11-23.mjs), dated in the last hours so they are "this month"
-REAL = json.loads(subprocess.check_output(["node", "-e", "import('./tests/scan/real/ali-2026-11-23.mjs').then(m => console.log(JSON.stringify(m.REAL)))"], text=True))
+import os
+_FIX = "file://" + os.path.join(os.path.dirname(os.path.abspath(__file__)), "scan", "real", "ali-2026-11-23.mjs")   # (run_all starts tests from another folder)
+REAL = json.loads(subprocess.check_output(["node", "-e", "import(%s).then(m => console.log(JSON.stringify(m.REAL)))" % json.dumps(_FIX)], text=True))
 FROM = {"paypal-enzu": "PayPal <service@paypal.com>", "anthropic-claude-pro": "Anthropic, PBC <invoice+statements@mail.anthropic.com>", "enzu-invoice-due": "Enzu Billing <billing@enzu.com>", "google-play-ai-pro": "Google Play <googleplay-noreply@google.com>"}
 EMAILS = [{"id": r["id"], "kind": "email", "from": FROM[r["id"]], "title": r["text"].split("\n")[0], "text": r["text"], "at": now - (i + 1) * 3600000, "link": ""} for i, r in enumerate(REAL)]
 SMS = [{"id": "sm1", "title": "CIB", "text": "Your credit card ending 2969 was charged for EGP 1,240.00 at CARREFOUR MAADI", "ts": now - 2 * 3600000},

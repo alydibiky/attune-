@@ -15186,7 +15186,7 @@ export const TRK = {
   "Answer the questions above first": "Önce yukarıdaki soruları yanıtla",
   "Attune learns: the next message from the same sender is read the same way.": "Attune öğrenir: aynı göndericiden gelen sonraki mesaj aynı şekilde okunur.",
   "Bank & wallet messages": "Banka ve cüzdan mesajları",
-  "CIB, InstaPay, Vodafone Cash…": "CIB, InstaPay, Vodafone Cash…",
+  "CIB, InstaPay, Vodafone Cash…": "ör. CIB, InstaPay, Vodafone Cash…",
   "Check this one": "Bunu kontrol et",
   "Debts and instalments — a tick box on each payment day": "Borçlar ve taksitler — her ödeme gününde bir onay kutusu",
   "Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.": "Her tutar mesajın kendisinden okunur ve toplam, para birimi ve tarihle kontrol edilir. Emin olunmayan şey sana gösterilir, kaydedilmez.",

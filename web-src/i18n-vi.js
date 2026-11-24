@@ -15185,7 +15185,7 @@ export const VI = {
   "Answer the questions above first": "Hãy trả lời các câu hỏi ở trên trước",
   "Attune learns: the next message from the same sender is read the same way.": "Attune học: tin nhắn tiếp theo từ cùng người gửi sẽ được đọc như vậy.",
   "Bank & wallet messages": "Tin nhắn ngân hàng và ví",
-  "CIB, InstaPay, Vodafone Cash…": "CIB, InstaPay, Vodafone Cash…",
+  "CIB, InstaPay, Vodafone Cash…": "vd: CIB, InstaPay, Vodafone Cash…",
   "Check this one": "Kiểm tra mục này",
   "Debts and instalments — a tick box on each payment day": "Nợ và trả góp — một ô đánh dấu vào mỗi ngày trả",
   "Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.": "Mỗi số tiền được đọc từ chính tin nhắn và đối chiếu với tổng, đơn vị tiền và ngày. Điều chưa chắc sẽ được hiện cho bạn, không được lưu.",

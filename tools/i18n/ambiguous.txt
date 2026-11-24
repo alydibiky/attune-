@@ -79,15 +79,16 @@ autom-ui.jsx: className={"min-h-[40px] px-3.5 rounded-full text-[13px] font-extr
 chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
 daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
 daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
+firstmin-ui.jsx: <span className={"text-[13px] font-extrabold " + (on && can ? "text-[var(--c-pos,#2F6B4F)]" : "c-sub")}>{on && can ? "● " + tr("On") : tr("O
 lookback-ui.jsx: {mean.on ? <span className="inline-flex items-center text-[11px] font-extrabold rounded-full px-2.5 py-0.5 bg-[var(--c-soft)] text-[var(--c-
 messages-ui.jsx: <button onClick={() => put("on", !r.on)} role="switch" aria-checked={!!r.on} aria-label={tr("On")} data-testid="msg-rule-on"
-recipes-ui.jsx: <span className="block text-[12px] text-[var(--c-mut)]">{done.has(x.id) ? tr("On") : tr(x.why, { n: x.n, d: x.d })}</span></button>)}</div>
 
 ## Off
 actions-ui.jsx: <span>★ {tr("Important")}</span><span className="text-[12px] font-bold">{nag === NAG.IMPORTANT ? tr("On") : tr("Off")}</span></button>
 chat.jsx: <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-[12px] text-[14px] font-semibold text-[var(--c-i
 daily-ui.jsx: <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== 
 daily-ui.jsx: <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.
+firstmin-ui.jsx: <span className={"text-[13px] font-extrabold " + (on && can ? "text-[var(--c-pos,#2F6B4F)]" : "c-sub")}>{on && can ? "● " + tr("On") : tr("O
 teach-ui.jsx: aria-label={off.has(p.name) ? tr("Off") : tr("On")}
 vault-ui.jsx: <button role="switch" aria-checked={v.on} onClick={toggle} className={v.on ? U.btnP : U.btnS + " h-12 min-h-[48px] px-5"} data-testid="vault
 
@@ -153,7 +154,7 @@ chatpilot-ui.jsx: <button type="submit" disabled={!say.trim() || step === "model
 code-ui.jsx: <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Ch
 cv-ui.jsx: <button className={ghost + " flex items-center gap-1"} onClick={() => photoRef.current && photoRef.current.click()}><Camera size={13} />{cv.
 donelog-ui.jsx: <div className="flex items-center justify-between gap-2 text-[14px]"><span>{tr("Money up to {n} a time", { n: (+st.limits.money).toLocaleStr
-lists-ui.jsx: <button onClick={onLabel} className="flex-1 min-w-0 min-h-[44px] text-start flex items-center" data-testid={testid + "-words"} title={tr("Ch
+firstmin-ui.jsx: <button onClick={() => { setEdit({ ...l }); setShowMsg(false); setStep("edit"); }} aria-label={tr("Change")} className="w-10 h-10 grid place
 
 ## Checking…
 agents-ui.jsx: <button onClick={() => checkNow(a)} disabled={busy} className={U.btnS + " mt-1"} data-testid="agent-auto-check"><RefreshCw size={14} />{busy
@@ -322,7 +323,7 @@ tables-ui.jsx: <div className="flex items-center gap-2"><button onClick={() => s
 
 ## Next
 agents-ui.jsx: <button onClick={() => go(1)} disabled={at >= rows.length - 1} className={side} aria-label={tr("Next")} data-testid="agent-sheet-next"><Chev
-attune.jsx: {step < 2 ? <button onClick={() => setStep(step + 1)} className="flex-1 min-h-[52px] rounded-full bg-[var(--c-btn,var(--c-acc))] text-[var(-
+attune.jsx: {step < 2 ? <button onClick={() => (step === 0 ? setMoney(true) : setStep(step + 1))} className="flex-1 min-h-[52px] rounded-full bg-[var(--
 attune.jsx: {st.multi ? <button onClick={() => setStep(step + 1)} className="min-h-[48px] rounded-[20px] bg-[var(--c-btn,var(--c-acc))] text-[var(--c-on
 daily-ui.jsx: <button className={btnP} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? t
 docs-ui.jsx: {open < ids.length - 1 ? <button onClick={() => setOpen(open + 1)} aria-label={tr("Next")} className="absolute end-2 w-11 h-11 rounded-full 
@@ -653,7 +654,7 @@ b1wire.js: { paid: tr("Paid"), tomorrow: tr("Tomorrow"), hour: tr("In 1 hour"), 
 chatpilot-ui.jsx: {d.kind !== "alert" && !d.undone ? <button onClick={() => { undo(d); close(); }} className="min-h-[44px] px-3.5 rounded-[12px] border border
 doit-ui.jsx: {r.undo && !undone ? <button className={btnS} onClick={() => { r.undo(); setUndone(true); onUndo && onUndo(); }} data-testid="do-undo"><Undo
 donelog-ui.jsx: <button className="min-h-[36px] px-2.5 rounded-full border border-[var(--c-ln)] text-[12.5px] font-bold" onClick={() => undo(e)} data-testid
-notelabels-ui.jsx: {i.type !== "who" ? <button onClick={() => undo(i)} className="shrink-0 min-h-[34px] px-2 text-[12px] font-bold underline c-sub inline-flex 
+firstmin-ui.jsx: <p className="m-0 text-[14px] c-sub">{saved ? tr("{n} payments in Money · {p} plans in Dates", { n: saved.n, p: saved.plans }) : ""} <button
 
 ## Restore
 attune.jsx: {tr("Restore")}
@@ -1232,6 +1233,12 @@ money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange
 family-ui.jsx: <select className={U.inp + " w-auto!"} value={rRep} onChange={(e) => setRRep(e.target.value)} aria-label={tr("Repeat")}><option value="none"
 money-sheets-ui.jsx: <Field label={tr("How often")}><Pills value={freq} onChange={setFreq} items={[["daily", tr("Every day")], ["weekly", tr("Every week")], ["mo
 
+## Not mine
+firstmin-ui.jsx: <button onClick={() => save({ notMine: true })} className={ghost} data-testid="fm-edit-notmine">{tr("Not mine")}</button></div>
+notelabels-ui.jsx: <button onClick={no} className={BTN2} data-testid="note-paid-no">{tr("Not mine")}</button></div>
+readlog-ui.jsx: <button onClick={() => act("notmine", it)} className="h-8 px-3 rounded-full text-[12px] font-extrabold border border-[var(--c-acc)] text-[va
+trip-ui.jsx: <button className={btnS} onClick={() => decide(ask, false)} data-testid="trip-found-no">{tr("Not mine")}</button></div></div> : null}
+
 ## Focus
 focus-ui.jsx: <p className="text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub m-0">{tr("Focus")}</p>
 focus-ui.jsx: <div><p className="text-[12px] font-extrabold tracking-[0.08em] uppercase c-sub m-0">{tr("Focus")}</p><p className="text-[16px] font-extrabo
@@ -1505,11 +1512,6 @@ planner-ui.jsx: <div className="flex gap-1.5" role="tablist">{[["month", tr("Mon
 notelabels-ui.jsx: try { N.noteAskWords && N.noteAskWords(JSON.stringify({ title: tr("What is this? I wasn't sure."), mine: tr("Mine"), not: tr("Not money"), r
 notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
 notes-money-ui.jsx: <button onClick={() => take(x, false)} className={"w-10 h-10 grid place-items-center " + U.muted} aria-label={tr("Not money")} title={tr("No
-
-## Not mine
-notelabels-ui.jsx: <button onClick={no} className={BTN2} data-testid="note-paid-no">{tr("Not mine")}</button></div>
-readlog-ui.jsx: <button onClick={() => act("notmine", it)} className="h-8 px-3 rounded-full text-[12px] font-extrabold border border-[var(--c-acc)] text-[va
-trip-ui.jsx: <button className={btnS} onClick={() => decide(ask, false)} data-testid="trip-found-no">{tr("Not mine")}</button></div></div> : null}
 
 ## I understood:
 notelabels-ui.jsx: <p className="m-0 text-[13.5px]" dir="auto"><b>{tr("I understood:")}</b> {understoodOf(x, ar)}</p>

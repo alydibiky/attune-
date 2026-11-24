@@ -15186,7 +15186,7 @@ export const IDN = {
   "Answer the questions above first": "Jawab dulu pertanyaan di atas",
   "Attune learns: the next message from the same sender is read the same way.": "Attune belajar: pesan berikutnya dari pengirim yang sama dibaca dengan cara yang sama.",
   "Bank & wallet messages": "Pesan bank & dompet",
-  "CIB, InstaPay, Vodafone Cash…": "CIB, InstaPay, Vodafone Cash…",
+  "CIB, InstaPay, Vodafone Cash…": "mis. CIB, InstaPay, Vodafone Cash…",
   "Check this one": "Periksa yang ini",
   "Debts and instalments — a tick box on each payment day": "Utang dan cicilan — kotak centang di setiap hari bayar",
   "Each amount is read from the message itself and checked against the total, the currency and the date. Anything not sure is shown to you, not saved.": "Setiap jumlah dibaca dari pesannya sendiri lalu dicek dengan total, mata uang, dan tanggal. Yang belum pasti ditunjukkan kepada Anda, tidak disimpan.",
