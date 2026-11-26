@@ -57,6 +57,19 @@ with sync_playwright() as p:
         check("Last time I went to the barber." not in body and "(today) — Last" not in body, "%d: no 'today — Last time I went to the barber' from his own question" % w)
         gap = page.evaluate("document.documentElement.scrollHeight - window.scrollY - window.innerHeight")
         check(gap < 60, "%d: after the answer the page is at the bottom (gap %s px)" % (w, gap))
+        # 5 (Ali, 26 Nov: "it should look on notes, money, everything — I saved it as a note in Money"): a Money entry that says only
+        #   "hany rabee3" (his note says that is his barber) answers "the last time" — and the bare follow-up takes "barber" from before
+        page.evaluate("""() => { const d = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+          localStorage.setItem('ledger.v3', JSON.stringify({ currency: 'EGP', accounts: [{ id: 'a1', name: 'Cash', currency: 'EGP' }], recurring: [], customCats: [],
+            txns: [{ id: 'h1', type: 'expense', amount: 150, cat: 'other', note: 'hany rabee3', date: d, account: 'a1' }] })); }""")
+        for q in ("when is the last time I went to the barber?", "اخر مرة روحت الحلاق امتى؟"):
+            ask(page, q, ["(the model should not be asked)"])
+            body = page.evaluate("document.body.innerText"); after = body.split(q)[-1]
+            check("6 days ago" in after or "منذ 6 يوم" in after or "6 يوم" in after, "%d: «%s» → the Money entry 'hany rabee3', 6 days ago" % (w, q))
+        ask(page, "tell me about my barber", ["Your barber is Hany Rabee3."])
+        ask(page, "When is the last time I went", ["(the model should not be asked)"])
+        after = page.evaluate("document.body.innerText").split("When is the last time I went")[-1]
+        check("6 days ago" in after, "%d: the bare follow-up 'When is the last time I went' → 6 days ago" % w)
         ctx.close()
     br.close()
 check(not real_errors(errors), "no page errors")

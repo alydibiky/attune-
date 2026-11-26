@@ -51,19 +51,26 @@ export function memberAsked(q, members) {
 
 // v6.28 (Ali: "when I ask how much I paid for that, or the history of X, it should understand I'm asking about my data")
 const HISTORY = /\b(history of|everything (?:about|on)|all (?:about|records? (?:of|for))|timeline (?:of|for)|tell me about my)\b|(?:^|\s)(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s/i;
-const LAST = /\b(when did (?:i|we) last|last time (?:i|we)|when was the last time)\b|(?:امتى|إمتى|امتي)\s+(?:اخر|آخر)\s+(?:مره|مرة)|(?:اخر|آخر)\s+(?:مره|مرة)\s/i;
+const LAST = /\b(when did (?:i|we) last|last time (?:i|we)|when was the last time)\b|(?:امتى|إمتى|امتي)\s+(?:اخر|آخر)\s+(?:مره|مرة)|(?:اخر|آخر)\s+(?:مره|مرة)\s|\b(?:a5er|akher|a5r|a7'?er)\s+(?:mara|marra|mrra|mra)\b/i;
 const PAID_FOR = /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}\b(?:for|on)\b|(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s/i;
 /** The thing a question is about: "how much did I pay for the car service this year?" → "car service". */
 export function termOf(q) {
-  let t = latinQ(q).replace(/[?؟!.]+\s*$/, "").trim();
+  let t = latinQ(q).replace(/[\u200e\u200f\u061c]/g, "").replace(/\s+/g, " ").replace(/[?؟!.]+\s*$/, "").trim();   // (v10.9.9: a line break / direction mark inside)
   const pick = [
     /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}?\b(?:for|on)\s+(.+)$/i, /\b(?:history of|everything (?:about|on)|all about|timeline (?:of|for)|tell me about my)\s+(.+)$/i,
     /\b(?:when did (?:i|we) last|last time (?:i|we)|when was the last time (?:i|we))\s+(?:\w+\s+)?(.+)$/i,
     /(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s+(.+)$/, /(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s+(.+)$/,
-    /(?:اخر|آخر)\s+(?:مره|مرة)\s+(?:\S+\s+)?(.+)$/];
+    /(?:اخر|آخر)\s+(?:مره|مرة)\s+(?:\S+\s+)?(.+)$/, /\b(?:a5er|akher|a5r|a7'?er)\s+(?:mara|marra|mrra|mra)\s+(?:\S+\s+)?(.+)$/i];
   for (const re of pick) { const m = re.exec(t); if (m) { t = m[1]; break; } }
   return t.replace(/\b(this|last|in|since|over|during|so far)\s+(week|month|year|\d{4}).*$/i, "").replace(/(?:الشهر|السنه|السنة|الاسبوع|الأسبوع|السنادي)\s*(?:ده|دي|اللي فات|الماضي)?.*$/, "")
-    .replace(/^(?:the|my|a|an|our)\s+/i, "").replace(/\b(?:did|do|have|has|was|were)\b/gi, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    .replace(/^(?:the|my|a|an|our)\s+/i, "").replace(/\b(?:did|do|have|has|was|were)\b/gi, " ")
+    // v10.9.9 (Ali: «اخر مرة روحت الحلاق امتى» / "When is the last time I went"): the question words and a bare "went" are not the thing
+    .replace(/(?:[\s,.!:;)(]|\p{Extended_Pictographic}|\uFE0F|\b(?:thanks|thank you|thx|ok|okay|pls|please)\b|تمام|شكرا|شكراً|لو سمحت)+$/iu, "").replace(/[?؟!]+/g, " ")
+    .replace(/(?<![\p{L}])(?:امتى|إمتى|امتي|فين|كام|ايه|إيه|كان|كانت|emta|imta|fein|kam|kan)(?![\p{L}])/giu, " ")
+    .replace(/(?:[\s,.!:;)(]|\p{Extended_Pictographic}|\uFE0F|\b(?:thanks|thank you|thx|ok|okay|pls|please)\b|تمام|شكرا|شكراً|لو سمحت)+$/iu, "")
+    .replace(/^(?:(?:i|we)\s+)?(?:went|go|gone|visited|got|had|did|been)(?:\s+(?:to|at|for))?(?:\s+(?:the|my|a))?\b\s*/i, "")
+    .replace(/^(?:to|at|for)\s+(?:the|my|a)?\s*/i, "").replace(/^(?:the|my|a|an)\s+/i, "").replace(/^(?:ro7t|ro7na|rou7t)\s+/i, "").replace(/^(?:get|got|have|do|make)\s+(?:a|an|my|the)?\s*/i, "").replace(/(^|\s)el\s+/gi, "$1")
+    .replace(/\s+/g, " ").trim().slice(0, 60);
 }
 const latinQ = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d));
 const STOP = /^(the|my|our|for|and|with|from|that|this|ال|في|على|من|عن|ده|دي)$/;
@@ -89,11 +96,49 @@ export function isAskedText(text) {
 // what Attune itself saved (chat answers, questions, web looks) is not something YOU wrote or did
 const NOT_OWN = new Set(["chat", "ask", "instant", "copilot", "money", "web", "research"]);
 /** Every record in every tool that mentions the term: [{ date, what, src, amount?, type? }], newest first. */
+// v10.9.9 (Ali: "last time I went to the barber should look in notes, money, everything — I saved it as a note in Money"): the same
+// thing written other ways — "haircut", «حلاق», «حلاقة», "7ala2" all mean the barber; each word asked matches its whole group
+const GROUPS = [
+  "barber barbers barbershop haircut haircuts hair shave salon coiffeur حلاق حلاقه حلاقين حلقت احلق شعر 7ala2 7la2 halla2 a7la2",
+  "dentist dentists dental teeth tooth اسنان سنان ضرس دكتور_اسنان asnan",
+  "doctor doctors clinic dr checkup دكتور دكتوره كشف عياده 2ashf kashf",
+  "gym workout training جيم تمرين gim",
+  "mechanic garage workshop ميكانيكي ورشه عربيه_صيانه mekaneeky mekaniky mikaneeky wer4a",
+  "fuel petrol gas benzine بنزين",
+  "pharmacy pharmacies chemist صيدليه اجزاخانه saydaleya saydalya agzakhana",
+  "laundry ironing cleaners مكوجي مغسله",
+  "supermarket groceries grocery سوبرماركت بقاله",
+  "carwash wash غسيل",
+].map((g) => g.split(" ").map((w) => w.replace(/_/g, " ")));
+const COMMON = new Set("about after again also always back been before being best better came come could daily days every first from going good have here just keep last like little long made make many month more most much never next only other over really same some still take than that them then there they thing this time today told very want week well went were what when where which while will with work would year your every usual usually near street".split(" "));
+function groupOf(w) { for (const g of GROUPS) if (g.some((x) => fold(x).replace(/^ال/, "") === w)) return g.map((x) => fold(x).replace(/^ال/, "")); return null; }
+/** Names your OWN notes give a thing: "the barber I go to is hany rabee3" → "hany rabee3" — a Money entry that says only that counts. */
+function aliasesOf(want, s) {
+  const out = new Set(), all = new Set(want.flatMap((x) => groupOf(x) || [x])), inWant = (w) => all.has(w);
+  for (const r of s.memory || []) {
+    if (!r || NOT_OWN.has(r.kind) || isAskedText(r.text || r.title)) continue;
+    const w = words([r.title, r.text].join(" ")); if (!want.every((x) => w.some((h) => h === x || (groupOf(x) || []).includes(h)))) continue;
+    for (const a of w) if (/\d/.test(a) && /\p{L}/u.test(a) && a.length >= 4 && !inWant(a)) out.add(a);   // a Franco name in one word: "ezaby3"
+    for (let i = 0; i + 1 < w.length; i++) { const a = w[i], b = w[i + 1];
+      if (inWant(a) || inWant(b) || (COMMON.has(a) && COMMON.has(b))) continue;
+      if (/\d/.test(a + b) || !(COMMON.has(a) || COMMON.has(b))) out.add(a + " " + b); }
+  }
+  return [...out].slice(0, 12);
+}
 export function recordsAbout(term, s) {
-  const want = words(term); if (!want.length) return [];
+  let want = words(term); if (!want.length) return [];
+  // ("dental clinic", "doctor el asnan", «دكتور الاسنان»: the word that names the place decides — "clinic" / "doctor" only help it)
+  const HELP = new Set(["doctor", "doctors", "clinic", "center", "centre", "shop", "place", "دكتور", "عياده", "مركز", "محل"].map(fold));
+  if (want.length > 1 && want.some((w) => !HELP.has(w) && groupOf(w))) want = want.filter((w) => !HELP.has(w));
   // (longer words say more: "service" counts more than "car" — a "Toyota service" matches “car service”, a "car wash" doesn't)
   const total = want.reduce((a, w) => a + w.length, 0);
-  const hit = (txt) => { const have = words(txt); const got = want.filter((w) => have.some((h) => h === w || (w.length >= 4 && (h.startsWith(w) || w.startsWith(h))))).reduce((a, w) => a + w.length, 0); return got >= total * 0.6; };
+  const alts = want.map((w) => groupOf(w) || [w]);
+  const aliases = aliasesOf(want, s);
+  const hit = (txt) => { const have = words(txt);
+    const got = want.filter((w, i) => alts[i].some((x) => have.some((h) => h === x || (x.length >= 4 && !x.includes(" ") && (h.startsWith(x) || x.startsWith(h) && h.length >= 4))))
+      || alts[i].some((x) => x.includes(" ") && fold(txt).includes(x))).reduce((a, w) => a + w.length, 0);
+    if (got >= total * 0.6) return true;
+    const ft = " " + have.join(" ") + " "; return aliases.some((a) => ft.includes(" " + a + " ")); };
   const out = [];
   for (const t of ((s.ledger && s.ledger.txns) || [])) if (hit(t.note + " " + (t.cat || ""))) out.push({ date: t.date, what: `${t.type === "income" ? "+" : "−"}${num(t.amount)} · ${t.note || t.cat}`, src: "money", amount: t.amount, type: t.type });
   for (const c of ((s.life && s.life.items) || [])) if (hit([c.person, c.title, c.kind].join(" "))) out.push({ date: c.start || iso(c.created || Date.now()), what: [c.person, c.title || c.kind, c.amount ? num(c.amount) + " " + (c.currency || "") : ""].filter(Boolean).join(" · "), src: "life" });
@@ -128,11 +173,14 @@ function history(q, s) {
     rows: recs.slice(0, 14).map((r) => [r.date || "—", r.what]), open: recs[0].src, sources: src };
 }
 const DONE_WORD = /\b(?:went|visited|did|had|got|bought|paid|was at|were at|today i|yesterday i|changed|fixed|renewed|saw)\b|روحت|رحت|زرت|عملت|اتعمل|حلقت|اشتريت|دفعت|غيرت|غيّرت|جددت|كشفت|النهارده|امبارح|ro7t|3amalt|7ala2t/i;
-function lastTime(q, s) {
+function lastTime(q, s, now, prev) {
   // v10.9.9: a note's date is when it was WRITTEN — it is a "last time" only when it tells of something done ("went to the barber")
-  const term = termOf(q); const recs = recordsAbout(term, s).filter((r) => r.date && (r.src !== "memory" || DONE_WORD.test(r.what)));
+  // (v10.9.9: "When is the last time I went" right after "tell me about my barber" — the thing comes from the question before)
+  const term = termOf(q) || (prev ? termOf(prev) : ""), today = iso(now || Date.now());
+  // (a reminder for Saturday is not "the last time" — only what already happened)
+  const recs = recordsAbout(term, s).filter((r) => r.date && String(r.date).slice(0, 10) <= today && (r.src !== "memory" || DONE_WORD.test(r.what)));
   if (!recs.length) return null;
-  const r = recs[0], days = Math.round((Date.parse(iso(Date.now()) + "T12:00:00") - Date.parse(r.date + "T12:00:00")) / DAY);
+  const r = recs[0], days = Math.round((Date.parse(today + "T12:00:00") - Date.parse(r.date + "T12:00:00")) / DAY);
   return { kind: "last", t: days === 0 ? "The last time: {d} (today) — {w}." : days === 1 ? "The last time: {d} (yesterday) — {w}." : days > 1 ? "The last time: {d} ({n} days ago) — {w}." : "The last time: {d} — {w}.", v: { d: r.date, n: days, w: r.what },
     en: `The last time: ${r.date}${days >= 0 ? ` (${days === 0 ? "today" : days === 1 ? "yesterday" : days + " days ago"})` : ""} — ${r.what}.`,
     ar: `آخر مرة: ${r.date}${days >= 0 ? ` (${days === 0 ? "اليوم" : days === 1 ? "أمس" : "منذ " + days + " يوم"})` : ""} — ${r.what}.`,
@@ -405,7 +453,7 @@ function moneyExtra(q, s, now) {
   return null;
 }
 /** The answer, or null when nothing in your data fits (the page then offers Chat). */
-export function askLife(question, stores = {}, { now = Date.now() } = {}) {
+export function askLife(question, stores = {}, { now = Date.now(), prev = "" } = {}) {
   const q = clean(question); if (!q) return null;
   const k = kindOf(q, stores);
   if (k === "money" || k === "paid-for") { const x = moneyExtra(q, stores, now); if (x) return x; }
@@ -418,7 +466,7 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
     return { kind: "money", en, ar: a, open: "money", sources: ["money"] };
   }
   if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", t: "Nothing in Money mentions “{x}”.", v: { x: term }, en: `Nothing in Money mentions “${term}”.`, ar: `مفيش حاجة في الفلوس فيها «${term}».`, open: "money", sources: ["money"] }; }
-  if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now);   // nothing about it in your data → null (the model answers)
+  if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now, prev);   // nothing about it in your data → null (the model answers)
   // v8.7: a question about the world right now (a score, the weather, "today") is not in your data: a score the phone saw in a
   // notification is answered from it; anything else goes to the web (kind "world" — Home sends it to the chat with the web on)
   if (k === "search" && (isLive(q) || isScoreQuestion(q))) {
@@ -465,8 +513,8 @@ export const EXAMPLES = [
 
 // ---- in Chat: only questions about YOUR OWN things ("what is HbA1c?" stays a normal answer; "is my HbA1c better?" is answered here)
 const QUESTION = /\?|؟|^(how|what|who|when|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
-const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد|(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|فلوس)|ورايا|ورايه|\b(3andi|3ndi|bta3i|bta3y|bta3ty|leya|liya|3alaya|3aleh|3aleha|sraft|dafa3t)\b/i;   // v10.9.8 «أحمد عليه كام؟» / Franco
-export function chatAsk(q, stores, { now = Date.now() } = {}) {
+const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد|(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|فلوس)|ورايا|ورايه|(?<![\p{L}])(?:روحت|رحت|زرت|حلقت|اتحلقت|كشفت|غسلت)(?![\p{L}])|\b(ro7t|ro7na|7ala2t|3amalt|3mlt|3andi|3ndi|bta3i|bta3y|bta3ty|leya|liya|3alaya|3aleh|3aleha|sraft|dafa3t)\b/iu;   // v10.9.8 «أحمد عليه كام؟» / Franco
+export function chatAsk(q, stores, { now = Date.now(), prev = "" } = {}) {
   const t = clean(q);
   if (!t || t.length > 160 || !QUESTION.test(t)) return null;
   // v10.9 (the real phone model run: "what should I eat before the gym" was answered "Nothing spent on Health this month"): a request for
@@ -477,5 +525,5 @@ export function chatAsk(q, stores, { now = Date.now() } = {}) {
   // (v10.9.8: "when does the passport expire?" names no "my" — a paper's expiry is always the person's own)
   if (!MINE.test(t) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
   if (k === "search") return null;
-  return askLife(t, stores, { now });
+  return askLife(t, stores, { now, prev });
 }

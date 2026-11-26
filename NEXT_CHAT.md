@@ -19,7 +19,20 @@
 > results as a full build); Mind is written 0.6 s after the last change and at once on background / close (window.__attuneMemFlush,
 > called by lifeask.loadStores and backup.collectData before they read storage). Tests: tests/unit/v1099askmind.test.mjs (Ali's case;
 > 10,000 HARD composed questions-vs-facts 99.98 %, held-out seeds 1–3 99.99–100 %, 79 % different shapes; the index), e2e_v1099askmind.py
-> (390 + 1366). Not changed: the model's own wording ("Other barbers you go to include…"), token speed (19.6 t/s is the model on his phone).
+> (390 + 1366).
+> **Part 2 (same day) — Ali: "last time I went to the barber should look on notes, money, everything — I saved it as a note in Money":**
+> lifeask.recordsAbout now matches each asked word's whole GROUP (barber = haircut / hair / shave / salon / «حلاق» / «حلاقة» / «احلق» /
+> 7ala2; dentist = teeth / «اسنان» / asnan; gym; doctor; mechanic = garage / «ورشة» / mekaneeky; pharmacy = chemist / «صيدلية» /
+> saydaleya; fuel; laundry; supermarket), drops helper words when a place word is there ("dental clinic", "doctor el asnan", «دكتور
+> الاسنان» = dentist), and takes the NAMES his own notes give the thing ("the barber I go to hany rabee3 I cut with 1.ahmed me8awry…"
+> → a Money entry that says only "hany rabee3" / "ahmed me8awry" / "ezaby3" counts; two-word names, or one word with a digit). "The last
+> time" never takes a future reminder. Questions: Franco "a5er mara ro7t el 7ala2 emta", «اخر مرة روحت الحلاق امتى» («روحت» = mine), the
+> question words / "ok" / «تمام» / emoji / a line break left out of the thing, "get a haircut"; a bare follow-up "When is the last time I
+> went" takes its thing from the question before (chatAsk prev — chat.jsx passes the last user message). Tests: tests/lasttime/gen.mjs
+> NEW 10,000 HARD composed people (the visit saved in Money in other words / by a name / in a note / in People & plans, among distractors:
+> newer spending, his own questions in Mind, a reminder next week, another place, an older visit; EN / Egyptian / Franco / follow-up):
+> 63.3 % at first → 100 %, held-out seeds 1–3 100 %, 94 % different shapes; unit v1099askmind (+44: his case × 8 notes × 5 questions,
+> never invented, 2 × 2,500 sample); e2e_v1099askmind (+3 per size). Not changed: the model's own wording ("Other barbers you go to include…"), token speed (19.6 t/s is the model on his phone).
 
 > ## START HERE (24 Nov 2026 night — v10.9.8: the new-user walk-through)
 > Ali asked for a "real user" walk: Claude used Attune as a NEW person (customer mode, no test presets) on a typical Egyptian phone that

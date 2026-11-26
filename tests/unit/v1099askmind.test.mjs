@@ -103,5 +103,26 @@ ok(leaks === 0, "no question kept as a note is read as a visit (" + leaks + ")")
   ok(X.memSearch(recs, ix, "edited", { now }).some((x) => /edited/.test(x.rec.title)) && !X.memSearch(recs, ix, "t30", { now }).some((x) => x.rec.title === "t30" && !recs.includes(x.rec)), "edited records are found; removed ones are gone");
 }
 
+// ---- Ali, 26 Nov: "last time I went to the barber should look on notes, money, everything — I saved it as a note in Money"
+{
+  const memNote = [{ id: 1, kind: "note", title: "x", text: "that in the barber I go to hany rabee3 I cut with 1.ahmed me8awry , 2.ahmed sheraton 3.ibrahim hassan", ts: now - 30 * D }];
+  const st = (note, extra = {}) => ({ memory: memNote, ledger: { currency: "EGP", accounts: [{ id: "a1", currency: "EGP" }], txns: [{ id: "t1", type: "expense", amount: 150, cat: "other", note, date: "2026-11-20", account: "a1" }, { id: "t2", type: "expense", amount: 90, cat: "food", note: "lunch with ahmed", date: "2026-11-25", account: "a1" }] }, ...extra });
+  for (const note of ["barber", "haircut", "hair cut", "حلاق", "حلاقة", "hany rabee3", "HANY RABEE3", "ahmed me8awry"])
+    for (const [q, prev] of [["When is the last time I went to the barber?", ""], ["When is the last time I went", "Tell me about my barber"], ["اخر مرة روحت الحلاق امتى؟", ""], ["a5er mara ro7t el 7ala2 emta?", ""], ["last time I got a haircut?", ""]]) {
+      const a = L.chatAsk(q, st(note), { now, prev });
+      ok(a && a.kind === "last" && a.v.d === "2026-11-20", `Money note «${note}» answers «${q}»${prev ? " (after " + prev + ")" : ""} → ${a && a.en}`);
+    }
+  // never invented: a reminder next week, "lunch with ahmed", his own question
+  const none = { memory: [...memNote, { id: 9, kind: "chat", title: "", text: "Last time I went to the barber", output: "x", ts: now }], reminders: [{ id: "r", at: now + 3 * D, title: "barber" }],
+    ledger: { currency: "EGP", accounts: [], txns: [{ id: "t2", type: "expense", amount: 90, cat: "food", note: "lunch with ahmed", date: "2026-11-25", account: "a1" }] } };
+  const a0 = L.chatAsk("When is the last time I went to the barber?", none, { now });
+  ok(!a0 || a0.kind !== "last", "nothing saved → no invented visit (not the reminder, not 'lunch with ahmed', not the question): " + (a0 && a0.en));
+  ok(!L.chatAsk("When is the last time I went", none, { now }), "a bare follow-up with nothing before it → left to the model");
+  // the 10,000 HARD generator (tests/lasttime/gen.mjs): a 2,500 sample + a held-out set
+  const G = await import("../lasttime/gen.mjs");
+  for (const [seed, nn] of [[7, 2500], [11, 2500]]) { const cs = G.gen(seed, nn); const good = cs.filter(G.check).length;
+    console.log(`lasttime seed ${seed}: ${(good / nn * 100).toFixed(2)} %`); ok(good / nn >= 0.99, `the last time… across Money / notes / plans, seed ${seed} ≥ 99 %`); }
+}
+
 console.log(fail ? `FAIL ${fail} of ${n}` : `ALL PASSED v1099askmind (${n} checks, 10,000 HARD)`);
 if (fail) process.exit(1);

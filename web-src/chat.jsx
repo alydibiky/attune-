@@ -1265,7 +1265,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
     // v6.28 Ask your life: «who owes me money?», «is mum's HbA1c better?» — answered by code from your own data, with its source
     if (route && cx && cx.answer && (!only || only === "money-ask")) { cxCard(); return; }   // a topic ("the wedding so far") after Money's own reader
-    let mine = route && !img && (!only || only === "money-ask" || only === "life") ? chatAsk(typed, lifeStores()) : null;
+    let mine = route && !img && (!only || only === "money-ask" || only === "life") ? chatAsk(typed, lifeStores(), { prev: [...((chat && chat.messages) || [])].reverse().find((m) => m.role === "user" && m.text && m.text !== said)?.text || "" }) : null;   // (v10.9.9: a follow-up takes its thing from the question before)
     // v8.7 (Ali: "tell me about my barber" took 15 s and came from a knowledge pack): your own people and things, from what
     // you told Attune — at once, by code (personal.js)
     if (!mine && route && !img && !only) { try { const pm = mindAnswer(typed, lifeStores()); if (pm) mine = { ...pm, rows: [] }; } catch (e) {} }
