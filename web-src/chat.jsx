@@ -699,15 +699,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v10.9.9 (Ali's screenshot: the answer card's buttons stayed hidden under the message box, with the ↓ button over its title): the
     // keyboard closing, the box changing height or the page growing also scroll the page — those never stop "following"; only the
     // person's own finger / wheel does (and the fling that goes on just after the finger lifts)
-    const lastTouch = { t: 0 };
+    // (moving UP is always the person — the scrollbar, Page Up, a key; a resize never moves the page up from the bottom by itself)
+    const lastTouch = { t: 0 }, lastResize = { t: 0 }; let lastY = window.scrollY;
     const onScroll = () => {
-      if (Date.now() - lastAuto.current < 120 && !touching.current) return;   // our own scroll
+      const y = window.scrollY, up = y < lastY - 2; lastY = y;
       const g = gapNow();
-      if (g < 48) set(true); else if (touching.current || Date.now() - lastTouch.t < 1500) set(false);
+      if (up && g >= 48 && Date.now() - lastResize.t > 400) { set(false); return; }   // (our own scrolls only ever go down to the bottom)
+      if (Date.now() - lastAuto.current < 120 && !touching.current) return;   // our own scroll
+      if (g < 48) set(true); else if (touching.current || Date.now() - lastTouch.t < 1500 || (up && Date.now() - lastResize.t > 400)) set(false);
     };
     const onDown = () => { touching.current = true; };
     const onUp = () => { touching.current = false; lastTouch.t = Date.now(); set(gapNow() < 48); };
-    const onResize = () => { if (stickRef.current && !touching.current) { lastAuto.current = Date.now(); window.scrollTo(0, document.documentElement.scrollHeight); } };
+    const onResize = () => { lastResize.t = Date.now(); if (stickRef.current && !touching.current) { lastAuto.current = Date.now(); window.scrollTo(0, document.documentElement.scrollHeight); } };
     window.addEventListener("resize", onResize, { passive: true });
     try { window.visualViewport && window.visualViewport.addEventListener("resize", onResize, { passive: true }); } catch (e) {}
     const onWheel = (e) => { if (e.deltaY < 0) set(false); };

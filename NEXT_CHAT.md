@@ -11,7 +11,8 @@
 > "What I need: …" stay notes); lifeask.recordsAbout skips chat / ask / instant / copilot / money records and question notes; lastTime
 > takes a NOTE only when it tells of something done (went / visited / روحت / حلقت…; a note's date is when it was written);
 > sourcelabel: fromMine → "From: your data"; spaces.glassCss: the composer (and anything data-solid) has a solid ground; chat.jsx:
-> following stops only by the finger / wheel (+1.5 s fling) — the keyboard closing, the box resizing or the page growing keep it, and
+> following stops by the finger / wheel (+1.5 s fling) or ANY move up away from the bottom (scrollbar, Page Up) — the keyboard closing, the box
+> resizing or the page growing keep it (e2e_v513's table wheel test caught the first version), and
 > resize / visualViewport resize / padB / typing re-scroll to the bottom. **Slow:** the whole Mind BM25 index was rebuilt after EVERY
 > chat answer (1,500 records ≈ 100 ms on a computer, 3–5× on a phone) and all of Mind (MBs) was written to storage in the same moment →
 > memindex.js (new): the index holds the records, each record's words counted once (WeakMap), updated record by record (≤ 8 ms, same
