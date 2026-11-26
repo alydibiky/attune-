@@ -696,23 +696,32 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const gapNow = () => document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
   useEffect(() => {
     const set = (v) => { if (stickRef.current !== v) { stickRef.current = v; setFollowing(v); } };
+    // v10.9.9 (Ali's screenshot: the answer card's buttons stayed hidden under the message box, with the ↓ button over its title): the
+    // keyboard closing, the box changing height or the page growing also scroll the page — those never stop "following"; only the
+    // person's own finger / wheel does (and the fling that goes on just after the finger lifts)
+    const lastTouch = { t: 0 };
     const onScroll = () => {
       if (Date.now() - lastAuto.current < 120 && !touching.current) return;   // our own scroll
-      set(gapNow() < 48);
+      const g = gapNow();
+      if (g < 48) set(true); else if (touching.current || Date.now() - lastTouch.t < 1500) set(false);
     };
     const onDown = () => { touching.current = true; };
-    const onUp = () => { touching.current = false; set(gapNow() < 48); };
+    const onUp = () => { touching.current = false; lastTouch.t = Date.now(); set(gapNow() < 48); };
+    const onResize = () => { if (stickRef.current && !touching.current) { lastAuto.current = Date.now(); window.scrollTo(0, document.documentElement.scrollHeight); } };
+    window.addEventListener("resize", onResize, { passive: true });
+    try { window.visualViewport && window.visualViewport.addEventListener("resize", onResize, { passive: true }); } catch (e) {}
     const onWheel = (e) => { if (e.deltaY < 0) set(false); };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("touchstart", onDown, { passive: true });
     window.addEventListener("touchend", onUp, { passive: true });
     window.addEventListener("touchcancel", onUp, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: true });
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("touchstart", onDown);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("touchstart", onDown); window.removeEventListener("resize", onResize);
+      try { window.visualViewport && window.visualViewport.removeEventListener("resize", onResize); } catch (e) {}
       window.removeEventListener("touchend", onUp); window.removeEventListener("touchcancel", onUp); window.removeEventListener("wheel", onWheel); };
   }, []);
   const toBottom = () => { lastAuto.current = Date.now(); window.scrollTo(0, document.documentElement.scrollHeight); };
-  useEffect(() => { if (stickRef.current && !touching.current) toBottom(); }, [messages]);
+  useEffect(() => { if (stickRef.current && !touching.current) toBottom(); }, [messages, padB, typing]);
 
   // Grow the text box with what is typed, up to a limit.
   useEffect(() => {

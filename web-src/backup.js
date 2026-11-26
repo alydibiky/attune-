@@ -67,6 +67,7 @@ export function takePhoneData(keys, native) {
 }
 
 export function collectData(storage) {
+  try { if (typeof globalThis !== "undefined" && globalThis.__attuneMemFlush) globalThis.__attuneMemFlush(); } catch (e) {}   // v10.9.9: Mind is written a moment later — write it now
   const s = storage || localStorage;
   const keys = {};
   for (let i = 0; i < s.length; i++) {

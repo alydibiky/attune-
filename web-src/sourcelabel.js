@@ -16,7 +16,7 @@ export const SOURCE_TEXT = {
 export function answerSources(m) {
   if (!m || m.role !== "assistant" || !m.text || m.card || m.error) return [];
   const out = [];
-  if (m.lifeData || m.learnedUsed || m.projectKnowledge) out.push("data");
+  if (m.lifeData || m.learnedUsed || m.projectKnowledge || (m.fromMine && m.fromMine.length)) out.push("data");   // v10.9.9: answered from your Mind / Shelf notes
   if (m.fromFile || m.readInParts || m.fromPhotoTable) out.push("file");
   // v10.9 (Ali's P8 test: "From: a knowledge pack" under answers that used none): passages shown but not used are not a source
   if ((m.kchips && m.kchips.length) || (m.knowledgeUsed && !Array.isArray(m.kchips))) out.push("pack");

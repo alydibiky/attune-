@@ -68,6 +68,26 @@ export function termOf(q) {
 const latinQ = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d));
 const STOP = /^(the|my|our|for|and|with|from|that|this|ال|في|على|من|عن|ده|دي)$/;
 const words = (s) => fold(s).replace(/(^|\s)ال(?=\S{3})/g, "$1").split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3 && !STOP.test(w));
+/** v10.9.9 (Ali's screenshot: "The last time: today — Last time I went to the barber" = his own question, read back as a visit):
+ *  is this text a QUESTION / an ask rather than a fact? Used to keep past questions out of "your data". */
+const ASK_START = /^(?:who|what|whats|what's|when|where|why|how|which|whose|is|are|was|were|do|does|did|can|could|should|would|will|tell me|show me|give me|find|search|explain|last time|the last time|any idea|is there|are there)\b/i;
+const ASK_START_AR = /^(?:مين|ايه|إيه|امتى|إمتى|امتي|إمتي|فين|ليه|ازاي|إزاي|كام|هل|قولي|قول لي|احكيلي|فكرني امتى|اخر مره|آخر مرة|آخر مره|اخر مرة|ما هو|ما هي|من هو|متى|أين|لماذا|كيف|kam|emta|fein|meen|eh)(?:\s|$)/i;
+const ASK_LEAD = /^(?:(?:hey|hi|hello|ok(?:ay)?|so|and|btw|by the way|quick (?:one|q|question)|question|attune|please|pls|yo|ya attune|يا [أاإ]تيون|بقولك|طب|طيب|معلش|سؤال|[\d٠-٩]+[.)-])[\s,،:;.!—–-]*)+/i;
+const ASK_TAIL = /(?:[\s,.!:;)(]|\p{Extended_Pictographic}|\uFE0F|thanks|thank you|thx|ok|okay|pls|please|:\)|تمام|شكرا|شكراً|لو سمحت|\(1\/2\))+$/iu;
+const Q_END_AR = /(?:^|\s)(?:امتى|إمتى|امتي|فين|كام|مين|ايه|إيه|ليه|ازاي|إزاي|emta|fein|kam|meen|eh)$/i;
+export function isAskedText(text) {
+  const raw = String(text || "").replace(/[\u200e\u200f\u061c\u202a-\u202e]/g, "").trim();
+  const lines = raw.split(/\n/).filter((l) => l.trim());
+  if (!raw || raw.length > 220 || lines.length > 3 || lines.slice(1).some((l) => /^\s*(?:[-•*]|\d+[.)])\s+\S/.test(l))) return false;   // a list is a note
+  const t = raw.replace(/\s+/g, " ").replace(ASK_TAIL, "").replace(ASK_LEAD, "").trim();
+  if (!t) return false;
+  if (/[?؟]$/.test(t)) return true;
+  if (/[?؟]/.test(raw) === false && /(?<![\d٠-٩]):(?![\d٠-٩])\s*\S/.test(t)) return false;   // "What I need: passport, 2 photos" is a note, not a question
+  if (t.split(" ").length > 16) return false;
+  return ASK_START.test(t) || ASK_START_AR.test(t) || Q_END_AR.test(t) || /\s[—–-]\s*when$/i.test(t);
+}
+// what Attune itself saved (chat answers, questions, web looks) is not something YOU wrote or did
+const NOT_OWN = new Set(["chat", "ask", "instant", "copilot", "money", "web", "research"]);
 /** Every record in every tool that mentions the term: [{ date, what, src, amount?, type? }], newest first. */
 export function recordsAbout(term, s) {
   const want = words(term); if (!want.length) return [];
@@ -82,7 +102,7 @@ export function recordsAbout(term, s) {
   for (const m of care.meds || []) if (hit(m.name)) out.push({ date: m.start || "", what: `${m.name} ${m.strength || ""} · ${m.dose || ""}${m.stopped ? " (stopped)" : ""}`.trim(), src: "care" });
   for (const l of care.labs || []) if (hit(l.test)) out.push({ date: l.date, what: `${l.test} ${l.value} ${l.unit || ""}${l.flag ? " (" + l.flag + ")" : ""}`, src: "care" });
   for (const [d, day] of Object.entries((s.fit && s.fit.days) || {})) for (const [meal, items] of Object.entries((day && day.meals) || {})) for (const x of items || []) if (hit((x.name || "") + " " + (x.ar || ""))) out.push({ date: d, what: `${x.name} · ${meal}${x.kcal != null ? " · " + Math.round(x.kcal) + " kcal" : ""}`, src: "fit" });
-  for (const r of s.memory || []) if (hit([r.title, r.text].join(" "))) out.push({ date: r.ts ? iso(r.ts) : "", what: r.title || String(r.text || "").slice(0, 80), src: "memory" });
+  for (const r of s.memory || []) if (r && !NOT_OWN.has(r.kind) && !(isAskedText(r.text || r.title) && !String(r.output || "").trim()) && hit([r.title, r.text].join(" "))) out.push({ date: r.ts ? iso(r.ts) : "", what: r.title || String(r.text || "").slice(0, 80), src: "memory" });
   for (const r of s.reminders || []) if (r.at && hit(r.title)) out.push({ date: iso(r.at), what: r.title, src: "reminders" });
   return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
 }
@@ -107,8 +127,10 @@ function history(q, s) {
     ar: `«${term}»: ${recs.length} سجل في بياناتك، من ${recs[recs.length - 1].date || "—"} إلى ${recs[0].date || "—"}.`,
     rows: recs.slice(0, 14).map((r) => [r.date || "—", r.what]), open: recs[0].src, sources: src };
 }
+const DONE_WORD = /\b(?:went|visited|did|had|got|bought|paid|was at|were at|today i|yesterday i|changed|fixed|renewed|saw)\b|روحت|رحت|زرت|عملت|اتعمل|حلقت|اشتريت|دفعت|غيرت|غيّرت|جددت|كشفت|النهارده|امبارح|ro7t|3amalt|7ala2t/i;
 function lastTime(q, s) {
-  const term = termOf(q); const recs = recordsAbout(term, s).filter((r) => r.date);
+  // v10.9.9: a note's date is when it was WRITTEN — it is a "last time" only when it tells of something done ("went to the barber")
+  const term = termOf(q); const recs = recordsAbout(term, s).filter((r) => r.date && (r.src !== "memory" || DONE_WORD.test(r.what)));
   if (!recs.length) return null;
   const r = recs[0], days = Math.round((Date.parse(iso(Date.now()) + "T12:00:00") - Date.parse(r.date + "T12:00:00")) / DAY);
   return { kind: "last", t: days === 0 ? "The last time: {d} (today) — {w}." : days === 1 ? "The last time: {d} (yesterday) — {w}." : days > 1 ? "The last time: {d} ({n} days ago) — {w}." : "The last time: {d} — {w}.", v: { d: r.date, n: days, w: r.what },
@@ -413,6 +435,7 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
 
 /** The stores as each tool saved them (null-safe). */
 export function loadStores(ls = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { if (typeof globalThis !== "undefined" && globalThis.__attuneMemFlush) globalThis.__attuneMemFlush(); } catch (e) {}   // v10.9.9: Mind is written a moment later — write it now
   // v10.6 (smoothness: a phone filled like Ali's took 17 s to open — every save re-read EVERY store, all 3,000 kept notifications
   // included, when it needed one): each store is read the first time it is asked for, once per call — the same values as before
   const j = (k, d) => { try { const v = JSON.parse((ls && ls.getItem(k)) || "null"); return v == null ? d : v; } catch (e) { return d; } };

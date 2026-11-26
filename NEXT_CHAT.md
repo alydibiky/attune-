@@ -1,5 +1,25 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (26 Nov 2026 — v10.9.9: Ali's barber screenshots + "still glitchy and slow")
+> Ali's two screenshots: (1) Chat answered "Your barber is Hany Rabee3" under "From your Mind: … · Tell me about my barber · Who won the
+> last champions league final" — his own PAST QUESTIONS (every chat turn is kept in Mind as kind "chat") were read back as notes; and the
+> line under it said "From: the model's own knowledge". (2) "When is the last time I went" → "The last time: 2026-11-26 (today) — Last
+> time I went to the barber." = his question of a minute before, read as a visit. (3) While typing, the answer's buttons / "Open Mind"
+> showed THROUGH the message box (light Glass: --c-surf is 76 % white), and the answer card stayed under the box with ↓ over its title.
+> Fixed: chat's memSearch / memStrong / memMeaning use only what HE wrote or kept (ownRec) and never a question-only record
+> (lifeask.isAskedText — leads "hey Attune, / يا أتيون،", tails "thx / تمام / 🔔", "?? ", Arabic question words at the end, lists and
+> "What I need: …" stay notes); lifeask.recordsAbout skips chat / ask / instant / copilot / money records and question notes; lastTime
+> takes a NOTE only when it tells of something done (went / visited / روحت / حلقت…; a note's date is when it was written);
+> sourcelabel: fromMine → "From: your data"; spaces.glassCss: the composer (and anything data-solid) has a solid ground; chat.jsx:
+> following stops only by the finger / wheel (+1.5 s fling) — the keyboard closing, the box resizing or the page growing keep it, and
+> resize / visualViewport resize / padB / typing re-scroll to the bottom. **Slow:** the whole Mind BM25 index was rebuilt after EVERY
+> chat answer (1,500 records ≈ 100 ms on a computer, 3–5× on a phone) and all of Mind (MBs) was written to storage in the same moment →
+> memindex.js (new): the index holds the records, each record's words counted once (WeakMap), updated record by record (≤ 8 ms, same
+> results as a full build); Mind is written 0.6 s after the last change and at once on background / close (window.__attuneMemFlush,
+> called by lifeask.loadStores and backup.collectData before they read storage). Tests: tests/unit/v1099askmind.test.mjs (Ali's case;
+> 10,000 HARD composed questions-vs-facts 99.98 %, held-out seeds 1–3 99.99–100 %, 79 % different shapes; the index), e2e_v1099askmind.py
+> (390 + 1366). Not changed: the model's own wording ("Other barbers you go to include…"), token speed (19.6 t/s is the model on his phone).
+
 > ## START HERE (24 Nov 2026 night — v10.9.8: the new-user walk-through)
 > Ali asked for a "real user" walk: Claude used Attune as a NEW person (customer mode, no test presets) on a typical Egyptian phone that
 > is NOT Ali's (12 bank / wallet SMS: InstaPay, Vodafone Cash, NBE, Banque Misr, CIB, an OTP, an advert, a refund, an ATM, a declined

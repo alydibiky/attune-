@@ -116,7 +116,8 @@ import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js"
 import * as NT from "./noteteach.js";
 import * as AL from "./applinks.js";
 import * as WT from "./webtask.js";
-import * as RELAY from "./relay.js";   // v9.9.8 M2
+import * as RELAY from "./relay.js";
+import { makeMemIndex } from "./memindex.js";   // v10.9.9
 import * as MEAN from "./meaning.js";
 import { recallDocs as RDOCS, warmRecall } from "./lookback.js";
 import { ProblemReportRow, crashState } from "./crash-ui.jsx";   // v10.8 CR3
@@ -224,7 +225,7 @@ import { PLAY_BUILD, NOT_IN_PLAY } from "./buildflags.js";
 import { morningReminder } from "./morning.js";
 import { photoKind, KIND_SAY } from "./smartcam.js";
 import { readDeadlines, addDeadline, loadRadar, saveRadar } from "./deadlines.js";
-import { loadStores as loadLifeStores } from "./lifeask.js";
+import { loadStores as loadLifeStores, isAskedText } from "./lifeask.js";
 import { setExtraSchedule } from "./actions.js";
 import { beforeMeet } from "./beforemeet.js";
 import { flightAlerts } from "./trip-ui.jsx";
@@ -2735,55 +2736,7 @@ function memMake(r) {
 // network, and runs in microseconds on a phone.
 const K1 = 1.2, B = 0.75;
 
-function memBuildIndex(records) {
-  const df = new Map();              // token -> how many records contain it
-  const post = new Map();            // token -> [ [idx, tf], ... ]
-  const len = new Array(records.length);
-  records.forEach((rec, i) => {
-    const mm = rec.meta || {};   // v6.8 Mind: its title, summary, tags and your note are searchable too
-    const toks = memTokens(rec.title + " \n " + rec.text + " \n " + rec.output + " " + (rec.tags || []).join(" ") +
-      " " + [mm.myTitle, mm.aiTitle, mm.summary, mm.myNote, ...(mm.aiTags || []), ...(mm.myTags || [])].filter(Boolean).join(" "));
-    len[i] = toks.length || 1;
-    const tf = new Map();
-    for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
-    for (const [t, n] of tf) {
-      df.set(t, (df.get(t) || 0) + 1);
-      if (!post.has(t)) post.set(t, []);
-      post.get(t).push([i, n]);
-    }
-  });
-  const avg = len.reduce((a, b) => a + b, 0) / (len.length || 1);
-  return { df, post, len, avg, n: records.length };
-}
-
-function memSearch(records, index, query, opts) {
-  const o = opts || {};
-  const now = o.now || Date.now();
-  const qt = [...new Set(memTokens(query))];
-  if (!qt.length) return [];
-  const score = new Map();
-  for (const t of qt) {
-    const p = index.post.get(t);
-    if (!p) continue;
-    const df = index.df.get(t) || 1;
-    const idf = Math.log(1 + (index.n - df + 0.5) / (df + 0.5));
-    for (const [i, tf] of p) {
-      const norm = tf * (K1 + 1) / (tf + K1 * (1 - B + B * index.len[i] / index.avg));
-      score.set(i, (score.get(i) || 0) + idf * norm);
-    }
-  }
-  const out = [];
-  for (const [i, s] of score) {
-    const rec = records[i];
-    const ageD = Math.max(0, (now - rec.ts) / 86400000);
-    // Recency is a nudge, not a ranking. Something from March that actually
-    // matches should still beat yesterday's near-miss.
-    const boost = 1 + 0.30 * Math.exp(-ageD / 45) + (rec.pinned ? 0.5 : 0);
-    out.push({ rec, score: s * boost });
-  }
-  out.sort((a, b) => b.score - a.score);
-  return out.slice(0, o.limit || 30);
-}
+const { memBuildIndex, memIndexUpdate, memSearch } = makeMemIndex(memTokens);   // v10.9.9 (memindex.js)
 
 // Why this record matched — the line containing the best query term. Search
 // results you can't verify at a glance are search results you don't trust.
@@ -7900,7 +7853,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.8";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -8050,6 +8003,8 @@ ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 }
 
 /** v9.9.2 S1 / v9.9.8 M2: what YOU wrote or kept — notes, Shelf, to-dos, places, photos you saved — never Attune's own chat answers. */
+// v10.9.9: a note that is only a question ("tell me about my barber", "who won…?") is not a fact about you
+const looksAsked = (r) => !!r && !String(r.output || "").trim() && isAskedText(r.text || r.title);
 const ownRec = (r) => !!r && (["note", "todo", "place", "photo", "field", "travel"].includes(r.kind) || (r.meta && r.meta.book) || r.pinned);
 
 /** v9.9.7 W1 "Do it on the web": the task understood, then each step ticked from what Attune's browser reported. Never pays. */
@@ -8561,7 +8516,8 @@ export default function App() {
   };
 
   // The index is derived, so a bad index is never data loss — it rebuilds.
-  const memIndex = useMemo(() => memBuildIndex(memory), [memory]);
+  const memIxRef = useRef(null);
+  const memIndex = useMemo(() => { const p = memIxRef.current; const ix = p ? memIndexUpdate(p.ix, p.recs, memory) : memBuildIndex(memory); memIxRef.current = { ix, recs: memory }; return ix; }, [memory]);
   const memoryLive = useMemo(() => memory.filter((r) => !(r.meta && r.meta.trashed)), [memory]);   // v6.11: notes in the Shelf trash are not shown in Mind
   const memHits = useMemo(
     () => (memQ.trim() ? memSearch(memory, memIndex, memQ, { now: Date.now(), limit: 40 }) : []),
@@ -8569,7 +8525,13 @@ export default function App() {
 
   // Persist on change. A full quota is a real event on a phone, so it is
   // handled rather than thrown: drop the oldest, tell the user, keep working.
-  useEffect(() => {
+  // v10.9.9 (Ali: "glitchy and slow"): the whole Mind (up to 4,000 records, megabytes) was written on EVERY change — after each chat
+  // answer, in the same moment the answer finished. It is now written once things are quiet (0.6 s), and at once when Attune goes to
+  // the background or closes, so nothing is lost.
+  const memSaveRef = useRef({ t: 0, rec: null });
+  const memFlush = useRef(() => {});
+  memFlush.current = () => {
+    const w = memSaveRef.current; if (w.t) { clearTimeout(w.t); w.t = 0; } if (!w.rec) return; const memory = w.rec; w.rec = null;
     try { localStorage.setItem(MEM_KEY, JSON.stringify(memory)); }
     catch (e) {
       const { records, dropped } = memPrune(memory, Math.floor(memory.length * 0.8));
@@ -8577,7 +8539,17 @@ export default function App() {
             setMemNote(`Storage was full — the ${dropped} oldest items were removed. Pinned items were kept.`); }
       catch (e2) { setMemNote("Storage is full and could not be trimmed."); }
     }
+  };
+  useEffect(() => {
+    const w = memSaveRef.current; w.rec = memory; if (w.t) clearTimeout(w.t);
+    w.t = setTimeout(() => memFlush.current(), 600);
   }, [memory]);
+  useEffect(() => {
+    const now = () => memFlush.current(), hid = () => { if (document.visibilityState === "hidden") now(); };
+    window.__attuneMemFlush = now;   // (anything that reads Mind straight from storage — Ask your life, backup, sync — writes it first)
+    document.addEventListener("visibilitychange", hid); window.addEventListener("pagehide", now); window.addEventListener("beforeunload", now);
+    return () => { now(); document.removeEventListener("visibilitychange", hid); window.removeEventListener("pagehide", now); window.removeEventListener("beforeunload", now); };
+  }, []);
   useEffect(() => {
     try { localStorage.setItem("attune:commits:v1", JSON.stringify(commits)); } catch (e) {}
   }, [commits]);
@@ -10092,19 +10064,21 @@ export default function App() {
     rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
     rankAll: (question, hits, o) => rankPassages(question, hits, o),
     isPersonal: (q) => isPersonalAsk(q),
-    memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
+    // v10.9.9 (Ali's screenshot: "From your Mind: Tell me about my barber · Who won the last champions league final"): Chat answers
+    // only from what YOU wrote or kept — never from your own past questions or Attune's saved chat answers
+    memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 12 }).filter((f) => ownRec(f.rec) && !looksAsked(f.rec)).slice(0, 4),
     // v9.9.2 S1 (Ali picked: "Chat always checks your own things first"): a note in Shelf / Mind that clearly fits ANY question
     // (most of its words in one record) — not only "my…" questions
     memStrong: (q) => { const qt = [...new Set(memTokens(q))]; if (qt.length < 2) return [];
       // (only what YOU wrote or kept — notes, Shelf, to-dos, places, photos you saved — never Attune's own saved chat answers)
-      return memSearch(memory, memIndex, q, { now: Date.now(), limit: 8 }).filter((f) => ownRec(f.rec)).filter((f) => { const rt = new Set(memTokens([f.rec.title, f.rec.text, f.rec.output, f.rec.note].filter(Boolean).join(" "))); const hit = qt.filter((t) => rt.has(t)).length; return hit >= 2 && hit / qt.length >= 0.6; }).slice(0, 3); },
+      return memSearch(memory, memIndex, q, { now: Date.now(), limit: 8 }).filter((f) => ownRec(f.rec) && !looksAsked(f.rec)).filter((f) => { const rt = new Set(memTokens([f.rec.title, f.rec.text, f.rec.output, f.rec.note].filter(Boolean).join(" "))); const hit = qt.filter((t) => rt.has(t)).length; return hit >= 2 && hit / qt.length >= 0.6; }).slice(0, 3); },
     // v9.9.8 M2 the relay: the meaning model (small, 0.57 B) finds your records that MEAN the question; the chat model answers
     // from them. Reuses the numbers Recall stored; up to 24 newest records without numbers get theirs in the same call; the
     // phone lets the meaning model go right after when memory is tight (release). Nothing when the model isn't on the phone.
     memMeaning: NATIVE && NATIVE.embedStatus ? async (q) => {
       let st = null; try { st = JSON.parse(NATIVE.embedStatus()); } catch (e) {}
       if (!st || !st.installed || String(q || "").trim().length < 4) return [];
-      const own = memory.filter(ownRec).slice(-1500), docs = RDOCS({ memory: own }), keyOf = new Map(own.map((r, i) => [r.id, MEAN.keyOf(docs[i])]));
+      const own = memory.filter((r) => ownRec(r) && !looksAsked(r)).slice(-1500), docs = RDOCS({ memory: own }), keyOf = new Map(own.map((r, i) => [r.id, MEAN.keyOf(docs[i])]));
       const vecs = await MEAN.loadVectors();
       const todo = own.filter((r) => !vecs.has(keyOf.get(r.id))).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 24);
       const r = await nativeCall("embed", { texts: [String(q).slice(0, 600), ...todo.map((x) => MEAN.textOf(docs[own.indexOf(x)]))], release: true });

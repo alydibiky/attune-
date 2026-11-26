@@ -379,7 +379,10 @@ export function glassCss(theme) {
   // (v10.9.1, Ali's Mind screenshot: the words under the top bar showed through it — "144 kept" over "Mind": the bars that stick on top
   // use --g-bar, which was set only inside .calm, and the app's top bar is outside .calm → no colour at all. The bar colours are on html too.)
   return `html.att-glass{--g-page:${page};--g-bar:${vars["--g-bar"]};--g-solid:${vars["--g-solid"]};--g-solid-2:${vars["--g-solid-2"]};background:${ground}}html.att-glass.att-glass.att-glass .calm{${v}}`
-    + `html.att-glass.att-glass.att-glass [class*="bg-black/"],html.att-glass.att-glass.att-glass [class*="bg-black/"] .calm,html.att-glass.att-glass.att-glass [role="dialog"].calm,html.att-glass.att-glass.att-glass [role="dialog"] .calm{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`;
+    + `html.att-glass.att-glass.att-glass [class*="bg-black/"],html.att-glass.att-glass.att-glass [class*="bg-black/"] .calm,html.att-glass.att-glass.att-glass [role="dialog"].calm,html.att-glass.att-glass.att-glass [role="dialog"] .calm{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`
+    // v10.9.9 (Ali's screenshot: the answer's buttons and "Open Mind" showed THROUGH the message box while typing): a box pinned over
+    // the page (the Chat composer, anything marked data-solid) has a solid ground in Glass, never see-through
+    + `html.att-glass.att-glass.att-glass [data-testid="composer"],html.att-glass.att-glass.att-glass [data-solid]{--c-surf:var(--g-solid);--c-bg:var(--g-solid);--c-surf-2:var(--g-solid-2)}`;
 }
 
 /* v9.5 (Ali, 5 Nov: "not all background colours work"): the redesigned screens (.calm) had their own fixed colours, so Settings →
