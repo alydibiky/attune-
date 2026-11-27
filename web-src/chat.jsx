@@ -80,7 +80,7 @@ import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from 
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
-import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
+import { compactSystem, PHOTO_RULE, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
 import { useSubBack } from "./backstack.js";
 import { factsBlock, checkFacts, keepCovering, packsCover, wantsFacts } from "./knowledge.js";
