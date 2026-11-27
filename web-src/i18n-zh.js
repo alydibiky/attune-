@@ -15246,4 +15246,6 @@ export const ZH = {
   "Connect your phone": "连接你的手机",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "在手机上：设置 → 同步 → Wi-Fi → 显示代码。然后在这里输入。",
   "Skip — I'll type on the computer": "跳过——我在电脑上输入",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Mind 已满：已清除 {n} 条旧的聊天回答。你自己的笔记全部保留。",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "存储空间已满。你的笔记已保留：删除一些不再需要的内容来腾出空间。",
 };

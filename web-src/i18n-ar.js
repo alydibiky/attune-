@@ -12468,4 +12468,6 @@ export const AR = {
   "Connect your phone": "وصّل موبايلك",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "على الموبايل: الإعدادات ← المزامنة ← Wi-Fi ← اعرض كود. وبعدين اكتبه هنا.",
   "Skip — I'll type on the computer": "تخطي — هكتب على الكمبيوتر",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "«عقلي» اتملى: اتمسح {n} من ردود الشات القديمة. ملاحظاتك كلها زي ما هي.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "المساحة مليانة. ملاحظاتك محفوظة: امسح حاجة مش محتاجها عشان تفضّي مكان.",
 };

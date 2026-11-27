@@ -124,5 +124,21 @@ ok(leaks === 0, "no question kept as a note is read as a visit (" + leaks + ")")
     console.log(`lasttime seed ${seed}: ${(good / nn * 100).toFixed(2)} %`); ok(good / nn >= 0.99, `the last time… across Money / notes / plans, seed ${seed} ≥ 99 %`); }
 }
 
+// ---- A1 (Ali picked): Mind never deletes your own notes — only Attune's saved answers, oldest first
+{
+  const { pruneMind } = await import("../../web-src/memindex.js");
+  const mk = (i, kind, extra = {}) => ({ id: kind + i, kind, title: kind + " " + i, text: "", ts: now - i * 60e3, ...extra });
+  const barberNote = mk(99999, "note", { text: "that in the barber I go to hany rabee3" });   // the OLDEST record of all
+  let recs = [barberNote, ...Array.from({ length: 200 }, (_, i) => mk(i, "note")), ...Array.from({ length: 3800 }, (_, i) => mk(i + 300, "chat"))];
+  for (let i = 0; i < 500; i++) recs = pruneMind([mk(-i - 1, "chat"), ...recs], 4000).records;   // 500 more chat turns
+  ok(recs.includes(barberNote) && recs.filter((r) => r.kind === "note").length === 201 && recs.length === 4000, "500 more chat turns on a full Mind: every note kept (the oldest one too), only old chat answers cleared");
+  ok(recs.filter((r) => r.kind === "chat").every((r) => r.ts > now - 4300 * 60e3), "…the OLDEST chat answers are the ones cleared");
+  const own = [...Array.from({ length: 4100 }, (_, i) => mk(i, pick4(i)))]; function pick4(i) { return ["note", "todo", "photo", "place"][i % 4]; }
+  const r2 = pruneMind([mk(-1, "note"), ...own], 4000);
+  ok(r2.dropped === 0 && r2.records.length === 4101, "only your own records over the size → nothing is deleted");
+  const pinned = mk(5000, "chat", { pinned: true }), r3 = pruneMind([pinned, ...Array.from({ length: 4000 }, (_, i) => mk(i, "chat"))], 4000);
+  ok(r3.records.includes(pinned) && r3.dropped === 1, "a pinned chat answer is kept like a note");
+}
+
 console.log(fail ? `FAIL ${fail} of ${n}` : `ALL PASSED v1099askmind (${n} checks, 10,000 HARD)`);
 if (fail) process.exit(1);

@@ -15246,4 +15246,6 @@ export const JA = {
   "Connect your phone": "スマホをつなぐ",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "スマホで：設定 → 同期 → Wi-Fi → コードを表示。ここに入力します。",
   "Skip — I'll type on the computer": "スキップ — パソコンで入力する",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Mind がいっぱいでした：古いチャットの回答を {n} 件消去しました。あなたのメモはすべて残っています。",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "ストレージがいっぱいです。メモは残っています：空きを作るため、不要になったものを削除してください。",
 };

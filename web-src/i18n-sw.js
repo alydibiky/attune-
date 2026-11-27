@@ -15247,4 +15247,6 @@ export const SW = {
   "Connect your phone": "Unganisha simu yako",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Kwenye simu: Mipangilio → Sawazisha → Wi-Fi → Onyesha msimbo. Kisha uandike hapa.",
   "Skip — I'll type on the computer": "Ruka — nitaandika kwenye kompyuta",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Akili ilijaa: majibu {n} ya zamani ya gumzo yamefutwa. Maelezo yako yote yamehifadhiwa.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Hifadhi imejaa. Maelezo yako yamehifadhiwa: futa kitu usichokihitaji tena ili kupata nafasi.",
 };

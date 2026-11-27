@@ -15246,4 +15246,6 @@ export const VI = {
   "Connect your phone": "Kết nối điện thoại",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Trên điện thoại: Cài đặt → Đồng bộ → Wi-Fi → Hiện mã. Rồi nhập ở đây.",
   "Skip — I'll type on the computer": "Bỏ qua — tôi sẽ nhập trên máy tính",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Bộ nhớ đã đầy: đã xóa {n} câu trả lời chat cũ. Tất cả ghi chú của bạn vẫn được giữ.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Bộ nhớ đã đầy. Ghi chú của bạn vẫn được giữ: hãy xóa thứ bạn không cần nữa để có chỗ.",
 };

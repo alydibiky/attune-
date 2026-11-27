@@ -15246,4 +15246,6 @@ export const RU = {
   "Connect your phone": "Подключить телефон",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "На телефоне: Настройки → Синхронизация → Wi-Fi → Показать код. Затем введите его здесь.",
   "Skip — I'll type on the computer": "Пропустить — буду вводить на компьютере",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Память была заполнена: удалено старых ответов чата: {n}. Все ваши заметки сохранены.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Хранилище заполнено. Ваши заметки сохранены: удалите что-нибудь ненужное, чтобы освободить место.",
 };

@@ -15247,4 +15247,6 @@ export const TRK = {
   "Connect your phone": "Telefonunu bağla",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Telefonda: Ayarlar → Eşitleme → Wi-Fi → Kod göster. Sonra buraya yaz.",
   "Skip — I'll type on the computer": "Atla — bilgisayarda yazacağım",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Zihin doldu: {n} eski sohbet yanıtı silindi. Kendi notlarının hepsi duruyor.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Depolama dolu. Notların korunuyor: yer açmak için artık ihtiyacın olmayan bir şeyi sil.",
 };

@@ -76,3 +76,18 @@ export function makeMemIndex(memTokens) {
 
   return { memBuildIndex, memIndexUpdate, memSearch };
 }
+
+/* ---- v10.9.9 A1 (Ali picked: "Mind never deletes your own notes"): when Mind is over its size, only what ATTUNE saved by itself
+   (its chat answers, quick answers, web looks) is cleared, oldest first. What YOU saved — notes, to-dos, Money notes, places, photos,
+   files, papers, anything pinned — is never cleared to make room, even if Mind stays over its size. Pure; tests: v1099askmind. */
+export const AUTO_KINDS = new Set(["chat", "ask", "instant", "copilot", "web", "research"]);
+export const isAutoRec = (r) => !!r && AUTO_KINDS.has(r.kind) && !r.pinned && !(r.meta && (r.meta.book || r.meta.kept));
+/** → { records (newest first), dropped } — drops only Attune's own saved answers, oldest first, until `max` is met (or none are left). */
+export function pruneMind(records, max) {
+  if (records.length <= max) return { records, dropped: 0 };
+  const over = records.length - max;
+  const auto = records.filter(isAutoRec).sort((a, b) => (a.ts || 0) - (b.ts || 0)).slice(0, over);
+  if (!auto.length) return { records, dropped: 0 };
+  const gone = new Set(auto);
+  return { records: records.filter((r) => !gone.has(r)).sort((a, b) => (b.ts || 0) - (a.ts || 0)), dropped: auto.length };
+}

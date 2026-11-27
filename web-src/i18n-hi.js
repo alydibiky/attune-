@@ -15247,4 +15247,6 @@ export const HI = {
   "Connect your phone": "अपना फ़ोन जोड़ें",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "फ़ोन पर: सेटिंग्स → सिंक → Wi-Fi → कोड दिखाएँ। फिर यहाँ लिखें।",
   "Skip — I'll type on the computer": "छोड़ें — मैं कंप्यूटर पर लिखूँगा",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "माइंड भर गया था: चैट के {n} पुराने जवाब हटाए गए। आपके सभी नोट्स सुरक्षित हैं।",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "स्टोरेज भर गया है। आपके नोट्स सुरक्षित हैं: जगह बनाने के लिए कुछ ऐसा हटाएँ जिसकी अब ज़रूरत नहीं।",
 };

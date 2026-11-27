@@ -15246,4 +15246,6 @@ export const TH = {
   "Connect your phone": "เชื่อมต่อโทรศัพท์",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "บนโทรศัพท์: การตั้งค่า → ซิงค์ → Wi-Fi → แสดงรหัส แล้วพิมพ์ที่นี่",
   "Skip — I'll type on the computer": "ข้าม — จะพิมพ์บนคอมพิวเตอร์",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Mind เต็มแล้ว: ล้างคำตอบแชทเก่า {n} รายการ โน้ตของคุณยังอยู่ครบ",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "พื้นที่เก็บข้อมูลเต็ม โน้ตของคุณยังอยู่ครบ: ลบสิ่งที่ไม่ต้องการแล้วเพื่อเพิ่มพื้นที่",
 };

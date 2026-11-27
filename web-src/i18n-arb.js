@@ -15238,4 +15238,6 @@ export const ARB = {
   "Connect your phone": "اربط هاتفك",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "على الهاتف: الإعدادات ← المزامنة ← Wi-Fi ← اعرض رمزًا. ثم اكتبه هنا.",
   "Skip — I'll type on the computer": "تخطٍّ — سأكتب على الحاسوب",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "امتلأ «العقل»: حُذف {n} من ردود المحادثة القديمة. ملاحظاتك كلها محفوظة.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "المساحة ممتلئة. ملاحظاتك محفوظة: احذف شيئًا لم تعد تحتاجه لتوفير مساحة.",
 };

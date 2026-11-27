@@ -15246,4 +15246,6 @@ export const BN = {
   "Connect your phone": "আপনার ফোন যুক্ত করুন",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "ফোনে: সেটিংস → সিঙ্ক → Wi-Fi → কোড দেখান। তারপর এখানে লিখুন।",
   "Skip — I'll type on the computer": "এড়িয়ে যান — কম্পিউটারে লিখব",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "মাইন্ড ভরে গিয়েছিল: চ্যাটের {n}টি পুরোনো উত্তর মুছে ফেলা হয়েছে। আপনার সব নোট রাখা আছে।",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "স্টোরেজ ভর্তি। আপনার নোটগুলো রাখা আছে: জায়গা খালি করতে এমন কিছু মুছুন যা আর দরকার নেই।",
 };

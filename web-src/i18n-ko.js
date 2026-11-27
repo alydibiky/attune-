@@ -15246,4 +15246,6 @@ export const KO = {
   "Connect your phone": "휴대폰 연결",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "휴대폰에서: 설정 → 동기화 → Wi-Fi → 코드 표시. 그다음 여기에 입력하세요.",
   "Skip — I'll type on the computer": "건너뛰기 — 컴퓨터에서 입력할게요",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Mind가 가득 찼습니다: 오래된 채팅 답변 {n}개를 지웠습니다. 내 메모는 모두 그대로입니다.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "저장 공간이 가득 찼습니다. 메모는 그대로입니다: 공간을 만들려면 더 이상 필요 없는 것을 삭제하세요.",
 };

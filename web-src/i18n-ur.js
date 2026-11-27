@@ -15247,4 +15247,6 @@ export const UR = {
   "Connect your phone": "اپنا فون جوڑیں",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "فون پر: ترتیبات ← سنک ← Wi-Fi ← کوڈ دکھائیں۔ پھر یہاں لکھیں۔",
   "Skip — I'll type on the computer": "چھوڑیں — میں کمپیوٹر پر لکھوں گا",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "مائنڈ بھر گیا تھا: چیٹ کے {n} پرانے جوابات حذف کیے گئے۔ آپ کے تمام نوٹس محفوظ ہیں۔",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "اسٹوریج بھر گئی ہے۔ آپ کے نوٹس محفوظ ہیں: جگہ بنانے کے لیے کوئی ایسی چیز حذف کریں جس کی اب ضرورت نہیں۔",
 };

@@ -15247,4 +15247,6 @@ export const IDN = {
   "Connect your phone": "Hubungkan ponselmu",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Di ponsel: Pengaturan → Sinkron → Wi-Fi → Tampilkan kode. Lalu ketik di sini.",
   "Skip — I'll type on the computer": "Lewati — saya ketik di komputer",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "Ingatan penuh: {n} jawaban chat lama dihapus. Semua catatanmu tetap tersimpan.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Penyimpanan penuh. Catatanmu tetap tersimpan: hapus sesuatu yang tidak kamu perlukan lagi untuk memberi ruang.",
 };

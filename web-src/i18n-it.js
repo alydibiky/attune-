@@ -15247,4 +15247,6 @@ export const IT = {
   "Connect your phone": "Collega il telefono",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "Sul telefono: Impostazioni → Sincronizza → Wi-Fi → Mostra un codice. Poi scrivilo qui.",
   "Skip — I'll type on the computer": "Salta — scriverò sul computer",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "La Mente era piena: {n} vecchie risposte della chat sono state cancellate. Tutte le tue note sono conservate.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "Lo spazio è pieno. Le tue note sono conservate: elimina qualcosa che non ti serve più per fare spazio.",
 };

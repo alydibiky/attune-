@@ -15246,4 +15246,6 @@ export const FA = {
   "Connect your phone": "گوشی‌تان را وصل کنید",
   "On the phone: Settings → Sync → Wi-Fi → Show a code. Then type it here.": "روی گوشی: تنظیمات ← همگام‌سازی ← Wi-Fi ← نمایش کد. سپس اینجا بنویسید.",
   "Skip — I'll type on the computer": "رد شدن — روی رایانه می‌نویسم",
+  "Mind was full: {n} old chat answers were cleared. Your own notes are all kept.": "ذهن پر شده بود: {n} پاسخ قدیمی گفتگو پاک شد. همه یادداشت‌های شما حفظ شده‌اند.",
+  "Storage is full. Your notes are kept: delete something you no longer need to make room.": "فضای ذخیره‌سازی پر است. یادداشت‌های شما حفظ شده‌اند: برای باز کردن جا چیزی را که دیگر لازم ندارید حذف کنید.",
 };

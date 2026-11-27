@@ -117,7 +117,7 @@ import * as NT from "./noteteach.js";
 import * as AL from "./applinks.js";
 import * as WT from "./webtask.js";
 import * as RELAY from "./relay.js";
-import { makeMemIndex } from "./memindex.js";   // v10.9.9
+import { makeMemIndex, pruneMind } from "./memindex.js";   // v10.9.9
 import * as MEAN from "./meaning.js";
 import { recallDocs as RDOCS, warmRecall } from "./lookback.js";
 import { ProblemReportRow, crashState } from "./crash-ui.jsx";   // v10.8 CR3
@@ -2755,15 +2755,8 @@ function memSnippet(rec, query, max) {
 // ---- pruning -------------------------------------------------------------
 // Storage is finite and failing to write is worse than dropping the oldest
 // thing. Pinned records are never pruned, and the caller is told what went.
-function memPrune(records, max) {
-  const cap = max || MEM_MAX;
-  if (records.length <= cap) return { records, dropped: 0 };
-  const pinned = records.filter((r) => r.pinned);
-  const rest = records.filter((r) => !r.pinned).sort((a, b) => b.ts - a.ts);
-  const keep = rest.slice(0, Math.max(0, cap - pinned.length));
-  return { records: [...pinned, ...keep].sort((a, b) => b.ts - a.ts),
-           dropped: records.length - pinned.length - keep.length };
-}
+// v10.9.9 A1: only Attune's own saved answers are ever cleared to make room — never what you saved (memindex.pruneMind)
+function memPrune(records, max) { return pruneMind(records, max || MEM_MAX); }
 
 /* =========================================================================
    COMMITMENTS — things you said you'd do
@@ -8536,8 +8529,8 @@ export default function App() {
     catch (e) {
       const { records, dropped } = memPrune(memory, Math.floor(memory.length * 0.8));
       try { localStorage.setItem(MEM_KEY, JSON.stringify(records)); setMemory(records);
-            setMemNote(`Storage was full — the ${dropped} oldest items were removed. Pinned items were kept.`); }
-      catch (e2) { setMemNote("Storage is full and could not be trimmed."); }
+            setMemNote(dropped ? ["Mind was full: {n} old chat answers were cleared. Your own notes are all kept.", { n: dropped }] : "Storage is full. Your notes are kept: delete something you no longer need to make room."); }
+      catch (e2) { setMemNote("Storage is full. Your notes are kept: delete something you no longer need to make room."); }
     }
   };
   useEffect(() => {
@@ -8593,7 +8586,7 @@ export default function App() {
     setMemory((m) => {
       if (m.some((x) => x.id === r.id)) return m;           // same input, same answer
       const { records, dropped } = memPrune([r, ...m], MEM_MAX);
-      if (dropped) setMemNote(`${dropped} oldest item${dropped === 1 ? "" : "s"} removed to make room.`);
+      if (dropped) setMemNote(["Mind was full: {n} old chat answers were cleared. Your own notes are all kept.", { n: dropped }]);
       return records;
     });
     return r;
@@ -11081,7 +11074,7 @@ export default function App() {
             note={memNote ? (
               <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-900/50 rounded-xl p-3">
                 <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-100/80 flex-1">{tr(memNote)}</p>
+                <p className="text-xs text-amber-100/80 flex-1">{Array.isArray(memNote) ? tr(memNote[0], memNote[1]) : tr(memNote)}</p>
                 <button onClick={() => setMemNote("")} className="text-amber-400/60 hover:text-amber-300"><X size={14} /></button>
               </div>
             ) : null}
