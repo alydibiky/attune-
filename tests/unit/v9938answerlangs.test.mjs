@@ -4,6 +4,9 @@
 const I = await import("../../web-src/i18n.js"), A = await import("../../web-src/lifeask.js"), M = await import("../../web-src/myledger.js");
 let fail = 0; const ok = (c, m) => { if (!c) { console.log("FAIL " + m); fail++; } };
 const now = Date.parse("2026-11-14T12:00:00");
+// (v10.9.9 A2: "what's due this week?" said 15 things, the first on 2026-01-01 — the Netflix subscription counted as "late" for every month
+//  since January. A subscription charges by itself: now 4 things — Ahmed's October + November instalments and the car's November one
+//  (late), and the car licence on 18 Nov)
 const stores = { life: { items: [
   { id: "a", kind: "installment", person: "Ahmed", dir: "in", amount: 1000, count: 12, total: 12000, every: "month", start: "2026-08-01", currency: "EGP", paid: [0, 1] },
   { id: "b", kind: "debt", person: "Sara", dir: "in", amount: 2500, count: 0, total: 0, every: null, start: "", currency: "EGP", paid: [] },
@@ -11,7 +14,7 @@ const stores = { life: { items: [
   { id: "s", kind: "subscription", title: "Netflix", dir: "out", amount: 200, count: 0, total: 0, every: "month", start: "2026-01-01", currency: "EGP", paid: [] }] },
   radar: { items: [{ id: "r", title: "Car licence", date: "2026-11-18", status: "open" }] }, reminders: [],
   ledger: { currency: "EGP", accounts: [{ id: "c", currency: "EGP", start: 0 }], txns: [{ id: "1", type: "expense", amount: 150, cat: "food", date: "2026-11-14", note: "lunch", account: "c" }, { id: "2", type: "expense", amount: 300, cat: "transport", date: "2026-11-12", note: "uber", account: "c" }] } };
-const Q = [["who owes me money?", /12,500/], ["what do I owe?", /40,500/], ["what's due this week?", /\b15\b.*2026-01-01|2026-01-01.*\b15\b|15.*2026-01-01/], ["what are my subscriptions?", /200/]];
+const Q = [["who owes me money?", /12,500/], ["what do I owe?", /40,500/], ["what's due this week?", /\b4\b.*2026-10-01|2026-10-01.*\b4\b/], ["what are my subscriptions?", /200/]];
 const MQ = [["how much did I spend this month?", /450/], ["how much did I spend today?", /150/], ["how much did I spend in the last 3 days?", /450/], ["how much did I spend on food this month?", /150/]];
 // English left behind = two or more English words from these answers' own sentences
 const EN = /\b(?:owes?|people|person|still|payments?|commitments?|things?|First|subscriptions?|Biggest|spent|entries|entry|month|today|days|in all|already|late)\b/g;
