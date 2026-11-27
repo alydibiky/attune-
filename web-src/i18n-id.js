@@ -15301,4 +15301,6 @@ export const IDN = {
   "passport": "paspor",
   "a word from one of your notes": "satu kata dari salah satu catatanmu",
   "mom": "ibu",
+  "You owe {w} nothing in People & plans.": "Kamu tidak berutang apa pun ke {w} di Orang & rencana.",
+  "You still owe {w} {a}.": "Kamu masih berutang {a} ke {w}.",
 };

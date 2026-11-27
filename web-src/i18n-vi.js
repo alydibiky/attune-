@@ -15300,4 +15300,6 @@ export const VI = {
   "passport": "hộ chiếu",
   "a word from one of your notes": "một từ trong ghi chú của bạn",
   "mom": "mẹ",
+  "You owe {w} nothing in People & plans.": "Bạn không nợ {w} gì trong Người & kế hoạch.",
+  "You still owe {w} {a}.": "Bạn vẫn còn nợ {w} {a}.",
 };

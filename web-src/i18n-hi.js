@@ -15301,4 +15301,6 @@ export const HI = {
   "passport": "पासपोर्ट",
   "a word from one of your notes": "आपके किसी नोट का एक शब्द",
   "mom": "माँ",
+  "You owe {w} nothing in People & plans.": "लोग और योजनाएँ में आप पर {w} का कुछ बकाया नहीं है।",
+  "You still owe {w} {a}.": "आप पर अब भी {w} के {a} बाकी हैं।",
 };

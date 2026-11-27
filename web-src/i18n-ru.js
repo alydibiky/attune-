@@ -15300,4 +15300,6 @@ export const RU = {
   "passport": "паспорт",
   "a word from one of your notes": "слово из одной из ваших заметок",
   "mom": "мама",
+  "You owe {w} nothing in People & plans.": "Вы ничего не должны {w} в разделе «Люди и планы».",
+  "You still owe {w} {a}.": "Вы всё ещё должны {w} {a}.",
 };

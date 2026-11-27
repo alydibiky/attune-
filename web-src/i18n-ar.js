@@ -12522,4 +12522,6 @@ export const AR = {
   "passport": "الباسبور",
   "a word from one of your notes": "كلمة من ملاحظة من ملاحظاتك",
   "mom": "ماما",
+  "You owe {w} nothing in People & plans.": "مش عليك حاجة ل{w} في الناس والالتزامات.",
+  "You still owe {w} {a}.": "لسه عليك ل{w} {a}.",
 };

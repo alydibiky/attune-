@@ -15300,4 +15300,6 @@ export const FA = {
   "passport": "گذرنامه",
   "a word from one of your notes": "کلمه‌ای از یکی از یادداشت‌هایتان",
   "mom": "مامان",
+  "You owe {w} nothing in People & plans.": "در «افراد و برنامه‌ها» به {w} بدهی ندارید.",
+  "You still owe {w} {a}.": "هنوز {a} به {w} بدهکارید.",
 };

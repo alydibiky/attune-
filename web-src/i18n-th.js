@@ -15300,4 +15300,6 @@ export const TH = {
   "passport": "หนังสือเดินทาง",
   "a word from one of your notes": "คำหนึ่งจากโน้ตของคุณ",
   "mom": "แม่",
+  "You owe {w} nothing in People & plans.": "คุณไม่ได้ติดหนี้ {w} ใน คนและแผน",
+  "You still owe {w} {a}.": "คุณยังติดหนี้ {w} อยู่ {a}",
 };

@@ -15300,4 +15300,6 @@ export const JA = {
   "passport": "パスポート",
   "a word from one of your notes": "メモの中の一語",
   "mom": "お母さん",
+  "You owe {w} nothing in People & plans.": "「人と予定」で、{w}への借りはありません。",
+  "You still owe {w} {a}.": "{w}にまだ{a}の借りがあります。",
 };

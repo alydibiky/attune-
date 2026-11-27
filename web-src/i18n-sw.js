@@ -15301,4 +15301,6 @@ export const SW = {
   "passport": "pasipoti",
   "a word from one of your notes": "neno kutoka mojawapo ya kumbukumbu zako",
   "mom": "mama",
+  "You owe {w} nothing in People & plans.": "Huna deni lolote kwa {w} kwenye Watu na mipango.",
+  "You still owe {w} {a}.": "Bado unadaiwa {a} na {w}.",
 };

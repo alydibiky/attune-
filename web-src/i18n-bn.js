@@ -15300,4 +15300,6 @@ export const BN = {
   "passport": "পাসপোর্ট",
   "a word from one of your notes": "আপনার কোনো নোটের একটি শব্দ",
   "mom": "মা",
+  "You owe {w} nothing in People & plans.": "মানুষ ও পরিকল্পনায় {w}-এর কাছে আপনার কোনো দেনা নেই।",
+  "You still owe {w} {a}.": "আপনার এখনও {w}-এর কাছে {a} দেনা আছে।",
 };

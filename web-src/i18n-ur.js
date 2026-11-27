@@ -15301,4 +15301,6 @@ export const UR = {
   "passport": "پاسپورٹ",
   "a word from one of your notes": "آپ کے کسی نوٹ کا ایک لفظ",
   "mom": "امی",
+  "You owe {w} nothing in People & plans.": "لوگ اور منصوبے میں آپ پر {w} کا کچھ واجب نہیں۔",
+  "You still owe {w} {a}.": "آپ پر اب بھی {w} کے {a} باقی ہیں۔",
 };

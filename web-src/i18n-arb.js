@@ -15292,4 +15292,6 @@ export const ARB = {
   "passport": "جواز السفر",
   "a word from one of your notes": "كلمة من إحدى ملاحظاتك",
   "mom": "أمي",
+  "You owe {w} nothing in People & plans.": "لا تدين لـ{w} بشيء في الأشخاص والالتزامات.",
+  "You still owe {w} {a}.": "ما زلت مدينًا لـ{w} بمبلغ {a}.",
 };

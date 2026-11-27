@@ -15300,4 +15300,6 @@ export const DE = {
   "passport": "Reisepass",
   "a word from one of your notes": "ein Wort aus einer deiner Notizen",
   "mom": "Mama",
+  "You owe {w} nothing in People & plans.": "Du schuldest {w} in Personen & Pläne nichts.",
+  "You still owe {w} {a}.": "Du schuldest {w} noch {a}.",
 };

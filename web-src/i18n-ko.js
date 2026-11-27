@@ -15300,4 +15300,6 @@ export const KO = {
   "passport": "여권",
   "a word from one of your notes": "내 메모 속 한 단어",
   "mom": "엄마",
+  "You owe {w} nothing in People & plans.": "사람과 계획에서 {w}에게 갚을 돈이 없어요.",
+  "You still owe {w} {a}.": "{w}에게 아직 {a}을(를) 갚아야 해요.",
 };

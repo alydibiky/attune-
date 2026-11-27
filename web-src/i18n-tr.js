@@ -15301,4 +15301,6 @@ export const TRK = {
   "passport": "pasaport",
   "a word from one of your notes": "notlarından birinden bir kelime",
   "mom": "annem",
+  "You owe {w} nothing in People & plans.": "Kişiler ve planlar'da {w} kişisine borcun yok.",
+  "You still owe {w} {a}.": "{w} kişisine hâlâ {a} borcun var.",
 };

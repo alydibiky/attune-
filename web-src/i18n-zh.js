@@ -15300,4 +15300,6 @@ export const ZH = {
   "passport": "护照",
   "a word from one of your notes": "你某条笔记里的一个词",
   "mom": "妈妈",
+  "You owe {w} nothing in People & plans.": "在“人和计划”中，你不欠{w}任何钱。",
+  "You still owe {w} {a}.": "你还欠{w} {a}。",
 };
