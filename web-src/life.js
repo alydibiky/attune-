@@ -510,7 +510,9 @@ export function removeCommitment(data, id) { return { ...data, items: data.items
 /** What is due soon across everything (for Home's "Today" and reminders): [{ c, i, date, amount, late }] within `days`. */
 export function dueSoon(data, now = Date.now(), days = 7) {
   const today = iso(new Date(now)), until = iso(new Date(now + days * 86400000)), out = [];
-  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && !s.open && !(c.skip || []).includes(s.i) && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
+  // (v10.9.9 A2: a subscription is charged by itself — its past months are never "already late"; only the next charge is due;
+  //  …and an open loan with no due date is never "due")
+  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && !s.open && !(c.skip || []).includes(s.i) && s.date <= until && (c.kind !== "regular" || s.date === today) && !(c.kind === "subscription" && s.date < today) && !(c.kind === "debt" && !c.every && !(c.count > 0) && !c.due)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

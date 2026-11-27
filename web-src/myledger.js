@@ -31,14 +31,14 @@ const WORDNUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, 
 /** Is this a question about the person's own money (not money in general)? → "expense" | "income" | "both" | "" */
 export function myMoneyIntent(q) {
   const t = latin(q).toLowerCase();
-  const mine = /\b(my|i|me|i've|did i|have i)\b/.test(t) || /(مصاريفي|مصروفاتي|صرفت|دفعت|دخلي|قبضت|فلوسي|مصروفي|حساباتي|اتصرف|كسبت|عندي كام|معايا كام|فاضلي|فاضل معايا|ميزانيتي|بصرف|باصرف|بدفع|بادفع)/.test(t) || /^\s*total (?:spent|spending|expenses)\b/.test(t);
+  const mine = /\b(my|i|me|i've|did i|have i)\b/.test(t) || /\bhow much money came in\b|\btotal spending\b|\bspending (?:this|last|in|for|during)\b/.test(t) || /(مصاريفي|مصروفاتي|صرفت|دفعت|دخلي|قبضت|فلوسي|مصروفي|حساباتي|اتصرف|كسبت|عندي كام|معايا كام|فاضلي|فاضل معايا|ميزانيتي|بصرف|باصرف|بدفع|بادفع)/.test(t) || /^\s*total (?:spent|spending|expenses)\b/.test(t);
   if (!mine) return "";
   // v9.0 (Ali: "Remind me on the last day of each month to pay interest for mom" was answered with this month's spending): a
   // reminder, an alarm, a to-do or a payment to make is something to SET, never a question about money already spent
   if ((LEX.action.test(q) && !/[?؟]\s*$/.test(String(q).trim())) || /\b(remind(er)?|alarm|alert me|notify me|schedule|don'?t let me forget|wake me)\b/.test(t) || /(فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني|حطلي تذكير|منبه|متنسانيش)/.test(t)) return "";
   if (/^\s*(please\s+)?(pay|transfer|send)\b/.test(t) || /\b(i need to|i have to|i must|i should|i want to|i'?ll|i will|i'?m going to)\s+pay\b/.test(t) || /(لازم|محتاج|عايز|هدفع|حادفع)\s+(ا|أ)?دفع/.test(t)) return "";
   const exp = /\b(expens\w*|spen[dt]\w*|spending|paid|pay(ments)?|costs?|purchases?|bought|outgoings?)\b|\bhow much (did|have) i (give|given|gave)\b/.test(t) || /(مصاريف|مصروف|صرفت|دفعت|اتصرف|اشتريت|بصرف|باصرف|بدفع|بادفع)/.test(t);
-  const inc = /\b(income|earn\w*|received|got paid|salary|revenue)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);
+  const inc = /\b(income|earn\w*|received|got paid|salary|revenue|came in|money in)\b/.test(t) || /(دخل|قبضت|كسبت|استلمت|مرتب|راتب)/.test(t);
   const bal = /\b(balance|how much (money )?(do )?i have|net|left in my budget|budget left|left (?:this|for the) month)\b/.test(t) || /(رصيد|معايا كام|عندي كام|فاضلي كام|فاضل معايا)/.test(t);
   if (!exp && !inc && !bal) return "";
   // v9.0 (the sentence bank: "I bought a fridge on instalments, 1500 a month" was read as a question): a statement of what was

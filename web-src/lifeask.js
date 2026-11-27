@@ -8,6 +8,7 @@
    Tests: tests/unit/v731lifeask.test.mjs.                                                                                       */
 import { recallRaw, forgetRecallCache } from "./notecache.js";   // v10.6 one fetch shared
 import { myMoneyIntent, catAsked, answerMyMoney, spanOf, spanWords } from "./myledger.js";
+import { egyToEnglish } from "./egyask.js";   // v10.9.9 A2
 import { tr, getLang } from "./i18n.js";
 /** v9.9.38 (Ali: "are all the languages up to date?" — no: answers worked out by code came out in English in 18 languages): an answer
  *  carries its sentence as a template with its numbers ({t, v}); Egyptian Arabic keeps its hand-written sentence, every other language
@@ -29,7 +30,7 @@ const iso = (t) => isoDay(t);
 
 // ---- what kind of question -------------------------------------------------------------------------------------------------------
 const OWED_IN = /\b(owes? me|owe me|owed to me|am i owed|i'?m owed|what i'?m owed|lent|i lent|who owes|money (?:people|others) owe)\b|(?<![\u0621-\u064a])(?:ليا عند|لي عند)|مين عليه|(?:عليه|عليها|عليهم)[^؟?]{0,20}(?:ليا|لي)(?![\u0621-\u064a])|مديون لي|مديونين لي|(?:^|\s)[ء-ي]{2,}(?:\s+[ء-ي]{2,})?\s+(?:عليه|عليها)\s+(?:لسه\s+)?كام|سلفت|سلّفت|اللي ليا|فلوسي عند|\b(?:3aleh|3aleha|3aleih)\s+(?:lessa\s+)?(?:kam|kaam|felos|flos)\b|\bmeen 3aleh\b|\b(?:leya|liya) (?:3and|3nd)\b/i;   // (v10.9.8 Franco: "Ahmed 3aleh kam?")
-const OWED_OUT = /\b(i owe|do i owe|my debts?|installments?|instalments?|i still pay|left to pay)\b|عليا|علي فلوس|ديوني|اقساط|أقساط|القسط|فاضل عليا|باقي عليا|جمعيه|جمعية/i;
+const OWED_OUT = /\b(i owe|do i owe|i still owe|do i still owe|my debts?|installments?|instalments?|i still pay|left to pay)\b|عليا|علي فلوس|ديوني|اقساط|أقساط|القسط|فاضل عليا|باقي عليا|جمعيه|جمعية/i;
 // v10.9.8 (new-user walk-through: "what do I have tomorrow?" went to the model): a day asked about with "have / planned / on"
 const DAY_Q = /\b(tomorrow|today|tonight)\b|بكر[هة]|النهارد[هة]|انهارد[هة]|\bbokra\b|\bel ?naharda\b|\bennaharda\b/i;
 const DAY_HAVE = /\b(do i have|have i got|i have|i got|what'?s on|what is on|anything on|planned|plans?|schedule|agenda|due)\b|عندي|ورايا|ورايه|مواعيد|\b3andi\b|\b3ndi\b|\bwaraya\b/i;
@@ -50,19 +51,19 @@ export function memberAsked(q, members) {
 }
 
 // v6.28 (Ali: "when I ask how much I paid for that, or the history of X, it should understand I'm asking about my data")
-const HISTORY = /\b(history of|everything (?:about|on)|all (?:about|records? (?:of|for))|timeline (?:of|for)|tell me about my)\b|(?:^|\s)(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s/i;
+const HISTORY = /\b(history of|everything (?:about|on)|all (?:about|records? (?:of|for))|timeline (?:of|for)|tell me about my|what do i know about my|what(?:'s| is) my (?=car|bike|flat|apartment|house|laptop|phone)\w+)\b|(?:^|\s)(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s/i;
 const LAST = /\b(when did (?:i|we) last|last time (?:i|we)|when was the last time)\b|(?:امتى|إمتى|امتي)\s+(?:اخر|آخر)\s+(?:مره|مرة)|(?:اخر|آخر)\s+(?:مره|مرة)\s|\b(?:a5er|akher|a5r|a7'?er)\s+(?:mara|marra|mrra|mra)\b/i;
 const PAID_FOR = /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}\b(?:for|on)\b|(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s/i;
 /** The thing a question is about: "how much did I pay for the car service this year?" → "car service". */
 export function termOf(q) {
   let t = latinQ(q).replace(/[\u200e\u200f\u061c]/g, "").replace(/\s+/g, " ").replace(/[?؟!.]+\s*$/, "").trim();   // (v10.9.9: a line break / direction mark inside)
   const pick = [
-    /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}?\b(?:for|on)\s+(.+)$/i, /\b(?:history of|everything (?:about|on)|all about|timeline (?:of|for)|tell me about my)\s+(.+)$/i,
+    /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}?\b(?:for|on)\s+(.+)$/i, /\b(?:history of|everything (?:about|on)|all about|timeline (?:of|for)|tell me about my|what do i know about my|what(?:'s| is) my)\s+(.+)$/i,
     /\b(?:when did (?:i|we) last|last time (?:i|we)|when was the last time (?:i|we))\s+(?:\w+\s+)?(.+)$/i,
     /(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s+(.+)$/, /(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s+(.+)$/,
     /(?:اخر|آخر)\s+(?:مره|مرة)\s+(?:\S+\s+)?(.+)$/, /\b(?:a5er|akher|a5r|a7'?er)\s+(?:mara|marra|mrra|mra)\s+(?:\S+\s+)?(.+)$/i];
   for (const re of pick) { const m = re.exec(t); if (m) { t = m[1]; break; } }
-  return t.replace(/\b(this|last|in|since|over|during|so far)\s+(week|month|year|\d{4}).*$/i, "").replace(/(?:الشهر|السنه|السنة|الاسبوع|الأسبوع|السنادي)\s*(?:ده|دي|اللي فات|الماضي)?.*$/, "")
+  return t.replace(/,?\s*how much\b.*$/i, "").replace(/\s+\b(?:in|for|during)\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b.*$/i, "").replace(/^total (?:i|we) (?:paid|spent) (?:for|on)\s+/i, "").replace(/\s+\b(?:in total|so far|altogether|ever)\b.*$/i, "").replace(/\b(this|last|in|since|over|during|so far)\s+(week|month|year|\d{4}).*$/i, "").replace(/(?:الشهر|السنه|السنة|الاسبوع|الأسبوع|السنادي)\s*(?:ده|دي|اللي فات|الماضي)?.*$/, "")
     .replace(/^(?:the|my|a|an|our)\s+/i, "").replace(/\b(?:did|do|have|has|was|were)\b/gi, " ")
     // v10.9.9 (Ali: «اخر مرة روحت الحلاق امتى» / "When is the last time I went"): the question words and a bare "went" are not the thing
     .replace(/(?:[\s,.!:;)(]|\p{Extended_Pictographic}|\uFE0F|\b(?:thanks|thank you|thx|ok|okay|pls|please)\b|تمام|شكرا|شكراً|لو سمحت)+$/iu, "").replace(/[?؟!]+/g, " ")
@@ -216,15 +217,17 @@ function lastTime(q, s, now, prev) {
 // v9.9.38 (the 1M test: "what are my subscriptions?" went to the AI): the subscriptions you pay, from People & plans and from Money
 const SUBS_Q = /\b(?:my|the|all)\s+(?:monthly\s+)?subscriptions\b|\bwhat (?:am i|do i) (?:subscribed to|pay for every month)\b|\bsubscriptions? (?:do|am) i\b|اشتراكاتي|الاشتراكات (?:اللي|بتاعتي)|انا مشترك في ايه|بدفع اشتراك في ايه/i;
 const SUB_CAT = /^(?:subs|subscriptions?|اشتراكات)$/i;
+// (v10.9.9 A2: "NETFLIX.COM" in Money and "Netflix" in People & plans were two subscriptions — one key per brand)
+const brandKey = (x) => fold(String(x || "")).replace(/\.(?:com|net|eg|io|co)\b/g, " ").replace(/[^\p{L}\p{N} ]+/gu, " ").trim().split(/\s+/)[0] || "";
 function subs(q, s, now) {
   const out = [], seen = new Set(), today = iso(now);
   for (const c of ((s.life && s.life.items) || [])) if (c && c.kind === "subscription" && !c.del && !c.ended) {
-    const k = fold(c.title || c.person || ""); if (seen.has(k)) continue; seen.add(k);
+    const k = brandKey(c.title || c.person || ""); if (seen.has(k)) continue; seen.add(k);
     out.push({ name: c.title || c.person || "?", monthly: c.every === "year" ? c.amount / 12 : c.every === "week" ? c.amount * 52 / 12 : c.amount, cur: c.currency || "", src: "life" }); }
   // Money: what was paid as a subscription in the last two months and is not in People & plans already
   const L = s.ledger || {}, from = iso(now - 62 * DAY);
   for (const t of (L.txns || [])) if (t && t.type === "expense" && t.date >= from && t.date <= today && (SUB_CAT.test(String(t.cat || "")) || /netflix|spotify|shahid|anghami|icloud|youtube premium|chatgpt|disney|osn|starzplay|watch ?it|google one|apple (?:music|one|tv)/i.test(String(t.note || "")))) {
-    const k = fold(t.note || t.cat); if (!k || seen.has(k)) continue; seen.add(k);
+    const k = brandKey(t.note || t.cat); if (!k || seen.has(k)) continue; seen.add(k);
     out.push({ name: t.note || t.cat, monthly: Number(t.amount) || 0, cur: t.currency || "", src: "money" }); }
   if (!out.length) return { kind: "subs", t: "I don't see any subscriptions yet — add one in People & plans (“Netflix 200 a month”) and I'll keep track.", en: "I don't see any subscriptions yet — add one in People & plans (“Netflix 200 a month”) and I'll keep track.", ar: "مش شايف اشتراكات لسه — ضيف واحد في الناس والالتزامات («نتفليكس 200 كل شهر») وأنا أتابعه.", open: "life", sources: ["life", "money"] };
   out.sort((a, b) => b.monthly - a.monthly);
@@ -236,17 +239,31 @@ function subs(q, s, now) {
 }
 // v10.9.8 (the walk-through's HARD run): direction marks a phone adds and doubled spaces never change the question ("owes  me")
 const clean = (q) => String(q || "").replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\u061c]/g, "").replace(/[ \t]+/g, " ").trim()
+  // (v10.9.9 A2: what people put after the question — "(roughly)", "— thanks", "?!", an emoji — is not part of it)
+  .replace(/(?:[\s\n]*(?:[—–-]+\s*)?(?:\((?:roughly|approx\.?|approximately|about|more or less|تقريبا|تقريبًا|ta2reeban)\)|thanks|thank you|thx|pls|please|ok|okay|تمام|شكرا|شكرًا|\p{Extended_Pictographic}|\uFE0F|!+))+\s*$/giu, "")
+  .replace(/([?؟])[?؟!]+\s*$/u, "$1")
+  // (v10.9.9 A2: "btw …", "quick q: …", "hey attune, …" in front — the question is what comes after)
+  .replace(/^(?:(?:hey|hi|ok so|okay so|btw|by the way|quick q|quick question|question|hey attune|attune|ya attune)[\s,:;!—-]+)+/i, "")
   // ("remind me, what do I have today?" / "tell me, …" asks — the comma and the question after it say so; "remind me to …" is untouched)
   // (a numbered question — "2 questions:", "1)", "Q2:", «سؤال ٢:» — is still the question)
   .replace(/^(?:\d+\)|[١-٩]\)|#\d+|q\d+\s*:|\d+\s+questions?\s*:|one more(?:\s*\([\d٠-٩]+\/[\d٠-٩]+\))?\s*:|سؤالين\s*:|سؤال\s*[\d٠-٩]+\s*:|تاني مرة\s*:|so2al\s*:|\d+\s+so2alat\s*:)\s*/iu, "")
   .replace(/(?<![\p{L}])(?:remind me|tell me|fakarny|fakarni|فكرني|قولي)\s*[,،:—\-|.…]+\s*(?:(?:يا [أإا]تيون|معلش|بص|please|ok|sorry)\s*[,،:—\-|.…]*\s*)?(?=(?:what|when|do|does|did|how|anything|who|which|is|are)\b|(?:عندي|ورايا|امت[يى]|كام|ايه|مين)(?![\p{L}]))/iu, "");
+// v10.9.9 A2: questions the readers sent the wrong way (tests/mydata/gen.mjs)
+const TOTAL_Q = /\b(?:in total|so far|altogether|all (?:in all|together)|total (?:i|we) (?:paid|spent)|ever)\b/i;
+const CAT_NAME = /^(?:my |the )?(?:food|eating out|groceries|transport|transportation|bills|shopping|health|fun|coffee|gifts|other)$/i;   // ("rent" is paid to someone — a thing, not only a category)
+const WHEN_IS = /^(?:when(?:'s| is| was| do i have| am i| are) (?:my|the|our)|what time is (?:my|the)|what day is (?:my|the))\b/i;
 export function kindOf(q, stores = {}) {
   const t = clean(q);
+  if (TOP_Q.test(t)) return "money";
+  if (WHEN_IS.test(t.trim()) && !/\b(last|paid|pay|spend|spent)\b/i.test(t)) return "due";
+  const MONTH_SPAN = /\b(?:this|last) (?:week|month|year)\b|\b(?:in|for|during) (?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i;
+  if (TOTAL_Q.test(t) && !MONTH_SPAN.test(t) && (PAID_FOR.test(t) || /\btotal (?:i|we) (?:paid|spent)\b/i.test(t)) && !CAT_NAME.test(termOf(t).replace(TOTAL_Q, "").trim())) return "paid-for";
   // (a paper's expiry is a date question even when the paper is the rent contract — never "money on rent")
   if (/\b(expir\w*|renew\w*)\b|هينتهي|بينتهي|ينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) && DUE.test(t)) return "due";
   if (HISTORY.test(t)) return "history";
   if (LAST.test(t)) return "last";
-  if (PAID_FOR.test(t) && !catAsked(termOf(t))) return "paid-for";
+  // (v10.9.9 A2: "what did I spend in total for November?" — November is WHEN, not what it was paid for)
+  if (PAID_FOR.test(t) && !catAsked(termOf(t)) && !/^(?:(?:in total|total)\s+)?(?:for|in|during)?\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*$|^(?:this|last) (?:week|month|year)$/i.test(termOf(t).trim()) && !/\b(?:spend|spent) in total (?:for|in|during) (?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(t)) return "paid-for";
   if (OWED_IN.test(t)) return "owed-in";
   if (/\b(installments?|instalments?|debts?|loans?)\b|اقساط|أقساط|القسط|ديوني|جمعيه|جمعية/i.test(t) || (OWED_OUT.test(t) && !myMoneyIntent(t))) return "owed-out";
   if (labTestOf(t) && (LAB_Q.test(t) || /\b(my|mum|mom|dad|her|his)\b|بتاع|بتاعت|بتاعي|عندي|ماما|بابا/i.test(t) || /\?|؟/.test(t)) && !SUGAR_NOW.test(t.replace(/hba1c|a1c|السكر التراكمي|التراكمي/gi, ""))) return "lab";
@@ -270,7 +287,8 @@ function owedIn(q, s, now) {
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir === "in");
   let who = items.map((c) => c.person).filter(Boolean).find((p) => fold(q).includes(fold(p)));
   // v10.9.8 (new-user walk-through: «أحمد عليه كام؟» → "أحمد owes you nothing" with "Ahmed" saved): the same name in the other script
-  if (!who) { const qk = new Set(fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 2).map((w) => nKey(w.replace(/^(?:ول|وب|ل|و|ب)(?=[\u0621-\u064a]{3})/, "")))); who = items.map((c) => c.person).filter(Boolean).find((p) => fold(p).split(/\s+/).every((w) => qk.has(nKey(w)))); }
+  // (v10.9.9 A2: «ليلى» lost its «ل» as if it were «ل» = "to" — a name that starts with ل / و / ب is tried whole too: Laila, Walid, Basma)
+  if (!who) { const qk = new Set(fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 2).flatMap((w) => [nKey(w), nKey(w.replace(/^(?:ول|وب|ل|و|ب)(?=[\u0621-\u064a]{3})/, ""))])); who = items.map((c) => c.person).filter(Boolean).find((p) => fold(p).split(/\s+/).every((w) => qk.has(nKey(w)))); }
   // v9.9.38 (the 1M test, part D: "how much does Hany owe me?" answered with EVERYONE's total when Hany owed nothing): a person named in
   // the question who has nothing in People & plans owes nothing — never the others' total
   if (!who) { const m = /\b(?:does|did|is|has)\s+([\p{L}][\p{L}'’-]{1,24})\s+(?:still\s+)?(?:owe|owes|have to pay|need to pay)\b|\bhow much (?:does|do)\s+([\p{L}][\p{L}'’-]{1,24})\s+owe\b/iu.exec(q)
@@ -292,6 +310,17 @@ function owedIn(q, s, now) {
     ar: who ? `لسه على ${who} ليك ${num(total)} ${cur} (استلمت ${list[0].p.paidCount} دفعة لحد دلوقتي).` : np === 1 ? `شخص واحد عليه ليك ${num(total)} ${cur}.` : `${np} أشخاص عليهم ليك ${num(total)} ${cur} في المجموع.`, rows, open: "life", sources: ["life"] };
 }
 function owedOut(q, s, now) {
+  // v10.9.9 A2 ("how much do I owe Sara?" was answered with the total of every commitment, Netflix included): a person named → that person
+  { const ppl = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in" && c.person);
+    const qk = new Set(fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 2).flatMap((w) => [nKey(w), nKey(w.replace(/^(?:ول|وب|ل|و|ب)(?=[\u0621-\u064a]{3})/, ""))]));
+    const who = ppl.map((c) => c.person).find((p) => fold(p).split(/\s+/).every((w) => qk.has(nKey(w))));
+    const named = /\b(?:owe|pay)\s+([\p{L}][\p{L}'’-]{1,24})\b/iu.exec(q), nm = who || (named && !/^(?:anyone|anybody|someone|everyone|them|him|her|the|my|for|back|money|it|this|that)$/i.test(named[1]) ? named[1] : "");
+    if (nm) { const mine = ppl.filter((c) => c.person === who).map((c) => ({ c, p: prog(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
+      const left = mine.reduce((a, x) => a + (x.p.left != null ? x.p.left : +x.c.amount || 0), 0), cur = (mine[0] && mine[0].c.currency) || "";
+      if (!mine.length) return { kind: "owed-out", t: "You owe {w} nothing in People & plans.", v: { w: nm }, en: `You owe ${nm} nothing in People & plans.`, ar: `مش عليك حاجة ل${nm} في الناس والالتزامات.`, open: "life", sources: ["life"] };
+      return { kind: "owed-out", t: "You still owe {w} {a}.", v: { w: who, a: num(left) + " " + cur }, en: `You still owe ${who} ${num(left)} ${cur}.`, ar: `لسه عليك ل${who} ${num(left)} ${cur}.`,
+        refs: mine.map((x) => ({ src: "life", ref: x.c.id, what: x.c.person + " · " + num(x.c.amount) + " " + cur, date: x.c.start || "" })).length ? refsOf(mine.map((x) => ({ src: "life", ref: x.c.id, what: x.c.person + " · " + num(x.c.amount) + " " + cur, date: x.c.start || "" }))) : [],
+        rows: mine.map(({ c, p }) => [c.title || c.person, `${num(p.left != null ? p.left : c.amount)} ${c.currency || cur}`]), open: "life", sources: ["life"] }; } }
   const items = ((s.life && s.life.items) || []).filter((c) => c.dir !== "in").map((c) => ({ c, p: prog(c, now) })).filter((x) => x.p.left == null || x.p.left > 0);
   if (!items.length) return { kind: "owed-out", t: "You have no installments or debts in People & plans.", en: "You have no installments or debts in People & plans.", ar: "مش عليك أقساط أو ديون في الناس والالتزامات.", open: "life", sources: ["life"] };
   const cur = items[0].c.currency || "", left = items.reduce((a, x) => a + (x.p.left || 0), 0);
@@ -369,7 +398,7 @@ function due(q, s, now) {
   // answered by itself, whatever its date
   const STOPW = /^(when|what|which|does|did|do|will|my|the|is|are|expire|expires|expiry|expiring|expired|due|renew|renewal|renews|end|ends|date|next|have|got|anything|planned|plans|tomorrow|today|tonight|this|week|month|year|امتي|إمتى|امتى|ميعاد|معاد|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|بتاع|بتاعي|بتاعتي|عندي|ايه|إيه|بكره|بكرة|النهارده|emta|emte|el|bta3|bta3i|beyentehy|hayentehy|byentehy|3andi|3ndi|eh|bokra|naharda|ennaharda)$/i;
   // (the paper's name in the other language: «جواز السفر» asks about the "Passport" saved in English, "licence" about «رخصة»)
-  const SYN = [["passport", "جواز", "باسبور", "basbor", "gawaz"], ["licence", "license", "رخصه", "رخصة", "rokhsa"], ["visa", "فيزا", "تاشيره", "تأشيرة"], ["insurance", "تامين", "تأمين", "ta2meen"], ["id", "بطاقه", "بطاقة", "beta2a", "national"], ["contract", "عقد"], ["rent", "ايجار", "إيجار", "egar"], ["subscription", "اشتراك", "eshtrak"]].map((g) => g.map(fold));
+  const SYN = [["barber", "haircut", "حلاق", "7ala2"], ["dentist", "اسنان", "asnan"], ["passport", "جواز", "باسبور", "basbor", "gawaz"], ["licence", "license", "رخصه", "رخصة", "rokhsa"], ["visa", "فيزا", "تاشيره", "تأشيرة"], ["insurance", "تامين", "تأمين", "ta2meen"], ["id", "بطاقه", "بطاقة", "beta2a", "national"], ["contract", "عقد"], ["rent", "ايجار", "إيجار", "egar"], ["subscription", "اشتراك", "eshtrak"]].map((g) => g.map(fold));
   const qw0 = fold(q).split(/[^\p{L}\p{N}]+/u).filter((w) => (w.length >= 3 || w === "id") && !STOPW.test(w));
   const qw = [...new Set(qw0.flatMap((w) => [w, ...(SYN.find((g) => g.some((x) => x === w || w === "ال" + x || (x.length >= 4 && w.startsWith(x)))) || [])]))];
   const today0 = iso(now), daysTo = (d) => Math.round((Date.parse(d + "T12:00:00") - Date.parse(today0 + "T12:00:00")) / DAY);
@@ -444,10 +473,12 @@ function search(q, s) {
 /* v8.7 (persona 4, idea 5 — "ask anything over your own life", numbers by code): three questions the readers above got wrong —
    "what did I spend most on this year?" (a ranking), "how much did I spend on uber in September?" (a word in the notes, not its
    whole category), "how much did I give Sara this year?" (People & plans, not only Money). → an answer or null. */
+// v10.9.9 A2: "where did most of my money go?", "what took most of my money?", "my biggest expense?" — a ranking of categories
+const TOP_Q = /\b(?:where did (?:most of |all )?(?:my|the) money go|most of my money|took (?:the )?most of my money|biggest expenses?|top (?:spending|categor\w*)|spent the most on|spend the most on)\b/i;
 function moneyExtra(q, s, now) {
   const t = latinQ(q), ar = /[\u0600-\u06FF]/.test(q), L = s.ledger, cur = (L && L.currency) || "", span = spanOf(q, now);
   const tx = ((L && L.txns) || []).filter((x) => x.type === "expense" && x.date >= span.from && x.date <= span.to);
-  if (/\b(spend|spent|spending)\b.*\b(most|biggest|the most)\b|\b(most|biggest)\b.*\b(spend|spent|spending|expense)/i.test(t) || /(صرفت|بصرف|مصاريفي)\s*(أكتر|اكتر|اكثر|أكثر)|(أكتر|اكتر)\s*حاجة\s*(صرفت|بصرف)/.test(t)) {
+  if (TOP_Q.test(t) || /\b(spend|spent|spending)\b.*\b(most|biggest|the most)\b|\b(most|biggest)\b.*\b(spend|spent|spending|expense)/i.test(t) || /(صرفت|بصرف|مصاريفي)\s*(أكتر|اكتر|اكثر|أكثر)|(أكتر|اكتر)\s*حاجة\s*(صرفت|بصرف)/.test(t)) {
     if (!tx.length) return null;
     const by = {}; for (const x of tx) by[x.cat || "other"] = (by[x.cat || "other"] || 0) + (+x.amount || 0);
     const rows = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = tx.reduce((a, x) => a + (+x.amount || 0), 0);
@@ -458,7 +489,7 @@ function moneyExtra(q, s, now) {
       rows: rows.map(([c, a]) => [ar ? CA[c] || c : c, `${num(a)} ${cur} · ${Math.round((a / tot) * 100)}%`]), open: "money", sources: ["money"] };
   }
   const term = termOf(q).replace(/\b(in|on|for|during)\s+\w+$/i, "").replace(/\s*(?:في|ف)\s+\S+$/, "").trim();
-  if (!term || term.length < 2 || /^(food|groceries|transport|bills|rent|shopping|health|fun|coffee|gifts|other|everything|all|money)$/i.test(term)) return null;
+  if (!term || term.length < 2 || /^(food|groceries|transport|bills|rent|shopping|health|fun|coffee|gifts|other|everything|all|money)$/i.test(term) || /^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*$/i.test(term)) return null;   // (a month is WHEN — v10.9.9)
   const f = fold(term);
   // a person in People & plans: what was lent / paid to them in the span
   const ppl = ((s.life && s.life.items) || []).filter((c) => c.person && fold(c.person).split(/\s+/)[0] === f.split(/\s+/)[0]);
@@ -470,8 +501,11 @@ function moneyExtra(q, s, now) {
       en: `You lent ${who} ${num(lent)} ${cur} ${span.label[0]} (${made.length} time${made.length === 1 ? "" : "s"}) — ${num(left)} still owed.`,
       ar: `سلّفت ${who} ${num(lent)} ${cur} ${span.label[1]} (${made.length === 1 ? "مرة واحدة" : made.length === 2 ? "مرتين" : made.length + " مرات"}) — لسه عليه ${num(left)}.`, open: "life", sources: ["life"] };
   }
-  // a word in the notes ("uber", «البنزين»)
-  const hit = tx.filter((x) => fold(`${x.note || ""} ${x.src || ""}`).includes(f));
+  // a word in the notes ("uber", «البنزين») — "in total" / "so far" is paid-for's, over all time (v10.9.9 A2)
+  if (TOTAL_Q.test(q)) return null;
+  // (v10.9.9 A2: "fuel" counts "benzine 92" too — the same thing's other words)
+  const alts = [f, ...((f.split(/\s+/).length === 1 && groupOf(f.replace(/^ال/, ""))) || [])].filter((x) => x.length >= 3);
+  const hit = tx.filter((x) => { const n = fold(`${x.note || ""} ${x.src || ""}`); return alts.some((a) => n.includes(a)); });
   if (hit.length) { const sum = hit.reduce((a, x) => a + (+x.amount || 0), 0);
     return { kind: "paid-for", t: pl(hit.length, "You spent {a} on “{x}” {p} — 1 payment.", "You spent {a} on “{x}” {p} — {n} payments."), v: { a: num(sum) + " " + cur, x: term, p: spanWords(span), n: hit.length },
       en: `You spent ${num(sum)} ${cur} on “${term}” ${span.label[0]} — ${hit.length} payment${hit.length === 1 ? "" : "s"}.`,
@@ -538,9 +572,11 @@ export const EXAMPLES = [
 ];
 
 // ---- in Chat: only questions about YOUR OWN things ("what is HbA1c?" stays a normal answer; "is my HbA1c better?" is answered here)
-const QUESTION = /\?|؟|^(how|what|who|when|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
+const QUESTION = /\b(?:tell me about|people who|who still|what do i know about)\b|^(?:my (?:income|biggest|spending|expenses?|subscriptions?|debts?)|total (?:i|we) (?:paid|spent)|total spending|last time (?:i|we))\b|\?|؟|^(how|what|who|when|where|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
 const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد|(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|فلوس)|ورايا|ورايه|(?<![\p{L}])(?:روحت|رحت|زرت|حلقت|اتحلقت|كشفت|غسلت)(?![\p{L}])|\b(ro7t|ro7na|7ala2t|3amalt|3mlt|3andi|3ndi|bta3i|bta3y|bta3ty|leya|liya|3alaya|3aleh|3aleha|sraft|dafa3t)\b/iu;   // v10.9.8 «أحمد عليه كام؟» / Franco
-export function chatAsk(q, stores, { now = Date.now(), prev = "" } = {}) {
+export function chatAsk(q, stores, { now = Date.now(), prev = "", _en = false } = {}) {
+  // v10.9.9 A2: an Egyptian / Franco question about your own data is read as the same question in English first
+  if (!_en) { let e = ""; try { e = egyToEnglish(q); } catch (x) {} if (e) { const a = chatAsk(e, stores, { now, prev, _en: true }); if (a) return a; } }
   const t = clean(q);
   if (!t || t.length > 160 || !QUESTION.test(t)) return null;
   // v10.9 (the real phone model run: "what should I eat before the gym" was answered "Nothing spent on Health this month"): a request for
@@ -549,7 +585,10 @@ export function chatAsk(q, stores, { now = Date.now(), prev = "" } = {}) {
   const members = (stores && stores.care && stores.care.members) || [];
   const k = kindOf(t, stores);
   // (v10.9.8: "when does the passport expire?" names no "my" — a paper's expiry is always the person's own)
-  if (!MINE.test(t) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
+  // (v10.9.9 A2: "food this month, how much?", "what's due this week?" name no "my" — a sum over a time span / your week is still yours)
+  const spanMine = (/\bhow much\b|\btotal spending\b/i.test(t)) && /\b(?:this|last|next)\s+(?:week|month|year)\b|\b(?:today|yesterday|so far|in total)\b|\b(?:in|for|during)\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i.test(t) && (k === "money" || k === "paid-for");
+  const weekMine = k === "due" && /\b(?:this|next) week\b|\bcoming up\b|\bdue\b/i.test(t);
+  if (!spanMine && !weekMine && !MINE.test(t) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
   if (k === "search") return null;
   return askLife(t, stores, { now, prev });
 }
