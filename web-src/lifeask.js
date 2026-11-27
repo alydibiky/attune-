@@ -120,19 +120,32 @@ const GROUPS = [
   "carwash wash غسيل",
 ].map((g) => g.split(" ").map((w) => w.replace(/_/g, " ")));
 const COMMON = new Set("about after again also always back been before being best better came come could daily days every first from going good have here just keep last like little long made make many month more most much never next only other over really same some still take than that them then there they thing this time today told very want week well went were what when where which while will with work would year your every usual usually near street".split(" "));
-function groupOf(w) { for (const g of GROUPS) if (g.some((x) => fold(x).replace(/^ال/, "") === w)) return g.map((x) => fold(x).replace(/^ال/, "")); return null; }
+// (v10.9.9 A3: a lookup table made once — it was rebuilt for every word of every note: 25 s on a full phone at each Send)
+let GROUP_MAP = null;
+function groupOf(w) {
+  if (!GROUP_MAP) { GROUP_MAP = new Map(); for (const g of GROUPS) { const f = g.map((x) => fold(x).replace(/^ال/, "")); for (const x of f) if (!GROUP_MAP.has(x)) GROUP_MAP.set(x, f); } }
+  return GROUP_MAP.get(w) || null;
+}
 /** Names your OWN notes give a thing: "the barber I go to is hany rabee3" → "hany rabee3" — a Money entry that says only that counts. */
+const ALIAS_CACHE = new WeakMap();   // memory array → Map(want → names)   (v10.9.9 A3: the same notes are read once per question, not per record kind)
 function aliasesOf(want, s) {
+  const mem = s.memory || [], key = want.join(" ");
+  let byWant = ALIAS_CACHE.get(mem); if (byWant && byWant.has(key)) return byWant.get(key);
   const out = new Set(), via = new Map(), all = new Set(want.flatMap((x) => groupOf(x) || [x])), inWant = (w) => all.has(w);
-  for (const r of s.memory || []) {
-    if (!r || NOT_OWN.has(r.kind) || isAskedText(r.text || r.title)) continue;
-    const w = words([r.title, r.text].join(" ")); if (!want.every((x) => w.some((h) => h === x || (groupOf(x) || []).includes(h)))) continue;
+  // (a quick look first: a note that has none of the words is skipped before it is split into words)
+  const quick = [...all].filter((x) => x.length >= 3);
+  for (const r of mem) {
+    if (!r || NOT_OWN.has(r.kind)) continue;
+    const raw = fold([r.title, r.text].join(" ")); if (!quick.some((x) => raw.includes(x))) continue;
+    if (isAskedText(r.text || r.title)) continue;
+    const w = words([r.title, r.text].join(" ")); if (!want.every((x) => { const g = groupOf(x); return w.some((h) => h === x || (g && g.includes(h))); })) continue;
     for (const a of w) if (/\d/.test(a) && /\p{L}/u.test(a) && a.length >= 4 && !inWant(a)) { out.add(a); if (!via.has(a)) via.set(a, r); }   // a Franco name in one word: "ezaby3"
     for (let i = 0; i + 1 < w.length; i++) { const a = w[i], b = w[i + 1];
       if (inWant(a) || inWant(b) || (COMMON.has(a) && COMMON.has(b))) continue;
       if (/\d/.test(a + b) || !(COMMON.has(a) || COMMON.has(b))) { out.add(a + " " + b); if (!via.has(a + " " + b)) via.set(a + " " + b, r); } }
   }
   const names = [...out].slice(0, 12); names.via = via;   // (v10.9.9 B1: which note gave each name — shown as a chip)
+  if (!byWant) { byWant = new Map(); ALIAS_CACHE.set(mem, byWant); } byWant.set(key, names);
   return names;
 }
 export function recordsAbout(term, s) {
@@ -144,7 +157,9 @@ export function recordsAbout(term, s) {
   const total = want.reduce((a, w) => a + w.length, 0);
   const alts = want.map((w) => groupOf(w) || [w]);
   const aliases = aliasesOf(want, s);
-  const hit = (txt) => { const have = words(txt);
+  // (v10.9.9 A3: a record that holds none of the words — nor the names — is passed over before it is split into words)
+  const needles = [...new Set([...alts.flat(), ...aliases.flatMap((a) => a.split(" "))].map((x) => x.slice(0, 4)).filter((x) => x.length >= 3))];
+  const hit = (txt) => { const ft0 = fold(txt); if (needles.length && !needles.some((x) => ft0.includes(x))) return false; const have = words(txt);
     const got = want.filter((w, i) => alts[i].some((x) => have.some((h) => h === x || (x.length >= 4 && !x.includes(" ") && (h.startsWith(x) || x.startsWith(h) && h.length >= 4))))
       || alts[i].some((x) => x.includes(" ") && fold(txt).includes(x))).reduce((a, w) => a + w.length, 0);
     if (got >= total * 0.6) return true;

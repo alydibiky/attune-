@@ -114,7 +114,14 @@ export function normTag(x) {
   return String(x || "").trim().toLowerCase().replace(/^#/, "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").replace(/\s+/g, " ").slice(0, 24);
 }
 /** Everything a card is tagged with: yours first, then the model's, then the code's. No duplicates. */
+// (v10.9.9 A3: worked out once per record — Mind's search re-tagged all 4,000 records at every key: ~0.6 s a key on a full phone; a
+// changed record is a new object, so its tags are worked out again)
+const TAGS = new WeakMap();
 export function tagsOf(rec) {
+  if (rec && typeof rec === "object") { const c = TAGS.get(rec); if (c) return c; const v = tagsOf0(rec); TAGS.set(rec, v); return v; }
+  return tagsOf0(rec);
+}
+function tagsOf0(rec) {
   const m = (rec && rec.meta) || {};
   const all = [...(m.myTags || []), ...(m.aiTags || []), ...(rec.tags || []).filter((t) => !/^(note|kept|dropped|saved|shared|photo|chat)$/.test(t)), ...codeTags(rec || {})];
   const out = [], seen = new Set();

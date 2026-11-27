@@ -156,7 +156,10 @@ function dayNames() {
   DAYS.sort((a, b) => b[0].length - a[0].length);
   return DAYS;
 }
-export function daysIn(t) { const out = new Set(); let s = t; for (const [n, d] of dayNames()) { const re = NOSPACE.test(n) ? new RegExp(esc(n)) : new RegExp("(?<![\\p{L}\\p{M}])" + esc(n) + "(?![\\p{L}\\p{M}])", "u"); if (re.test(s)) { out.add(d); s = s.replace(re, " "); } } return [...out].sort(); }
+// (v10.9.9 A3: the ~200 weekday patterns of 20 languages are made once — they were made again for every sentence: 0.35 s on a phone)
+let DAY_RES = null;
+const dayRes = () => DAY_RES || (DAY_RES = dayNames().map(([n, d]) => [NOSPACE.test(n) ? new RegExp(esc(n)) : new RegExp("(?<![\\p{L}\\p{M}])" + esc(n) + "(?![\\p{L}\\p{M}])", "u"), d, n]));
+export function daysIn(t) { const out = new Set(); let s = t; for (const [re, d, n] of dayRes()) { if (s.length && !s.includes(n.slice(0, 2))) continue; if (re.test(s)) { out.add(d); s = s.replace(re, " "); } } return [...out].sort(); }
 // v9.9.25: the words must START a word — «جمعرات» (Urdu Thursday) holds «رات» (night) and turned 7 in the morning into 19:00; «شب» in «شنبه»…
 // (Thai / Chinese / Japanese / Korean are written without spaces, so those stay as they are)
 const PM = /(?<![\p{L}\p{M}])(?:pm|p\.m\.|مساء|بالليل|بليل|العصر|المغرب|soir|tarde|noche|abend|nachmittag|sera|pomeriggio|вечер|дня|akşam|aksam|sore|malam|शाम|رات|شام|عصر|شب|সন্ধ্যা|রাত|jioni|usiku|tối|chiều)(?![a-z])|เย็น|ค่ำ|晚上|下午|午後|夜|저녁|오후/u;

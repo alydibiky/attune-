@@ -141,9 +141,13 @@ export function saveSeen(v, st = typeof localStorage !== "undefined" ? localStor
    → the same answer, remembered. */
 let LAST = { k: "", v: [] };
 const fp = (x) => { const a = Array.isArray(x) ? x : (x && (x.txns || x.items || x.pots)) || []; const z = a[a.length - 1]; return a.length + ":" + (z ? String(z.id || z.ts || z.at || "") + String(z.amount || "") + String(z.done || "") : ""); };
+// (v10.9.9 A3: Attune's own saved chat answers changed the key on EVERY question — the whole look ran again each time, ~0.5 s on a full
+// phone; only what the person saved counts now)
+const AUTO = new Set(["chat", "ask", "instant", "copilot", "web", "research"]);
+const fpOwn = (m) => { if (!Array.isArray(m)) return fp(m); let n = 0, t = 0; for (const r of m) if (r && !AUTO.has(r.kind)) { n++; if ((r.ts || 0) > t) t = r.ts || 0; } return n + ":" + t; };
 export function insightsCached(stores = {}, dir = { items: [] }, opts = {}) {
   const now = opts.now || Date.now();
-  const k = [fp(stores.ledger), fp(stores.life), fp(stores.reminders), fp(stores.radar), fp(stores.pots), fp(stores.memory), fp(dir), JSON.stringify(opts.seen || {}).length, opts.notesPending || 0, Math.floor(now / 3600e3)].join("|");
+  const k = [fp(stores.ledger), fp(stores.life), fp(stores.reminders), fp(stores.radar), fp(stores.pots), fpOwn(stores.memory), fp(dir), JSON.stringify(opts.seen || {}).length, opts.notesPending || 0, Math.floor(now / 3600e3)].join("|");
   if (k === LAST.k) return LAST.v;
   const v = insights(stores, dir, opts); LAST = { k, v }; return v;
 }

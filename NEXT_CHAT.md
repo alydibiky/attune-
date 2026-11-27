@@ -1,5 +1,27 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (27 Nov 2026 — v10.9.9 part 3: Ali's picks A1 A2 A3 A4 B1 B5 — https://claude.ai/artifact/EqcSsaHBz1kb7kM9Y9Mwdr)
+> **A1** Mind never deletes your own notes: memindex.pruneMind clears only Attune's own saved answers (chat / ask / instant / copilot / web /
+> research), oldest first; your notes, to-dos, Money notes, photos, places, files, pinned are never cleared for room (20-language notice).
+> **A4** the first word sooner (measured with tests/trials/promptcache.py, the engine's own cache_n / prompt_n): the rules are the SAME for
+> every question (the language line and the photo rule go WITH the question; the photo rule only with a photo), and tapping the box
+> pre-reads the rules + the chat so far (warmChat, 1 token, quiet, never cancelled). Tokens read before the first word (test model):
+> 1st question 1,840 → 109, 2nd 1,030 → 365.
+> **B1** (OK-B1) chips under every "From your own data" answer + the "From your Mind" line: lifeask refsOf (each record keeps its ref; a
+> Money entry linked by a name in a note brings that note as a chip), personal.mindAnswer refs; srcchips-ui.jsx opens THE thing through
+> personpage.openOriginal (+ "attune-open-item" so kept pages read it; Money remembers the asked payment 5 s across a rebuild).
+> **B5** (OK-B5) Settings › Test every page (testpages.js + testpages-ui.jsx): Home · Chat · Money · Mind, then every Tools page; 12 own
+> steps + a general one; the person's own words where there are some; ✓ / ✗ (note + screenshot) / Skip; kept across restarts; the phone
+> hides it to a "Back to the test" pill, the computer keeps it at the side; Share the list = one .html report (text + screenshots).
+> **A3** lag on a FULL phone at phone speed (tests/trials/lag.py: 4,000 Mind, 3,000 Money, 200 chats, CPU 4×): Send → question on the
+> screen 25,425 ms → 250 ms (the barber fix's groupOf folded the whole word list for every word of every note — 5 s at full speed; now a
+> table made once + aliases cached + a quick look before splitting; lifeedit groupOf the same; rules.daysIn made ~200 RegExps per
+> sentence → once; insightsCached's key changed with every chat answer → only your own records count; brainFacts cached + prepared in
+> idle; the question is drawn before it is read); the reading after it 25 s → ~1 s; Mind first open 445 → 276, Mind search a key 439 →
+> 174 (tagsOf per record once), Follow-ups first open 1,107 → 591 (one number formatter). Not done yet: the ~1 s reading after Send,
+> first opens still ~250–600 ms; tests/trials/lag.py at 1366 does not start (the start page) — fix the script.
+> **A2** (30 everyday "my data" questions, 10,000 HARD) — see below / next.
+
 > ## START HERE (26 Nov 2026 — v10.9.9: Ali's barber screenshots + "still glitchy and slow")
 > Ali's two screenshots: (1) Chat answered "Your barber is Hany Rabee3" under "From your Mind: … · Tell me about my barber · Who won the
 > last champions league final" — his own PAST QUESTIONS (every chat turn is kept in Mind as kind "chat") were read back as notes; and the

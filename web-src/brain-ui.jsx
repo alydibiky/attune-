@@ -25,7 +25,21 @@ export function brainStores(now = Date.now()) {
   return { ledger, life: j("attune:life:v1", { items: [] }), radar: j("attune:radar:v1", { items: [] }), notes, minds: j("attune:notifmind:v1", {}),
     agents: j("attune:agents:v1", { agents: [] }), bills: (() => { try { return billsOf(ledger, now); } catch (e) { return []; } })(), noticed, lang: getLang() };
 }
-export function brainFacts(now = Date.now()) { try { return F.facts(brainStores(now), loadMem(), { now, progress: progressOf }); } catch (e) { return []; } }
+// (v10.9.9 A3: asked with every Chat question — read again only when Money, People & plans, Dates, the brain's own memory or the minute
+// change: it parsed every store each time, ~0.5 s on a full phone)
+let FACTS = { k: "", v: [] };
+const rawLen = (k) => { try { const v = localStorage.getItem(k); return v ? v.length + ":" + v.slice(-24) : "0"; } catch (e) { return "0"; } };
+export function brainFacts(now = Date.now()) {
+  const k = ["ledger.v3", "attune:life:v1", "attune:radar:v1", "attune:notifmind:v1", "attune:agents:v1", F.BRAIN_KEY].map(rawLen).join("|") + "|" + Math.floor(now / 600000) + "|" + getLang();
+  if (k === FACTS.k) return FACTS.v;
+  try { const v = F.facts(brainStores(now), loadMem(), { now, progress: progressOf }); FACTS = { k, v }; return v; } catch (e) { return []; } }
+// …and made ready quietly while nothing else runs: a few seconds after Attune opens, and when it comes back to the screen — so the first
+// question after that doesn't wait for it
+if (typeof window !== "undefined") {
+  const idle = (f) => (window.requestIdleCallback ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 200));
+  const warm = () => setTimeout(() => idle(() => { try { brainFacts(); } catch (e) {} }), 4500);
+  try { warm(); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") warm(); }); } catch (e) {}
+}
 /** One fact as a line in the person's language. */
 export const factText = (f) => (f.text ? f.text : tr(f.T[0], f.T[1]));
 /** The lines that go with a question to the AI (Pro): the facts whose words meet the question's, else the 4 strongest. */

@@ -50,7 +50,9 @@ export function moneyOverview(L, now = Date.now()) {
 }
 
 /** 48250 → "48,250"; -350.5 → "−350.5" (a real minus sign). */
+// (v10.9.9 A3: one number formatter, made once — toLocaleString with options builds a new one at every call: Follow-ups spent ~0.3 s on it)
+let NF = null;
 export function fmt(n, { sign = false } = {}) {
-  const v = Math.round((Number(n) || 0) * 100) / 100, s = Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const v = Math.round((Number(n) || 0) * 100) / 100, s = (NF || (NF = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }))).format(Math.abs(v));
   return (v < 0 ? "−" : sign && v > 0 ? "+" : "") + s;
 }

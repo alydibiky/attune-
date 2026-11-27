@@ -570,6 +570,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const taRef = useRef(null);
   const stickRef = useRef(true);
   const [typing, setTyping] = useState(false);
+  const [pendingQ, setPendingQ] = useState(null);   // v10.9.9 A3: the question shown at once, until the chat has it
   useEffect(() => () => document.documentElement.classList.remove("att-typing"), []);
   // The space under the last answer follows the composer's REAL height (a
   // photo or file chip makes it taller) so its buttons and follow-up chips
@@ -595,6 +596,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, [busy]);
   useEffect(() => { setQueued([]); }, [activeId]);
   const messages = chat ? chat.messages : [];
+  // (the waiting question goes as soon as the chat has it — or after 15 s if nothing was asked after all)
+  useEffect(() => { setPendingQ(null); }, [messages.length, activeId]);
+  useEffect(() => { if (!pendingQ) return; const t = setTimeout(() => setPendingQ(null), 15000); return () => clearTimeout(t); }, [pendingQ]);
   // v5.14: the assistant (like a Gem) and/or project this chat belongs to. A
   // new chat started from Assistants/Projects waits in `pending` until its
   // first message creates it.
@@ -841,6 +845,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
     if (busy) stop();
+    // v10.9.9 A3 (measured on a full phone at phone speed: 2 s between Send and the question on the screen, 25 s before the fix to
+    // lifeask): the question is drawn first, then read
+    if (said && !o.queuedDuring && typeof requestAnimationFrame === "function") {
+      setPendingQ(said); setText("");
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+    }
 
     // v9.8 (Ali: "translating document did not work"): a document attached + "translate" → the File Converter translates the whole
     // file and keeps its layout (a chat answer saw only the first pages, or said it can't open files)
@@ -2798,6 +2808,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
           </div>
         ))}
+        {/* v10.9.9 A3: the question is on the screen the moment Send is tapped — before Attune reads it (on a full phone that took 2 s) */}
+        {pendingQ ? <div className="att-msg flex flex-col items-end" data-testid="chat-pending-q">
+          <div dir="auto" className="max-w-[85%] bg-[var(--c-soft)] text-[var(--c-ink)] rounded-[20px] rounded-ee-[12px] px-4 py-3 text-[15px] whitespace-pre-wrap leading-relaxed">{pendingQ}</div></div> : null}
 
         {/* next step, one tap */}
         {queued.length ? (

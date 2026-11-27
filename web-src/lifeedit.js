@@ -26,7 +26,9 @@ const SAME = [
   ["electricity", "كهربا", "الكهربا", "الكهرباء"],
   ["rent", "ايجار", "الايجار"],
 ];
-const groupOf = (word) => SAME.findIndex((g) => g.some((x) => fold(x) === word));
+// (v10.9.9 A3: a table made once — every word of every saved item folded the whole list again: ~0.16 s per sentence on a full phone)
+let SAME_MAP = null;
+const groupOf = (word) => { if (!SAME_MAP) { SAME_MAP = new Map(); SAME.forEach((g, k) => g.forEach((x) => { const f = fold(x); if (!SAME_MAP.has(f)) SAME_MAP.set(f, k); })); } return SAME_MAP.has(word) ? SAME_MAP.get(word) : -1; };
 const wordsOf = (s) => fold(s).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3 && !/^(the|and|bill|pay|every|monthly|weekly|regular|من|في|كل)$/.test(w));
 
 /** Which items does the sentence name? (title or person; a word of 3+ letters, or the same thing in another language) */
