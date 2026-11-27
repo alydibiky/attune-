@@ -110,3 +110,6 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   Mind / behind a filter, "linked by your note", test every page) — https://claude.ai/artifact/EqcSsaHBz1kb7kM9Y9Mwdr
 - 27 Nov 2026: Ali picked **A1 A2 A3 A4 B1 B5** → A1 built (memindex.pruneMind); combined B1 + B5 with "what I understood" —
   docs/mockups/b1-b5-combined.html → https://claude.ai/artifact/5wPk56GJhPRuoq4CWSTHKq (waiting for OK-B1 / OK-B5)
+- 27 Nov 2026: Ali said **OK-B1 + OK-B5** → built in v10.9.9: source chips (srcchips-ui.jsx, tests/e2e_v1099b1.py) and Settings › Test every page
+  (testpages.js + testpages-ui.jsx, tests/e2e_v1099b5.py), both phone + computer, 20 languages. One difference from the mock-up: the
+  Tools list has ~35 pages today (not 23) — 12 have their own step, the rest one general step with the page's name.

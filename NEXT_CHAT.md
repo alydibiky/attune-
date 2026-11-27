@@ -20,7 +20,19 @@
 > idle; the question is drawn before it is read); the reading after it 25 s → ~1 s; Mind first open 445 → 276, Mind search a key 439 →
 > 174 (tagsOf per record once), Follow-ups first open 1,107 → 591 (one number formatter). Not done yet: the ~1 s reading after Send,
 > first opens still ~250–600 ms; tests/trials/lag.py at 1366 does not start (the start page) — fix the script.
-> **A2** (30 everyday "my data" questions, 10,000 HARD) — see below / next.
+> **A2** every everyday "my data" question tested like the barber: tests/mydata/gen.mjs (NEW) — 10,000 HARD composed people (a month of
+> Money in shops + categories, older months, a salary, who owes whom, subscriptions, papers, reminders, a car note, a past question in
+> Mind) × 18 kinds of question (cat-month, shop-month, last-paid, total-ever, top-cat, subs, owed-in, owed-out, who-owes, expiry,
+> tomorrow, week, appointment, earned, spent-month, about, spent-day, cat-lastmonth) in English / Egyptian / Franco, checked for the right
+> number / date / name: 49.0 % at first → 100 %; held-out seeds 4 and 5 (never looked at) 100 %; 100 % different cases, 20 % different
+> question shapes (the question alone — honest: the frames repeat, the people and their data never do). Real bugs fixed: "where did most of
+> my money go?" answered with due dates; "when is my dentist appointment?" with Health spending; "how much do I owe Sara?" with every
+> commitment (now that person, 2 new lines in 20 languages); NETFLIX.COM + Netflix = 2 subscriptions; a monthly subscription "already late"
+> since the month it started, an open loan "due" forever (life.dueSoon); «ليلى» lost its «ل» (any name starting ل / و / ب); "fuel" missed
+> "benzine 92" (the barber groups now in Money's word sums); "in total / so far" said "this month"; "for November" read as a shop; "(roughly)",
+> "— thanks", "?!", "btw", "quick q:" around a question. NEW egyask.js: Egyptian / Franco "my data" questions → the English frame the
+> readers know (the thing mapped, a name kept). Three generator mistakes said and fixed (one spelling per shop; a Netflix charge in Money is
+> a subscription too; an expired paper IS late). Unit: tests/unit/v1099mydata.test.mjs (the probe's wrong answers + a 2,500 sample).
 
 > ## START HERE (26 Nov 2026 — v10.9.9: Ali's barber screenshots + "still glitchy and slow")
 > Ali's two screenshots: (1) Chat answered "Your barber is Hany Rabee3" under "From your Mind: … · Tell me about my barber · Who won the
