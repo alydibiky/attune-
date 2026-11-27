@@ -118,6 +118,7 @@ import * as AL from "./applinks.js";
 import * as WT from "./webtask.js";
 import * as RELAY from "./relay.js";
 import { makeMemIndex, pruneMind } from "./memindex.js";   // v10.9.9
+import { TestPages } from "./testpages-ui.jsx";   // v10.9.9 B5
 import * as MEAN from "./meaning.js";
 import { recallDocs as RDOCS, warmRecall } from "./lookback.js";
 import { ProblemReportRow, crashState } from "./crash-ui.jsx";   // v10.8 CR3
@@ -193,7 +194,7 @@ function boughtFromLists(text) {
 }
 import { parseProjectTask, addTasks, loadProjects as loadProjectsList, upsertProject as upsertProjectRec } from "./spaces.js";
 import { addShared as addSharedToProject } from "./projlinks.js";   // v10.1 P4
-import { ListChecks, KeyRound } from "lucide-react";
+import { ListChecks, KeyRound, FlaskConical } from "lucide-react";
 import { WritingStudio } from "./writing-ui.jsx";   // v10.7 OK-WR
 import { VoiceScreen, voiceTag } from "./voice-ui.jsx";
 import { brainSystem, knownFor, routeTask } from "./brain.js";
@@ -1755,7 +1756,7 @@ const LocalEngine = {
       try {
         const pr = nativeCall("chat", body);
         const id = nativeLastId();
-        if (o.background) LocalEngine._bg.add(id); else LocalEngine._nativeId = id;
+        if (o.warm) { /* v10.9.9 A4: a pre-read of the rules is never cancelled by the question that needs it */ } else if (o.background) LocalEngine._bg.add(id); else LocalEngine._nativeId = id;
         let looped = null, sinceCheck = 0;
         if (NATIVE_CALLS[id]) NATIVE_CALLS[id].onDelta = (c, r) => {
           if (looped) return;
@@ -1793,7 +1794,7 @@ const LocalEngine = {
           }
           if (!looped) throw e; res = { content: text, reasoning: thinking };
         }
-        LAST_STATS = statsFrom(res, Date.now() - t0n);
+        if (!o.warm) LAST_STATS = statsFrom(res, Date.now() - t0n);
         // Stopped by the length limit, not because it was done: say so, so
         // the screen can offer "Continue".
         if (!strict && LAST_STATS.tokens && LAST_STATS.tokens >= body.max_tokens - 3) LAST_STATS.cut = true;
@@ -1830,7 +1831,7 @@ const LocalEngine = {
     }
 
     const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
-    LocalEngine._abort = ctl;
+    if (!o.warm) LocalEngine._abort = ctl;
     const t0 = Date.now();
     try {
       const r = await fetch(base + "/v1/chat/completions", {
@@ -1843,7 +1844,7 @@ const LocalEngine = {
       }
       if (!wantTokens || !r.body || !r.body.getReader) {
         const j = await r.json();
-        LAST_STATS = statsFrom(j, Date.now() - t0);
+        if (!o.warm) LAST_STATS = statsFrom(j, Date.now() - t0);
         return ((j.choices || [])[0] || {}).message?.content || null;
       }
       // Server-sent events: data: {choices:[{delta:{content, reasoning_content}}]}
@@ -1977,6 +1978,14 @@ async function runBench() {
   return { ...LAST_STATS };
 }
 
+/* v10.9.9 A4 (Ali picked: "the first word comes sooner"): the engine keeps the start of the last prompt; the chat's rules are ~550
+   tokens the phone must read before the first word. Chat asks for a 1-token "pre-read" of the same rules + the chat so far the moment
+   the box is tapped, so they are already read when the question is sent. Quiet: no stats, no Stop, never cancelled by the question. */
+async function warmChat(messages) {
+  if (NATIVE) { const e = nativeJSON("engine") || {}; if (e.state !== "ready") return false; }   // (only a model already awake — never loads one)
+  else if (!LocalEngine.ready) return false;
+  try { await LocalEngine.run("", null, { messages, maxTokens: 1, think: false, background: true, warm: true, temperature: 0 }); return true; } catch (e) { return false; }
+}
 async function callChat(messages, image, meta) {
   if (!LocalEngine.ready && !NATIVE) throw new Error("No model loaded — open Engine and load one");
   if (NATIVE) await LocalEngine.waitReady(meta && meta.onStatus);
@@ -6539,7 +6548,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
   };
   // v10.9.3: "✎ Change" on Read from your messages opens that payment's sheet here
   const openLedgerRef = React.useRef(null);
-  React.useEffect(() => { const go = (id) => { if (id && openLedgerRef.current) { window.__attuneMoneyTx = null; openLedgerRef.current("tx:" + id); } };
+  // (v10.9.9 B1: Money can be built again a moment after it comes back on screen (a kept page whose data changed) — the payment asked
+  // for is remembered for 5 s, so the new Money opens it too, and forgotten once its sheet is closed)
+  React.useEffect(() => { const go = (id) => { if (id && openLedgerRef.current) { window.__attuneMoneyTx = null; window.__attuneMoneyWant = { id, t: Date.now() }; openLedgerRef.current("tx:" + id); } };
+    const want = window.__attuneMoneyWant; if (want && Date.now() - want.t < 5000 && !window.__attuneMoneyTx) go(want.id);
     go(window.__attuneMoneyTx); const on = (e) => go(e && e.detail && e.detail.id); window.addEventListener("attune-money-tx", on); return () => window.removeEventListener("attune-money-tx", on); }, []);
   const openLedger = (sc) => {
     setMoreOpen(false); setAddOpen(false); const s = String(sc || "home");
@@ -6668,7 +6680,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, trialPro = false,
       {/* Yusr: always loaded (hidden until the ledger is open), so the bridge, the box and the Zakāt figures work everywhere */}
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={ledgerOn ? { border: 0 } : { border: 0, display: "none" }} data-testid="money-yusr" />
       {addOpen ? <AddSheet L={ledgerNow} prefill={addPrefill} onSave={(t) => { setAddPrefill(null); addFromSheet(t); }} onDebt={() => openLedger("debt")} onClose={() => { setAddOpen(false); setAddPrefill(null); }} /> : null}
-      {msheet ? (() => { const close = (msg) => { setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
+      {msheet ? (() => { const close = (msg) => { window.__attuneMoneyWant = null; setMsheet(null); if (msg) flash(msg); setTimeout(() => setVer((x) => x + 1), 200); }; const P = { L: ledgerNow, run: runDo, onClose: close, id: msheet.id };
         return msheet.k === "account" ? <AccountSheet {...P} /> : msheet.k === "bill" ? <BillSheet {...P} /> : msheet.k === "tx" ? <TxSheet {...P} /> : msheet.k === "debt" ? <DebtSheet {...P} />
           : msheet.k === "zakat-pay" ? <ZakatPaySheet {...P} /> : msheet.k === "zakat-set" ? <ZakatSetSheet {...P} /> : msheet.k === "zakat-rulings" ? <ZakatRulingsSheet {...P} /> : msheet.k === "zakat-calc" ? <ZakatCalcSheet {...P} kind={msheet.id} nisab={(() => { try { const zs = zakatPage(ledgerNow, snapRef.current || snapshot); return (zs && zs.status && zs.status.nisab) || 0; } catch (e) { return 0; } })()} /> : null; })() : null}
       {moreOpen ? <MoreSheet open={(sc) => { if (sc === "automations") { setMoreOpen(false); if (goTo) goTo("automations"); return; } if (sc === "split" || sc === "salary") { setMoreOpen(false); if (goTo) goTo(sc); return; } if (sc === "share") { setMoreOpen(false); setShareOpen(true); return; }  openLedger(sc); }} onClose={() => setMoreOpen(false)} /> : null}
@@ -8150,6 +8162,7 @@ export default function App() {
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
   // v6.24: a computer-sized screen gets a sidebar like Claude / ChatGPT instead of the bottom bar
   const wide = useDesktopWide();
+  const [testOpen, setTestOpen] = useState(false);   // v10.9.9 B5: Settings › Test every page
   const side = useSide(wide);
   // the computer's own pages don't exist on a phone-sized window: going narrow returns to Chat
   // v6.27: Home exists on a phone too now — only the computer Tools page falls back to Chat on a narrow window
@@ -9963,6 +9976,7 @@ export default function App() {
   // Everything the Chat screen needs from the rest of the app.
   const chatApi = {
     run: callChat,
+    warm: warmChat,   // v10.9.9 A4
     cmdLocal: (t) => (cmdLocalRef.current ? cmdLocalRef.current(t) : null),          // v6.48 (Chat runs the app)
     // v9.0 (the sentence bank: "lunch 150" in Chat went to the AI): what the Home box does, Chat does too — money in a few words,
     // food eaten, water, weight, a dose, a debt paid back. Reminders, plans with people and dates keep Chat's own cards.
@@ -11953,12 +11967,17 @@ export default function App() {
       </nav>
       {/* v6.28: the windows and sheets have their own guard — an error in one of them no longer blanks the whole app */}
       <Guard name="windows">
+      {testOpen ? <TestPages open={testOpen} onClose={() => setTestOpen(false)} wide={wide} version={PAGE_VERSION} navTo={navTo} native={NATIVE} nativeCall={nativeCall} flash={flash}
+        pages={groupsShown.flatMap(([, ids]) => ids).filter((id, i, a) => a.indexOf(id) === i).map((id) => { const t = MORE_TOOLS.find((x) => x[0] === id); return [id, t ? t[1] : (MODE_TITLES[id] || id)]; })}
+        stores={loadLifeStores()} /> : null}
       {moreOpen && wide ? (
         // v6.27 (Ali: "why does settings have this"): on a computer Settings is a settings window — the tools are in the sidebar
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-6" onClick={() => setMoreOpen(false)} data-testid="desk-settings-bg">
           <div className="calm att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-[20px] bg-[var(--c-surf)]! text-[var(--c-ink)] border border-[var(--c-ln)] p-6 space-y-6 shadow-[0_16px_48px_rgba(0,0,0,0.35)]" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
             <div className="flex items-center justify-between"><h2 className="text-[22px] font-black tracking-tight text-[var(--c-ink)] flex items-center gap-2.5 m-0"><span className="w-9 h-9 rounded-[12px] grid place-items-center bg-[var(--c-soft)] text-[var(--c-acc)]"><LayoutGrid size={18} /></span>{tr("Settings")}</h2>
               <button onClick={() => setMoreOpen(false)} className="w-11 h-11 grid place-items-center rounded-[12px] text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)] transition-colors duration-150" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
+            <button onClick={() => { setMoreOpen(false); setTestOpen(true); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="settings-test-pages">
+              <FlaskConical size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("Test every page")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("One thing to try on each page — then share the list")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
             <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 py-3 text-start hover:border-[var(--c-acc)] transition-colors duration-150" data-testid="desk-guide">
               <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14.5px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12.5px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
             <button onClick={() => { setMoreOpen(false); navTo("setup"); }} data-testid="more-setup" className="w-full min-h-[52px] flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 text-start">
@@ -12002,6 +12021,8 @@ export default function App() {
               {LEGACY_NAV ? <>
               <button onClick={() => { setMoreOpen(false); navTo("setup"); }} className="w-full min-h-[56px] mb-2 flex items-center gap-3 rounded-[20px] border border-[var(--c-acc)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-setup">
                 <Sparkles size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Set up your life")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Attune sets up your money, papers, people and week with you")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
+              <button onClick={() => { setMoreOpen(false); setTestOpen(true); }} className="w-full min-h-[56px] mb-2 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-3.5 py-2.5 text-start" data-testid="settings-test-pages">
+                <FlaskConical size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Test every page")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("One thing to try on each page — then share the list")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full min-h-[56px] mb-4 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-3.5 py-2.5 text-start" data-testid="more-guide">
                 <BookOpen size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("How to use Attune")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-[var(--c-acc)] text-lg rtl:-scale-x-100">›</span></button>
               {groupsHere.map(([title, ids], gi) => (
@@ -12023,6 +12044,8 @@ export default function App() {
               {/* v9.9.39 SB-4 (Ali picked it): the sidebar's setup strip goes once setup is done — Settings keeps the way in */}
               <button onClick={() => { setMoreOpen(false); navTo("setup"); }} data-testid="more-setup" className="w-full min-h-[52px] mb-3 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-soft)] px-4 text-start">
                 <Sparkles size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1 text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Set up your life")}</span><span aria-hidden="true" className="rtl:-scale-x-100 text-[var(--c-mut)]">›</span></button>
+              <button onClick={() => { setMoreOpen(false); setTestOpen(true); }} data-testid="settings-test-pages" className="w-full min-h-[52px] mb-3 flex items-center gap-3 rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)] px-4 text-start">
+                <FlaskConical size={18} className="text-[var(--c-acc)] shrink-0" /><span className="flex-1"><span className="block text-[14px] font-extrabold text-[var(--c-ink)]">{tr("Test every page")}</span><span className="block text-[12px] text-[var(--c-mut)]">{tr("One thing to try on each page — then share the list")}</span></span><span aria-hidden="true" className="rtl:-scale-x-100 text-[var(--c-mut)]">›</span></button>
               </>}
               <p className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] mt-4 mb-2 px-0.5">{tr("Settings")}</p>
               <div className="grid grid-cols-3 gap-2" data-testid="more-settings">

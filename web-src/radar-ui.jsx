@@ -172,8 +172,9 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const [busy, setBusy] = useState("");
   const [q, setQ] = useState("");
   // v9.9.23 N1: a person's page opened one of their dates → its form opens on it
-  useEffect(() => { try { const id = localStorage.getItem("attune:radar:open"); if (!id) return; localStorage.removeItem("attune:radar:open");
-    const it = D.loadRadar().items.find((y) => String(y.id) === id); if (it) { setEdit(it); setMode("form"); } } catch (e) {} }, []);
+  useEffect(() => { const go = () => { try { const id = localStorage.getItem("attune:radar:open"); if (!id) return; localStorage.removeItem("attune:radar:open");
+    const it = D.loadRadar().items.find((y) => String(y.id) === id); if (it) { setEdit(it); setMode("form"); } } catch (e) {} };
+    go(); window.addEventListener("attune-open-item", go); return () => window.removeEventListener("attune-open-item", go); }, []);   // (v10.9.9 B1: kept pages too)
   const fileRef = useRef(null);
   const [sugg, setSugg] = useState([]);
   const [access, setAccess] = useState(() => { try { return !!(N && N.payAccess && N.payAccess()); } catch (e) { return false; } });

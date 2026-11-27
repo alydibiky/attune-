@@ -199,8 +199,10 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const [car, setCar] = useState(() => loadCar());
   const putGold = (d) => setGold(saveGold(d)), putCar = (d) => setCar(saveCar(d));
   // v9.9.23 N1: a person's page opened one of their follow-ups → their history opens (where it is listed) and it lights up
-  React.useEffect(() => { try { const id = localStorage.getItem("attune:life:open"); if (!id) return; localStorage.removeItem("attune:life:open");
-    const c = (loadLife().items || []).find((x) => String(x.id) === id); if (c && c.person) setWho(c.person); } catch (e) {} }, []);
+  // (v10.9.9 B1: also while the page is kept built — "attune-open-item" says a new item is waiting)
+  React.useEffect(() => { const go = () => { try { const id = localStorage.getItem("attune:life:open"); if (!id) return; localStorage.removeItem("attune:life:open");
+    const c = (loadLife().items || []).find((x) => String(x.id) === id); if (c && c.person) setWho(c.person); } catch (e) {} };
+    go(); window.addEventListener("attune-open-item", go); return () => window.removeEventListener("attune-open-item", go); }, []);
   // a commitment handed over from Chat ("Save it"): read at once, shown to check
   React.useEffect(() => {
     let t0 = ""; try { t0 = localStorage.getItem("attune:life:ask") || ""; localStorage.removeItem("attune:life:ask"); } catch (e) {}

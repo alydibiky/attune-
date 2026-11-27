@@ -94,7 +94,8 @@ import { SlashMenu } from "./cmdbox-ui.jsx";   // v7.4 the "/" list in Chat too 
 import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
 import { summary as sideSummary } from "./side-ui.jsx";
-import { mergeFound } from "./relay.js";   // v9.9.8 M2
+import { mergeFound } from "./relay.js";
+import { SourceChips } from "./srcchips-ui.jsx";   // v10.9.9 B1   // v9.9.8 M2
 import { TeachChat } from "./notelabels-ui.jsx";   // v9.9.11 A4
 import * as PWS from "./pwstore.js";
 import { PwAnswer } from "./pw-ui.jsx";   // v10.9.6 (Ali: "chat to be able to answer from it")
@@ -757,7 +758,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   // turns (text only; older photos become "[photo]"), then the new message.
   // Earlier turns as plain user/assistant pairs (for the reasoning route).
   const pairsOf = (history) => buildMessages(history, "x").filter((m) => m.role !== "system").slice(0, -1).slice(-6);
-  const buildMessages = (history, userContent, maxHistoryChars) => {
+  const buildMessages = (history, userContent, maxHistoryChars, photo) => {
     // Only complete exchanges (a question and its answer) are sent, so the
     // turns always alternate — a stopped answer, a logged period or a
     // payment card never leaves two questions in a row, which chat formats reject.
@@ -794,7 +795,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const langRule = replyLanguageRule(said.length >= 12 ? said : said + " " + (kept.length ? kept[kept.length - 2].content : ""));
     // v6.12: a conversation imported from another AI (Gemini, ChatGPT…) is read with every question of this chat
     const imp = importRef.current, impBlock = imp ? contextBlock(imp, Math.max(2500, Math.min(12000, (ctx - 4500) * 2))) : "";
-    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") + (callRef.current ? "\n\n" + VOICE_RULE : "") }, ...kept, { role: "user", content: userContent }];
+    // v10.9.9 A4: what changes from question to question (the language line, the photo rule) goes WITH THE QUESTION, so the rules and
+    // the chat so far are the same every time and the engine keeps them read (measured: 1,030 tokens re-read when it sat in the rules)
+    return [{ role: "system", content: base + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") + (callRef.current ? "\n\n" + VOICE_RULE : "") }, ...kept,
+      { role: "user", content: (() => { if (typeof userContent !== "string") return userContent;
+        const lr = langRule && !/\((?:Write the reply in|اكتب الرد)/.test(userContent) ? langRule : "";   // (the question may say its language already)
+        const add = [photo && small ? PHOTO_RULE.replace(/^7\.\s*/, "") : "", lr].filter(Boolean).join(" ");
+        return add ? userContent + "\n\n(" + add + ")" : userContent; })() }];
+  };
+
+  // v10.9.9 A4: the moment the box is tapped, the engine reads this chat's rules + the chat so far (1 token, quiet), so the question's
+  // first word doesn't wait for them. Once per chat state; never while an answer is being written.
+  const warmKey = useRef("");
+  const warmNow = () => {
+    try {
+      if (!api.warm || busy) return;
+      const hist = (chat && chat.messages) || [], key = (chat ? chat.id : "new") + ":" + hist.length + ":" + (callRef.current ? 1 : 0);
+      if (warmKey.current === key) return; warmKey.current = key;
+      api.warm(buildMessages(hist, "…"));
+    } catch (e) {}
   };
 
   const waitingRef = useRef(null), askRef = useRef(null);
@@ -1275,7 +1294,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const cid = ensureChat(typed);
       patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
         { id: newId(), role: "user", text: said },
-        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: LA_say(mine, ar).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
+        { id: newId(), role: "assistant", card: { tone: "emerald", refs: mine.refs || null, title: "From your own data — worked out on this phone", detail: LA_say(mine, ar).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
           actions: [...(mine.open && TOOL[mine.open] ? [[TOOL[mine.open], "open:" + mine.open]] : []), ["Just answer", "answer"]] } }] }));
       setText("");
       return;
@@ -1672,7 +1691,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         let found = api.isPersonal(typed) ? api.memSearch(typed) : api.memStrong(typed);
         // v9.9.8 M2 the relay: the small meaning model adds your records that mean the same with other words (strict)
         if (found.length < 3 && api.memMeaning && api.isPersonal(typed)) { try { onStatus(tr("Looking in your notes…")); found = mergeFound(found, await api.memMeaning(typed), 3); } catch (e) {} }
-        if (found.length) { content = api.withRecords(typed, found); extra0.fromMine = found.slice(0, 3).map((f) => ({ title: String(f.rec.title || "").slice(0, 70), where: f.rec.meta && f.rec.meta.book ? "Shelf" : "Mind" })); }
+        if (found.length) { content = api.withRecords(typed, found); extra0.fromMine = found.slice(0, 3).map((f) => ({ id: f.rec.id, title: String(f.rec.title || "").slice(0, 70), where: f.rec.meta && f.rec.meta.book ? "Shelf" : "Mind" })); }
       }
       // v9.8 (Ali: "Attune must recall all notifications — and understand them"): what the phone's notifications say about the
       // question (understood: a delivery, money out, a missed call…) goes with it, so "when does my package come?" is answered
@@ -1945,7 +1964,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
         // picking a wrong digit or a stray token ("1.2.93", "kWkW", "a a a")
         const webT = sources && !useThink ? { temperature: 0.1 } : {};
-        answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined), pic, { onToken, onStatus, think: useThink, copy, ...longRep, ...webT });
+        answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined, !!pic), pic, { onToken, onStatus, think: useThink, copy, ...longRep, ...webT });
       } catch (e) {
         const em = String((e && e.message) || e);
         // v5.32: "Stopped" when the person did NOT press Stop (a thinking run the engine cut
@@ -1956,7 +1975,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // Too long with the earlier turns: answer from this message alone; still too long →
           // read the message itself in parts. (v5.27: never a "too long" error.)
           onStatus("Long chat — answering from this message alone…");
-          try { answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: false, copy }); }
+          try { answer = await api.run(buildMessages([], content, 0, !!pic), pic, { onToken, onStatus, think: false, copy }); }
           catch (e2) {
             if (String(e2 && e2.message) === "Stopped" || runRef.current !== run) throw e2;
             const c = await readInParts(content, requestOf(typed || content));
@@ -1968,7 +1987,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // Any other hiccup (the engine restarted, a thinking run that went nowhere…): one
           // more try, lighter — no earlier turns, no thinking — before an error is shown.
           onStatus(tr("Something went wrong — trying again…"));
-          answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: false, copy });
+          answer = await api.run(buildMessages([], content, 0, !!pic), pic, { onToken, onStatus, think: false, copy });
         }
       }
       if (runRef.current !== run) return;
@@ -1977,7 +1996,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (plain && answer && !looksLikeCodeTask(typed || "") && codeInsteadOfAnswer(answer, typed)) {
         onStatus(tr("Writing it out in words…"));
         try {
-          const again = await api.run(buildMessages(history, content + "\n\n(Answer in plain words with your reasoning step by step. Do NOT write code, functions or tool calls.)"), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
+          const again = await api.run(buildMessages(history, content + "\n\n(Answer in plain words with your reasoning step by step. Do NOT write code, functions or tool calls.)", undefined, !!pic), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
           if (runRef.current !== run) return;
           if (again && !codeInsteadOfAnswer(again)) answer = again;
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -2000,7 +2019,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // v6.38 (Ali: "it writes the whole answer then removes it and rewrites it"): say why before it is written again
           onStatus(want === "ar" ? tr("The answer came in English — writing it again in Arabic…") : tr("The answer came in the wrong language — writing it again in English…"));
           try {
-            const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : tr("\n\n(Write the whole answer in English.)"))), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
+            const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : tr("\n\n(Write the whole answer in English.)")), undefined, !!pic), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
             if (runRef.current !== run) return;
             if (again && !wrongLanguage(typed || q, again)) answer = again;
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -2009,7 +2028,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // The model said nothing at all: asked once more, plainly.
       if (plain && !String(answer || "").trim()) {
         onStatus(tr("Something went wrong — trying again…"));
-        answer = await api.run(buildMessages(longMsg ? [] : history, content, longMsg ? 0 : undefined), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
+        answer = await api.run(buildMessages(longMsg ? [] : history, content, longMsg ? 0 : undefined, !!pic), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
         if (runRef.current !== run) return;
       }
       // v5.27 — AUTO-CONTINUE: an answer cut by the length limit carries on by itself (the
@@ -2564,6 +2583,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-[20px] border p-4 ${m.card.tone === "rose" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10" : m.card.tone === "violet" ? "border-[var(--c-acc)]/40 bg-[var(--c-soft)]" : "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10"}`}>
             <p dir="auto" className="text-[15px] font-extrabold text-[var(--c-ink)] flex items-center gap-2 m-0"><CheckCircle2 size={16} className={m.card.tone === "rose" ? "text-[var(--c-neg)]" : m.card.tone === "violet" ? "text-[var(--c-acc)]" : "text-[var(--c-pos)]"} /> {tr(m.card.title)}</p>
             {m.card.detail ? <p dir="auto" className="text-sm text-[var(--c-ink)] mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
+            {m.card.refs && m.card.refs.length ? <SourceChips refs={m.card.refs} /> : null}
             {(m.card.actions || []).length ? (
               <div className="flex gap-2 mt-3 flex-wrap">
                 {m.card.actions.map(([label, act], i) => (
@@ -2592,7 +2612,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.streaming && !m.text && !m.thinking ? (
               <div className="flex items-center gap-2 text-sm text-[var(--c-acc)] py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
-            {m.fromMine && m.fromMine.length && !m.streaming ? <p className="text-[11.5px] text-[var(--c-mut)] m-0 mt-1" data-testid="from-mine" dir="auto">{m.fromMine.map((x) => tr("From your {w}: {t}", { w: tr(x.where), t: x.title })).join(" · ")}</p> : null}
+            {m.fromMine && m.fromMine.length && !m.streaming ? <div data-testid="from-mine-wrap"><p className="text-[11.5px] text-[var(--c-mut)] m-0 mt-1" data-testid="from-mine" dir="auto">{m.fromMine.map((x) => tr("From your {w}: {t}", { w: tr(x.where), t: x.title })).join(" · ")}</p>
+              {m.fromMine.some((x) => x.id) ? <SourceChips refs={m.fromMine.filter((x) => x.id).map((x) => ({ src: "memory", id: String(x.id), what: x.title, via: true }))} /> : null}</div> : null}
             {m.webImages && m.webImages.length && !m.streaming ? (   /* v6.12: pictures from the pages read, like Gemini — tap opens the page */
               <div className="flex gap-1.5 overflow-x-auto mb-2 -mx-1 px-1" data-testid="web-images">
                 {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-[20px] border border-[var(--c-ln)] bg-[var(--c-surf)]" /></a>)}
@@ -2865,7 +2886,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             // Pasted text: some Android keyboards paste without a normal input
             // event — read the box again right after, so it shows at once.
             onPaste={() => { setTimeout(() => { const el = taRef.current; if (el) setText(el.value); }, 0); setTimeout(() => { const el = taRef.current; if (el) setText(el.value); }, 120); }}
-            onFocus={() => { setTyping(true); document.documentElement.classList.add("att-typing"); setTimeout(() => { try { taRef.current.scrollIntoView({ block: "nearest" }); } catch (e) {} }, 250); }}
+            onFocus={() => { warmNow(); setTyping(true); document.documentElement.classList.add("att-typing"); setTimeout(() => { try { taRef.current.scrollIntoView({ block: "nearest" }); } catch (e) {} }, 250); }}
             // (after a moment: a tap on Send closes the keyboard first, and the
             // text box must not move away from under the finger before the tap lands)
             onBlur={() => { setTimeout(() => { if (document.activeElement !== taRef.current) { setTyping(false); document.documentElement.classList.remove("att-typing"); } }, 300); }}

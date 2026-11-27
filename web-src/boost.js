@@ -67,6 +67,8 @@ export const HONESTY_RULE = `KNOWLEDGE HONESTY (when the message gives you no PA
  * The short system prompt for small models (levels 1–2): six rules and one example of the
  * answer shape — small models copy an example far better than they follow a rule.
  */
+/** v10.9.9 A4: the photo rule is added only when the message has a photo (it was read before every answer). */
+export const PHOTO_RULE = `7. Photo of a machine, vehicle or product: name the type, the most likely brand and model from visible clues (logos, badges, shape, text), how sure you are, and 3–5 useful facts. Never stop at a generic label like "a mobile crane".`;
 export function compactSystem(today) {
   return `You are Attune, a helpful assistant on the user's phone.
 Rules:
@@ -76,7 +78,6 @@ Rules:
 4. Never invent facts, prices, specs or names. If unsure, say so. Never state live facts you can't see (today's weather, traffic, news); what the user says about their own day is true — help with it.
 5. Write the answer once. No preamble, no repeating yourself.
 6. Plain maths (3 × 4, x²), never LaTeX.
-7. Photo of a machine, vehicle or product: name the type, the most likely brand and model from visible clues (logos, badges, shape, text), how sure you are, and 3–5 useful facts. Never stop at a generic label like "a mobile crane".
 Today is ${today}.
 
 Example:

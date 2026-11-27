@@ -7,6 +7,7 @@
      mindAnswer(q, stores)        → { en, ar, recs: [the records it came from], open } | null — the closest note, said back
    Pure (stores in); tests: tests/unit/v870personal.test.mjs.                                                                */
 import { recallSearch, recallDocs, fold } from "./lookback.js";
+import { isAskedText } from "./lifeask.js";   // v10.9.9: your past questions are not what you told Attune
 
 const ASKS = /\b(tell me about|what do you know about|do you know|who(?:'s| is| was)|where(?:'s| is| do i)|remind me (?:who|where|what)|what(?:'s| is) (?:the (?:name|number|address) of )?my|which)\b|^(?:my )|(?:^|\s)(?:مين|فين|تعرف|تعرفي|عارف|عارفة|قولي عن|احكيلي عن|ايه اسم|إيه اسم|رقم|عنوان)(?:\s|$)/i;
 const MINE = /\b(my|mine|i go to|i use|our)\b|بتاعي|بتاعتي|بتوعي|اللي بروحله|اللي بروحلها|بتاعنا|عندنا/i;
@@ -27,7 +28,8 @@ export function mindAnswer(q, { memory = [], notes = [], life = null } = {}, { n
   const core = String(q).replace(/[?؟!.]/g, " ").replace(QWORDS, " ").replace(/\s+/g, " ").trim();
   if (!core) return null;
   const people = ((life && life.items) || []).filter((c) => c && c.person).map((c) => ({ id: "life:" + c.id, title: c.person, text: [c.title, c.kind, c.note].filter(Boolean).join(" · "), ts: Date.parse(c.start || "") || 0 }));
-  const docs = recallDocs({ memory: memory.filter((r) => r && r.kind !== "chat"), notes })
+  // (v10.9.9: Attune's own saved answers and your past questions are never "what you told it")
+  const docs = recallDocs({ memory: memory.filter((r) => r && !["chat", "ask", "instant", "copilot"].includes(r.kind) && !(isAskedText(r.text || r.title) && !String(r.output || "").trim())), notes })
     .concat(people.map((p) => ({ ...p, kind: "mind", open: { mode: "life" } })));
   const r = recallSearch(docs, core, { now, limit: 5 });
   const hits = (r.hits || []).filter((h) => h.score > 0);
@@ -42,5 +44,9 @@ export function mindAnswer(q, { memory = [], notes = [], life = null } = {}, { n
   const whenAr = top.doc.ts ? new Date(top.doc.ts).toLocaleDateString("ar-EG-u-nu-latn", { day: "numeric", month: "short", year: "numeric" }) : "";
   const src = top.doc.kind === "note" ? ["a message you got", "رسالة جاتلك"] : top.doc.open && top.doc.open.mode === "life" ? ["People & plans", "الناس والالتزامات"] : ["your Mind", "عقلي"];
   return { en: `From ${src[0]}${when ? " (" + when + ")" : ""}: “${said}”`, ar: `من ${src[1]}${whenAr ? " (" + whenAr + ")" : ""}: «${said}»`,
-    recs: hits.slice(0, 3).map((h) => h.doc), open: top.doc.kind === "note" ? "recall" : top.doc.open && top.doc.open.mode === "life" ? "life" : "memory" };
+    recs: hits.slice(0, 3).map((h) => h.doc),
+    // v10.9.9 B1: the note (or person) it came from, as a chip that opens it
+    refs: hits.slice(0, 3).map((h) => { const d = h.doc, oid = d.open && d.open.id, lid = String(d.id || "").startsWith("life:") ? String(d.id).slice(5) : "";
+      return oid ? { src: "memory", id: String(oid), what: d.title || String(d.text || "").slice(0, 60), date: "", via: true } : lid ? { src: "life", id: lid, what: d.title, date: "" } : null; }).filter(Boolean),
+    open: top.doc.kind === "note" ? "recall" : top.doc.open && top.doc.open.mode === "life" ? "life" : "memory" };
 }

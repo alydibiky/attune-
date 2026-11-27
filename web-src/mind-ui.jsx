@@ -293,6 +293,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const [colour, setColour] = useState(null);
   // v6.48: Home's /find opens the item it found (cmdbox-ui → "attune:mind:open")
   const [openId, setOpenId] = useState(() => { try { const v = localStorage.getItem("attune:mind:open"); if (v) { localStorage.removeItem("attune:mind:open"); return v; } } catch (e) {} return null; });
+  useEffect(() => { const go = () => { try { const v = localStorage.getItem("attune:mind:open"); if (v) { localStorage.removeItem("attune:mind:open"); setOpenId(v); } } catch (e) {} };   // (v10.9.9 B1: kept page)
+    window.addEventListener("attune-open-item", go); return () => window.removeEventListener("attune-open-item", go); }, []);
   const [busy, setBusy] = useState("");
   const [answer, setAnswer] = useState(null);
   const [spaces, setSpaces] = useState(loadSpaces);

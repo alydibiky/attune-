@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { Sparkles, Search, Mic, ChevronRight, MessageSquare, Lock, X } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
 import * as A from "./lifeask.js";
+import { SourceChips } from "./srcchips-ui.jsx";   // v10.9.9 B1
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { page, cardPad, btnP, btnS, inp, label, chip, h1, muted } from "./ui-kit.jsx";
 
@@ -79,6 +80,7 @@ export function LifeAnswer({ res, navTo, askChat, onClose }) {
       <div className="flex items-start gap-2"><span className={label + " flex-1"} dir="auto">{res.q}</span>{close}</div>
       <p className="text-[17px] leading-snug m-0 font-medium" dir="auto" data-testid="lifeask-text">{A.sayAnswer(res.a, ar).replace(/\*\*/g, "")}</p>
       {res.a.chart ? <AnswerChart chart={res.a.chart} ar={ar} /> : null}
+      {res.a.refs && res.a.refs.length ? <SourceChips refs={res.a.refs} navTo={navTo} /> : null}
       {(res.a.rows || []).length ? <table className="w-full text-[13.5px] c-num" data-testid="lifeask-rows"><tbody>{res.a.rows.map(([k, v], i) => <tr key={i} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1.5 pe-3 c-sub whitespace-nowrap align-top" dir="auto">{k}</td><td className="py-1.5" dir="auto">{v}</td></tr>)}</tbody></table> : null}
       <div className="flex flex-wrap gap-2 items-center">
         <span className="c-sub text-[12px]">{tr("From")}: {res.a.sources.map((s) => tr(TOOL[s] || s)).join(" · ")}</span>

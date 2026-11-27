@@ -44,6 +44,9 @@ export function openOriginal(target, navTo) {
   if (!target || !target.mode) return false;
   try { if (target.key) localStorage.setItem(target.key, String(target.id)); } catch (e) {}
   if (navTo) navTo(target.mode); else try { window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: target.mode } })); } catch (e) {}
+  // (v10.9.9 B1: a page kept built since its last visit reads the key on this event; Money opens a payment by its own event)
+  try { const fire = () => { window.dispatchEvent(new CustomEvent("attune-open-item")); if (target.mode === "money" && /^tx:/.test(String(target.id))) { window.__attuneMoneyTx = String(target.id).slice(3); window.dispatchEvent(new CustomEvent("attune-money-tx", { detail: { id: String(target.id).slice(3) } })); } };
+    setTimeout(fire, 60); } catch (e) {}
   // a line inside a list (a follow-up, a reminder): scroll to it and light it up once the page is there
   if (target.flash && typeof document !== "undefined") { let n = 0; const go = () => { const el = document.querySelector('[data-open-id="' + String(target.flash).replace(/"/g, "") + '"]');
     if (el) { try { el.scrollIntoView({ block: "center" }); } catch (e) {} el.setAttribute("data-opened", "1"); el.style.outline = "2.5px solid var(--c-acc)"; el.style.outlineOffset = "2px";

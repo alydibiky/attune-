@@ -57,6 +57,20 @@ with sync_playwright() as p:
         check("Last time I went to the barber." not in body and "(today) — Last" not in body, "%d: no 'today — Last time I went to the barber' from his own question" % w)
         gap = page.evaluate("document.documentElement.scrollHeight - window.scrollY - window.innerHeight")
         check(gap < 60, "%d: after the answer the page is at the bottom (gap %s px)" % (w, gap))
+        # A4 (Ali picked: the first word sooner): tapping the box pre-reads the rules (1 token, quiet); the rules are the SAME for an
+        #   English, an Arabic and a French question (the language line goes with the question), so the engine keeps them read
+        page.evaluate("() => { window.__mock.bodies = []; }")
+        page.locator("textarea[placeholder='Message Attune']").click(); page.wait_for_timeout(800)
+        warm = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens === 1)")
+        check(len(warm) == 1 and warm[0]["messages"][0]["role"] == "system", "%d: tapping the box pre-reads the rules once (1 token)" % w)
+        page.locator("textarea[placeholder='Message Attune']").click(); page.wait_for_timeout(400)
+        check(len(page.evaluate("window.__mock.bodies.filter(x => x.max_tokens === 1)")) == 1, "%d: …not again for the same chat" % w)
+        systems = []
+        for q in ("what is the capital of australia?", "يعني ايه تضخم؟", "quelle est la capitale du Japon ?"):
+            b = ask(page, q, ["**Fine.**"], wait=2200)
+            systems.append(b[-1]["messages"][0]["content"] if b else "")
+        check(all(systems) and systems[0] == systems[1] == systems[2] and systems[0] == warm[0]["messages"][0]["content"], "%d: the rules are the same for every question and the pre-read (kept by the engine)" % w)
+        check("Photo of a machine" not in systems[0], "%d: the photo rule is not read when there is no photo" % w)
         # 5 (Ali, 26 Nov: "it should look on notes, money, everything — I saved it as a note in Money"): a Money entry that says only
         #   "hany rabee3" (his note says that is his barber) answers "the last time" — and the bare follow-up takes "barber" from before
         page.evaluate("""() => { const d = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
