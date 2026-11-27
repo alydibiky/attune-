@@ -58,7 +58,10 @@ with sync_playwright() as p:
     queue(page, ["**This is a yellow all-terrain mobile crane** — most likely a Demag AC 100 (5 axles)."])
     send(page, "what is this crane")
     done(page)
-    sys_prompt = bodies(page)[0]["messages"][0]["content"]
+    # (v10.9.9 A4: the photo rule goes WITH the photo question — the rules stay the same for every question so the engine keeps them;
+    #  the 1-token pre-read when the box is tapped is not the question)
+    q_body = [b for b in bodies(page) if (b.get("max_tokens") or 0) > 1][0]
+    sys_prompt = "\n".join(str(m.get("content")) for m in q_body["messages"])
     check("Never stop at a generic label" in sys_prompt, "a photo question asks for type, likely make/model and facts — not just 'a mobile crane'")
     page.locator("button:has-text('Web')").first.click()
     # v6.35: the search finds pages about THIS crane (a model number must be on the page — research.js onTopic)

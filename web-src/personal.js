@@ -7,9 +7,10 @@
      mindAnswer(q, stores)        → { en, ar, recs: [the records it came from], open } | null — the closest note, said back
    Pure (stores in); tests: tests/unit/v870personal.test.mjs.                                                                */
 import { recallSearch, recallDocs, fold } from "./lookback.js";
-import { isAskedText } from "./lifeask.js";   // v10.9.9: your past questions are not what you told Attune
+import { isAskedText } from "./lifeask.js";
+import { egyToEnglish } from "./egyask.js";   // v10.9.9: your past questions are not what you told Attune
 
-const ASKS = /\b(tell me about|what do you know about|do you know|who(?:'s| is| was)|where(?:'s| is| do i)|remind me (?:who|where|what)|what(?:'s| is) (?:the (?:name|number|address) of )?my|which)\b|^(?:my )|(?:^|\s)(?:مين|فين|تعرف|تعرفي|عارف|عارفة|قولي عن|احكيلي عن|ايه اسم|إيه اسم|رقم|عنوان)(?:\s|$)/i;
+const ASKS = /\b(tell me about|what do you know about|what do i know about|do you know|who(?:'s| is| was)|where(?:'s| is| do i)|remind me (?:who|where|what)|what(?:'s| is) (?:the (?:name|number|address) of )?my|which)\b|^(?:my )|(?:^|\s)(?:مين|فين|تعرف|تعرفي|عارف|عارفة|قولي عن|احكيلي عن|ايه اسم|إيه اسم|رقم|عنوان)(?:\s|$)/i;
 const MINE = /\b(my|mine|i go to|i use|our)\b|بتاعي|بتاعتي|بتوعي|اللي بروحله|اللي بروحلها|بتاعنا|عندنا/i;
 const NAMED = /\b(?:who(?:'s| is| was))\s+[A-Z؀-ۿ][\w؀-ۿ]+|(?:^|\s)مين\s+[؀-ۿ]{3,}/;   // "who is Osama the carpenter", «مين أسامة النجار»
 const GENERAL = /\b(what is an? |what are |how (?:do|does|to) |why )/i;
@@ -23,7 +24,16 @@ export function personalAsk(q) {
 
 const QWORDS = /\b(tell|me|about|what|do|you|know|who|is|was|where|my|mine|the|a|an|of|remind|which|name|number|address|i|go|to|use|our|please)\b|(?:^|\s)(مين|فين|تعرف|تعرفي|عارف|قولي|عن|احكيلي|ايه|إيه|اسم|بتاعي|بتاعتي|بتوعي|اللي|ده|دي|هو|هي)(?=\s|$)/gi;
 /** The closest thing you told Attune about it — or null when nothing really matches (then the model / web may answer). */
-export function mindAnswer(q, { memory = [], notes = [], life = null } = {}, { now = Date.now() } = {}) {
+// (v10.9.9 A2: «عربيتي ايه؟» / "3arabeyty eh?" are asked as "tell me about my car" when the question itself finds nothing)
+export function mindAnswer(q0, stores = {}, opts = {}) {
+  // ("btw …", "… thanks تمام 🙏", "pls" around the question are not words the note must hold)
+  const q = String(q0 || "").replace(/[\u200e\u200f\u061c\u202a-\u202e]/g, "").replace(/\s+/g, " ").trim().replace(/^(?:(?:btw|by the way|hey|hi|ok so|okay so|quick q|quick question|question|attune|ya attune)[\s,:;!—-]+)+/i, "")
+    .replace(/(?:[\s\n]*(?:[—–-]+\s*)?(?:\((?:roughly|about)\)|thanks|thank you|thx|pls|please|ok|okay|تمام|شكرا|شكرًا|\p{Extended_Pictographic}|\uFE0F|!+))+\s*$/giu, "")
+    .replace(/\s+(?:pls|please)(?=\s*[?؟]?$)/i, "").replace(/([?؟])[?؟!]+\s*$/u, "$1").trim();
+  const a = mindAnswer0(q, stores, opts); if (a) return a;
+  let e = ""; try { e = egyToEnglish(q); } catch (x) {} return e ? mindAnswer0(e, stores, opts) : null;
+}
+function mindAnswer0(q, { memory = [], notes = [], life = null } = {}, { now = Date.now() } = {}) {
   if (!personalAsk(q)) return null;
   const core = String(q).replace(/[?؟!.]/g, " ").replace(QWORDS, " ").replace(/\s+/g, " ").trim();
   if (!core) return null;

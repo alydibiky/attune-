@@ -193,6 +193,8 @@ function paidFor(q, s, now) {
 function history(q, s) {
   const term = termOf(q); const recs = recordsAbout(term, s);
   if (!recs.length) return null;
+  // (v10.9.9: only notes → Mind's own answer says what they SAY — "that in the barber I go to hany rabee3…" — not "1 record: Barber")
+  if (recs.every((r) => r.src === "memory")) return null;
   const src = [...new Set(recs.map((r) => r.src))];
   return { kind: "history", t: pl(recs.length, "“{x}”: 1 record in your data, on {b}.", "“{x}”: {n} records in your data, from {a} to {b}."), v: { x: term, n: recs.length, a: recs[recs.length - 1].date || "—", b: recs[0].date || "—" },
     en: `“${term}”: ${recs.length} record${recs.length === 1 ? "" : "s"} in your data, from ${recs[recs.length - 1].date || "—"} to ${recs[0].date || "—"}.`,
@@ -572,7 +574,7 @@ export const EXAMPLES = [
 ];
 
 // ---- in Chat: only questions about YOUR OWN things ("what is HbA1c?" stays a normal answer; "is my HbA1c better?" is answered here)
-const QUESTION = /\b(?:tell me about|people who|who still|what do i know about)\b|^(?:my (?:income|biggest|spending|expenses?|subscriptions?|debts?)|total (?:i|we) (?:paid|spent)|total spending|last time (?:i|we))\b|\?|؟|^(how|what|who|when|where|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
+const QUESTION = /\b(?:tell me about my|people who|who still|what do i know about my)\b|^(?:my (?:income|biggest|spending|expenses?|subscriptions?|debts?)|total (?:i|we) (?:paid|spent)|total spending|last time (?:i|we))\b|\?|؟|^(how|what|who|when|where|which|is|are|did|do|does|have|has|show|list|anything|any)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|(?<![\p{L}])(كام|ايه|إيه|مين|امتى|امتي|إمتى|فين)(?![\p{L}])|\b(kam|kaam|emta|imta|meen|mein|fein|fen|eh|eih)\b|\b(how much|how many|when (?:does|do|is|did|will)|what (?:do|does|did|is)|what'?s (?:on|my)|do i have|have i got|(?:does|did) \w+ (?:still )?owe|owes? me how much|expir\w* when|expiry|renewal due|anything (?:planned|on)|what'?s planned)\b|(?<![\p{L}])(?:عندي مواعيد|ورايا|ورايه|(?:عليه|عليها)\s+(?:لسه\s+)?فلوس\s+ليا)(?![\p{L}])/iu;   // («هاني عليه فلوس ليا» with no amount asks)   // (…and after a greeting: "I forgot — when does my visa expire")   // (v10.9.8: \b never matches beside an Arabic letter — «جواز السفر بينتهي امتى» had no question word)   // (v10.9.8: Franco questions too)
 const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد|(?:عليه|عليها)\s+(?:لسه\s+)?(?:كام|فلوس)|ورايا|ورايه|(?<![\p{L}])(?:روحت|رحت|زرت|حلقت|اتحلقت|كشفت|غسلت)(?![\p{L}])|\b(ro7t|ro7na|7ala2t|3amalt|3mlt|3andi|3ndi|bta3i|bta3y|bta3ty|leya|liya|3alaya|3aleh|3aleha|sraft|dafa3t)\b/iu;   // v10.9.8 «أحمد عليه كام؟» / Franco
 export function chatAsk(q, stores, { now = Date.now(), prev = "", _en = false } = {}) {
   // v10.9.9 A2: an Egyptian / Franco question about your own data is read as the same question in English first
@@ -588,7 +590,9 @@ export function chatAsk(q, stores, { now = Date.now(), prev = "", _en = false } 
   // (v10.9.9 A2: "food this month, how much?", "what's due this week?" name no "my" — a sum over a time span / your week is still yours)
   const spanMine = (/\bhow much\b|\btotal spending\b/i.test(t)) && /\b(?:this|last|next)\s+(?:week|month|year)\b|\b(?:today|yesterday|so far|in total)\b|\b(?:in|for|during)\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i.test(t) && (k === "money" || k === "paid-for");
   const weekMine = k === "due" && /\b(?:this|next) week\b|\bcoming up\b|\bdue\b/i.test(t);
-  if (!spanMine && !weekMine && !MINE.test(t) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
+  // (v10.9.9: the "me" of "tell me / show me / give me" says nothing about whose — "tell me about an oriental restaurant page" is not yours)
+  const tMine = t.replace(/\b(?:tell|show|give|let|help|remind|teach|send|find|get) me\b/gi, " ");
+  if (!spanMine && !weekMine && !MINE.test(tMine) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")
   if (k === "search") return null;
   return askLife(t, stores, { now, prev });
 }

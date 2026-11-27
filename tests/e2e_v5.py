@@ -455,7 +455,7 @@ def sec_fast(br):
     check(len(warm) == 1 and warm[0]["messages"][0]["role"] == "system" and "Attune" in warm[0]["messages"][0]["content"],
           "when the model is ready, Chat's instructions are pre-read once in the background (prompt cache warm-up)")
     comp = page.locator("textarea[placeholder='Message Attune']")
-    n0 = len(page.evaluate("window.__mock.bodies") or [])
+    n0 = len(page.evaluate("(window.__mock.bodies || []).filter((b) => b.max_tokens > 1)") or [])
     t0 = page.evaluate("Date.now()")
     comp.fill("3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?")
     page.locator("button[title='Send']").click()
@@ -463,7 +463,7 @@ def sec_fast(br):
     ms = page.evaluate("Date.now()") - t0
     check(page.locator(".att-md strong:has-text('Total: 171,000 EGP')").count() == 1, "Ali's question is answered: Total: 171,000 EGP")
     check(ms < 1500, "…instantly (%d ms including typing into the box), with the working shown" % ms)
-    check(len(page.evaluate("window.__mock.bodies") or []) == n0, "…and without calling the model at all")
+    check(len(page.evaluate("(window.__mock.bodies || []).filter((b) => b.max_tokens > 1)") or []) == n0, "…and without calling the model at all")   # (v10.9.9 A4: the 1-token pre-read when the box is tapped is not asking)
     page.locator("[data-testid=calc-note] button").click()
     page.wait_for_timeout(1500)
     check(len(page.evaluate("window.__mock.bodies") or []) > n0, "“Ask the model” still sends it to the model if wanted")

@@ -122,8 +122,10 @@ export function gen(seed = 7, n = 10000) {
   return cases;
 }
 const fmtD = (d) => d;
+const P = await import("../../web-src/personal.js");
 export function check(c) {
-  let a = null; try { a = L.chatAsk(c.q, c.s, { now: NOW, prev: c.prev }); } catch (e) { return { ok: false, why: "crash " + e.message }; }
+  // (what Chat does: your data's readers first, then Mind's answer from your notes — chat.jsx chatAsk → mindAnswer)
+  let a = null; try { a = L.chatAsk(c.q, c.s, { now: NOW, prev: c.prev }) || P.mindAnswer(c.q, c.s, { now: NOW }); } catch (e) { return { ok: false, why: "crash " + e.message }; }
   if (!a) return { ok: false, why: "null" };
   const en = String(a.en || "") + " " + (a.rows || []).map((r) => r.join(" ")).join(" "), w = c.want;
   if (w.num != null && !(w.num === 0 ? /\b(?:nothing|no |0\b)/i.test(en) : en.includes(num(w.num)))) return { ok: false, why: "num " + num(w.num), a };

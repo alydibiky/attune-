@@ -22,7 +22,8 @@ const st = {
   radar: { items: [ { id: "r1", title: "Passport", date: "2027-03-03", kind: "paper" } ] },
   reminders: [ { id: "m1", at: now + D - 3 * 3600e3, title: "call the bank" }, { id: "m2", at: now + 3 * D, title: "dentist appointment" } ],
   memory: [ { id: "n2", kind: "note", text: "my car is a Kia Cerato 2019, plate 123 ABC", ts: now - 40 * D } ] };
-const A = (q, prev) => L.chatAsk(q, st, { now, prev }) || { en: "", kind: "null" };
+const P = await import("../../web-src/personal.js");
+const A = (q, prev) => L.chatAsk(q, st, { now, prev }) || P.mindAnswer(q, st, { now }) || { en: "", kind: "null" };   // (what Chat does)
 const has = (q, re, m) => { const a = A(q); ok(re.test(a.en + " " + (a.rows || []).map((r) => r.join(" ")).join(" ")), m + " — «" + q + "» → " + a.kind + ": " + a.en.slice(0, 90)); };
 has("where did most of my money go this month?", /Most went on rent/i, "a ranking, never a list of due dates");
 has("when is my dentist appointment?", /2026-11-29/, "an appointment is the reminder's date, never Health spending");
@@ -40,6 +41,9 @@ has("how much did I spend for November?", /You spent [\d,]+ EGP\b.*November|Nove
 ok(egyToEnglish("صرفت كام على الأكل الشهر ده؟") === "how much did I spend on food this month?", "Egyptian → English frame: " + egyToEnglish("صرفت كام على الأكل الشهر ده؟"));
 ok(egyToEnglish("sraft kam 3ala el akl el shahr da?") === "how much did I spend on food this month?", "Franco → the same English");
 ok(egyToEnglish("hello there") === "" && egyToEnglish("ازيك عامل ايه") === "", "small talk is not a question about your data");
+// (the full browser run: "Tell me about an oriental restaurant page" was answered "Nothing is recorded in Money" — the "me" of "tell me")
+for (const q of ["Tell me about an oriental restaurant page", "show me a recipe for koshary", "tell me about the history of Egypt", "give me 3 tips to sleep better", "Tell me about a crane simulator page"])
+  ok(!L.chatAsk(q, st, { now }), "a general question is never answered from your data: «" + q + "»");
 // 2,500 sample
 const G = await import("../mydata/gen.mjs");
 for (const [seed, nn] of [[7, 2500], [9, 1000]]) { const cs = G.gen(seed, nn); const good = cs.filter((c) => G.check(c).ok).length;
