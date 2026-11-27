@@ -105,3 +105,8 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
   new screenshots read by themselves, Share → Attune, every country / format tested), BK1 (built: Set up rows open, bank row live) +
   BK2 (a live line on Money) + BK3 (a notification when reading stops) — docs/mockups/quick-input.html →
   https://claude.ai/artifact/PAaS5zeqTkLDCCHH4oAXKz (waiting for Ali; recommended PW1 PW2 SS1 SS2 SS3 BK2 BK3)
+- 27 Nov 2026 (v10.9.9, Ali: "tell me things to do in the app so it's improved"): A1–A4 (fixes: Mind never deletes your notes, every
+  "my data" question tested like the barber, lag hunt on a full phone, first word sooner) + B1–B5 (visible: source chips, chats out of
+  Mind / behind a filter, "linked by your note", test every page) — https://claude.ai/artifact/EqcSsaHBz1kb7kM9Y9Mwdr
+- 27 Nov 2026: Ali picked **A1 A2 A3 A4 B1 B5** → A1 built (memindex.pruneMind); combined B1 + B5 with "what I understood" —
+  docs/mockups/b1-b5-combined.html → https://claude.ai/artifact/5wPk56GJhPRuoq4CWSTHKq (waiting for OK-B1 / OK-B5)

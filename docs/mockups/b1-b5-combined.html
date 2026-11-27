@@ -1,0 +1,148 @@
+<title>Attune B1 + B5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work — a combined mock-up for one OK
+   IDEA the two screens as they will ship, each with "what I understood" beside it
+   PICTURE phone mock-ups (and the computer layout for B5) in Attune's light-glass burgundy
+   COLOUR warm off-white, burgundy #7a1f3d, sage for "from your data"
+   TYPE Nunito + Cairo for the Egyptian lines
+   LAYOUT laptop: phones left, understood list right; phone: stacked */
+:root{color-scheme:light dark;--bg:light-dark(#f5f4f2,#141012);--card:light-dark(#fff,#1d1519);--ink:light-dark(#1e1c1b,#f3ebee);--mut:light-dark(#5e5a57,#bfb0b6);--ln:light-dark(#e6e1de,#2f2429);--acc:light-dark(#7a1f3d,#e88aa8);--soft:light-dark(#f8e6ec,#3a1f2a);--sage:light-dark(#e4efe6,#1d2b21);--sageink:light-dark(#24603a,#9fd6ae);--scr:light-dark(#fbf9f8,#1a1417);--red:light-dark(#b3261e,#ff8a80)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip;padding-bottom:120px}
+.band{padding-block:clamp(24px,4vw,44px);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+h1{font-size:clamp(32px,5vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0 0 10px;font-weight:900}
+h2{font-size:24px;margin:0 0 4px;font-weight:900}
+.lead{max-width:68ch;margin:0}
+.sec{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:28px;background:var(--card);border:1px solid var(--ln);border-radius:22px;padding:22px;margin-top:22px}
+.phones{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.code{display:inline-block;font-weight:900;color:#fff;background:var(--acc);border-radius:8px;padding:1px 9px;margin-inline-end:8px}
+:root[data-theme=dark] .code{color:#1d1519}
+.ar{font-family:Cairo,sans-serif;direction:rtl;unicode-bidi:isolate;color:var(--mut);font-size:14px}
+ol.u{padding-inline-start:20px;margin:10px 0}ol.u li{margin:6px 0}
+.q{background:var(--bg);border-radius:12px;padding:10px 14px;font-size:15px;margin:10px 0}
+.pick{display:flex;align-items:center;gap:10px;font-weight:800;min-height:44px;cursor:pointer}
+.pick input{width:22px;height:22px;accent-color:var(--acc)}
+textarea{width:100%;min-height:64px;font:16px/1.4 Nunito,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px 12px}
+.phone{width:270px;max-width:100%;border-radius:34px;background:#111;padding:9px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.scr{background:var(--scr);border-radius:26px;overflow:hidden;min-height:540px;display:flex;flex-direction:column;font-size:13px}
+.sb{display:flex;justify-content:space-between;padding:8px 18px 4px;font-size:11px;font-weight:800}
+.top{display:flex;align-items:center;gap:8px;padding:6px 12px 10px;border-bottom:1px solid var(--ln)}
+.top b{font-size:15px;font-weight:900;flex:1}
+.ham{width:16px;height:2px;background:var(--ink);box-shadow:0 5px 0 var(--ink),0 -5px 0 var(--ink)}
+.body{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
+.u{align-self:flex-end;background:var(--soft);border-radius:16px 16px 6px 16px;padding:7px 11px;max-width:85%}
+.a{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:9px 11px}
+.a.data{background:var(--sage)}
+.t{font-weight:900;color:var(--sageink);font-size:12px;margin-bottom:3px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:3px 9px;font-weight:800;font-size:11.5px;margin:5px 4px 0 0;background:var(--card)}
+.btn{display:inline-block;border-radius:10px;padding:6px 11px;font-weight:800;font-size:12px;margin:6px 4px 0 0;background:var(--acc);color:#fff}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--ln)}
+.small{font-size:11px;color:var(--mut)}
+.box{margin:auto 10px 10px;background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:9px 12px;color:var(--mut)}
+.sheet{margin-top:auto;background:var(--card);border-top:1px solid var(--ln);border-radius:20px 20px 0 0;padding:12px;box-shadow:0 -8px 20px rgba(0,0,0,.08)}
+.hl{outline:2px solid var(--acc);border-radius:12px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:8px 4px;border-bottom:1px solid var(--ln)}
+.bar{height:8px;border-radius:6px;background:var(--ln);overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+.ok{color:var(--sageink);font-weight:900}.no{color:var(--red);font-weight:900}
+.pickbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--ln);padding:10px max(5vw,16px) calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;z-index:5}
+.pickbar .sum{flex:1;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickbar button{min-height:44px;border:0;border-radius:12px;padding:0 18px;font:800 15px Nunito,sans-serif;background:var(--acc);color:#fff;cursor:pointer}
+.pickbar button:disabled{opacity:.45}
+#out{display:none;width:100%}
+@media(max-width:860px){.sec{grid-template-columns:minmax(0,1fr);padding:16px}}
+</style>
+
+<div class="band"><div class="wrap">
+  <h1>B1 + B5, before I build them</h1>
+  <p class="lead">You picked B1 and B5. These are the two screens as I'd build them, each with what I understood next to it. Tick <b>OK</b> on each (or write what to change), then Copy my picks. A1 is already built, and I'm working on A2, A3 and A4 meanwhile.</p>
+
+  <section class="sec" id="s-B1">
+    <div class="phones">
+      <div class="phone"><div class="scr"><div class="sb"><span>2:47</span><span>78</span></div><div class="top"><span class="ham"></span><b>Attune</b><span class="small">● Blaze</span></div>
+        <div class="body"><div class="u">when is the last time I went to the barber?</div>
+        <div class="a data"><div class="t">✓ From your own data</div>The last time: <b>20 Nov (6 days ago)</b><br>
+          <span class="chip">💳 −150 · hany rabee3 · 20 Nov ›</span><span class="chip">📝 Your note · barber ›</span><span class="chip">+1 older ›</span></div>
+        <div class="u">how much on food this month?</div>
+        <div class="a data"><div class="t">✓ From your own data</div><b>2,480 EGP</b> on Food<br><span class="chip">💳 12 entries · Food ›</span></div></div>
+        <div class="box">Message Attune</div></div></div>
+      <div class="phone"><div class="scr"><div class="sb"><span>2:48</span><span>78</span></div><div class="top"><span class="ham"></span><b>Money</b></div>
+        <div class="body"><div class="small">November</div>
+          <div class="row"><span>Lunch with Ahmed</span><b>−90</b></div>
+          <div class="row hl"><span><b>hany rabee3</b><br><span class="small">20 Nov · Other</span></span><b>−150</b></div>
+          <div class="row"><span>Carrefour</span><b>−535</b></div>
+        </div>
+        <div class="sheet"><b>hany rabee3</b> · −150 EGP<div class="small">20 Nov · Other · Cash</div><span class="btn">Edit</span><span class="btn g">Category: Personal care</span><span class="btn g">Delete</span></div></div></div>
+    </div>
+    <div>
+      <h2><span class="code">B1</span>Tap where an answer came from</h2>
+      <div class="ar">تدوس على مصدر الإجابة وتفتح الحاجة نفسها</div>
+      <b style="display:block;margin-top:12px">What I understood</b>
+      <ol class="u">
+        <li>Every answer worked out from <b>your own data</b> (the green "From your own data" card, in Chat and on Home) ends with up to <b>3 chips</b>, one per thing it used: 💳 a Money entry, 📝 a note, 📅 a date or reminder, 👤 a People & plans item. "+N more ›" opens the full list.</li>
+        <li>A chip opens that exact thing. A Money entry opens Money with the row lit up and its edit sheet open (edit, change category, delete). A note opens it in Mind. A date opens it in Dates.</li>
+        <li>A total ("2,480 on Food") gets one chip that opens Money filtered to those entries.</li>
+        <li>Answers written by the model from your notes keep the "From your Mind: …" line, but each title becomes a tappable chip.</li>
+        <li>Same on the computer, where the chip opens the page beside the chat. In all 20 languages, light and dark.</li>
+      </ol>
+      <label class="pick"><input type="checkbox" data-c="OK-B1"> OK-B1, build it like this</label>
+      <textarea data-n="OK-B1" placeholder="Your note on B1 (optional)"></textarea>
+    </div>
+  </section>
+
+  <section class="sec" id="s-B5">
+    <div class="phones">
+      <div class="phone"><div class="scr"><div class="sb"><span>9:10</span><span>81</span></div><div class="top"><span class="ham"></span><b>Test every page</b></div>
+        <div class="body"><div class="small">Page 7 of 23 · Money</div><div class="bar"><i style="width:30%"></i></div>
+          <div class="a"><b>1. Try this</b><br>On Home, type «صرفت كام على الأكل الشهر ده؟»<div class="small" style="margin-top:6px">Should: show this month's Food total, and name Groceries if it's there.</div></div>
+          <div class="a"><b>2. Did it work?</b><br><span class="btn">✓ Works</span><span class="btn g">✗ Wrong</span><span class="btn g">Skip</span></div>
+          <div class="a"><b>✗ What was wrong?</b><div class="small" style="margin:4px 0">said 0, I paid 85 for bread today</div><span class="btn g">📷 Add screenshot</span><span class="btn g">Open Money</span></div>
+          <div class="small" style="text-align:center">You can leave anytime and carry on later</div></div></div></div>
+      <div class="phone"><div class="scr"><div class="sb"><span>9:40</span><span>79</span></div><div class="top"><span class="ham"></span><b>Test every page</b></div>
+        <div class="body"><b>Done: 23 pages</b><div class="small">19 ✓ · 3 ✗ · 1 skipped · on v10.9.9</div>
+          <div class="row"><span>Home</span><span class="ok">✓</span></div>
+          <div class="row"><span>Money · food total</span><span class="no">✗ 📷</span></div>
+          <div class="row"><span>Mind · find a note</span><span class="ok">✓</span></div>
+          <div class="row"><span>Dates · passport</span><span class="no">✗</span></div>
+          <div class="row"><span>Agents · hotel</span><span class="no">✗ 📷</span></div>
+          <div class="row"><span>… 18 more</span><span class="small">›</span></div>
+          <span class="btn" style="text-align:center">Share the list with Claude</span><div class="small" style="text-align:center">Sends the text and screenshots through your share sheet. Nothing is sent by itself.</div></div></div></div>
+    </div>
+    <div>
+      <h2><span class="code">B5</span>Test every page, guided</h2>
+      <div class="ar">اختبار كل صفحة على موبايلك خطوة بخطوة</div>
+      <b style="display:block;margin-top:12px">What I understood</b>
+      <ol class="u">
+        <li>It lives in <b>Settings › Test every page</b>, and in the side menu's search as "test". It's for you now, before launch. Later it can be hidden for regular users.</li>
+        <li>It walks through <b>every page on the Tools list</b> (23 today), with one real thing to try per page. The things to try use your own data where you have it (your barber, your bank SMS) and examples otherwise, plus what the page should do.</li>
+        <li>For each page: <b>✓ Works</b>, <b>✗ Wrong</b> (with a note and an optional screenshot) or Skip. <b>Open …</b> jumps to the page and you come back to the same step.</li>
+        <li>Progress is kept, so you can stop and carry on later. Each run is stamped with the app version.</li>
+        <li>At the end, <b>Share the list</b> sends the results through your share sheet, as text plus your screenshots, to WhatsApp, e-mail, or here. Nothing is ever sent by itself.</li>
+        <li>On the computer it's the same steps in a side panel beside the page being tested. In all 20 languages.</li>
+      </ol>
+      <label class="pick"><input type="checkbox" data-c="OK-B5"> OK-B5, build it like this</label>
+      <textarea data-n="OK-B5" placeholder="Your note on B5 (optional)"></textarea>
+    </div>
+  </section>
+</div></div>
+
+<div class="pickbar"><div class="sum" id="sum">Nothing ticked yet</div><button id="copy" disabled>Copy my picks</button></div>
+<textarea id="out" readonly aria-label="Your picks"></textarea>
+<script>
+{
+const CODES = ["OK-B1", "OK-B5"], KEY = "attune-b1b5-v1";
+let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const text = () => CODES.filter((c) => st[c] && st[c].on).map((c) => c + (st[c].note && st[c].note.trim() ? " — " + st[c].note.trim().replace(/\s+/g, " ") : "")).join("\n");
+const sum = document.getElementById("sum"), btn = document.getElementById("copy"), out = document.getElementById("out");
+const paint = () => { for (const c of CODES) { const s = st[c] || {}; document.querySelector(`[data-c="${c}"]`).checked = !!s.on; const n = document.querySelector(`[data-n="${c}"]`); if (n.value !== (s.note || "")) n.value = s.note || ""; }
+  const t = text(); sum.textContent = t ? "Picked: " + t.split("\n").map((l) => l.split(" — ")[0]).join(", ") : "Nothing ticked yet"; btn.disabled = !t; };
+document.addEventListener("change", (e) => { const c = e.target.dataset.c; if (!c) return; st[c] = { ...(st[c] || {}), on: e.target.checked }; save(); paint(); });
+document.addEventListener("input", (e) => { const c = e.target.dataset.n; if (!c) return; st[c] = { ...(st[c] || {}), note: e.target.value }; if (e.target.value.trim()) st[c].on = true; save(); paint(); });
+btn.addEventListener("click", async () => { const t = text(); if (!t) return; try { await navigator.clipboard.writeText(t); btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy my picks"), 1800); } catch (e) { out.style.display = "block"; out.value = t; out.select(); btn.textContent = "Select + copy below"; } });
+paint();
+}
+</script>
