@@ -75,7 +75,7 @@ export function classify(typed0, { now = Date.parse("2026-11-10T12:00:00"), both
       if (teach) return { doActions: Math.max(1, doActions), teach: true };
       return { doActions, goal: T(() => looksLikeGoal(text), false), metro: !!T(() => metroAsk(text)), automation: !!T(() => parseAutomation(text)), watch: !!T(() => parseWatch(text)), mission: !!(pm && pm.deadline), agent }; };
     const o = T(() => cmdRoute(typed, { api: { detect: det, records: () => [] }, prefs: {} }));
-    if (o) { const m = { list: "list", todoAdd: "todo", todos: "todo", whereSave: "where", confirm: "where", rememberNote: "note", found: "find", email: "email", projectTask: "todo" }[o.type];
+    if (o) { const m = { list: "list", autolist: "list" /* v10.9.8: "buy milk" → the Groceries list */, todoAdd: "todo", todos: "todo", whereSave: "where", confirm: "where", rememberNote: "note", found: "find", email: "email", projectTask: "todo" }[o.type];
       if (m && !(o.type === "email")) return { k: m }; if (o.type === "email") return { k: "email" };
       if (o.type === "lines" && o.lines[0] && (o.lines[0].open === "memory" || /where|فين/i.test(typed))) return { k: "where" }; } }
   if (UND.looksFranco(typed)) { const arT = UND.francoToArabic(typed);
