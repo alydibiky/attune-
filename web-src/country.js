@@ -185,10 +185,11 @@ export function myCountry(store = typeof localStorage !== "undefined" ? localSto
 }
 /** Only a country the person chose — what defaults (currency, VAT) follow; a guess never changes their numbers. */
 export function savedCountry(store = typeof localStorage !== "undefined" ? localStorage : null) {
-  try { const v = store && store.getItem(COUNTRY_KEY); return v && COUNTRIES[v] ? v : null; } catch (e) { return null; }
+  // v10.9.10: "EG" and "eg" are the same country (the persona test saved "EG" and silently ran as a US phone)
+  try { const v = String((store && store.getItem(COUNTRY_KEY)) || "").trim().toLowerCase(); return v && COUNTRIES[v] ? v : null; } catch (e) { return null; }
 }
 export function setCountry(code, store = typeof localStorage !== "undefined" ? localStorage : null) {
-  try { if (COUNTRIES[code]) store.setItem(COUNTRY_KEY, code); else store.removeItem(COUNTRY_KEY); } catch (e) {}
+  try { const c = String(code || "").trim().toLowerCase(); if (COUNTRIES[c]) store.setItem(COUNTRY_KEY, c); else store.removeItem(COUNTRY_KEY); } catch (e) {}
 }
 /** The emergency numbers as short lines: ["Police 122", "Ambulance 123", "Fire 180"] or ["Emergency 112"]. */
 /** v9.9.18 (Ali: "all countries"): the weekend days (0 = Sunday) — "weekdays" reminders skip these, not Egypt's Fri + Sat everywhere. */

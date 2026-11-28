@@ -361,8 +361,8 @@ class AgentWatchReceiver : BroadcastReceiver() {
 /** v10.9.10: one-shot background work an alarm wakes (agents' round, Scout at night). A job may run ~10 minutes; a receiver ~60 s. */
 class BgRunJob : android.app.job.JobService() {
     companion object {
-        const val AGENTS = 0x5c0b1
-        const val SCOUT = 0x5c0b2
+        const val AGENTS = 0x5c0b3   // (0x5c0b1 is AiNightJob — tests/unit/v10910jobids.test.mjs)
+        const val SCOUT = 0x5c0b4
         /** true = the job is planned (Android runs it as soon as there is a network). */
         fun start(ctx: Context, id: Int): Boolean = try {
             val js = ctx.getSystemService(android.app.job.JobScheduler::class.java)

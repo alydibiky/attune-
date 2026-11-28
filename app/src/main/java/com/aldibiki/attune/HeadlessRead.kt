@@ -52,9 +52,15 @@ object HeadlessRead {
                 w.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(v: WebView, u: String?) {
                         v.evaluateJavascript(kit, null)
-                        for (ms in longArrayOf(3000L, 6000L, 10000L, 15000L, 21000L)) v.postDelayed({ try { v.evaluateJavascript(kit, null); v.evaluateJavascript(read, null) } catch (e: Exception) {} }, ms)
+                        // v10.9.10 (the Android audit): this WebView is never attached to a window, and a detached view's postDelayed waits for the
+                        // attach (API 24+) — the reads never ran and every check waited 24 s for nothing. The main thread's Handler runs them.
+                        val h = android.os.Handler(android.os.Looper.getMainLooper())
+                        for (ms in longArrayOf(3000L, 6000L, 10000L, 15000L, 21000L)) h.postDelayed({ try { v.evaluateJavascript(kit, null); v.evaluateJavascript(read, null) } catch (e: Exception) {} }, ms)
                     }
                 }
+                // v10.9.10: MainActivity.onStop pauses the timers of EVERY WebView in the app (pauseTimers is global) — with Attune in the
+                // background the site's own scripts never ran here. Resumed for this read; the app pauses them again when it next stops.
+                try { w.resumeTimers() } catch (e: Exception) {}
                 w.loadUrl(url)
             } catch (e: Throwable) { failed.set(true) }
         }

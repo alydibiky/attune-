@@ -32,7 +32,10 @@ object PlaceGeo {
     /** { reminders: [{ id, title, place, on: arrive|leave, done }], places: [{ id, name, lat, lng }] } → saved + the alerts set again. */
     fun save(ctx: Context, json: String) { ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("data", json).apply(); arm(ctx) }
     private fun pi(ctx: Context, id: String, kind: String, flags: Int): PendingIntent? =
-        PendingIntent.getBroadcast(ctx, ("geo$kind$id").hashCode(), Intent(ctx, PlaceReceiver::class.java).putExtra("id", id).putExtra("kind", kind), flags or PendingIntent.FLAG_IMMUTABLE)
+        PendingIntent.getBroadcast(ctx, ("geo$kind$id").hashCode(), Intent(ctx, PlaceReceiver::class.java).putExtra("id", id).putExtra("kind", kind),
+            // v10.9.10 (the Android audit): Android adds KEY_PROXIMITY_ENTERING to this intent when the alert fires — an IMMUTABLE intent
+            // can't take it, so PlaceReceiver returned at once and a place reminder never rang. MUTABLE is allowed: the intent names its receiver.
+            flags or (if (android.os.Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
     fun arm(ctx: Context) {
         if (!supported(ctx)) return
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
