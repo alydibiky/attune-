@@ -1,5 +1,6 @@
 # Attune — read this first (every session)
 
+0000000. **REPAIR PLAN FIRST (Ali, 28 Nov 2026): read `REPAIR_PLAN.md` and work its first unticked phase — no new features until its scoreboard is green; every mistake is fixed in the ONE shared module that decides it, never on one screen.**
 000000. **THE BRAND (Ali, 4 Nov 2026): Attune = a life planner / organiser + productivity app with offline AI** (phone: your
    day, money, dates, people, documents; computer: organise work, read and sort PDFs, understand context). Read the top of
    **`VISION.md`** and **`FEATURES.md`** (every feature, its use and verdict) before anything else. Business features go to the
