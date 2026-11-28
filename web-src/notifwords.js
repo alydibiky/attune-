@@ -6,6 +6,8 @@
      notAPayment(text, n) → "" (could be a payment) | "code" | "failed" | "notyet" | "offer" | "price" | "post" | "scam" | "person"
    Pure; tests: tests/unit/v9917notifs.test.mjs and the 10,000 run (bash tests/notifs/run.sh).                                      */
 
+import { OFFER, DONE, isAdvert } from "./adverts.js";
+
 // a one-time code — also when it names the purchase it is for ("397519 is your verification code for … purchase of EGP 567")
 export const CODE_W = /\b(otp|one[- ]time|verification code|security code|passcode|auth(?:entication)? code|2fa)\b|\b(?:use|enter) (?:the )?code \d{4,8}\b|\b\d{4,8} is your\b|رمز التحقق|كود التحقق|كود التفعيل|رمز التفعيل|كلمة المرور لمرة|الرمز السري|لا تشارك(?:ه|ها)?\s(?!بيانات|معلومات|حساب|ارقام|أرقام)|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|doğrulama kodu|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)(?![\p{L}])/iu;
 // it did NOT happen: declined, failed, not charged
@@ -13,7 +15,8 @@ export const FAILED_W = /\b(couldn'?t (?:charge|process|complete|renew)|could no
 // it has not happened YET: due, will be charged, to be paid on delivery, a quote, a request, a limit, something maturing
 export const NOTYET_W = /\b(changing (?:its|the|your) price|price (?:change|increase)s?\b|(?:salary|pay) ?slip|payslip|(?:renewal )?quote(?=\s*:)|quotation|will be (?:egp|usd|sar|aed|le|eur)|starting (?:january|february|march|april|may|june|july|august|september|october|november|december|next month)|will be (?:charged|billed|debited|deducted|renewed|collected|delivered|credited|refunded)|you'?ll be (?:charged|billed)|you will be (?:charged|billed)|will renew|renews on|auto-?renew|upcoming (?:payment|charge|bill)|payment (?:is )?due|is (?:now )?(?:due|overdue|payable)|are (?:now )?(?:due|overdue|payable)|(?:due|payable) (?:on|by|in|before|date|within)|due \d|overdue|total due|minimum due|amount due|pay (?:it |now |online )?before|to be paid|cod amount|cash on delivery|free trial|trial (?:ends|period)|matures on|estimated at|offered|requested|would (?:be|cost)|will arrive|in \d+\s*[–-]\s*\d+ (?:business |working )?days|credit limit|limit (?:has been |was )?(?:increased|raised|changed)|scheduled (?:for|on)|is being (?:reviewed|processed|verified)|being processed|is pending|pending approval|once it is processed|refund request|your request (?:to|for))\b|سيتم (?:خصم|تجديد|التجديد|سحب)|مستحق|(?:آخر|اخر) (?:ميعاد|موعد|يوم)|موعد (?:الدفع|السداد)|صدرت بقيمة|قيد (?:المراجعة|التنفيذ)|سدد قبل|السداد قبل|المبلغ المطلوب|الفترة التجريبية|تاريخ الاستحقاق|سعر الكشف|يطلب منك|طلب منك|الحد الائتماني|حد البطاقة|(?<![\p{L}])(sera (?:débité|prélevé|facturé)|se renouvelle|essai gratuit|será (?:cobrado|cargado|debitado|renovad[oa])|se renovará|prueba gratuita|teste grátis|vence em|vence el|wird (?:abgebucht|belastet|verlängert)|fällig|probemonat|verrà addebitat[oa]|si rinnova|scade il|tahsil edilecek|yenilenecek|son ödeme|akan (?:ditagih|didebit)|jatuh tempo)(?![\p{L}])/iu;
 // an offer / advert, in the app's languages (added to each reader's own list)
-export const OFFER_W = /\b(price drop|on your wishlist|pay later|0% interest|interest[- ]free|installments? (?:starting|from)|orders? (?:above|over)|up to \d+ ?%|\d+ ?% ?(?:off|cashback|discount)|flash sale|last chance|buy (?:1|one) get|free delivery|free shipping|invite (?:a |your )?friends?|deal of the day|weekend treat|pre-?approved|apply now|loan (?:offer|up to))\b|عروض|خصومات|تخفيضات|تبدأ من|استمتع ب|تتيح لك|في صورة نقاط|نقاط (?:مكافآت|مكافات|share)|كاش ?باك|٪ من قيمة|% من قيمة|بحد أقصى|لمعرفة المزيد|حتى \d+ ?[٪%]|توصيل مجاني|ضعف الدقايق|اطلب قرض|بدون ضامن|قرض شخصي|(?<![\p{L}])(offre|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|sconto|offerta|aanbieding|korting|à partir de|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
+// v10.9.10 REPAIR P1: the advert words and the "money really moved" words live in ONE place now (adverts.js); kept under the old names
+export const OFFER_W = OFFER;
 // a price / a stock / a rate moving — news, not the person's money
 export const PRICE_W = /\b(?:is |are )?(?:up|down)\b[^.\n]{0,14}\d|\b(?:fell|rose|gained|dropped|climbs?|climbed|crossed|closed at|trading at)\b|\b(?:now|today at)\s+(?:egp|\$|usd|€|£)|\bper (?:gram|ounce|barrel|litre|liter|share)\b|\b(?:usd|eur|gbp|egp|sar|aed|btc|eth)\/(?:usd|eur|gbp|egp|sar|aed|usdt)\b|عيار|سعر (?:الدولار|الذهب|الدهب|اليورو|البنزين)|يسجل/iu;
 // a post, a video, a listing somebody shared
@@ -32,7 +35,7 @@ const MISTAKE = /(?:بالخط[أإاءئ]|بالغلط|عن طريق الخط[�
 export const isScam = (text, sender = "") => { const t = String(text || ""); return PRIZE.test(t) || MISTAKE.test(t) || (LINK.test(t) && LURE.test(t) && !ownLink(t, sender)); };
 /** An SMS whose sender is a person's phone number, not a bank's name ("+20 10…", "0101…") — people TALK about money there, like in a chat. */
 export const fromPhoneNumber = (n) => !!n && /messag|\bsms\b|mms|رسائل/i.test(String(n.app || "") + " " + String(n.pkg || "")) && /^\s*\+?[\d\s().-]{7,}\s*$/.test(String(n.title || ""));
-const HAPPENED = /\b(debited|credited|charged|you paid|you sent|you received|was deducted|refunded)\b|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|دفع|سداد)|استلمت|وصلك/iu;
+const HAPPENED = DONE;
 
 /** Why this notification is not money that moved ("" when it could be). n = { app, pkg, title } for the sender checks. */
 export function notAPayment(text, n = null) {
@@ -48,7 +51,7 @@ export function notAPayment(text, n = null) {
   if (/\b(?:to be|will be|is to be)\s+\S{0,7}…\s*$|(?<![\p{L}])(?:سيتم|هيتم|هتتخصم|هيتخصم)\s+\S{0,6}…\s*$/u.test(t)) return "notyet";
   if (/تم\s+طلب\s+(?:سحب|تحويل|دفع)|للتأكيد\s+اطلب|لتأكيد\s+العملية|في\s+انتظار\s+(?:التأكيد|موافقتك)|\b(?:pending (?:your )?(?:approval|confirmation)|awaiting (?:your )?confirmation|to confirm,? (?:dial|reply|enter))\b/i.test(t)) return "notyet";
   if (/(?:^|[\]:—-])\s*(?:please|kindly)\s+(?:transfer|pay|send)\b|(?:برجاء|يرجى|من فضلك|رجاء)\s+(?:تحويل|دفع|سداد)/iu.test(t)) return "notyet";
-  if (OFFER_W.test(t) && !HAPPENED.test(t)) return "offer";
+  if (isAdvert(t)) return "offer";
   if (PRICE_W.test(t) && !HAPPENED.test(t)) return "price";
   if (POST_W.test(t)) return "post";
   return "";

@@ -4,6 +4,8 @@
    unreadable texts are dropped; the same payment notified twice (an update, or the bank AND InstaPay) is kept once.
    The entries are listed in Money to confirm; confirmed ones go to Money (Yusr) through the bridge ("add-txns").
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
+import { isAdvert, DONE, plain } from "./adverts.js";
+import { samePayment } from "./dedupe.js";
 import { catFor, loadCatRules } from "./catlearn.js";
 import { labelOf, notMoney, countsAsMoney, understandNote as readMeaning } from "./notelabels.js";   // v9.9.11 what the person taught
 import { notAPayment , cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
@@ -43,7 +45,7 @@ export function categorise(text, direction) {
 // v6.27: one-time codes, balance-only messages and adverts in the world's common languages
 const OTP = /\b(otp|one[- ]time|verification code|security code|passcode|pin|2fa)\b|رمز التحقق|كود التفعيل|كلمة المرور لمرة|رمز التفعيل|(?<![\p{L}])(code de (?:vérification|sécurité|confirmation)|código de (?:verificación|seguridad|verificação|confirmação)|bestätigungscode|sicherheitscode|tan\b|doğrulama kodu|şifre|kode (?:otp|verifikasi)|codice (?:di verifica|otp)|verificatiecode|код подтверждения|验证码|인증번호|認証コード)/iu;
 const BALANCE_ONLY = /^(?=.*(?<![\p{L}])(balance|available|solde|saldo|kontostand|bakiye|остаток|余额|잔액|رصيدك|الرصيد)(?![\p{L}]))(?!.*(?<![\p{L}])(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|spent|débité|crédité|paiement|cargo|abono|compra|pago|pagamento|zahlung|gutschrift|harcama|ödeme|pembayaran|списан|зачислен|payment|salary|refund|خصم|إيداع|ايداع|أيداع|اضافة|إضافة|أضافة|اضيف|أضيف|تحويل|سحب|شراء|استلام|سداد|استلمت|استقبلت|وصلك|اتحولك|حولت|دفعت|تم دفع|total|virement|re[cç]u|achat|havale|eft|gelmi[sş]tir|al[ıi][sş]veri[sş]|didebet|debet|menerima|pembelian|kartenzahlung|erhalten|überweisung|accredito|addebito|bonifico|pagou|recebeu|pix|recibiste|recibido|transferencia|debit|credit|dr|cr|amt|betaald|ontvangen|حوالة|حواله|withdrawal|withdrawn|deposited|purchased|transferred|refunded|pos)(?![\p{L}]))/iu;   // v9.0: «استلمت 300 ج.م … رصيدك» is money received, not a balance
-const PROMO = /\b(offer|discount|win|cashback offer|promo|sale|% off|deal of the day|coupon)\b|عرض|خصم \d+%|اربح|كاش باك|(?<![\p{L}])(offre|promotion|soldes|oferta|descuento|promoción|promoção|desconto|angebot|rabatt|gutschein|kampanya|indirim|fırsat|diskon|promo|sconto|offerta|aanbieding|korting|скидка|акция|优惠|할인|セール)(?![\p{L}])/iu;
+// (v10.9.10 REPAIR P1: the advert check is adverts.js isAdvert — one list for every reader)
 
 // v6.27: a charge that has NOT happened yet (a trial ending, a renewal, an upcoming bill) is the Deadline Radar's, not a payment
 const FUTURE = /\b(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|auto-?renew|upcoming (?:payment|charge|bill)|payment (?:is )?due|due on|due date|free trial|trial (?:ends|period)|reminder)\b|سيتم خصم|سيتم التجديد|تنتهي الفترة التجريبية|الفترة التجريبية|تاريخ الاستحقاق|(?<![\p{L}])(sera (?:débité|prélevé|facturé)|se renouvelle|essai gratuit|será (?:cobrado|cargado|debitado|renovad[oa])|se renovará|prueba gratuita|teste grátis|wird (?:abgebucht|belastet|verlängert)|probemonat|testphase|verrà addebitat[oa]|si rinnova|prova gratuita|tahsil edilecek|yenilenecek|ücretsiz deneme|akan (?:ditagih|didebit)|uji coba)(?![\p{L}])/iu;
@@ -72,9 +74,11 @@ export function readNotification(n, opts, why) {
   const text = [/^\s*\+?[\d\s-]{3,16}\s*$/.test(String(n.title || "")) ? "" : n.title, n.text].filter(Boolean).join(" — ").trim();
   if (!text) return no("empty");
   if (OTP.test(text)) return no("code");
-  if (BALANCE_ONLY.test(text)) return no("balance");
+  // (v10.9.12 REPAIR P1: "only a balance" unless the shared money-moved words (adverts.js DONE) say a payment happened too —
+  // "Transaction approved: 85 EGP … Available balance", «تم تجديد باقتك … رصيدك المتاح», "You sent EGP 50 … Available balance")
+  if (BALANCE_ONLY.test(text) && !DONE.test(plain(text))) return no("balance");
   if (FUTURE.test(text)) return no("notyet");
-  if (PROMO.test(text) && !/\b(debited|charged|received|paid)\b|تم خصم|تم تحويل|تم استلام/i.test(text)) return no("offer");
+  if (isAdvert(text)) return no("offer");
   // v9.9.17 (the 10,000-notification run): a code that names its purchase, a declined / failed payment, a bill that is only due, a
   // fine, "you will be billed", an offer, a price moving, a prize text, an SMS from a person's number — none of them is money that
   // moved (what the person taught as "my bank / my money" is still read); a video's title or an advert is never a payment
@@ -106,7 +110,9 @@ export function inbox(queue, done = [], opts) {
   for (const n of [...(queue || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0))) {
     if (skip.has(n.id)) continue;
     const e = readNotification(n, opts); if (!e) continue;
-    if (out.some((x) => x.direction === e.direction && Math.abs(x.amount - e.amount) < 0.005 && Math.abs(x.ts - e.ts) < 10 * 60000)) continue;
+    // v10.9.12 REPAIR P1: dedupe.js decides (the same amount minutes apart is NOT the same payment when the payee, the currency or the
+    // email account differ — two InstaPay transfers of 500 to Ahmed and to Mona used to become one)
+    if (out.some((x) => samePayment(x, e))) continue;
     out.push(e);
   }
   return out;
@@ -132,8 +138,9 @@ export function evidenceOf(e) {
 export function alreadyIn(entry, ledger) {
   if (!entry || !(entry.amount > 0) || !ledger || !Array.isArray(ledger.txns)) return null;
   const type = entry.direction === "in" ? "income" : "expense", day = toTxns([entry])[0].date, shop = merchantOf(entry.party || "");
-  return ledger.txns.find((t) => t && t.type === type && t.date === day && Math.abs((Number(t.amount) || 0) - entry.amount) < 0.005
-    && (t.source !== "notification" ? true : (t.created && entry.ts) ? Math.abs(t.created - entry.ts) <= 10 * 60000 : !!shop && merchantOf(t.note) === shop)) || null;
+  // v10.9.12 REPAIR P1: dedupe.js decides; a typed / boxed entry counts by its day (it was typed whenever), a notification by its minutes
+  return ledger.txns.find((t) => t && t.type === type && t.date === day && samePayment(entry, t, { ledger, byDay: t.source !== "notification" })
+    && (t.source !== "notification" || !!(t.created && entry.ts) || (!!shop && merchantOf(t.note) === shop))) || null;
 }
 
 /* v9.9.10 (Ali: "an AI model should assess the notifications so it knows what everything is about, and it should have asked me

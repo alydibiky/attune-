@@ -19,6 +19,9 @@
 import { merchantOf, SUBS } from "./guardian.js";
 import { readDeadlines, isoDay, datesIn } from "./deadlines.js";
 import { isSignInMessage } from "./notifwords.js";
+import { isAdvert, DONE, plain } from "./adverts.js";
+import { samePayment } from "./dedupe.js";
+import { parsePayment } from "./yusr/paytext.js";
 
 const DAY = 86400000;
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -77,11 +80,10 @@ const W = (words) => new RegExp("(?<![\\p{L}])(?:" + words + ")(?![\\p{L}])", "i
 const CHARGE = W("receipt|invoice|order (?:confirmed|confirmation|receipt|total|#|no\\.?|number)|your order (?:of|has been (?:placed|confirmed|delivered))|payment of [^.\\n]{1,30} (?:was |has been )?(?:received|successful)|payment (?:received|confirmation|successful)|you(?:'ve| have)? paid|charged|billed|renewed|has been renewed|renewal (?:receipt|confirmation)|subscription (?:confirmed|renewed)|thanks for your (?:purchase|payment)|إيصال|فاتورة|تم الدفع|تم خصم|تم تجديد|تم التجديد");
 const HIKE = W("price (?:increase|change|update)|prices? (?:is|are|will be) (?:going up|increasing|changing)|new price|will (?:increase|go up|rise)|increas(?:e|ing) (?:the|your) (?:price|subscription)|raising (?:the|our) price|زيادة (?:في )?(?:السعر|الأسعار|سعر)|السعر الجديد|سعر جديد|تغيير (?:في )?السعر");
 const PERK = W("points?|voucher|coupon|gift card|reward|rewards|cashback|cash back|lounge|complimentary|perk|perks|free month|unclaimed|redeem|benefits?|قسيمة|كوبون|نقاط|نقطة|مكافأة|مكافآت|هدية|استرداد نقدي|ميزة|مزايا");
-/** An advert / offer, not a payment: "EGP 800 off your first order", "Last chance!", "Don't miss…", «خصم ٥٠٪». */
-const PROMO = W("\\d+\\s?% off|off your|(?:egp|le|usd|sar|aed|\\$|€|£)\\s?[\\d.,]+\\s?off|[\\d.,]+\\s?(?:egp|le|usd|sar|aed)\\s?off|discount|deals?|offers?|promo(?:tion)?|promo ?code|use (?:the )?code|code\\s?:|last chance|don'?t miss|do not miss|hurry|limited time|ends (?:tonight|today|soon)|free delivery|first order|save (?:up to|\\d)|sale|flash|treat yourself|craving|hungry|order now|shop now|get it now|unlock|win|خصم|خصومات|عرض|عروض|كود|كوبون|وفر|توفير|لفترة محدودة|اطلب (?:دلوقتي|الآن|الان)|أول طلب|اول طلب|فرصة أخيرة|متفوتش|لا تفوت");
-const REAL_PAY = W("receipt|invoice|charged|billed|you(?:'ve| have)? paid|payment (?:received|confirmation|successful)|has been renewed|subscription (?:confirmed|renewed)|إيصال|فاتورة|تم الدفع|تم خصم|تم تجديد|تم التجديد");
+// a receipt that says it is a renewal / a subscription / a membership counts as a service even from a name not in the list (v10.9.10)
 const SUB_WORDS = W("renewed|has been renewed|renewal (?:receipt|confirmation)|subscription (?:confirmed|renewed|receipt|payment)|your (?:subscription|membership|plan) (?:has been |was |is )?(?:renewed|active|confirmed)|membership (?:fee|renewal)|monthly plan|annual plan|yearly plan|تم تجديد (?:اشتراكك|الاشتراك)|تجديد الاشتراك|اشتراكك");
-export const isPromo = (text) => PROMO.test(String(text || "")) && !REAL_PAY.test(String(text || ""));
+// v10.9.10 REPAIR P1: an advert is decided by adverts.js (one list for every reader); kept under the old name
+export const isPromo = isAdvert;
 /** v10.9.10 (Ali: "I have 2 Claude accounts … it should understand the notification comes from 2 different emails"): the email
  *  account a message went to — the Gmail notification's account line (acct), else an address in the text that is not the sender's. */
 export const accountOf = (s) => { const a = String((s && s.acct) || "").toLowerCase().match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/); if (a) return a[0];
@@ -100,28 +102,39 @@ export function readSource(s, { now = Date.now() } = {}) {
   const text = [s.title, s.text].filter(Boolean).join(" — ").replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "").replace(/[ \t\u00a0]+/g, " ")
     .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/(\d)٫(\d)/g, "$1.$2").replace(/(\d)٬(\d)/g, "$1,$2"), out = [];   // and Arabic-Indic digits «٧٥ جنيه»
   if (!text.trim() || isSignInMessage(text)) return out;   // v10.2: a sign-in link / login code is never a subscription
-  if (isPromo(text)) return out;   // v10.9.10: an advert is never a charge, a trial, a renewal, a rise or a perk
+  // v10.9.10: an advert is never a charge, a trial, a renewal or a rise — but YOUR own points / voucher ("You have 5,209 points. Redeem your
+  // 50 EGP voucher") is a perk, even with advert words in it
+  const ownPerk = /\b(?:you have|you've got|your)\b[^.\n]{0,30}\b(?:points?|voucher|reward|credit|miles)\b|(?:نقاطك|رصيد نقاطك|عندك [\d٠-٩][\d٠-٩,]* نقط|قسيمتك)/i.test(text);
+  if (isPromo(text) && !ownPerk) return out;
   // a KNOWN service (Netflix, Claude…) is one thing; a name guessed from the sender / title is only a merchant (it needs 3 months)
   const known = serviceOf(text) || serviceOf(s.from);
   const service = known || titleCase(merchantOf(String(s.from || "").replace(/<.*>|".*?"|@.*/g, "") || s.title || ""));
   const acct = accountOf(s);
   const money = moneyIn(text), src = { id: s.id, kind: s.kind, at: s.at || now, title: s.title || "", link: s.link || "", app: s.app || "", text: text.slice(0, 400), ...(acct ? { acct } : {}) };
   const cadence = YEARLY.test(text) ? "year" : QUARTER.test(text) ? "quarter" : MONTHLY.test(text) ? "month" : "";
+  const ad = isPromo(text);
   // price rise: two amounts, the second bigger, in the same currency
-  if (HIKE.test(text) && money.length >= 2) {
+  if (!ad && HIKE.test(text) && money.length >= 2) {
     const [a, b] = money.length > 2 ? money.slice(-2) : money;
     if (b.amount > a.amount && (a.currency === b.currency || !a.currency || !b.currency))
       out.push({ type: "hike", service, from: a.amount, to: b.amount, currency: b.currency || a.currency, cadence: cadence || "month", src });
   }
   // trials and renewals: Deadline Radar's reader (dates, "7-day trial", "renews on")
-  for (const d of readDeadlines(text, { now: s.at || now, base: s.at || now })) {
+  for (const d of ad ? [] : readDeadlines(text, { now: s.at || now, base: s.at || now })) {
     if (d.confidence === "low" || (d.kind !== "trial" && d.kind !== "renewal")) continue;
     const m = money[0];
     out.push({ type: d.kind, service: serviceOf(d.title) || service, date: d.date, amount: m ? m.amount : 0, currency: m ? m.currency : "", cadence, src });
   }
   // a charge: a receipt / renewal receipt / invoice with an amount (a trial notice is not a charge)
-  if (CHARGE.test(text) && money.length && !out.some((e) => e.type === "trial" || e.type === "hike")) {
-    const m = money.reduce((a, x) => (x.amount > a.amount ? x : a), money[0]);   // the total is the biggest amount
+  // (v10.9.12: a charge is this reader's receipt words OR the shared "money moved" words with Money's reader saying it went OUT —
+  // "Purchase EGP 99.00 at SPOTIFY" was no charge here; a refund / money in never is one)
+  let outP = null; try { outP = parsePayment(text, { home: "" }); } catch (e) {}
+  if (!ad && (CHARGE.test(text) || (DONE.test(plain(text)) && outP && outP.direction === "out")) && money.length && !out.some((e) => e.type === "trial" || e.type === "hike")) {
+    // v10.9.12 REPAIR P1 (the money audit: "charged EGP 99.00 at SPOTIFY. Available limit EGP 20,000.00" became a 20,000 Spotify charge):
+    // Money's own amount reader decides (it knows limits, balances, card numbers, dates, codes); the biggest amount only when it finds none
+    let m = null;
+    try { const p = parsePayment(text, { home: "" }); if (p && p.amount > 0) m = money.find((x) => Math.abs(x.amount - p.amount) < 0.005) || { amount: p.amount, currency: p.currency || "" }; } catch (e) {}
+    if (!m) m = money.reduce((a, x) => (x.amount > a.amount ? x : a), money[0]);   // (a receipt's total is its biggest amount)
     // a receipt that says it is a renewal / a subscription / a membership counts as a service even from a name not in the list
     const subLike = known || SUB_WORDS.test(text) ? service : "";
     out.push({ type: "charge", service: subLike, merchant: subLike ? "" : service, acct, amount: m.amount, currency: m.currency, cadence, date: isoDay(s.at || now), src });
@@ -220,7 +233,8 @@ export function overpayCheck({ ledger, notes = [], emails = [], radar, now = Dat
   }
   // charges by service (a merchant that is not a known service counts only when paid 3+ months with steady amounts)
   const by = new Map();
-  const same = (x, e) => Math.abs(x.amount - e.amount) < 0.01 && Math.abs(Date.parse(x.date) - Date.parse(e.date)) <= 3 * DAY;
+  // v10.9.12 REPAIR P1: dedupe.js decides (a receipt email can come up to 3 days after the bank's SMS; another currency / account / payee is another charge)
+  const same = (x, e) => samePayment({ ...x, type: "charge", party: x.service || x.merchant }, { ...e, type: "charge", party: e.service || e.merchant }, { days: 3, byDay: true });
   // v10.9.10: charges that name the email account first (two Claude accounts = two subscriptions), then the rest — a bank SMS joins
   // the account whose email is the same charge (the bank AND the email: once)
   const charges = ev.filter((x) => x.type === "charge").sort((a, b) => (b.acct ? 1 : 0) - (a.acct ? 1 : 0));

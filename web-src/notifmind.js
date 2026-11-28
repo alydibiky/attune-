@@ -12,6 +12,7 @@
               every number / date the model gives must be in the notification) and merge() keeps the best of both.
    Code first (fast, offline, the same answer every time), the model for what code can't place — never the other way round.
    Pure; tests: tests/notifmind/gen.mjs (10,000 notifications, 34 kinds × 11 intents × 9 languages) + heldout.mjs + unit. */
+import { isAdvert } from "./adverts.js";
 import { understandNote as meaningOf } from "./notifmeaning.js";
 import { notAPayment, isScam, CODE_W, isSignInMessage, cleanNote } from "./notifwords.js";
 
@@ -116,7 +117,7 @@ const W = {
   alert: words(["is closed", "closed tomorrow", "closed today", "closed due to", "no school", "classes suspended", "someone is trying", "approve sign-in", "trying to sign in", "مغلقة", "تعطيل الدراسة", "battery low", "running low", "someone is at", "motion detected", "door opened", "door is open", "smoke", "water leak", "alarm", "intruder", "فيه حد عند", "الباب مفتوح", "البطارية ضعيفة", "declined", "rejected", "تم رفض", "رفض", "اترفض", "refusée", "refusé", "rechazada", "rechazado", "abgelehnt", "recusado", "recusada", "rifiutata", "rifiutato", "reddedildi", "ditolak", "alert", "warning", "urgent", "important", "suspicious", "unusual", "security alert", "new sign-in", "new login", "someone tried", "password changed", "low balance", "low battery", "emergency", "failed", "declined", "overdue", "late", "final notice", "action required", "immediately", "asap",
     "تنبيه", "تحذير", "عاجل", "ضروري", "مهم", "هام", "حالا", "حالاً", "فورا", "فوراً", "طوارئ", "الحقني", "الحقوني", "تسجيل دخول", "محاولة", "فشل", "مرفوض", "متأخرات", "إنذار", "انذار",
     "alerte", "urgent", "avertissement", "alerta", "urgente", "aviso", "warnung", "dringend", "achtung", "avviso", "uyarı", "acil", "peringatan", "darurat", "penting"]),
-  offer: /(?<![\p{L}])(?:\d+\s*%\s*(?:off|discount|خصم)|off\b|sale|discount|deal|deals|offer|offers|promo|promocode|coupon|cashback|limited time|free shipping|buy 1|save up to|for only|starting from|just for you|عرض|عروض|خصم\s*\d|تخفيض|تخفيضات|كوبون|كاش باك|اشتري|وفر|لفترة محدودة|promotion|soldes|réduction|oferta|descuento|rebaja|angebot|rabatt|desconto|promoção|offerta|sconto|indirim|kampanya|fırsat|diskon|promo|potongan)(?![\p{L}])/iu,
+  offer: { test: (x) => isAdvert(x) },   // v10.9.10 REPAIR P1: adverts.js decides (one list for every reader)
   greeting: words(["عيد ميلاد سعيد", "سنة سعيدة", "good morning", "good night", "good evening", "happy birthday", "happy new year", "eid mubarak", "ramadan kareem", "congratulations", "congrats", "miss you", "love you", "how are you", "thank you", "thanks", "hi", "hello", "hey",
     "صباح الخير", "مساء الخير", "تصبح على خير", "كل سنة وانت طيب", "كل سنه وانت طيب", "عيد سعيد", "عيد مبارك", "رمضان كريم", "مبروك", "الف مبروك", "وحشتني", "بحبك", "عامل ايه", "عاملة ايه", "ازيك", "شكرا", "شكراً", "تسلم", "ربنا يخليك", "السلام عليكم", "اهلا", "أهلا",
     "bonjour", "bonsoir", "joyeux anniversaire", "merci", "buenos días", "buenas noches", "feliz cumpleaños", "gracias", "guten morgen", "gute nacht", "alles gute", "danke", "bom dia", "boa noite", "parabéns", "obrigado", "buongiorno", "buonanotte", "auguri", "grazie", "günaydın", "iyi geceler", "doğum günün kutlu olsun", "teşekkürler", "selamat pagi", "selamat malam", "selamat ulang tahun", "terima kasih"]),

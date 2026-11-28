@@ -528,7 +528,9 @@ export function apply(a, stores, { now = Date.now() } = {}) {
       // Money is opened once): a new person's first entry starts the book here, with one Cash account in their own currency
       const ledger = stores.ledger || starterLedger(now);
       const r = appendToLedger(ledger, a.items, now);
-      const sum = a.items.reduce((s, x) => s + x.amount, 0), cur = ledger.currency || "";
+      // (v10.9.12: the entry's own currency in the "added" line — "Expense added: 9.99 USD", never "9.99 EGP")
+      const curs = [...new Set(a.items.map((x) => x.currency).filter(Boolean))];
+      const sum = a.items.reduce((s, x) => s + x.amount, 0), cur = (curs.length === 1 ? curs[0] : "") || ledger.currency || "";
       const out = a.items.every((x) => x.type === "expense");
       return { stores: { "ledger.v3": r.ledger }, open: "money",
         done: { en: `${out ? "Expense" : "Money"} added: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join(", ")}.`, ar: `${out ? "اتضاف مصروف" : "اتضاف مبلغ"}: ${num(sum)} ${cur} — ${a.items.map((x) => x.note || x.cat).join("، ")}.` } };

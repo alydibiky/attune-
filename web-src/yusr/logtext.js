@@ -95,12 +95,15 @@ export function dateIn(text, today) {
   return null;
 }
 
+const NOT_TYPO = new Set(["charged", "charges", "charge", "debited", "credited", "balance", "account", "accounts", "purchase", "payment", "payments", "transaction", "approved", "available", "total", "order", "orders", "receipt", "invoice", "transfer", "transferred", "received", "refund", "refunded", "deposit", "withdrawal", "card", "cards", "ending", "amount", "limit", "dear", "customer", "thank", "thanks", "successful", "successfully", "your", "with", "from", "that", "this", "have", "been", "will", "date", "time"]);
 /** The category id for a piece of text (one of `ids`, else "other"). */
 export function catOf(text, ids = Object.keys(CAT_WORDS).concat("other")) {
   for (const [id, re] of Object.entries(CAT_WORDS)) if (ids.includes(id) && re.test(text)) return id;
   // persona 1 ("spnt 200 on lunh"): a word one letter away from a category word ("lunh" → lunch, "texi" → taxi)
   const words = String(text || "").toLowerCase().match(/[a-z]{4,}/g) || [];
-  for (const w of words) for (const [id, list] of CAT_LIST) if (ids.includes(id) && list.some((k) => k.length >= 4 && near1(w, k))) return id;
+  // (v10.9.12 the money audit: "Your card was charged … at ZYXSHOP" was Shopping — "charged" is one letter from "charger". A bank's own
+  // words are never a typo of a category word.)
+  for (const w of words) if (!NOT_TYPO.has(w)) for (const [id, list] of CAT_LIST) if (ids.includes(id) && list.some((k) => k.length >= 4 && near1(w, k))) return id;
   return ids.includes("other") ? "other" : ids[0];
 }
 // the plain English words of each category (from CAT_WORDS), for the one-letter-off match above

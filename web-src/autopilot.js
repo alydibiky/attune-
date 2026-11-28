@@ -7,6 +7,8 @@
    from now on?"; then they are added alone and listed as "done for you", each with Undo. Never twice: the bank SMS and the bank app's
    notification for the same amount are one; an expense already typed is matched, not added again. "Not this" teaches it (that app's
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
+import { isAdvert } from "./adverts.js";
+import { samePayment } from "./dedupe.js";
 import { isChatApp, readNotification, codeSure, moneySourceNote } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
@@ -78,7 +80,8 @@ export const subOf = (t) => (SUBS.find(([re]) => re.test(String(t || ""))) || [n
 const PAID_W = /\b(paid|payment|charged|renew(?:ed|al)|receipt|billed|purchase|subscription|subscribed|membership|order|invoice|debited|successful)\b|تم الدفع|دفعت|تم خصم|اتخصم|خصم مبلغ|اشتراك|تجديد|تم تجديد|فاتورة|عملية شراء|ايصال|إيصال/i;
 const DUE_W = /\b(?:is |are )?(?:now )?(?:due|overdue|payable)\b|pay (?:it |now )?before|\bdue (?:on|by|date|in)\b|مستحق|آخر ميعاد|اخر ميعاد|السداد قبل|سدد قبل/i;
 const BILL_W = /\b(bill|invoice|installment|instalment|fees?|fine|tax|rent|premium|payment)\b|فاتور|قسط|مخالف|مصاريف|رسوم|ضريب|ايجار|إيجار/i;
-const OFFER_W = /\b(get|try|free for|save|discount|deal|offer|limited time|\d+\s*%|for just|starting at|join now|upgrade now|ends soon|trial ends)\b|جرب|عرض|(?<!تم )خصم \d|وفر/i;
+// v10.9.10 REPAIR P1: adverts.js decides what an advert is; only a trial's own wording stays here (a trial notice is not a payment)
+const OFFER_W = { test: (x) => isAdvert(x) || /\b(?:trial ends|ends soon|free for \d|try (?:it )?free)\b|جرب مجان/i.test(x) };
 const curOf = (t) => { const m = /\b(egp|usd|sar|aed|eur|gbp|kwd|qar|try)\b|(e£|£|\$|€|جنيه|ج\.م|ريال|درهم)/i.exec(String(t || "")); if (!m) return ""; const k = (m[1] || m[2]).toLowerCase(); return { "e£": "EGP", "جنيه": "EGP", "ج.م": "EGP", "$": "USD", "€": "EUR", "£": "GBP", "ريال": "SAR", "درهم": "AED" }[k] || k.toUpperCase(); };
 
 // v9.9.12: the day the receipt says it was paid ("Order date: 7 Nov 2026", "Receipt from 7 Nov 2026") — the plan renews on that day,
@@ -114,7 +117,10 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   // v10.9 (real SMS: CIB's "available limit EGP 20,000.00. Purchase EGP 99.00 at SPOTIFY" made a 20,000 subscription; HSBC's "Purchase from
   // 006-109***-001 EGP 81.00-" an expense of 1): a bank / wallet message's amount is Money's own reading (paytext.js knows limits, card
   // numbers and balances) when it has one
-  const payAmt = (() => { try { const e = readNotification(n); return e && e.amount > 0 ? e.amount : 0; } catch (x) { return 0; } })();
+  const payE = (() => { try { return readNotification(n); } catch (x) { return null; } })(), payAmt = payE && payE.amount > 0 ? payE.amount : 0;
+  // v10.9.12 REPAIR P1 (the money audit: a $9.99 Steam / Netflix charge went into Money as 9.99 POUNDS through Autopilot — its card carried
+  // no currency): the currency Money's reader found, else this card's own reading; and the payee it found when there is no shop name
+  const payCur = (payE && payE.currency) || curOf(title + " " + text), payWho = (payE && payE.party) || "";
   { const all = all0, svc = subOf(all);
     if (svc && u.amount > 0 && !isChatApp(n) && !no && !left && u.kind !== "promo" && !(u.state === "money in" && !/payment(?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40}received|received your payment/i.test(all)) && PAID_W.test(all) && !OFFER_W.test(all)) {
       const d = paidDayOf(all, n.ts || now) || iso(n.ts || now);
@@ -129,16 +135,18 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   const bankMsg = u.kind === "bank" || moneySourceNote(n), paidSure = !!(lab && lab.meaning === "paid" && lab.sure);
   if (!bankMsg && u.amount > 0 && !isChatApp(n) && !no && !left && paidSure) {
     const shop = shopIn(title + " " + text) || (/messag|\bsms\b|gmail|mail|outlook/i.test(app) ? title : app);
-    return { ...base, kind: "expense", amount: u.amount, cat: catOf(shop + " " + app + " " + text), note: shop, date: iso(n.ts || now), via: "receipt", sure: true,
+    return { ...base, kind: "expense", amount: u.amount, cur: payCur, cat: catOf(shop + " " + app + " " + text), note: shop, date: iso(n.ts || now), via: "receipt", sure: true,
       key: "x:" + Math.round(u.amount * 100) + ":" + iso(n.ts || now), line: "Expense" };
   }
-  if (bankMsg && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || u.state === "money in" || paidSure)) {
+  // (v10.9.12: notifmeaning now really says "money in" — an incoming transfer Money isn't sure of waits in Money's own review list, as it
+  // did before, never as a new card on Home; a sure one is added by Money itself just below)
+  if (bankMsg && u.amount > 0 && !isChatApp(n) && !no && !left && (u.state === "money out" || (paidSure && u.state !== "money in") || (u.state === "money in" && (() => { try { const e = readNotification(n); return !!(e && codeSure(e)); } catch (x) { return false; } })()))) {
     // v9.9.30: a bank / wallet message Money is sure of goes into Money by itself — no card on Home asking for a tap
     { let e = null; try { e = readNotification(n); } catch (x) {} if (e && codeSure(e)) return null; }   // v9.9.9: never from a chat
     const shop = shopIn(title + " " + text), out = u.state === "money out" || (u.state !== "money in" && paidSure);
     const rc = out && paidSure && !moneySourceNote(n) && !/messag|\bsms\b|mms|رسائل/i.test(app + " " + String(n.pkg || ""));   // a shop's receipt (Steam, Booking.com), not a bank SMS: sure (v9.9.30)
     const amt = payAmt || u.amount;
-    return { ...base, kind: out ? "expense" : "income", amount: amt, cat: out ? catOf(shop + " " + text) : "other", note: shop || app, date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : out && paidSure ? { sure: true } : {}),
+    return { ...base, kind: out ? "expense" : "income", amount: amt, cur: payCur, party: shop || payWho, cat: out ? catOf(shop + " " + text) : "other", note: shop || (payWho ? payWho + " · " + app : app), date: iso(n.ts || now), ...(rc ? { via: "receipt", sure: true } : out && paidSure ? { sure: true } : {}),
       key: (out ? "x:" : "i:") + Math.round(amt * 100) + ":" + iso(n.ts || now), line: (out ? "Expense" : "Income") };
   }
   if (u.kind === "delivery") {
@@ -173,7 +181,9 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
 /** Already in the money book? (the same amount, same day, same direction — typed by hand or from the other copy of the notice) */
 export function inLedger(x, ledger) {
   if (!ledger || !(x.kind === "expense" || x.kind === "income")) return false;
-  return (ledger.txns || []).some((t) => t.type === x.kind && Math.abs((+t.amount || 0) - x.amount) < 0.01 && String(t.date || "").slice(0, 10) === x.date);
+  // v10.9.12 REPAIR P1: dedupe.js decides — the same day and amount but another payee / currency is another payment
+  const me = { type: x.kind, amount: x.amount, date: x.date, currency: x.cur || "", party: x.party || x.shop || "" };
+  return (ledger.txns || []).some((t) => t.type === x.kind && samePayment(me, t, { ledger, byDay: true }));
 }
 
 /** Every waiting suggestion: newest first, one per key, minus what was added, said no to, or is in Money already. */
@@ -251,11 +261,11 @@ export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filt
 
 /** A suggestion → the actions the Home box would run (doit.js apply). */
 export function actionsFor(x) {
-  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification",
+  if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, ...(x.cur ? { currency: x.cur } : {}), cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification",
     // v10.4: the complete message it was read from, kept with the payment (Ali: "the evidence of the complete real message")
     ...(x.via !== "receipt" && x.full && x.full.text ? { evidence: { text: String(x.full.text).slice(0, 2000), from: String(x.full.title || "").slice(0, 200), app: String(x.app || "").slice(0, 80), ts: +x.at || 0, ...(x.full.acct ? { acct: x.full.acct } : {}) } } : {}) }] }];
   if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
-    ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
+    ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, ...(x.cur ? { currency: x.cur } : {}), cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];
   return [{ kind: "reminder", action: { kind: "reminder", at: x.at, title: x.title } }];
 }

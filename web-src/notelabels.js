@@ -12,7 +12,8 @@
    bill / delivery / family / important → how it is described. Nothing is saved before "I understood … — Save".
    Pure; tests: tests/unit/v999notelabels.test.mjs. */
 import { readTeach, ROLES } from "./noteteach.js";
-import { notAPayment, isScam, OFFER_W, cleanNote } from "./notifwords.js";   // v9.9.17
+import { notAPayment, isScam, OFFER_W, cleanNote } from "./notifwords.js";
+import { isAdvert, DONE } from "./adverts.js";   // v9.9.17
 import { understandNote as kindOf } from "./notifmeaning.js";   // v9.9.30
 const ROLE_AR = Object.fromEntries(ROLES.map((r) => [r[0], r[2]]));
 
@@ -146,9 +147,9 @@ export function learned(teach, dir = { items: [] }) {
 //   a receipt that says you were charged → "paid" (asked as "You paid … — add it to Money?", never "what is this?")
 //   a chat whose name or sender says work / wages → "work" as a GUESS (the card opens on "I think: …" — Save / Change)
 // Nothing is saved without the person's tap; the sure ones are only left out of the questions.
-const AD = /(invite (?:a |your )?friends?|refer (?:a |your )?friends?|get (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,24}\boff\b|\d+(?:[.,]\d+)?\s?%\s?off|\binstead of\b|\bonly (?:for|today|this)\b|\bfor [^.\n]{0,20}\bonly\b|treat yourself|don'?t miss|limited[- ]time|hurry|last chance|flash sale|\bsale\b|\bdeals?\b|\boffers?\b|discount|promo\w*|coupon|voucher|use (?:the )?code|free delivery|free shipping|cashback|save up to|lowest price|new arrivals|order now|shop now|book now|\bwin\b|giveaway|sponsored|new collection|\bfrom (?:egp|\$|usd|€|£|ج\.م\.?)\s?[\d٠-٩]|buy (?:1|one) get|get (?:1|one) free|special offer|new arrivals|(?:plans?|prices?|items?|starting|installments? starting) (?:from|at)\b|starting (?:from |at )?(?:egp|\$|usd|€)|watch now|visit [a-z0-9-]+\.(?:com|eg|net)|bonus|اشترك (?:في|ف)|واحصل|احصل على|بـ? ?[\d٠-٩][\d٠-٩,.٬٫]* ?جنيه بس|بس بـ|بدل(?:ا|اً)? من|بدل ما|خصم(?=\s*(?:يصل|لحد|حتى|على|[\d٠-٩]+\s*[%٪]))|نسبة خصم|عرض|عروض|كوبون|كود الخصم|استخدم كود|وفر|توصيل مجاني|لفترة محدودة|متفوتش|الحق(?:ه|ها)?|هدية|اطلب دلوقتي|اطلب الآن|ادعي صاحبك|ادعُ صديق|اكسب|تخفيضات|لحق نفسك)/iu;
-const MOVED = /(تم دفع|total charged|paid online|charged (?:egp|usd|sar|aed|\$|€|£)\s?[\d٠-٩]|you'?ve been charged|amount charged|received your payment|has been renewed|you were charged|has been charged|was charged|we charged|charged to your|billed to|debited|credited|total paid|(?:\$|egp|usd|€)\s?[\d.,]+ paid|\bpaid (?:successfully|with|by|on)\b|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} (?:was|is) successful|تم تجديد|تم الدفع|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|paid successfully|you paid|you sent|you received|refund(?:ed)?|تم (?:خصم|تحويل|استلام|إيداع|ايداع|سحب|شراء|دفع|سداد)|استلمت|وصلك مبلغ)/iu;
-const RECEIPT = /(receipt|بنجاح|total charged|paid online|you paid|received your payment|amount charged|has been renewed|تم سداد|billed to|total paid|invoice|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} (?:was|is) successful|رقم العملية|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
+// v10.9.12 REPAIR P1: the advert words (AD) and the money-moved words (MOVED) are in adverts.js now — one list for every reader
+const MOVED = DONE;
+const RECEIPT = /(receipt|order total|order (?:confirmed|confirmation)|بنجاح|total charged|paid online|you paid|received your payment|amount charged|has been renewed|تم سداد|billed to|total paid|invoice|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} (?:was|is) successful|رقم العملية|you'?ve been charged|you were charged|has been charged|was charged|we charged|payment (?:received|successful|confirmed|complete[d]?)|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|paid successfully|thanks? (?:you )?for your (?:payment|purchase|order)|invoice (?:paid|#|no)|order (?:number|no\.?|#)|subscription (?:continues|renewed|has been renewed|is renewed)|إيصال|ايصال|تم الدفع|تم خصم|تم سداد|فاتورة مدفوعة|تم تجديد اشتراكك|رقم الطلب)/iu;
 const FUTURE = /(will be (?:charged|billed|debited|renewed)|you'?ll be (?:charged|billed)|will renew|renews on|payment (?:is )?due|due on|free trial|trial ends|سيتم خصم|سيتم التجديد|الفترة التجريبية)/iu;
 const MEDIA = /youtube|tiktok|musically|zhiliaoapp|netflix|spotify|twitch|reddit|twitter|com\.x\.android|\bx\.com\b|pinterest|facebook\.katana|\bfacebook\b(?!.*orca)|threads|tumblr|shahid|anghami|watch ?it|osn|disney|primevideo|prime video|hbo|crunchyroll|soundcloud|deezer|podcast|castbox|\bnews\b|bbc|cnn|aljazeera|youm7|masrawy|almasryalyoum|google\.android\.apps\.magazines|quora|medium|linkedin|duolingo|\bgames?\b|supercell|pubg|tencent\.ig|freefire|dts\.freefire|roblox|king\.candycrush|steam|epicgames|chess|9gag|imdb|kick\.com|vimeo|dailymotion|snapchat/i;
 const NEWS_FROM = /substack|medium|digest|newsletter|quora|linkedin|coursera|udemy|kickstarter|reddit|youtube|property ?finder|job alerts?|upwork|indeed|wuzzuf|glassdoor|pinterest|tiktok|facebook|twitter|\bx\b/i;
@@ -169,7 +170,7 @@ export function understandNote(n) {
   if (s.kind === "mail" && NEWS_FROM.test(s.name) && !(moved && receipt)) return { meaning: "notmoney", sure: true, why: "newsletter" };
   if (why0 === "post" || (why0 === "price" && s.kind !== "chat")) return { meaning: "notmoney", sure: true, why: why0 };
   if (moved && receipt) return { meaning: "paid", sure: true, why: "receipt" };
-  if ((s.kind !== "chat" || /sponsored|إعلان ممول|ممول/i.test(text)) && (AD.test(text) || OFFER_W.test(text)) && !moved) return { meaning: "ads", sure: true, why: "offer" };
+  if ((s.kind !== "chat" || /sponsored|إعلان ممول|ممول/i.test(text)) && isAdvert(text) && !moved) return { meaning: "ads", sure: true, why: "offer" };
   if (s.kind === "chat" && WORKY.test(s.name + " " + String(n.title || ""))) return { meaning: "work", sure: false, why: "work-chat" };
   return null;
 }

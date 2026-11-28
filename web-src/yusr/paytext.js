@@ -139,6 +139,9 @@ const DIRECTION = [
   ["in",  /\b(?:paid you|sent you|you(?:'ve| have)? received|has been credited|was credited|credited (?:to|with|by)|credit amt|direct deposit|automatically deposited|salary of)\b/i],
   ["in",  /\bCR\b(?=\s|$|[:.,])/],
   ["out", /\b(?:debited by|has been debited|was debited|debit amt|you paid|you have paid|purchase of|a purchase|pos purchase|spent on)\b/i],
+  // v10.9.12 REPAIR P1 (tests/adverts/gen.mjs): a card's "Transaction approved: EGP 800 at …", "your card was charged", "renewed for 295 EGP",
+  // "your order total EGP 350 has been confirmed", «تم تجديد باقتك بنجاح بقيمة 85 جنيه» — money out (they had an amount but no direction)
+  ["out", /\b(?:transaction (?:approved|successful|completed)|(?:was|were|been|has been|got) charged|charged (?:to|on) your|amount charged|total charged|(?:has been |was )?renewed (?:for|at|with|successfully)|renewal (?:of|for) (?:egp|usd|le|sar|aed|\$|€|£)?\s?\d|order total|total paid|thanks for your (?:purchase|payment|order))\b|تم\s+(?:تجديد|التجديد)[^\n]{0,40}(?:بقيمة|بمبلغ|ب\s?[\d٠-٩])/i],
   ["out", /\bDR\b(?=\s|$|[:.,])/],
   ["in",  W("gelmi[sş]tir|yat[ıi]r[ıi]lm[ıi][sş]t[ıi]r|yat[ıi]r[ıi]ld[ıi]|hesab[ıi]n[ıi]za[^.]{0,80}(?:havale|eft|fast|para)|menerima|dikreditkan|dana masuk|uang masuk|virement re[cç]u|vous avez re[cç]u|accredito|accreditato|has recibido|recibiste|voc[eê] recebeu|recebeu um pix|je hebt[^.]{0,30}ontvangen|du hast[^.]{0,40}erhalten|erhalten|received from|ontvangen")],
   ["out", W("kart[ıi]n[ıi]zdan[\\s\\S]{0,60}?i[sş]yerinden|al[ıi][sş]veri[sş]|harcama|[oö]deme yap[ıi]lm[ıi][sş]t[ıi]r|didebet|telah didebet|transfer ke|pembelian|kartenzahlung|pagou|compra (?:de|por|aprovada)|paiement (?:par carte|de)|effectu[ée] un paiement|d[ée]bit[ée] de|pagamento di|je hebt[^.]{0,30}betaald|betaald aan|paid from|paid to")],
@@ -184,10 +187,12 @@ const DIRECTION = [
 // are scored by what sits next to them, and a "balance" number is pushed down
 // hard because mistaking it for the amount is the classic failure.
 // v6.27: every common way of writing a number — 1,500.00 · 1.500,00 · 1 500,00 · 1'500.00 · 1,23,456.00 (India) · 12,50
-const AMOUNT_RE = /(?:^|[^\d.,])((?:\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:[ '’]\d{3})+|\d+)(?:[.,]\d{1,3})?)(?=[^\d]|$)/g;
+// v10.9.12 REPAIR P1 (tests/adverts/gen.mjs: "on 15/11 at 1:23\n120 EGP was charged" was read as 23,120): the minutes of a time never
+// start an amount — a number right after "h:" is not a candidate (the space-grouped thousands "23 120" glued the time to the amount)
+const AMOUNT_RE = /(?:^|[^\d.,:])((?:\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:[ '’]\d{3})+|\d+)(?:[.,]\d{1,3})?)(?=[^\d]|$)/g;
 const NEAR_AMOUNT = /(\b[A-Z]{3}\b|[$€£¥₹₺₽₩₦₱฿₫৳₪₴₵]|R\$|zł|Kč|جنيه|ج\.?م|ريال|درهم|دولار|دينار|يورو|مبلغ|amount|bedrag|montant|importe|monto|valor|betrag|tutar|jumlah|nominal|importo|сумма|kwota|金额|금액|金額|بمبلغ|قيمة)/i;
 const NEAR_BALANCE = /(balance|available|avl\.? ?bal|\bbal\b|solde|saldo|disponible|disponível|disponibile|kontostand|verfügbar|bakiye|kullanılabilir|остаток|доступно|余额|잔액|残高|رصيد|الرصيد|المتاح|المتبقي)/i;
-const NEAR_REF = /(ref|reference|transaction\s*(?:no|id|#|ref|number)|txn|réf|referencia|referência|referenz|riferimento|işlem no|no\.? ?ref|рнн|номер|رقم|مرجع|العملية|المرجعية|order(?:\s*(?:no|number|#|id))?\.?\s*[A-Z]{0,3}|invoice\s*(?:no|#)\.?\s*[A-Z]{0,3}|طلب رقم|call|hotline|اتصل(?:\s*بـ?)?|للاستفسار|برجاء الاتصال)/i;   // v10.2: "call 19666" is not the amount;: "Order no. N6731580" was read as the amount
+const NEAR_REF = /(ref|reference|transaction\s*(?:no|id|#|ref|number)|txn|réf|referencia|referência|referenz|riferimento|işlem no|no\.? ?ref|рнн|номер|رقم|مرجع|العملية|المرجعية|order(?!\s*(?:total|amount|value|sum))(?:\s*(?:no|number|#|id))?\.?\s*[A-Z]{0,3}|invoice\s*(?:no|#)\.?\s*[A-Z]{0,3}|طلب رقم|call|hotline|اتصل(?:\s*بـ?)?|للاستفسار|برجاء الاتصال)/i;   // v10.2: "call 19666" is not the amount;: "Order no. N6731580" was read as the amount
 
 /** "1.500,00" → 1500 · "12,50" → 12.5 · "1,23,456" → 123456 · "150.000" → 150000 — but "12.500" KWD → 12.5 (3 decimals). */
 function payNumber(raw, cur) {
@@ -233,7 +238,12 @@ function payAmount(text, home) {
     if (/(?:الحالي|الحالى|الجديد|المتبقي)\s*:?\s*$/.test(before) && /رصيد/.test(t.slice(Math.max(0, at - 60), at))) score -= 14;
     // a fee next to a purchase ("fees EGP 15.00 and purchase EGP 300.00", «مصاريف الخدمة 1 جنيه») is not the payment
     if (/(?:fees?|charges?|commission|رسوم|مصاريف|عموله|عمولة)[^\d]{0,14}$/iu.test(before)) score -= 6;
-    if (NEAR_BALANCE.test(after.split(/[.،;\n!](?=\s)|\.\s/)[0])) score -= 3;   // (v10.9.8: a balance in the NEXT sentence says nothing about this number)
+    if (NEAR_BALANCE.test(after.split(/[.،;\n!](?=\s)|\.\s/)[0])) score -= 3;
+    // v10.9.12 REPAIR P1 (tests/adverts/gen.mjs: "charged EGP 150 at CARREFOUR … get 20% off" was read as 20): a percentage is never the amount
+    if (/^\s?[%٪]|^\s?(?:percent|per cent|بالمية|بالمائة|في المية)(?![\p{L}])/iu.test(after)) continue;
+    // …and a number glued to letters is a code, not money: "SAVE20", "EID50", "NEW100" (a currency glued on — "LE450", "EGP800" — stays)
+    // (only a real code: 4+ letters "SAVE20", or 3 that are no currency "EID50"; "Rp69.955", "R2,292", "RM45", "Rs500", "EGP800" are money)
+    if (/[A-Za-z]{4,}$/.test(before) || (/(?<![A-Za-z])[A-Za-z]{3}$/.test(before) && !/(?:EGP|USD|EUR|GBP|SAR|AED|KWD|QAR|BHD|OMR|JOD|TRY|INR|IDR|MYR|ZAR|NGN|KES|PKR|BDT|CNY|RMB|JPY|KRW|THB|VND|PHP|BRL|MXN|RUB|CHF|CAD|AUD|LKR|MAD|TND|DZD|LBP|IQD|SDG|ETB|GHS|TZS|UGX|IRR|AFN|KSH|TSH|USH|SHS|DHS|PHP|RPS)$/i.test(before)) && !/(?:Kshs?|TShs?|UShs?|Dhs|Php|Rp|RM|Rs|TL|SR|QR|KD|BD|JD)$/i.test(before)) continue;   // (v10.9.8: a balance in the NEXT sentence says nothing about this number)
     // reference numbers — v10.9 (real NBE SMS: «حسابكم رقم 0130 بمبلغ 3000.0 جم» lost its amount to the «رقم» of the account): only a
     // reference word with no other number between it and this one counts
     if (NEAR_REF.test(before.replace(/^[\s\S]*\d/, ""))) score -= 9;
@@ -242,6 +252,8 @@ function payAmount(text, home) {
     // v10.9 (the HARD run: SBI's "A/C X1234 debited by 296 … SMS BLOCK 1234 to 9223008333" read 1234): the number right after the
     // money verb is the payment; a number in an instruction ("SMS BLOCK 1234", "call 19666", «اتصل 19623») is not
     if (/(?:debited by|credited by|debited with|credited with|debited for|charged|withdrawn|spent|paid|purchase of|بمبلغ|بقيمة|مبلغ|خصم|سحب|ايداع|إيداع|دفع)\s*(?:[A-Z]{3}|Rs\.?|INR|جنيه|ج\.م)?\s*$/i.test(before)) score += 4;
+    // v10.9.12 REPAIR P1: "Transaction approved: EGP 800", "Order total: 450", "Amount: 99", "renewed for 295", "Total 120" — the number after them is the payment
+    if (/(?:transaction (?:approved|successful|completed)|order total|total(?: paid| charged| amount)?|amount(?: charged| paid)?|renewed (?:for|at|successfully)|purchase)\s*:?\s*(?:[A-Z]{3}|L\.E\.?|LE|US\$|E£|Rs\.?|جنيه|ج\.م)?\s*$/i.test(before)) score += 4;
     if (/(?:\bsms|\bsend|\bblock|\bstop|\bcall|\bdial|\bhelpline|اتصل|ارسل|أرسل|للاستفسار|خدمة العملاء)\s*(?:[A-Z]+\s+)?$/i.test(before)) score -= 8;
     // v10.9: a product's number — "Microsoft 365", "iPhone 15", "Galaxy S24", "PS5", "Windows 11" — is its name, not the price
     if (/(?:microsoft|office|xbox|windows|iphone|ipad|galaxy|pixel|playstation|ps|redmi|honor|huawei|oppo|vivo|realme|macbook|airpods|series|model|version|ios|android)\s?[a-z]?$/i.test(before) && !/^\s?(?:[A-Z]{3}\b|جنيه|ج\.م|جم|\$)/.test(after)) score -= 9;
@@ -260,7 +272,7 @@ function payAmount(text, home) {
     if (/شحن\s+(?:رصيد|كارت|باقة)\s*$/.test(before)) score += 4;
     if (/^\s*(?:today|so far|this (?:week|month))\b/i.test(after) && /spent\s[^\d]{0,6}$/i.test(before)) score -= 6;   // "You've spent £48.20 today"
     // the number that TOUCHES a currency is the amount ("Rs 2500.00", "245,90 TL", «45.00 ر.س») — a date or a count beside it is not
-    if (/(?:(?<![A-Za-z])(?:(?!ATM|POS|REF|PIN|OTP|TXN|ACC|NUM|SMS|VAT|ID\b)[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م|جم(?![\u0621-\u064A])|ج(?![\u0621-\u064A]))/.test(after)) score += 4;
+    if (/(?:(?<![A-Za-z])(?:(?!ATM|POS|REF|PIN|OTP|TXN|ACC|NUM|SMS|VAT|ID\b|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]{3}|Rs|Rp|RM|R|N|Dhs?|L\.E\.?|LE)|R\$|[$€£₹₺₦¥])\s?$/.test(before) || /^\s?(?:[A-Z]{3}(?![A-Za-z])|TL\b|DHS?\b|DT\b|DA\b|€|ر\.\s?[سقع]|د\.\s?[كبأإ]|جنيه|ريال|درهم|دينار|ج\.م|جم(?![\u0621-\u064A])|ج(?![\u0621-\u064A]))/.test(after)) score += 4;
     if (/^[.\/-]\d{1,4}(?!\d)/.test(after) && val <= 31 || /\d[.\/-]$/.test(before) && val <= 2100 && !/[.,]\d{2}$/.test(raw)) score -= 8;   // a piece of a date: 10-11-26, 10.11.2026
     if (!cands.length) score += 0.5;                    // …and of two equal candidates, the first written is the payment
     // v9.9.15: a day of the month ("on 20 December", «يوم 20 ديسمبر») or a count of minutes / nights / people is not an amount
@@ -344,6 +356,14 @@ function payRelation(text) {
 }
 
 const PARTY_RE = [
+  // v10.9.12 REPAIR P1 (the money audit: «تم تحويل 500 جنيه إلى حساب أحمد علي» had no payee → the note said "InstaPay", two transfers to two
+  // people became "Charged twice at Instapay"; «من حسابكم … عملية شراء من سعودي ماركت» named «حسابكم»): the payee after «إلى حساب»,
+  // a shop after «شراء من / لدى», after «لصالح», and "to the account of …"
+  /(?:[إأا]لى|الي|ل)\s*حساب\s+(?!(?:ك|كم|ي|نا)(?![ء-ي]))((?:[ء-يA-Za-z'’-]+\s*){1,4})/,
+  /شراء\s+(?:من|لدى|لدي|عند|في)\s+((?:[ء-يA-Za-z0-9'’&.-]+\s*){1,3})/,
+  /(?:حسابك|حسابكم|محفظتك|بطاقتك|بطاقتكم)\s+من\s+((?:[ء-يA-Za-z'’-]+\s*){1,4})/,   // «… إلى حسابك من أحمد علي» — who sent it
+  /لصالح\s+((?:[ء-يA-Za-z0-9'’&.-]+\s*){1,3})/,
+  /\bto (?:the )?account of\s+((?:[A-Za-z'’-]+\s*){1,4})/i,
   /\b(?:chez|bei|presso|bij)\s+([A-Z][A-Za-z0-9'’&-]+(?:\s+[A-Z][A-Za-z0-9'’&-]+){0,3})/,
   // persona 4 (a bank SMS shared to Attune): «… من حسابك بطاقة رقم **1234 لدى كارفور في 28/10» — the shop follows «لدى» / «عند»
   /(?:لدى|لدي|عند)\s+((?:[ء-يA-Za-z0-9'’&-]+\s*){1,3})/,
@@ -357,16 +377,16 @@ const PARTY_RE = [
 // Words that are grammar, not a counterparty. "من حسابك" means "from your
 // account" — writing "حسابك" into the ledger as the person you paid is the
 // kind of small wrongness that makes a user stop trusting the whole feature.
-const PARTY_STOP = /^(egp|usd|eur|sar|aed|gbp|kwd|qar|arabic|english|حساب|حسابك|حسابي|حسابنا|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
+const PARTY_STOP = /^(egp|usd|eur|sar|aed|gbp|kwd|qar|arabic|english|حساب|حسابك|حسابكم|حسابي|حسابنا|بطاقة|بطاقتك|بطاقتكم|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
 // Trailing fragments the greedy capture can pick up.
-const PARTY_TRIM = /\s+(?:(on|at|ref|reference|successfully|via)\b|(في|بتاريخ|رقم|بنجاح|عبر|بقيمة|بمبلغ)(?![ء-ي]))[\s\S]*$/i;   // v10.9.8: «إلى محمد سامي بنجاح» → «محمد سامي»   // (\b doesn't end an Arabic word: «كارفور في 28/10» kept «في»)
+const PARTY_TRIM = /\s+(?:(on|at|ref|reference|successfully|via)\b|(في|بتاريخ|رقم|بنجاح|عبر|بقيمة|بمبلغ|بطاقة|ببطاقة|بطاقتك|يوم|الرصيد|رصيدك|برجاء|لو|من|المنتهي|المنتهية|شكرا|شكراً)(?![ء-ي]))[\s\S]*$/i;   // v10.9.8: «إلى محمد سامي بنجاح» → «محمد سامي»   // (\b doesn't end an Arabic word: «كارفور في 28/10» kept «في»)
 
 function payParty(text) {
   const t = payNormalize(text).replace(/\s+/g, " ");
   // v10.9.8 (new-user walk-through): cash from a machine is "ATM", never «ماكينة الصراف الآلي فرع» cut half-way
   if (/(?<![A-Za-z])ATM(?![A-Za-z])|ماكين[ةه] (?:ال)?صراف|(?:ال)?صراف (?:ال)?[آا]لي|cash withdrawal|سحب نقدي/i.test(t)) return "ATM";
-  for (const re of PARTY_RE) {
-    const m = t.match(re);
+  // (every match of each pattern, not only the first: «إلى حسابك من أحمد علي» — «إلى حسابك» is your own account, «من أحمد علي» the payer)
+  for (const re of PARTY_RE) for (const m of t.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"))) {
     if (!m || !m[1]) continue;
     let name = m[1].trim().replace(PARTY_TRIM, "").replace(/[.,;:]+$/, "").trim();
     name = name.replace(/\s+\d[\d/\-.]*$/, "").trim();   // drop a trailing date or number

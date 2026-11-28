@@ -6,7 +6,8 @@
    «Shipped · Amazon Shopping — Arriving Thursday» and "who called me?" finds «Missed call · Ahmed».
    Pure and offline; tests/unit/v980fixes.test.mjs.                                                                                */
 
-import { OFFER_W, CODE_W, cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
+import { OFFER_W, CODE_W, cleanNote } from "./notifwords.js";
+import { isAdvert } from "./adverts.js";   // v9.9.17 one list for all four readers
 const low = (s) => String(s || "").toLowerCase();
 
 // [kind, app package / app name pattern, text pattern, the words it means (EN · Egyptian Arabic · Franco)]
@@ -30,7 +31,7 @@ const KINDS = [
     "bill invoice due recharge bundle internet subscription renew phone credit فاتوره فواتير باقه النت شحن رصيد اشتراك تجديد"],
   ["security", /google|apple|microsoft|facebook|instagram|bank|authenticator/, /\b(sign-?in|log-?in|new device|security alert|password|verify|suspicious|2-step)\b|تسجيل الدخول|جهاز جديد|تنبيه أمني|كلمة المرور/i,
     "security login sign in password account alert device امان دخول باسورد الحساب"],
-  ["promo", /./, /\b(\d+% off|sale|discount|offer|deal|promo(?:code)?|coupon|cashback|limited time|free shipping)\b|(?<!تم )خصم \d|عرض|عروض|تخفيض|كوبون|كاش باك/i,
+  ["promo", /./, { test: (x) => isAdvert(x) },
     "offer deal sale discount promo coupon cashback عرض عروض خصم تخفيضات كوبون"],
   ["news", /news|cnn|bbc|aljazeera|youm7|masrawy|reuters|sky|espn|kooora|yallakora|onefootball|fotmob|sofascore|livescore/, /./,
     "news headline breaking match score result اخبار خبر ماتش نتيجه كوره"],
@@ -44,7 +45,10 @@ const STATE = [
   [/(?<!will be |to be |couldn't be |could not be |not be |not |for )delivered|تم التوصيل|تم توصيل|اتسلم|وصل طلبك/i, "delivered"], [/out for delivery|خرج للتوصيل|المندوب في الطريق/i, "out for delivery"],
   [/arriv(?:ing|es)\s+((?:on\s+|by\s+)?(?:today|tomorrow|mon|tue|wed|thu|fri|sat|sun|\d{1,2}\s*(?:[a-z]{3}|\/))[\p{L}\d ,/]{0,16})/iu, "arriving"],
   [/shipped|dispatched|تم الشحن/i, "shipped"],
-  [/debited|purchase|spent|withdraw|تم خصم|سحب|عملية شراء|(?:payment|we) received(?: your payment)?:?[^.\n]{0,40}\bfor your (?:stay|order|booking|reservation|trip|ticket|purchase|subscription)|received your payment/i, "money out"],   // (v9.9.30: "Payment received: EGP 1,879 for your stay" is YOUR payment) [/credited|deposit|received|تم ايداع|تم إيداع|استلمت/i, "money in"],
+  [/debited|purchase|spent|withdraw|تم خصم|سحب|عملية شراء|(?:payment|we) received(?: your payment)?:?[^.\n]{0,40}\bfor your (?:stay|order|booking|reservation|trip|ticket|purchase|subscription)|received your payment/i, "money out"],   // (v9.9.30: "Payment received: EGP 1,879 for your stay" is YOUR payment)
+  // v10.9.12 REPAIR P1 (the money audit: this rule sat INSIDE the comment above, so a notification was never "money in" and Autopilot's
+  // income path never ran)
+  [/credited|deposit(?:ed)?|you(?:'ve| have)? received|received (?:egp|usd|le|sar|aed|\$|€|£)?\s?[\d٠-٩]|تم (?:ايداع|إيداع|استلام|إضافة|اضافة)|استلمت|وصلك|وارد/i, "money in"],
   [/missed/i, "missed"], [/cancel+ed|ملغي|تم الالغاء|تم الإلغاء/i, "cancelled"], [/delay(?:ed)?|متأخر|تأخير/i, "delayed"],
 ];
 
@@ -58,9 +62,8 @@ export function understandNote(n) {
   // v9.8 (Ali's screenshot): a WhatsApp "Missed voice call" is a call, not a message; an offer ("300 EGP OFF … delivered in 15 minutes")
   // is an offer, not a delivery; an email only counts as a delivery when a shop sent it
   // v9.9.17: «تم خصم 3,317 جم من بطاقتك» is money deducted, not a discount («خصم 30٪»); offers in the app's other languages
-  const PROMO0 = /\b\d+\s*(?:%|egp|le|جنيه)?\s*off\b|\bsale\b|\bdiscount\b|\bpromo(?:code)?\b|\bcoupon\b|\bcashback\b|\b(?:special )?offers?\b|\bdeals?\b|\bbonus\b|\binstead of\b|عرض|(?<!تم )خصم \d|تخفيض|كوبون/i;
-  // v10.9 (the HARD run): a bank's «خصم 13235.25 EGP. ببطاقة رقم **1602 لصالح فوري» / «خصم 23,744 ج.م من حسابك المنتهي» is a debit, not an offer
-  const PROMO = { test: (x) => (PROMO0.test(x) || OFFER_W.test(x)) && !/تم خصم|خصم مبلغ|\b(debited|credited|charged)\b/i.test(x) && !(/خصم\s*[\d٠-٩][\d٠-٩.,٬٫]*\s*(?:EGP|LE|L\.E|ج\.?\s?م|جم|جنيه|USD|SAR|AED|\$)(?!\s*[%٪])/i.test(x) && /من\s*حساب|بطاق|رقم مرجعي|رقم العملي|الرصيد|لصالح|المنتهي|لو لم تقم/.test(x)) };
+  // v10.9.10 REPAIR P1: an offer is decided by adverts.js (one list; a bank's «خصم 23,744 ج.م من حسابك» and a receipt with a promo code are money)
+  const PROMO = { test: isAdvert };
   // a person's chat is a message (or a missed call) whatever words it uses («انا في الطريق» is not a delivery, "the gate code" not a flight)
   const realChat = REAL_CHAT.test(src), cal = /calendar|com\.google\.android\.apps\.tachyon|\bmeet\b/.test(src);
   const SHOP = /amazon|noon|jumia|talabat|breadfast|aramex|dhl|fedex|ups|bosta|mylerz|shein|temu|aliexpress|instashop/i;

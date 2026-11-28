@@ -14,6 +14,7 @@ import { tr } from "./i18n.js";
 import { progressOf } from "./life.js";
 import { homeCurrency } from "./locale.js";
 import { billsOf, billLine } from "./bills.js";
+import { samePayment } from "./dedupe.js";
 
 const DAY = 86400000;
 const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -60,7 +61,8 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
       // v10.9.10 (Ali, 28 Nov: "Charged twice at Anthropic" — "I have 2 Claude accounts"): two payments that went to two different
       // email accounts are two subscriptions, never a double charge; and the same pair every month (both renew on the same day) too
       const ac = (t) => String((t.evidence && t.evidence.acct) || "").toLowerCase();
-      if (ac(a) && ac(b) && ac(a) !== ac(b)) continue;
+      // v10.9.12 REPAIR P1: dedupe.js decides whether the two can be one payment at all (another email account, payee or currency → no)
+      if (!samePayment(a, b, { ledger, within: 10 * 60000, byDay: !timed })) continue;
       const mo = a.date.slice(0, 7), pairBefore = [...new Set(list.filter((t) => t.date.slice(0, 7) !== mo).map((t) => t.date))].some((d) => list.filter((t) => t.date === d).length >= 2);
       if (pairBefore) continue;
       // a subscription service paid twice the same day by notification, with the account behind each unknown (a bank SMS names no

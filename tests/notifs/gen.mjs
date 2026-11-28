@@ -330,6 +330,8 @@ const by = {}; for (const r of rows) { const b = (by[r.g] = by[r.g] || { n: 0, b
 const total = rows.length, bad = rows.filter((r) => !r.ok).length, fm = rows.filter((r) => r.falseMoney).length, fa = rows.filter((r) => r.auto).length, kn = rows.filter((r) => r.kindWant).length, kb = rows.filter((r) => r.kindWant && !r.kindOk).length;
 const show = (x) => "«" + x.app + " · " + x.title + ": " + x.text.replace(/\n/g, " ⏎ ").slice(0, 110) + "»";
 const SR = shapeReport(texts);
+// (v10.9.12: the cards that interrupt — so a new interruption can be seen, not only counted)
+if (process.env.INTERRUPTS) { const ex = rows.filter((r) => r.interrupt).slice(0, 40).map((r) => r.g + " · " + JSON.stringify(r.n).slice(0, 200)); console.log("INTERRUPTS\n" + ex.join("\n")); }
 let md = `# Notification run${HARD ? " (HARD)" : ""} — ${total} notifications, ${total - bad} handled right (${(100 * (total - bad) / total).toFixed(1)}%) — ${SR.shapes} different shapes [${(100 * SR.share).toFixed(0)} of 100]\n\n- Became money when it is NOT a payment: **${fm}** (added by itself, without a tap: **${fa}**)\n- Interruptions (v9.9.30 — a question, or a card waiting for a tap, for something Attune could do itself): **${rows.filter((r) => r.interrupt).length}**\n- What it is (the kind Recall files it under): ${kn - kb} of ${kn} right (${(100 * (kn - kb) / kn).toFixed(1)}%)\n\n| area | notifications | wrong | right % | kind wrong |\n|---|---|---|---|---|\n`;
 for (const [g, b] of Object.entries(by).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n)) md += `| ${g} | ${b.n} | ${b.bad} | ${(100 * (b.n - b.bad) / b.n).toFixed(1)} | ${b.kn ? b.kbad + " of " + b.kn : "–"} |\n`;
 md += "\n## What went wrong (examples of each)\n";

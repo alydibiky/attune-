@@ -4,6 +4,7 @@
    Every number is checked by code: the price is the one NEXT TO a price word or a period ("/month", "per year", «شهريًا»), never a
    crossed-out old price, a discount, VAT alone, a card number, a date or a phone number; two different prices with the same weight →
    not sure (the card asks one question). Pure; tests: tests/scan/gen.mjs (10,000 composed HARD) + tests/unit/v1094scan.test.mjs. */
+import { isAdvert } from "./adverts.js";
 import { datesIn } from "./deadlines.js";
 
 /** The services people pay for every month or year, in Attune's 30 countries (name → the words that find it). Add freely. */
@@ -173,7 +174,7 @@ export function readSubscription(text0, { now = Date.now(), order = "dmy", home 
   const r = { service: svc ? svc[0] : "", plan: plan ? plan.replace(/^\w/, (c) => c.toUpperCase()) : "", amount: best ? best.v : 0, currency: best ? best.cur : "",
     cycle, cycleGuessed, next, last4: card ? (card[1] || card[2] || card[3] || "") : "", cancelled };
   // it must be YOUR subscription (a receipt, your plan, a renewal) — never a news post, an advert or a plans page
-  const personal = PERSONAL.test(all) || NEXT_W.test(all) || (/\bsub-?total\b|المجموع الفرعي|(?<![\p{L}])(?:sous-total|zwischensumme|ara toplam)(?![\p{L}])/iu.test(all) && TOTAL_W.test(all)) || /\bpaid on\b|تم الدفع في|(?<![\p{L}])(?:payé le|pagado el|bezahlt am|pago em|ödendi)(?![\p{L}])/iu.test(all), offer = OFFER_W.test(all);
+  const personal = PERSONAL.test(all) || NEXT_W.test(all) || (/\bsub-?total\b|المجموع الفرعي|(?<![\p{L}])(?:sous-total|zwischensumme|ara toplam)(?![\p{L}])/iu.test(all) && TOTAL_W.test(all)) || /\bpaid on\b|تم الدفع في|(?<![\p{L}])(?:payé le|pagado el|bezahlt am|pago em|ödendi)(?![\p{L}])/iu.test(all), offer = OFFER_W.test(all) || isAdvert(all);   // (v10.9.10: OFFER_W = a subscription's price news / plans; adverts.js the advert words)
   // sure = yours, a known service, ONE price with a price word or a period next to it, a period
   const alone = best && cands.filter((c) => c.s > -3 && !c.old && Math.abs(c.v - best.v) > 0.005).length === 0;   // (a "was / save" price is never a rival)   // the only amount that isn't an old price / a saving
   const why = offer && !STRONG_PERSONAL.test(all) ? "offer" : !personal ? "notyours" : !svc ? "service" : !best ? "price" : rivals.length ? "twoprices" : (best.s < 2 && !(alone && best.s >= 0)) ? "price" : !cycle ? "cycle" : "";
