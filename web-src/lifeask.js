@@ -589,7 +589,8 @@ export function chatAsk(q, stores, { now = Date.now(), prev = "", _en = false } 
   // (v10.9.8: "when does the passport expire?" names no "my" — a paper's expiry is always the person's own)
   // (v10.9.9 A2: "food this month, how much?", "what's due this week?" name no "my" — a sum over a time span / your week is still yours)
   const spanMine = (/\bhow much\b|\btotal spending\b/i.test(t)) && /\b(?:this|last|next)\s+(?:week|month|year)\b|\b(?:today|yesterday|so far|in total)\b|\b(?:in|for|during)\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i.test(t) && (k === "money" || k === "paid-for");
-  const weekMine = k === "due" && /\b(?:this|next) week\b|\bcoming up\b|\bdue\b/i.test(t);
+  // (…only "what's due / what do I have / anything coming up" — "what is still open this week?" in a project is about the project)
+  const weekMine = k === "due" && /\b(?:what(?:'s| is) (?:due|coming up)|what do (?:i|we) have|anything (?:coming up|due|planned))\b/i.test(t);
   // (v10.9.9: the "me" of "tell me / show me / give me" says nothing about whose — "tell me about an oriental restaurant page" is not yours)
   const tMine = t.replace(/\b(?:tell|show|give|let|help|remind|teach|send|find|get) me\b/gi, " ");
   if (!spanMine && !weekMine && !MINE.test(tMine) && !memberAsked(t, members) && !(k === "due" && (/expir|renew|امت[يى]|هينتهي|ينتهي|بينتهي|تنتهي|تجديد|beyentehy|byentehy|hayentehy/i.test(t) || (DAY_Q.test(t) && DAY_HAVE.test(t))))) return null;   // (… and "what's on today?")

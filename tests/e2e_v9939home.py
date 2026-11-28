@@ -12,7 +12,11 @@ src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "onemillion"
 exec(src[src.index("T = datetime.date"):src.index("DATA = sorted")])   # the 1M test's real-looking data (money, people & plans, reminders)
 with sync_playwright() as p:
     br = p.chromium.launch()
-    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=SEED + "try{localStorage.setItem('attune:test:quiet','0')}catch(e){}")
+    # (v10.9.9: the 1M data is dated 10 Nov — by now its bill and instalment are matched to payments in Money, and the only "late" things
+    #  left were a subscription "late since October" and a loan with no due date: both false, fixed. A bill really due in 2 days, relative
+    #  to TODAY, is what puts something in Right now)
+    DUE = "try{const L=JSON.parse(localStorage.getItem('attune:life:v1')||'{\"items\":[]}');const d=new Date(Date.now()+2*864e5).toISOString().slice(0,10);if(!L.items.some(x=>x.id==='due2'))L.items.push({id:'due2',kind:'bill',person:'',dir:'out',amount:450,count:1,total:450,every:null,start:d,currency:'EGP',paid:[],title:'Internet bill'});localStorage.setItem('attune:life:v1',JSON.stringify(L))}catch(e){}"
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=SEED + DUE + "try{localStorage.setItem('attune:test:quiet','0')}catch(e){}")
     page.goto(env.url); page.wait_for_selector("[data-testid=home-ask]", timeout=15000); page.wait_for_timeout(1500)
     for t, what in (("home-box", "the box"), ("home-now", "Right now"), ("home-todo", "To do"), ("home-see-report", "one “My report” row")):
         check(page.locator("[data-testid=%s]" % t).count() >= 1, "Home has " + what)

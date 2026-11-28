@@ -42,7 +42,7 @@ ok(egyToEnglish("صرفت كام على الأكل الشهر ده؟") === "how 
 ok(egyToEnglish("sraft kam 3ala el akl el shahr da?") === "how much did I spend on food this month?", "Franco → the same English");
 ok(egyToEnglish("hello there") === "" && egyToEnglish("ازيك عامل ايه") === "", "small talk is not a question about your data");
 // (the full browser run: "Tell me about an oriental restaurant page" was answered "Nothing is recorded in Money" — the "me" of "tell me")
-for (const q of ["Tell me about an oriental restaurant page", "show me a recipe for koshary", "tell me about the history of Egypt", "give me 3 tips to sleep better", "Tell me about a crane simulator page"])
+for (const q of ["What is still open this week?", "Tell me about an oriental restaurant page", "show me a recipe for koshary", "tell me about the history of Egypt", "give me 3 tips to sleep better", "Tell me about a crane simulator page"])
   ok(!L.chatAsk(q, st, { now }), "a general question is never answered from your data: «" + q + "»");
 // 2,500 sample
 const G = await import("../mydata/gen.mjs");

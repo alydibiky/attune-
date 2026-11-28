@@ -1390,7 +1390,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     // 2. The model, with the whole conversation.
     // persona 2 (Ali: P2-C): no AI yet → the question waits and is answered by itself once the AI is ready (no second Send)
-    if (!api.canUseAI()) { if (typed && !img && !fileAtt) waitingRef.current = { raw: typed, o: { ...o } }; return; }
+    // (v10.9.9 A3: the question was taken out of the box to show it at once — with no model it goes back into the box, as before)
+    if (!api.canUseAI()) { if (typed && !img && !fileAtt) waitingRef.current = { raw: typed, o: { ...o } }; setPendingQ(null); if (said && !o.queuedDuring) setText(said); return; }
     const cid = ensureChat(typed || "Photo");
     const history = o.history || (chat ? chat.messages : []);
     // A follow-up about a photo sent a moment ago ("what year is it?") gets
