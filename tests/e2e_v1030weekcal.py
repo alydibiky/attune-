@@ -30,7 +30,7 @@ with sync_playwright() as p:
     ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=init(), desktop=(1440, 900))
     page.goto(env.url); page.wait_for_selector("[data-testid=wk]", timeout=15000); page.wait_for_timeout(700)
     check(page.evaluate("document.documentElement.classList.contains('att-glass') && document.documentElement.classList.contains('att-glass-blur')"), "a computer wears the glass look, with real blur")
-    bg = page.evaluate("getComputedStyle(document.body).backgroundImage")
+    bg = page.evaluate("getComputedStyle(document.body, '::before').backgroundImage")   # v10.9.10: the ground is its own fixed layer (smooth scrolling)
     check("gradient" in bg, "the glass ground is drawn under everything: " + bg[:60])
     check(page.locator("[data-testid=wk-day]").count() == 7, "seven days side by side")
     ev = page.locator("[data-testid=wk-ev]")
