@@ -1,0 +1,284 @@
+<title>Repair Plan Picks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column (the plan) with full-width bands for the scoreboard and the decisions; phone mock-ups in a wrapping row. */
+:root{
+  --bg:#F6F4F3; --surf:#FFFFFF; --ink:#1D1719; --mut:#655B5E; --ln:#E6DFE1;
+  --acc:#7A1F3D; --acc-soft:#F6E7EC; --ok:#1E7A4F; --ok-soft:#E4F3EB; --warn:#9A5B05; --warn-soft:#FBF0DC; --bad:#B42335; --bad-soft:#FBE6E8;
+  --ph-bg:#F5F4F2; --ph-card:#FFFFFF;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-ar:"IBM Plex Sans Arabic","Noto Sans Arabic",Tahoma,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141112;--surf:#1D191A;--ink:#F1EBED;--mut:#B3A8AC;--ln:#332C2E;--acc:#E58AA2;--acc-soft:#3A1E27;--ok:#5CC995;--ok-soft:#163327;--warn:#E8B04B;--warn-soft:#3A2C12;--bad:#F07A88;--bad-soft:#3D1C22;--ph-bg:#221D1F;--ph-card:#2B2527;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141112;--surf:#1D191A;--ink:#F1EBED;--mut:#B3A8AC;--ln:#332C2E;--acc:#E58AA2;--acc-soft:#3A1E27;--ok:#5CC995;--ok-soft:#163327;--warn:#E8B04B;--warn-soft:#3A2C12;--bad:#F07A88;--bad-soft:#3D1C22;--ph-bg:#221D1F;--ph-card:#2B2527;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+.wrap{max-width:980px;margin:0 auto}
+.col{max-width:720px}
+h1,h2,h3{line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:34px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:23px;font-weight:700;margin-top:56px;margin-bottom:6px}
+h3{font-size:17px;font-weight:600}
+p{margin:.5em 0}
+.ar{font-family:var(--f-ar);direction:rtl;unicode-bidi:isolate}
+.lead{font-size:17px;color:var(--ink)}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);font-weight:600}
+header{padding-top:40px;display:grid;gap:10px}
+.term{font-family:var(--f-mono);font-size:12.5px;background:var(--acc-soft);color:var(--acc);padding:1px 6px;border-radius:5px}
+.num{font-variant-numeric:tabular-nums}
+
+/* root causes */
+.causes{display:grid;gap:12px;margin-top:14px}
+.cause{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:14px 16px;background:var(--surf);border:1px solid var(--ln);border-radius:12px}
+.cause .n{font:600 15px var(--f-mono);color:var(--acc);padding-top:2px}
+.cause h3{margin-bottom:2px}
+.cause .ev{font-size:13.5px;color:var(--mut);margin-top:6px}
+
+/* found today */
+.tbl{overflow-x:auto;margin-top:12px;border:1px solid var(--ln);border-radius:12px;background:var(--surf)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{padding:10px 12px;text-align:start;vertical-align:top;border-bottom:1px solid var(--ln)}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:600}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.p-bad{background:var(--bad-soft);color:var(--bad)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-ok{background:var(--ok-soft);color:var(--ok)}
+
+/* fixed today */
+.fixed{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:12px}
+.fx{padding:10px 12px;border-radius:10px;background:var(--ok-soft);font-size:13.5px}
+.fx b{color:var(--ok)}
+
+/* phases */
+.phases{display:grid;gap:14px;margin-top:14px}
+.ph{background:var(--surf);border:1px solid var(--ln);border-radius:14px;padding:16px 18px}
+.ph-top{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.ph-top .when{font:500 12.5px var(--f-mono);color:var(--mut)}
+.ph ul{margin:8px 0 0;padding-inline-start:20px}
+.ph li{margin:4px 0}
+.gate{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--acc-soft);font-size:13.5px}
+.gate b{color:var(--acc)}
+
+/* scoreboard */
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px}
+.sc{background:var(--surf);border:1px solid var(--ln);border-radius:12px;padding:12px 14px}
+.sc .k{font-size:13px;color:var(--mut)}
+.sc .v{display:flex;align-items:baseline;gap:8px;margin-top:4px;flex-wrap:wrap}
+.sc .now{font:600 20px var(--f-mono);color:var(--bad)}
+.sc .to{font:600 15px var(--f-mono);color:var(--ok)}
+.sc .arrow{color:var(--mut)}
+
+/* decisions */
+.dec{margin-top:26px;padding-top:6px}
+.dec h3{font-size:19px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:12px}
+.opt{background:var(--surf);border:1px solid var(--ln);border-radius:14px;padding:12px;display:grid;gap:10px;align-content:start}
+.opt.rec{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.opt-h{display:flex;gap:10px;align-items:flex-start}
+.opt-h input{width:20px;height:20px;margin-top:2px;accent-color:var(--acc);flex:none}
+.opt-h label{font-weight:600;cursor:pointer}
+.code{font:600 12.5px var(--f-mono);color:var(--acc)}
+.rectag{font-size:11.5px;font-weight:600;color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:1px 8px;margin-inline-start:4px;white-space:nowrap}
+.opt textarea{width:100%;min-height:54px;font:13.5px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:8px;resize:vertical}
+.opt textarea:focus,.opt input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* phone mock-up */
+.phone{width:100%;max-width:250px;margin:0 auto;border:7px solid #1b1718;border-radius:26px;background:var(--ph-bg);overflow:hidden;font-size:11.5px;line-height:1.4;color:var(--ink)}
+.phone .bar{display:flex;justify-content:space-between;padding:4px 12px 2px;font:600 10px var(--f-mono);color:var(--mut)}
+.phone .hd{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;font-weight:700;font-size:13px}
+.phone .scr{padding:0 10px 12px;display:grid;gap:7px;min-height:300px;align-content:start}
+.m-card{background:var(--ph-card);border:1px solid var(--ln);border-radius:12px;padding:8px 10px}
+.m-glass{background:rgba(255,255,255,.72);box-shadow:0 6px 22px rgba(122,31,61,.10);border:1px solid rgba(255,255,255,.9)}
+.m-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--ln)}
+.m-row:first-child{border-top:0}
+.m-lab{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.m-chip{display:inline-block;border:1px solid var(--ln);background:var(--ph-card);border-radius:999px;padding:2px 8px;margin:2px 3px 0 0;font-weight:600;font-size:10.5px}
+.m-chip.a{background:var(--acc-soft);color:var(--acc);border-color:transparent}
+.m-user{justify-self:end;background:var(--acc);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;max-width:85%}
+.m-ai{background:var(--ph-card);border:1px solid var(--ln);border-radius:12px 12px 12px 3px;padding:7px 9px;max-width:92%}
+.m-src{font-size:9.5px;color:var(--mut);margin-top:4px}
+.m-btn{display:block;text-align:center;background:var(--acc);color:#fff;border-radius:9px;padding:6px;font-weight:600}
+.m-btn.s{background:var(--acc-soft);color:var(--acc)}
+.m-menu div{padding:5px 4px;border-bottom:1px solid var(--ln)}
+.m-menu .lab{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600;border:0;padding-top:9px}
+.m-dim{opacity:.55}
+.m-bg-glass{background:radial-gradient(120% 90% at 0% 0%,#F9E6EC 0%,#F5F4F2 45%,#EFEDEA 100%)}
+.m-amt{font-family:var(--f-mono);font-weight:600}
+.timeline{display:grid;gap:6px;font-size:11px;padding:6px 0}
+.tl{display:grid;grid-template-columns:54px 1fr;gap:6px;align-items:center}
+.tl .b{height:12px;border-radius:6px;background:var(--acc-soft)}
+.tl .b i{display:block;height:100%;border-radius:6px;background:var(--acc)}
+
+/* how we work */
+.rules{display:grid;gap:8px;margin-top:12px;counter-reset:r}
+.rule{padding:10px 14px 10px 14px;border-inline-start:3px solid var(--acc);background:var(--surf);border-radius:0 10px 10px 0}
+
+/* sticky pick bar */
+.pickbar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--ln);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
+.pickbar .in{max-width:980px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pickbar .sel{flex:1;min-width:0;font:12.5px var(--f-mono);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickbar button{font:600 14px var(--f-body);background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.pickbar .copied{font-size:13px;color:var(--ok)}
+#copyBox{width:100%;min-height:70px;font:12.5px var(--f-mono);margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Attune · your picks D1A–D6A · 28 Nov 2026</div>
+  <h1>What I understood from your picks</h1>
+  <p class="lead col">You picked every recommended option. Below is exactly what I will build for each visible one, as it will look on the phone. Tick <b>OK</b> where it is right, or write what to change in the note, then "Copy my picks". Nothing visible is built before your OK. The invisible work (the money core, tests that match your phone) has already started.</p>
+  <p class="ar mut small">ده اللي فهمته من اختياراتك — علّم OK على اللي صح، أو اكتب التعديل في الملاحظة.</p>
+</header>
+
+<section class="col">
+  <h2>Not built, just agreed</h2>
+  <div class="causes">
+    <div class="cause"><div class="n">D1A</div><div><h3>Launch ~mid-January</h3><p>The Play closed test (12+ testers, 14 days) starts when phase P6 is green, and runs during your week of normal use (P7). You will need the 12 testers' emails ready by then.</p></div></div>
+    <div class="cause"><div class="n">D5A</div><div><h3>Glass stays as it is</h3><p>Nothing changes now. The new daily health line on your phone (phase P4) counts scroll stutters; only if it shows them do the card shadows go on phones. I will tell you before.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="col">To build after your OK</h2>
+
+  <div class="dec">
+    <h3><span class="code">D2A</span> The first release: 9 core pages, the rest under "More (early)"</h3>
+    <div class="opts">
+      <div class="opt"><div class="phone"><div class="bar"><span>10:36</span><span>92%</span></div><div class="hd">Attune</div><div class="scr m-menu">
+        <div><b>+ New chat</b></div>
+        <div class="lab">Your life</div><div>Home</div><div>Money</div><div>Follow-ups</div><div>To-dos &amp; lists</div><div>Dates &amp; papers</div><div>People &amp; plans</div><div>Mind</div><div>Passwords</div>
+        <div class="lab">More (early) ›</div></div></div></div>
+      <div class="opt"><div class="phone"><div class="bar"><span>10:36</span><span>92%</span></div><div class="hd">‹ More (early)</div><div class="scr">
+        <div class="m-card small">Still being finished. They work, but may have rough edges — tell Attune if something is wrong.</div>
+        <div class="m-card m-menu"><div>Agents</div><div>Health</div><div>Travel</div><div>Projects</div><div>Documents &amp; PDFs</div><div>Translate</div><div>All tools</div></div></div></div></div>
+      <div class="opt" style="align-content:start">
+        <h3 style="font-size:15px">What I understood</h3>
+        <ul class="small" style="margin:0;padding-inline-start:18px">
+          <li>Chat stays where it is ("New chat" at the top), so the 9 are Chat + the 8 in "Your life".</li>
+          <li>Nothing is removed or hidden from people who use it: a card you already use (an agent watching a hotel) stays on Home.</li>
+          <li>Phase P6 finishes these 9 first: every one through the checklist on phone, foldable and computer, English and Egyptian.</li>
+          <li>The others get finished after launch, one by one, each leaving "early" when it passes the same checklist.</li>
+          <li>On a computer the same two groups show in the sidebar.</li>
+        </ul>
+        <div class="opt-h"><input type="checkbox" id="OK-D2" data-code="OK-D2"><label for="OK-D2"><span class="code">OK-D2</span> Right, build it</label></div>
+        <textarea id="OK-D2-note" data-note="OK-D2" placeholder="Change anything? e.g. which pages are core"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="dec">
+    <h3><span class="code">D3A</span> When Attune has nothing: say it plainly, with two buttons</h3>
+    <div class="opts">
+      <div class="opt"><div class="phone"><div class="bar"><span>Chat</span><span></span></div><div class="scr">
+        <div class="m-user">how much did I spend on the dentist?</div>
+        <div class="m-ai">Nothing about <b>dentist</b> in Money yet.<div><span class="m-chip a">+ Add a payment</span><span class="m-chip">Search Mind</span></div><div class="m-src">From: your data</div></div>
+        <div class="m-user">did Ahmed pay me back?</div>
+        <div class="m-ai">Ahmed still owes you <span class="m-amt">225 EGP</span> (lunch, Nov 28). No payment back yet.<div class="m-src">From: People &amp; plans</div></div></div></div></div>
+      <div class="opt"><div class="phone"><div class="bar"><span>الشات</span><span></span></div><div class="scr" dir="rtl" style="font-family:var(--f-ar)">
+        <div class="m-user" style="justify-self:start;border-radius:12px 12px 12px 3px">صرفت كام على الدكتور؟</div>
+        <div class="m-ai" style="justify-self:end">مفيش حاجة عن <b>الدكتور</b> في الفلوس لسه.<div><span class="m-chip a">+ ضيف دفعة</span><span class="m-chip">دوّر في Mind</span></div></div></div></div></div>
+      <div class="opt" style="align-content:start">
+        <h3 style="font-size:15px">What I understood</h3>
+        <ul class="small" style="margin:0;padding-inline-start:18px">
+          <li>Any question about your own data that names a thing (a shop, a person, "dentist", "wifi") answers about <b>that thing</b>, or says plainly there is nothing. Never the nearest category.</li>
+          <li>"+ Add a payment" opens Money's box with the word filled in; "Search Mind" searches your notes for it.</li>
+          <li>The same in Chat, the Home box and voice, in all 20 languages.</li>
+          <li>A question about the world ("how do I make koshary?") is never answered from your spending.</li>
+        </ul>
+        <div class="opt-h"><input type="checkbox" id="OK-D3" data-code="OK-D3"><label for="OK-D3"><span class="code">OK-D3</span> Right, build it</label></div>
+        <textarea id="OK-D3-note" data-note="OK-D3" placeholder="Change anything?"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="dec">
+    <h3><span class="code">D4A</span> Settings › Make a test pack</h3>
+    <div class="opts">
+      <div class="opt"><div class="phone"><div class="bar"><span>Settings</span><span></span></div><div class="hd">Make a test pack</div><div class="scr">
+        <div class="m-card"><div class="m-lab">Goes in (last 60 days)</div><div class="m-row"><span>Money messages</span><span class="m-amt">412</span></div><div class="m-row"><span>Adverts and offers</span><span class="m-amt">288</span></div><div class="m-row"><span>What you typed to Attune</span><span class="m-amt">163</span></div></div>
+        <div class="m-card small"><div class="m-lab">Hidden on this phone</div>Names → Person 1, 2… · phone numbers, card and account digits → •••• · emails → a1@x · passwords and codes never go in.</div>
+        <span class="m-btn">Preview</span></div></div></div>
+      <div class="opt"><div class="phone"><div class="bar"><span>Settings</span><span></span></div><div class="hd">‹ Preview</div><div class="scr">
+        <div class="m-card small"><div class="m-lab">3 of 863</div>
+          <div class="m-row"><span>CIB: Purchase EGP 250.00 at SEOUDI MARKET, card ••••</span></div>
+          <div class="m-row"><span>InstaPay: 500 EGP to Person 4 ••••</span></div>
+          <div class="m-row"><span>Talabat: EGP 800 off your first order 🎉</span></div></div>
+        <span class="m-btn">Share the file</span><span class="m-btn s">Cancel</span></div></div></div>
+      <div class="opt" style="align-content:start">
+        <h3 style="font-size:15px">What I understood</h3>
+        <ul class="small" style="margin:0;padding-inline-start:18px">
+          <li>Made on the phone, never sent by itself: you see a preview, then share the file (WhatsApp to yourself, Drive, email) and send it to me.</li>
+          <li>Shops, amounts, dates and wording stay, because those are what the mistakes depend on.</li>
+          <li>It goes into the tests (<span class="term">tests/pack/</span>). The first time I list what Attune does with each message, and you mark the wrong ones once; after that, every test run checks all of them.</li>
+          <li>You can make a new pack any time; a newer pack adds to the old one.</li>
+          <li>On the computer it is in Settings too (for what the computer app reads).</li>
+        </ul>
+        <div class="opt-h"><input type="checkbox" id="OK-D4" data-code="OK-D4"><label for="OK-D4"><span class="code">OK-D4</span> Right, build it</label></div>
+        <textarea id="OK-D4-note" data-note="OK-D4" placeholder="Change anything?"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="dec">
+    <h3><span class="code">D6A</span> One subscriptions list, each line says where it came from</h3>
+    <div class="opts">
+      <div class="opt"><div class="phone"><div class="bar"><span>10:38</span><span>91%</span></div><div class="hd">‹ Money Guardian</div><div class="scr"><div class="m-card">
+        <div class="m-lab">All subscriptions (4) · 1,040 EGP + $40 a month</div>
+        <div class="m-row"><span>Netflix<br><span class="mut">You told me · next Dec 10</span></span><span class="m-amt">240</span></div>
+        <div class="m-row"><span>Claude (work@)<br><span class="mut">Gmail receipt · next Dec 13</span></span><span class="m-amt">$20</span></div>
+        <div class="m-row"><span>Claude (home@)<br><span class="mut">Gmail receipt · next Dec 13</span></span><span class="m-amt">$20</span></div>
+        <div class="m-row"><span>Gym<br><span class="mut">You told me · monthly</span></span><span class="m-amt">800</span></div></div></div></div></div>
+      <div class="opt"><div class="phone"><div class="bar"><span>10:38</span><span>91%</span></div><div class="hd">‹ Netflix</div><div class="scr">
+        <div class="m-card"><div class="m-row"><span>240 EGP a month</span><span class="mut">since Nov 28</span></div><div class="m-row"><span>Where from</span><span>You told me</span></div><div class="m-row"><span>Paid in Money</span><span class="mut">not yet this month</span></div></div>
+        <span class="m-btn s">Open in People &amp; plans</span><span class="m-btn s">I cancelled it</span></div></div></div>
+      <div class="opt" style="align-content:start">
+        <h3 style="font-size:15px">What I understood</h3>
+        <ul class="small" style="margin:0;padding-inline-start:18px">
+          <li>One list, kept in one place: what you told Attune (People &amp; plans), what Money's payments show, and what receipts and messages show. The same subscription from two sources is one line.</li>
+          <li>Each line says where it came from, and tapping it shows the source.</li>
+          <li>Money Guardian, Follow-ups ("Coming"), Home and Chat all read this one list, so they always agree.</li>
+          <li>"I cancelled it" ends it everywhere at once.</li>
+          <li>Totals stay per currency (EGP and $ never added together).</li>
+        </ul>
+        <div class="opt-h"><input type="checkbox" id="OK-D6" data-code="OK-D6"><label for="OK-D6"><span class="code">OK-D6</span> Right, build it</label></div>
+        <textarea id="OK-D6-note" data-note="OK-D6" placeholder="Change anything?"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<div class="pickbar" role="region" aria-label="Your picks">
+  <div class="in">
+    <span class="sel" id="selLine">Nothing ticked yet — tick OK on what is right.</span>
+    <button type="button" id="copyBtn">Copy my picks</button>
+    <span class="copied" id="copied" hidden>Copied</span>
+  </div>
+  <div class="in"><textarea id="copyBox" hidden readonly aria-label="Your picks, ready to copy"></textarea></div>
+</div>
+<script>
+(function(){
+  var KEY="attune-repair-combined:v1";
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){return {}}}
+  function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+  var st=load(); st.p=st.p||{}; st.n=st.n||{};
+  var boxes=[].slice.call(document.querySelectorAll("input[data-code]"));
+  var notes=[].slice.call(document.querySelectorAll("textarea[data-note]"));
+  boxes.forEach(function(b){b.checked=!!st.p[b.dataset.code]; b.addEventListener("change",function(){st.p[b.dataset.code]=b.checked; save(st); render();});});
+  notes.forEach(function(t){t.value=st.n[t.dataset.note]||""; t.addEventListener("input",function(){st.n[t.dataset.note]=t.value; save(st); render();});});
+  function text(){
+    var lines=[];
+    boxes.forEach(function(b){ if(!b.checked) return; var c=b.dataset.code, n=(st.n[c]||"").trim(); lines.push(n? c+" — "+n : c); });
+    notes.forEach(function(t){ var c=t.dataset.note, n=(t.value||"").trim(); if(n && !st.p[c]) lines.push(c+" (not picked) — "+n); });
+    return lines.join("\n");
+  }
+  function render(){ var t=text(); document.getElementById("selLine").textContent = t ? t.replace(/\n/g,"  ·  ") : "Nothing ticked yet — tick OK on what is right."; }
+  render();
+  document.getElementById("copyBtn").addEventListener("click",function(){
+    var t=text()||"(no picks)", box=document.getElementById("copyBox"), ok=document.getElementById("copied");
+    function fallback(){ box.hidden=false; box.value=t; box.focus(); box.select(); }
+    try{ navigator.clipboard.writeText(t).then(function(){ ok.hidden=false; setTimeout(function(){ok.hidden=true},1800); }, fallback); }catch(e){ fallback(); }
+  });
+})();
+</script>

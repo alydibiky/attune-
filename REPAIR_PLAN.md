@@ -1,6 +1,15 @@
 # Attune repair plan (Ali, 28 Nov 2026: "I want a complete plan in everything in the app to make it better overall")
 Page with the evidence, the scoreboard and Ali's decisions D1–D6: https://claude.ai/artifact/BkAo2My6XLuggJonNLnfeN
 
+## Ali's decisions (28 Nov): D1A D2A D3A D4A D5A D6A
+- D1A: the Play closed test starts when P6 is green; launch ~mid-January.
+- D2A: first release = 9 core pages (Home, Chat, Money, Follow-ups, To-dos & lists, Dates & papers, People & plans, Mind, Passwords); the rest under "More (early)".
+- D3A: nothing found → say it plainly + two buttons (Add a payment / Search Mind).
+- D4A: Settings › Make a test pack (anonymised on the phone, shared once).
+- D5A: keep Glass; drop card shadows on phones only if the health line shows stutters.
+- D6A: one subscriptions list, each line says where it came from.
+Visible ones (D2 D3 D4 D6) wait for the combined "what I understood" OK (MOCKUPS.md rule).
+
 ## The five root causes (measured 28 Nov by 4 code audits + a page-by-page walk-through)
 1. The same question is answered in many places: advert 7 files, amount 8, merchant 7, dates 10, ~35 deciders per Chat sentence, Chat ≠ Home chain.
 2. Tests don't test what the phone does: single functions, my own data, prewarm off under webdriver, the persona test's "EG" country ignored.

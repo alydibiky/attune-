@@ -113,3 +113,7 @@ redesign, a new card or flow, colours, layout, or the order of things. Objective
 - 27 Nov 2026: Ali said **OK-B1 + OK-B5** → built in v10.9.9: source chips (srcchips-ui.jsx, tests/e2e_v1099b1.py) and Settings › Test every page
   (testpages.js + testpages-ui.jsx, tests/e2e_v1099b5.py), both phone + computer, 20 languages. One difference from the mock-up: the
   Tools list has ~35 pages today (not 23) — 12 have their own step, the rest one general step with the page's name.
+- 28 Nov 2026 (v10.9.10, Ali: "I want a complete plan in everything in the app"): the repair plan with D1–D6 (launch date, first-release
+  scope, the "nothing found" answer, real data in the tests, Glass on a phone, one subscriptions list) — https://claude.ai/artifact/BkAo2My6XLuggJonNLnfeN
+- 28 Nov 2026: Ali picked **D1A D2A D3A D4A D5A D6A** (all the recommended ones, no notes) → combined page with "what I understood"
+  (OK-D2 OK-D3 OK-D4 OK-D6; D5A needs no build unless the phone's health line shows stutters; D1A is the schedule) — docs/mockups/repair-combined.html → https://claude.ai/artifact/9Aa9taY8THPaPRPuKuoxXr (waiting for his OK)
