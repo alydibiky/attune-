@@ -20,6 +20,9 @@ import { digitsOf } from "./moneyunits.js";   // v9.9.18 each currency's decimal
 // merchants Money's own words don't know yet → its categories. v6.27: worldwide chains first, then by region
 // (Egypt, the Gulf, Europe, the Americas, South & South-East Asia, Africa). Add more freely: one regex per category.
 const MERCHANTS = [
+  // v10.9.12 REPAIR P1 (the money audit: "Careem Food" / "Bolt Food" were transport, "Uber Eats" food here and transport in Autopilot):
+  // food delivery first, before the ride companies that share its name
+  [/careem ?food|bolt ?food|uber ?eats|grab ?food|talabat|طلبات|elmenus|المنيوز|breadfast|بريدفاست|rabbit|instashop|mrsool|مرسول|deliveroo|doordash|grubhub|zomato|swiggy|foodpanda|glovo|wolt|hungerstation|jahez|جاهز|noon ?food/i, "food"],
   [/wataniya|وطنية|total ?energies|misr ?petroleum|mobil|chill ?out|emarat ?misr|shell|taqa|petrol|fuel|بنزين|\bbp\b|exxon|chevron|texaco|esso|aral|repsol|galp|eni\b|q8|adnoc|enoc|aramco|petronas|pertamina|indian ?oil|bharat ?petroleum|hp ?petrol|ipiranga|pemex|circle ?k|7-?eleven fuel|gas station|tankstelle|station[- ]service|gasolinera|posto/i, "transport"],
   [/seoudi|سعودي|spinneys|hyper ?one|kazyon|كازيون|oscar|metro market|gourmet|lulu|bim\b|panda|kheir zaman|خير زمان|fathalla|فتح الله|ragab|رجب|carrefour|walmart|target|costco|kroger|safeway|whole ?foods|trader ?joe|publix|aldi|lidl|tesco|sainsbury|asda|morrisons|waitrose|rewe|edeka|kaufland|netto|penny|leclerc|auchan|intermarch|monoprix|mercadona|dia\b|eroski|esselunga|coop\b|conad|albert ?heijn|jumbo|migros|a101|şok|sok market|bim market|magnit|пятёрочка|пятерочка|перекрёсток|biedronka|żabka|othaim|danube|tamimi|al ?meera|big ?bazaar|dmart|reliance fresh|blinkit|zepto|bigbasket|alfamart|indomaret|giant|fairprice|tops\b|lotus|big ?c|woolworths|coles|countdown|loblaws|sobeys|metro inc|soriana|chedraui|oxxo|pão de açúcar|atacad[aã]o|assa[ií]|shoprite|pick ?n ?pay|checkers|naivas|quickmart|7-?eleven|family ?mart|lawson|supermarket|supermarch|supermercado|grocer/i, "groceries"],
   [/swvl|careem|indrive|didi|bolt|metro|مترو|uber(?! ?eats)|lyft|grab(?! ?food)|gojek|ola\b|rapido|cabify|99 ?app|yandex ?go|free ?now|blablacar|lime\b|tier\b|transit|tfl|mta\b|sncf|renfe|trenitalia|deutsche ?bahn|\bdb\b|irctc|amtrak|parking|parkplatz|stationnement|estacionamiento|toll|peaje|péage|maut|airline|airways|emirates|qatar airways|ryanair|easyjet|lufthansa|air france|indigo|airasia|flydubai|egyptair/i, "transport"],
@@ -139,7 +142,7 @@ export function alreadyIn(entry, ledger) {
   if (!entry || !(entry.amount > 0) || !ledger || !Array.isArray(ledger.txns)) return null;
   const type = entry.direction === "in" ? "income" : "expense", day = toTxns([entry])[0].date, shop = merchantOf(entry.party || "");
   // v10.9.12 REPAIR P1: dedupe.js decides; a typed / boxed entry counts by its day (it was typed whenever), a notification by its minutes
-  return ledger.txns.find((t) => t && t.type === type && t.date === day && samePayment(entry, t, { ledger, byDay: t.source !== "notification" })
+  return ledger.txns.find((t) => t && t.type === type && t.date === day && samePayment(entry, t, { ledger, byDay: t.source !== "notification", ignorePayee: t.source !== "notification" })
     && (t.source !== "notification" || !!(t.created && entry.ts) || (!!shop && merchantOf(t.note) === shop))) || null;
 }
 

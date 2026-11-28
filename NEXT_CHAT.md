@@ -1,5 +1,22 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (28 Nov 2026, later — v10.9.12: the REPAIR PLAN, Ali picked D1A–D6A; P1 part 1 built)
+> Ali (28 Nov): "a lot of mistakes … I want a complete plan in everything in the app". 4 code audits (money, Chat routing, Android, speed)
+> + a page-by-page walk-through → REPAIR_PLAN.md (five root causes, phases P0–P7, a scoreboard) — page https://claude.ai/artifact/BkAo2My6XLuggJonNLnfeN.
+> Ali picked **D1A D2A D3A D4A D5A D6A** (all recommended) → the combined "what I understood" page https://claude.ai/artifact/9Aa9taY8THPaPRPuKuoxXr
+> waits for **OK-D2 OK-D3 OK-D4 OK-D6** (nothing visible is built before them — MOCKUPS.md).
+> Fixed on the way (from the audits): BgRunJob's id clashed with AiNightJob (0x5c0b1 — tests/unit/v10910jobids), place reminders could never
+> ring (immutable proximity intent), the agents' hidden browser never read a page (postDelayed on a detached view + paused timers —
+> v10910android), country "EG" = "eg".
+> **P1 part 1 (one money core)** — see REPAIR_PLAN.md P1 for the list: adverts.js + dedupe.js are THE decisions every money reader imports;
+> 10,000 HARD generators tests/adverts/gen.mjs (every reader must agree; 72 % shapes) and tests/dedupe/gen.mjs (pairs) at 100 % on 5 seeds;
+> tests/notifs 10,000 still 100 % with 0 interruptions; unit tests/unit/v10912money.test.mjs = each audit bug on its real message.
+> Real bugs the new generators found in paytext.js (the amount reader every money path uses): a time glued to the amount ("1:23\n120 EGP" =
+> 23,120), a %, a promo code (SAVE20), a year ("5 NOV 2026") taken as the amount, "order total" read as an order number.
+> **Next:** the rest of P1 (services.js, accounts.js, moneyread.js — REPAIR_PLAN.md), then P0 (the sentence bank through the REAL route — the Chat
+> audit found ~25 of 120 sentences wrong because ~35 deciders run in the order they were added; Chat ≠ Home), then P2 (one router).
+> Lesson for the next session: never edit code while tests/run_all.sh or the unit loop runs in the background — the results become noise.
+
 > ## START HERE (28 Nov 2026 — v10.9.10: Ali's phone list — the pop-up on every open, Money Guardian "90 % wrong", two Claude accounts, the Engine log, glitchy scrolling)
 > **1 the pop-up** ("Attune closed unexpectedly last time: signal 9 (Blaze)" on every open): shown only with the tester's switch, but for
 > ANY ending not marked "cached" — MagicOS's memory manager closing a resting app (process state "service") counted. Now only an ending

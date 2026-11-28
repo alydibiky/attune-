@@ -71,6 +71,13 @@ export function viewOf(p, ledger = null) {
   return { dir, amount: Math.abs(Number(p.amount) || 0), cur, at, day, payee, acct, src: p.source || (p.src && p.src.kind) || "" };
 }
 
+/** A Money entry's currency: its own, else its account's, else the book's, else `fallback` (v10.9.12: the Guardian and the subscription
+ *  check used the home currency for every entry — a $9.99 Netflix in a USD account became "9.99 EGP"). */
+export function txnCurrency(t, ledger, fallback = "") {
+  if (t && /^[A-Z]{3}$/i.test(t.currency || "")) return String(t.currency).toUpperCase();
+  const a = ledger && t && (ledger.accounts || []).find((x) => x.id === t.account);
+  return (a && a.currency) || (ledger && ledger.currency) || fallback || "";
+}
 /** The same payment seen twice? o.within = how far apart two TIMED ones may be (ms; default 10 minutes); o.days = how many days apart
  *  two may be when one has no time (default 0: the same day; the overpay check gives 3 — a receipt email can come days later). */
 export function samePayment(a0, b0, o = {}) {
@@ -80,7 +87,7 @@ export function samePayment(a0, b0, o = {}) {
   if (Math.abs(a.amount - b.amount) > 0.01) return false;
   if (a.cur && b.cur && a.cur !== b.cur) return false;
   if (a.acct && b.acct && a.acct !== b.acct) return false;
-  if (!samePayee(a.payee, b.payee)) return false;
+  if (!o.ignorePayee && !samePayee(a.payee, b.payee)) return false;   // (o.ignorePayee: a note a person typed is not a payee name — "groceries", «حاجات»)
   const within = o.within == null ? 10 * 60000 : o.within, days = o.days || 0;
   if (a.at && b.at && within > 0 && !o.byDay) return Math.abs(a.at - b.at) <= within;
   if (!a.day || !b.day) return false;

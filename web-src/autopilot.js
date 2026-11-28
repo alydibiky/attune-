@@ -9,7 +9,7 @@
    offers are never suggested again). One-time codes are never kept (RecallLog.kt). Pure; tests/unit/v980autopilot.test.mjs.        */
 import { isAdvert } from "./adverts.js";
 import { samePayment } from "./dedupe.js";
-import { isChatApp, readNotification, codeSure, moneySourceNote } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
+import { isChatApp, readNotification, codeSure, moneySourceNote, categorise } from "./paylog.js";   // v9.9.9 (Ali: a WhatsApp group's wages became income)
 import { understandNote } from "./notifmeaning.js";
 import { findSub } from "./subpay.js";
 import { notAPayment, fromPhoneNumber, cleanNote } from "./notifwords.js";   // v9.9.17 one list for all four readers
@@ -25,7 +25,9 @@ const at9 = (t) => { const d = new Date(t); d.setHours(9, 0, 0, 0); return d.get
 const CAT = [[/carrefour|seoudi|spinneys|hyper|metro market|kazyon|oscar|gourmet|بقال|سوبر ?ماركت|خضار/i, "groceries"], [/talabat|elmenus|mcdonald|kfc|pizza|cafe|coffee|starbucks|restaurant|مطعم|كافيه/i, "food"],
   [/uber|careem|indrive|didi|swvl|bolt|fuel|petrol|gas station|wataniya|total|mobil|chillout|بنزين/i, "transport"], [/pharmac|صيدلي|hospital|clinic|lab/i, "health"],
   [/vodafone|orange|etisalat|\bwe\b|electric|water|gas bill|internet/i, "bills"], [/amazon|noon|jumia|shein|zara|h&m|lc waikiki|mall/i, "shopping"]];
-export const catOf = (t) => (CAT.find(([re]) => re.test(String(t || ""))) || [null, "other"])[1];
+// v10.9.12 REPAIR P1 (the money audit: "Uber Eats" was food in Money and transport here): the category is Money's own decision
+// (paylog.categorise); this card's old list only answers what Money leaves as "other"
+export const catOf = (t) => { const c = categorise(String(t || ""), "out"); return c && c !== "other" ? c : (CAT.find(([re]) => re.test(String(t || ""))) || [null, "other"])[1]; };
 const shopIn = (text) => { const m = /\b(?:at|@|from|لدى|في|عند)\s+([A-Z0-9][A-Za-z0-9&' .-]{1,30}?)(?=\s+(?:on|card|بطاقة|using|ref|\d)|[.,]|$)/.exec(String(text || "")); return m ? m[1].trim() : ""; };
 
 const WEEKDAY = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "الأحد": 0, "الاحد": 0, "الاثنين": 1, "الاتنين": 1, "الاربع": 3, "الثلاثة": 2, "الإثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الاربعاء": 3, "الخميس": 4, "الجمعة": 5, "السبت": 6 };
@@ -68,6 +70,8 @@ export function isGroupChat(n) {
 // I want users to make low effort and the app makes the most effort"): a payment to a service that only comes as a subscription →
 // added to Subscriptions (People & plans, every month) and the expense to Money, BY ITSELF (listed as "done for you" with Undo)
 export const SUBS = [
+  // (kept as Ali's 9 Nov case: Google bills the Gemini plan as "Google One" — "a Google One which told me the payment of Gemini"; the money
+  // audit of 28 Nov called it a bug, but splitting it would make his existing Gemini subscription two lines)
   [/gemini|google one|google ai (?:pro|premium|ultra|plus)|جيميني|جوجل ون/i, "Google Gemini"], [/youtube premium|youtube music|يوتيوب بريميوم/i, "YouTube Premium"],
   [/netflix|نتفليكس/i, "Netflix"], [/spotify|سبوتيفاي/i, "Spotify"], [/shahid|شاهد vip|شاهد في اي بي/i, "Shahid"], [/\bosn\+?|osn plus/i, "OSN+"],
   [/watch ?it|واتش ات/i, "WATCH IT"], [/anghami|انغامي|أنغامي/i, "Anghami"], [/icloud|apple music|apple tv|apple one/i, "Apple"],

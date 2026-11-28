@@ -9,7 +9,7 @@ import { datesIn } from "./deadlines.js";
 
 /** The services people pay for every month or year, in Attune's 30 countries (name → the words that find it). Add freely. */
 export const SERVICES = [
-  ["Netflix", /netflix|نتفليكس|نتفلكس|نيتفليكس/i], ["Shahid VIP", /shahid|شاهد/i], ["OSN+", /\bosn\s?\+|osn plus|\bosn\b/i], ["WATCH IT", /watch ?it\b|واتش ?ات/i],
+  ["Netflix", /netflix|نتفليكس|نتفلكس|نيتفليكس/i], ["Shahid VIP", /shahid|شاهد\s?(?:vip|في ?اي ?بي|بلس|plus)|اشتراك شاهد|باقة شاهد/i], ["OSN+", /\bosn\s?\+|osn plus|\bosn\b/i], ["WATCH IT", /watch ?it\b|واتش ?ات/i],
   ["Anghami", /anghami|[أإا]نغامي/i], ["Spotify", /spotify|سبوتيفاي/i], ["YouTube Premium", /youtube (?:premium|music)|يوتيوب بريميوم/i],
   ["Apple", /icloud\+?|apple (?:music|tv\+?|one|arcade)/i], ["Google One", /google one|جوجل ون/i], ["Google Gemini", /gemini|google ai (?:pro|premium|ultra|plus)/i],
   ["Disney+", /disney\s?\+|disney plus/i], ["Amazon Prime", /amazon prime|prime video|برايم/i], ["STARZPLAY", /starz ?play/i], ["TOD", /\btod\b(?= |\.|$)|tod tv/i],

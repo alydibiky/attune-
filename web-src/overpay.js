@@ -20,7 +20,7 @@ import { merchantOf, SUBS } from "./guardian.js";
 import { readDeadlines, isoDay, datesIn } from "./deadlines.js";
 import { isSignInMessage } from "./notifwords.js";
 import { isAdvert, DONE, plain } from "./adverts.js";
-import { samePayment } from "./dedupe.js";
+import { samePayment, txnCurrency } from "./dedupe.js";
 import { parsePayment } from "./yusr/paytext.js";
 
 const DAY = 86400000;
@@ -30,9 +30,9 @@ const titleCase = (s) => String(s || "").replace(/(^|\s)\p{L}/gu, (c) => c.toUpp
 // ---- what a service is ----------------------------------------------------------------------------------------------------------
 /** Services by name (the longest first, so "YouTube Music" is not "YouTube"). The name shown is the first spelling. */
 const SERVICES = [
-  ["Google AI Pro", /google ai (?:pro|ultra|premium)|gemini advanced|ai premium/i], ["Google One", /google one|google storage/i],
-  ["ChatGPT", /chatgpt|openai/i], ["Claude", /claude|anthropic/i], ["Copilot", /copilot/i], ["Perplexity", /perplexity/i], ["Midjourney", /midjourney/i],
-  ["YouTube Music", /youtube music/i], ["YouTube Premium", /youtube premium/i], ["Netflix", /netflix|نتفليكس/i], ["Shahid", /shahid|شاهد/i],
+  ["Google AI Pro", /google ai (?:pro|ultra|premium)|gemini(?: advanced)?|ai premium|جيميني/i], ["Google One", /google one|google storage/i],
+  ["ChatGPT", /chatgpt|openai/i], ["Claude", /claude\.ai|claude (?:pro|max|team)|anthropic/i], ["Copilot", /copilot/i], ["Perplexity", /perplexity/i], ["Midjourney", /midjourney/i],
+  ["YouTube Music", /youtube music/i], ["YouTube Premium", /youtube premium/i], ["Netflix", /netflix|نتفليكس/i], ["Shahid", /shahid|شاهد\s?(?:vip|في ?اي ?بي|بلس|plus)|اشتراك شاهد|باقة شاهد/i],
   ["OSN+", /osn/i], ["Watch It", /watch ?it/i], ["Disney+", /disney/i], ["HBO Max", /hbo/i], ["Prime Video", /prime video/i], ["Amazon Prime", /amazon prime/i],
   ["StarzPlay", /starz ?play/i], ["Apple TV+", /apple tv/i], ["Apple Music", /apple music/i], ["Apple One", /apple one/i], ["iCloud+", /icloud/i],
   ["Spotify", /spotify/i], ["Anghami", /anghami|انغامي|أنغامي/i], ["Deezer", /deezer/i], ["Microsoft 365", /microsoft 365|office 365|m365|email essentials/i],
@@ -228,7 +228,7 @@ export function overpayCheck({ ledger, notes = [], emails = [], radar, now = Dat
     if (!t || t.type !== "expense" || !(t.amount > 0) || !t.date || Date.parse(t.date) < since) continue;
     const name = serviceOf(t.note) || (SUBS.test(t.note || "") ? titleCase(merchantOf(t.note)) : "");
     const acct = accountOf({ acct: t.evidence && t.evidence.acct });
-    ev.push({ type: "charge", service: name, merchant: titleCase(merchantOf(t.note)), acct, amount: t.amount, currency: t.currency || cur0, cadence: "", date: t.date,
+    ev.push({ type: "charge", service: name, merchant: titleCase(merchantOf(t.note)), acct, amount: t.amount, currency: txnCurrency(t, ledger, cur0), cadence: "", date: t.date,
       src: { id: t.id, kind: "payment", at: Date.parse(t.date + "T12:00:00"), title: t.note || "", text: t.note || "" } });
   }
   // charges by service (a merchant that is not a known service counts only when paid 3+ months with steady amounts)

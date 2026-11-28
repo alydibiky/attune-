@@ -14,7 +14,7 @@ import { tr } from "./i18n.js";
 import { progressOf } from "./life.js";
 import { homeCurrency } from "./locale.js";
 import { billsOf, billLine } from "./bills.js";
-import { samePayment } from "./dedupe.js";
+import { samePayment, txnCurrency } from "./dedupe.js";
 
 const DAY = 86400000;
 const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -23,7 +23,7 @@ const money = (n) => (Math.round(n * 100) / 100).toLocaleString("en-US", { maxim
 // v6.27 global: legal forms, branch words and store numbers are dropped ("STARBUCKS #1234 LONDON GB" → "starbucks")
 const NOT_MERCHANT = /\b(egypt|eg|maadi|cairo|branch|store|market|s\.?a\.?e|inc|llc|ltd|limited|plc|gmbh|ag|sarl|sas|srl|spa|bv|nv|pty|pvt|co|corp|company|sa|sl|ltda|tbk|bhd|sdn|kk|online|pos|purchase|card|visa|mastercard|debit|credit|www|com|us|uk|gb|de|fr|es|it|in|ae|sa|london|paris|new york|dubai|riyadh)\b|#\s*\d+|\b\d{3,}\b/g;
 export const merchantOf = (note) => String(note || "").split(/ · | - |—|\*/)[0].toLowerCase().replace(/[^\p{L}\p{N}# ]/gu, " ").replace(NOT_MERCHANT, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
-export const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|google storage|apple\.com\/bill|apple music|apple tv|apple one|anghami|disney|hulu|hbo|paramount|peacock|prime video|amazon prime|crunchyroll|deezer|tidal|audible|kindle unlimited|xbox|game ?pass|playstation|ps plus|nintendo|steam|microsoft 365|office 365|onedrive|dropbox|chatgpt|openai|claude|anthropic|perplexity|midjourney|gemini|copilot|canva|adobe|figma|notion|evernote|grammarly|duolingo|babbel|headspace|calm\b|strava|peloton|linkedin|patreon|onlyfans|twitch|tinder|bumble|hinge|nordvpn|expressvpn|surfshark|1password|lastpass|gym|fitness|نتفليكس|شاهد|انغامي|أنغامي|اشتراك|(?<![\p{L}])(abonnement|suscripción|suscripcion|assinatura|abbonamento|abonelik|langganan|abo|mitgliedschaft|membresía|adhésion)(?![\p{L}])/iu;
+export const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|google storage|apple\.com\/bill|apple music|apple tv|apple one|anghami|disney|hulu|hbo|paramount|peacock|prime video|amazon prime|crunchyroll|deezer|tidal|audible|kindle unlimited|xbox|game ?pass|playstation|ps plus|nintendo|microsoft 365|office 365|onedrive|dropbox|chatgpt|openai|claude\.ai|claude pro|claude max|anthropic|perplexity|midjourney|gemini|copilot|canva|adobe|figma|notion|evernote|grammarly|duolingo|babbel|headspace|calm\b|strava|peloton|linkedin|patreon|onlyfans|twitch|tinder|bumble|hinge|nordvpn|expressvpn|surfshark|1password|lastpass|gym|fitness|نتفليكس|شاهد\s?(?:vip|في ?اي ?بي|بلس)|اشتراك شاهد|انغامي|أنغامي|اشتراك|(?<![\p{L}])(abonnement|suscripción|suscripcion|assinatura|abbonamento|abonelik|langganan|abo|mitgliedschaft|membresía|adhésion)(?![\p{L}])/iu;
 const FEES = /\b(fee|fees|commission|charges?|service charge|maintenance fee|annual fee|stamp|overdraft|late fee|atm fee|foreign transaction|fx fee)\b|عمولة|عموله|رسوم|مصاريف إدارية|دمغة|(?<![\p{L}])(frais|commission|cotisation|agios|comisión|comision|cargo por|tarifa|taxa|tarifa bancária|gebühr|gebühren|entgelt|kontoführung|commissione|canone|spese|ücret|masraf|komisyon|biaya|biaya admin|kosten|provisie|комиссия|手续费|수수료|手数料)(?![\p{L}])/iu;
 
 /** Everything the Guardian finds now. → [{ id, kind, title, detail, amount (EGP at stake), action }] */
@@ -51,7 +51,9 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
   const tm = (t) => t.ts || t.created || 0;
   const brief = (t) => ({ id: t.id, date: t.date, amount: t.amount, note: t.note || "", account: t.account || "", at: tm(t) || null, source: t.source || "" });
   const byM = new Map();
-  for (const t of exp) { const k = merchantOf(t.note) + "|" + t.amount; (byM.get(k) || byM.set(k, []).get(k)).push(t); }
+  // (v10.9.12: each entry in its OWN currency — 20 EGP and 20 USD are never one pair; the card says "20 USD", never the home currency)
+  const tc = (t) => txnCurrency(t, ledger, cur);
+  for (const t of exp) { const k = merchantOf(t.note) + "|" + t.amount + "|" + tc(t); (byM.get(k) || byM.set(k, []).get(k)).push(t); }
   for (const [k, list] of byM) {
     if (list.length < 2 || !k.split("|")[0]) continue;
     list.sort((a, b) => (tm(a) || Date.parse(a.date)) - (tm(b) || Date.parse(b.date)));
@@ -71,8 +73,8 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
       // the bank's message and the shop's email about ONE payment (two different apps) → ask, never "charged twice"
       const apps = (t) => String((t.evidence && t.evidence.app) || "").toLowerCase();
       const mixed = (a.source === "notification") !== (b.source === "notification") || (!!apps(a) && !!apps(b) && apps(a) !== apps(b));
-      const sure = timed && !mixed && !a.__subAsk; delete a.__subAsk; const _ = 0, m = titleCase(merchantOf(b.note)), amt = `${money(b.amount)} ${cur}`;
-      add({ id: "double:" + (b.id || k + b.date), kind: "double", sure, amount: b.amount, txns: [brief(a), brief(b)],
+      const sure = timed && !mixed && !a.__subAsk; delete a.__subAsk; const _ = 0, m = titleCase(merchantOf(b.note)), amt = `${money(b.amount)} ${tc(b)}`;
+      add({ id: "double:" + (b.id || k + b.date), kind: "double", sure, amount: b.amount, currency: tc(b), txns: [brief(a), brief(b)],
         title: sure ? `Charged twice at ${m}` : `Same payment twice at ${m}?`,
         detail: sure ? `${amt} twice on ${b.date} — ask your bank to refund one` : `${amt} twice on ${b.date} — logged twice, or charged twice?`, action: "dispute",
         T: [sure ? "Charged twice at {m}" : "Same payment twice at {m}?", { m }],
@@ -81,8 +83,9 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
   }
   // creep: a payment made every month to the same merchant went up ≥ 5 %
   const monthly = new Map();
-  for (const t of exp) { const m = merchantOf(t.note); if (!m) continue; (monthly.get(m) || monthly.set(m, []).get(m)).push(t); }
-  for (const [m, list] of monthly) {
+  for (const t of exp) { const m = merchantOf(t.note); if (!m) continue; const k = m + "\u0001" + tc(t); (monthly.get(k) || monthly.set(k, []).get(k)).push(t); }
+  for (const [mk, list] of monthly) {
+    const [m, curM] = mk.split("\u0001");   // (one shop in one currency)
     const months = [...new Set(list.map((t) => t.date.slice(0, 7)))].sort();
     if (months.length < 3) continue;
     const per = months.map((mo) => list.filter((t) => t.date.startsWith(mo)).reduce((a, t) => a + t.amount, 0));
@@ -90,16 +93,16 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
     const steady = before.every((x) => Math.abs(x - avg) <= avg * 0.05);
     if (steady && last >= avg * 1.05 && list.filter((t) => t.date.startsWith(months[months.length - 1])).length === 1) {
       const rise = last - avg;
-      add({ id: "creep:" + m + ":" + months[months.length - 1], kind: "creep", amount: rise * 12, title: `${titleCase(m)} went up ${Math.round((rise / avg) * 100)}%`,
-        detail: `${money(avg)} → ${money(last)} ${cur} a month: ${money(rise * 12)} more a year`, action: "review",
-        T: ["{m} went up {n}%", { m: titleCase(m), n: Math.round((rise / avg) * 100) }], D: ["{a} → {b} a month: {y} more a year", { a: money(avg), b: `${money(last)} ${cur}`, y: `${money(rise * 12)} ${cur}` }] });
+      add({ currency: curM, id: "creep:" + m + ":" + months[months.length - 1], kind: "creep", amount: rise * 12, title: `${titleCase(m)} went up ${Math.round((rise / avg) * 100)}%`,
+        detail: `${money(avg)} → ${money(last)} ${curM} a month: ${money(rise * 12)} more a year`, action: "review",
+        T: ["{m} went up {n}%", { m: titleCase(m), n: Math.round((rise / avg) * 100) }], D: ["{a} → {b} a month: {y} more a year", { a: money(avg), b: `${money(last)} ${curM}`, y: `${money(rise * 12)} ${curM}` }] });
     }
     // subs: paid every month (3 of the last 3 months) to a subscription
     if (SUBS.test(m + " " + list.map((t) => t.note).join(" ")) && months.length >= 3) {
       const lastAmt = per[per.length - 1];
-      add({ id: "subs:" + m, kind: "subs", amount: lastAmt * 12, title: `${titleCase(m)}: ${money(lastAmt * 12)} ${cur} a year`,
+      add({ currency: curM, id: "subs:" + m, kind: "subs", amount: lastAmt * 12, title: `${titleCase(m)}: ${money(lastAmt * 12)} ${curM} a year`,
         detail: `Paid every month since ${months[0]}. Still using it?`, action: "cancel", monthly: lastAmt,
-        T: ["{m}: {a} a year", { m: titleCase(m), a: `${money(lastAmt * 12)} ${cur}` }], D: ["Paid every month since {d}. Still using it?", { d: months[0] }] });
+        T: ["{m}: {a} a year", { m: titleCase(m), a: `${money(lastAmt * 12)} ${curM}` }], D: ["Paid every month since {d}. Still using it?", { d: months[0] }] });
     }
   }
   // fees: bank fees and commissions this month
