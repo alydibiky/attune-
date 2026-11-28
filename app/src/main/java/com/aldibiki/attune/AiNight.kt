@@ -153,7 +153,7 @@ class AiNightJob : android.app.job.JobService() {
     override fun onStartJob(params: android.app.job.JobParameters): Boolean {
         stop.set(false)
         worker = Thread {
-            try { AiNight.run(applicationContext, stop) } catch (e: Throwable) {} finally { try { jobFinished(params, false) } catch (e: Throwable) {} }
+            Engine.inUse.incrementAndGet(); try { AiNight.run(applicationContext, stop) } catch (e: Throwable) {} finally { Engine.inUse.decrementAndGet(); try { jobFinished(params, false) } catch (e: Throwable) {} }   // v10.9.10: never released under it
         }.also { it.start() }
         return true
     }

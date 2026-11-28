@@ -35,7 +35,7 @@ export function takeEmails(list, { s = ls(), now = Date.now() } = {}) {
   const pays = fresh.filter(isPaymentEmail);
   if (pays.length) { try {
     const wait = JSON.parse((s && s.getItem(WAIT_KEY)) || "[]"), ids = new Set(wait.map((x) => x.id));
-    const add = pays.filter((e) => !ids.has(e.id)).map((e) => ({ id: e.id, pkg: "gmail", app: "Gmail", who: e.from, title: e.title || e.from, text: String(e.text || "").slice(0, 700), ts: e.at || now }));
+    const add = pays.filter((e) => !ids.has(e.id)).map((e) => ({ id: e.id, pkg: "gmail", app: "Gmail", who: e.from, title: e.title || e.from, text: String(e.text || "").slice(0, 700), ts: e.at || now, ...(e.to ? { acct: String(e.to).slice(0, 200) } : {}) }));
     s && s.setItem(WAIT_KEY, JSON.stringify([...wait, ...add].slice(-600)));
   } catch (e) {} }
   return { added: fresh.length, payments: pays.length };

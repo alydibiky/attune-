@@ -1,5 +1,42 @@
 # Attune — start here (handoff for the next chat, 7 Nov 2026 — v9.8)
 
+> ## START HERE (28 Nov 2026 — v10.9.10: Ali's phone list — the pop-up on every open, Money Guardian "90 % wrong", two Claude accounts, the Engine log, glitchy scrolling)
+> **1 the pop-up** ("Attune closed unexpectedly last time: signal 9 (Blaze)" on every open): shown only with the tester's switch, but for
+> ANY ending not marked "cached" — MagicOS's memory manager closing a resting app (process state "service") counted. Now only an ending
+> while Attune was ON SCREEN (x.fg) is shown; the rest stays in the Engine log (attune.jsx lastExit effect).
+> **3 the Engine log** — (a) two ANRs, AgentWatchReceiver (25 + 27 Nov) and ScoutNightReceiver (25 Nov): the receivers ran the whole round
+> under goAsync (~60 s; a round reads up to 40 pages + the invisible browser, Scout up to 30 searches) → NEW BgRunJob (AgentWatch.kt): the
+> receiver only plans a one-shot job (10-minute budget, any network) and returns. (b) "signal 9 · iAwareR[LowMem](service) · 600–875 MB"
+> 5–17 min after he left, ~10 times in 4 days: the model stayed loaded in the background, so the phone closed the whole app and every
+> reopen was a cold start (page + model). MainActivity: after 4 minutes in the background with nothing being written (GenService) and no
+> background AI job using it (Engine.inUse, held by MindBgJob / AiNightJob) the model is let go; it reloads on return (the existing
+> freedForMemory path). Not measured on his phone yet — check the Engine log for "4 minutes in the background" and fewer LowMem endings.
+> **2 Money Guardian** (his screenshot: Enzu 6,230 · Support 5,144.78 · Egp Off 800 · Last Chance 3,899/yr · Your Dessert 295 · Supplexon ·
+> Talabat Deals · Alex Forte $115 · Meta For · First Order · Don T · Order Your — all adverts): overpay.js readSource made a charge of
+> anything with the bare word "order" + an amount, and the name guessed from the title counted as a KNOWN service (one charge = a monthly
+> subscription). Now: isPromo (EN / Arabic advert words, unless the text is a real receipt) → nothing; "order" only as an order receipt;
+> a guessed name is a merchant (3 steady months needed) unless the receipt itself says renewal / subscription (SUB_WORDS); perks only
+> for a known service or points. Direction marks, double spaces and Arabic-Indic digits no longer hide a receipt's amount ("USD ‎20",
+> «٧٥ جنيه»). **Two Claude accounts**: the account each email went to is kept — PayListener reads the notification's subText address
+> ("acct"), GmailRead keeps Delivered-To / To ("to"), paylog / autopilot carry it into the payment's evidence; overpay groups charges by
+> service + account ("Claude (a@…)", "Claude (b@…)"; a bank SMS joins the account whose email is the same charge); guardian "Charged
+> twice": never for two different accounts, never when the same pair came in an earlier month, a bank message + a shop email = ASK,
+> and a subscription service twice the same day with no account named = ASK (SUBS now has anthropic / perplexity / midjourney — the bank
+> writes ANTHROPIC, the list only had claude). His already-saved data has no account addresses (they were never kept) — the 13 Nov
+> Anthropic pair now ASKS instead of "Charged twice"; new receipts carry the account.
+> Tests: NEW tests/subs/gen.mjs — 10,000 HARD composed people (1–4 real services by email / notification, EN / Arabic, an advert line
+> inside some receipts, the same service on two accounts, the bank SMS for the same charge, steady local payments, one-off orders, 3–14
+> adverts composed from parts, a real double charge as a control): 40.96 % at first (two generator mistakes said and fixed: a local name
+> shows its first two words; the twin Money entries used other addresses) → 80.31 % → 100 %; held-out seeds 1–3 100 %; 100 % different
+> advert shapes. Real bugs it found: direction marks / double spaces / Arabic-Indic digits, and "ANTHROPIC" not a subscription word.
+> Unit tests/unit/v10910subs.test.mjs (his exact adverts, two accounts, the bank pair, a real double, «٧٥ جنيه», a 2,500 sample).
+> **4 scrolling** — measured first (NEW tests/trials/scroll.py: a full phone, CPU 4×, Home / Money / Follow-ups / Mind / Chat scrolled
+> frame by frame): smooth in desktop Chromium (median 16.7 ms, no frame over 50 ms except Mind's first 85 ms). So the stutter is
+> Android-WebView-only. The Glass ground was `body { background: var(--g-page) fixed }` — a fixed background makes a phone's WebView
+> repaint the whole screen (gradient + every card's shadow) on every scroll frame. Now body::before is a fixed layer of its own (build/
+> tw.css); screenshots before / after at 390 and 1366: identical. NOT proven on his phone (headless Chromium records no paints) — ask him.
+> harness.py: NO_ENGINE=1 runs page-only trials without llama-server.
+
 > ## START HERE (27 Nov 2026 — v10.9.9 part 3: Ali's picks A1 A2 A3 A4 B1 B5 — https://claude.ai/artifact/EqcSsaHBz1kb7kM9Y9Mwdr)
 > **A1** Mind never deletes your own notes: memindex.pruneMind clears only Attune's own saved answers (chat / ask / instant / copilot / web /
 > research), oldest first; your notes, to-dos, Money notes, photos, places, files, pinned are never cleared for room (20-language notice).

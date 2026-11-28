@@ -81,13 +81,14 @@ object GmailRead {
                 val m = get("https://gmail.googleapis.com/gmail/v1/users/me/messages/$id?format=full", token)
                 val pl = m.optJSONObject("payload")
                 val hs = pl?.optJSONArray("headers") ?: JSONArray()
-                var from = ""; var subj = ""
+                var from = ""; var subj = ""; var to = ""
                 for (k in 0 until hs.length()) { val h = hs.optJSONObject(k) ?: continue
-                    when (h.optString("name").lowercase()) { "from" -> from = h.optString("value"); "subject" -> subj = h.optString("value") } }
+                    when (h.optString("name").lowercase()) { "from" -> from = h.optString("value"); "subject" -> subj = h.optString("value")
+                        "delivered-to" -> to = h.optString("value"); "to" -> if (to.isEmpty()) to = h.optString("value") } }   // v10.9.10: which of the person's addresses it went to
                 val (plain, html) = bodyOf(pl)
                 val text = (plain.ifBlank { clean(html) }.ifBlank { m.optString("snippet") }).replace(Regex("\\s+"), " ").trim().take(3000)
                 if (PayLog.isOtp(subj) || PayLog.isOtp(text.take(400))) continue   // never a one-time code
-                out.put(JSONObject().put("id", "gm:" + id).put("kind", "email").put("from", from).put("title", subj).put("text", text)
+                out.put(JSONObject().put("id", "gm:" + id).put("kind", "email").put("from", from).put("to", to.take(200)).put("title", subj).put("text", text)
                     .put("at", m.optString("internalDate").toLongOrNull() ?: 0L).put("link", "https://mail.google.com/mail/#all/" + m.optString("threadId")))
             } catch (e: Exception) { if (e.message?.startsWith("Gmail said no") == true) throw e }
         }

@@ -100,7 +100,7 @@ export function suggestFrom(n, { now = Date.now(), recent = [], s = emptyState()
   if (!n) return null;
   const u = understandNote(n), app = String(n.app || n.pkg || ""), text = String(n.text || ""), title = String(n.title || "");
   if ((s.skipApps || []).includes(app + ":" + u.kind)) return null;
-  const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text } };   // (v9.8: the whole message, to read before adding)
+  const base = { src: String(n.id), app, at: n.ts || now, kind: "", full: { title, text, ...(n.acct ? { acct: String(n.acct).slice(0, 120) } : {}) } };   // (v9.8: the whole message, to read before adding)
   // v9.9.17 (the 10,000-notification run): the cards skipped the checks Money's list has — "You will be billed EGP 1,438", "your
   // payment was declined", a code "for your purchase of EGP 567", «سيتم خصم قسط القرض», a prize text became a subscription / an
   // expense / income card. One list for every reader (notifwords.js); an advert or a video is never a card either.
@@ -253,7 +253,7 @@ export const weekCount = (s, now = Date.now()) => Object.values(s.ok || {}).filt
 export function actionsFor(x) {
   if (x.kind === "expense" || x.kind === "income") return [{ kind: "money", items: [{ type: x.kind, amount: x.amount, cat: x.cat || "other", note: x.note || "", date: x.date, source: x.via === "receipt" ? "receipt" : "notification",
     // v10.4: the complete message it was read from, kept with the payment (Ali: "the evidence of the complete real message")
-    ...(x.via !== "receipt" && x.full && x.full.text ? { evidence: { text: String(x.full.text).slice(0, 2000), from: String(x.full.title || "").slice(0, 200), app: String(x.app || "").slice(0, 80), ts: +x.at || 0 } } : {}) }] }];
+    ...(x.via !== "receipt" && x.full && x.full.text ? { evidence: { text: String(x.full.text).slice(0, 2000), from: String(x.full.title || "").slice(0, 200), app: String(x.app || "").slice(0, 80), ts: +x.at || 0, ...(x.full.acct ? { acct: x.full.acct } : {}) } } : {}) }] }];
   if (x.kind === "subscription") return [{ kind: "subPay", name: x.title, amount: x.amount, date: x.date, cur: x.cur || "", key: x.key },
     ...(x.noMoney ? [] : [{ kind: "money", items: [{ type: "expense", amount: x.amount, cat: "bills", note: x.title, date: x.date, source: "notification", ...(x.account ? { account: x.account } : {}) }] }])];
   if (x.kind === "bill") return [{ kind: "life", c: { kind: "bill", dir: "out", amount: x.amount, count: 1, total: x.amount, every: null, start: iso(x.at), title: x.title, person: "", paid: [], currency: "" } }];

@@ -154,7 +154,7 @@ class MindBgJob : android.app.job.JobService() {
     @Volatile private var worker: Thread? = null
     override fun onStartJob(params: android.app.job.JobParameters): Boolean {
         stop.set(false)
-        worker = Thread { try { MindBg.run(applicationContext, stop) } catch (e: Throwable) {} finally { try { jobFinished(params, false) } catch (e: Throwable) {} } }.also { it.start() }
+        worker = Thread { Engine.inUse.incrementAndGet(); try { MindBg.run(applicationContext, stop) } catch (e: Throwable) {} finally { Engine.inUse.decrementAndGet(); try { jobFinished(params, false) } catch (e: Throwable) {} } }.also { it.start() }
         return true
     }
     override fun onStopJob(params: android.app.job.JobParameters): Boolean { stop.set(true); try { worker?.interrupt() } catch (e: Throwable) {}; return true }

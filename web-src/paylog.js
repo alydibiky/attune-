@@ -95,7 +95,7 @@ export function readNotification(n, opts, why) {
   if (p.direction === "in" && !known && /payment (?:was |has been )?received|received your payment|payment of (?:[^.\n]|\.\d|\.(?=E\b|e\b|م)){0,40} received|تم استلام (?:دفعتك|مدفوعاتك)/i.test(text)) p.direction = "out";
   // full / from: the complete message as it arrived and who sent it — kept with the payment as its evidence (Ali, 25 Oct)
   return { id: n.id, app: n.app || n.pkg || "", amount: p.amount, currency: p.currency || "", direction: p.direction, party: p.party || "",
-    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), confidence: p.confidence,
+    ts: n.ts || p.date || Date.now(), text: text.slice(0, 300), full: String(n.text || "").slice(0, 2000), from: String(n.title || "").slice(0, 200), ...(n.acct ? { acct: String(n.acct).slice(0, 120) } : {}), confidence: p.confidence,
     ...(countsAsMoney(lab) ? { trusted: true } : {}) };
 }
 
@@ -123,7 +123,7 @@ export function toTxns(entries) {
 /** The proof kept on a payment read from a notification: the complete message as it arrived, who sent it, the app, the time. */
 export function evidenceOf(e) {
   const text = String((e && (e.full || e.text)) || "").slice(0, 2000);
-  return text ? { text, from: String(e.from || "").slice(0, 200), app: String(e.app || "").slice(0, 80), ts: e.ts || 0 } : undefined;
+  return text ? { text, from: String(e.from || "").slice(0, 200), app: String(e.app || "").slice(0, 80), ts: e.ts || 0, ...(e.acct ? { acct: String(e.acct).slice(0, 120) } : {}) } : undefined;
 }
 
 /** v7.9 (Ali: a 599 "charged twice" that was one payment): is this notification already in Money? The same amount and day, and
@@ -211,7 +211,7 @@ export function appendToLedger(ledger, txns, now = Date.now()) {
     if (!acc) acc = L.accounts[0];
     const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
     const dg = digitsOf(acc.currency || t.currency || "EGP");   // v9.9.18: KWD / BHD / OMR / JOD / TND keep 3 decimals, JPY none
-    L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: catFor(CR.rules, { note: t.note, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other" }) /* v9.9.18 M5: "always put Seoudi in Groceries" */, account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0 } } : {}) });
+    L.txns.push({ id, ...(t.nid ? { nid: String(t.nid).slice(0, 80) } : {}), type: t.type, amount: Math.round(a * 10 ** dg) / 10 ** dg, cat: catFor(CR.rules, { note: t.note, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other" }) /* v9.9.18 M5: "always put Seoudi in Groceries" */, account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80), created: typeof t.ts === "number" ? t.ts : now, ...(t.source === "notification" ? { source: "notification" } : {}) , ...(t.evidence && t.evidence.text ? { evidence: { text: String(t.evidence.text).slice(0, 2000), from: String(t.evidence.from || "").slice(0, 200), app: String(t.evidence.app || "").slice(0, 80), ts: +t.evidence.ts || 0, ...(t.evidence.acct ? { acct: String(t.evidence.acct).slice(0, 120) } : {}) } } : {}) });
     ids.push(id);
   }
   return { ledger: L, ids };

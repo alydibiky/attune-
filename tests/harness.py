@@ -96,7 +96,9 @@ class Env:
         # v6.8: ATTUNE_MODEL=<path to a real .gguf> runs the same tests / trials on a real model
         # (tests/trials/); normal runs keep the tiny random model.
         model = os.environ.get("ATTUNE_MODEL") or HERE + "/tiny-a.gguf"
-        self.srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", model,
+        # v10.9.10: NO_ENGINE=1 (tests/trials/scroll.py) — page-only timing, no llama-server needed
+        if os.environ.get("NO_ENGINE"): self.srv = subprocess.Popen(["sleep", "86400"])
+        else: self.srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", model,
             "--host", "127.0.0.1", "--port", str(ENGINE_PORT), "-c", "16384", "-t", os.environ.get("ATTUNE_THREADS", "2"), "-np", "1",
             "--jinja", "--no-ui", "--no-slots", "--api-key", "testkey",
             "--cors-headers", "Authorization,Content-Type", "--cors-origins", f"http://127.0.0.1:{PAGE_PORT}",
@@ -106,7 +108,7 @@ class Env:
             def log_message(self, *a): pass
         self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", PAGE_PORT), functools.partial(Quiet, directory=DIST))
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
-        for _ in range(150 if not os.environ.get("ATTUNE_MODEL") else 900):   # a real model takes longer to load
+        for _ in (range(0) if os.environ.get("NO_ENGINE") else range(150 if not os.environ.get("ATTUNE_MODEL") else 900)):   # a real model takes longer to load
             try:
                 if urllib.request.urlopen(f"http://127.0.0.1:{ENGINE_PORT}/health", timeout=1).status == 200: break
             except Exception: time.sleep(0.2)

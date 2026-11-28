@@ -22,7 +22,7 @@ const money = (n) => (Math.round(n * 100) / 100).toLocaleString("en-US", { maxim
 // v6.27 global: legal forms, branch words and store numbers are dropped ("STARBUCKS #1234 LONDON GB" → "starbucks")
 const NOT_MERCHANT = /\b(egypt|eg|maadi|cairo|branch|store|market|s\.?a\.?e|inc|llc|ltd|limited|plc|gmbh|ag|sarl|sas|srl|spa|bv|nv|pty|pvt|co|corp|company|sa|sl|ltda|tbk|bhd|sdn|kk|online|pos|purchase|card|visa|mastercard|debit|credit|www|com|us|uk|gb|de|fr|es|it|in|ae|sa|london|paris|new york|dubai|riyadh)\b|#\s*\d+|\b\d{3,}\b/g;
 export const merchantOf = (note) => String(note || "").split(/ · | - |—|\*/)[0].toLowerCase().replace(/[^\p{L}\p{N}# ]/gu, " ").replace(NOT_MERCHANT, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
-export const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|google storage|apple\.com\/bill|apple music|apple tv|apple one|anghami|disney|hulu|hbo|paramount|peacock|prime video|amazon prime|crunchyroll|deezer|tidal|audible|kindle unlimited|xbox|game ?pass|playstation|ps plus|nintendo|steam|microsoft 365|office 365|onedrive|dropbox|chatgpt|openai|claude|gemini|copilot|canva|adobe|figma|notion|evernote|grammarly|duolingo|babbel|headspace|calm\b|strava|peloton|linkedin|patreon|onlyfans|twitch|tinder|bumble|hinge|nordvpn|expressvpn|surfshark|1password|lastpass|gym|fitness|نتفليكس|شاهد|انغامي|أنغامي|اشتراك|(?<![\p{L}])(abonnement|suscripción|suscripcion|assinatura|abbonamento|abonelik|langganan|abo|mitgliedschaft|membresía|adhésion)(?![\p{L}])/iu;
+export const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|google storage|apple\.com\/bill|apple music|apple tv|apple one|anghami|disney|hulu|hbo|paramount|peacock|prime video|amazon prime|crunchyroll|deezer|tidal|audible|kindle unlimited|xbox|game ?pass|playstation|ps plus|nintendo|steam|microsoft 365|office 365|onedrive|dropbox|chatgpt|openai|claude|anthropic|perplexity|midjourney|gemini|copilot|canva|adobe|figma|notion|evernote|grammarly|duolingo|babbel|headspace|calm\b|strava|peloton|linkedin|patreon|onlyfans|twitch|tinder|bumble|hinge|nordvpn|expressvpn|surfshark|1password|lastpass|gym|fitness|نتفليكس|شاهد|انغامي|أنغامي|اشتراك|(?<![\p{L}])(abonnement|suscripción|suscripcion|assinatura|abbonamento|abonelik|langganan|abo|mitgliedschaft|membresía|adhésion)(?![\p{L}])/iu;
 const FEES = /\b(fee|fees|commission|charges?|service charge|maintenance fee|annual fee|stamp|overdraft|late fee|atm fee|foreign transaction|fx fee)\b|عمولة|عموله|رسوم|مصاريف إدارية|دمغة|(?<![\p{L}])(frais|commission|cotisation|agios|comisión|comision|cargo por|tarifa|taxa|tarifa bancária|gebühr|gebühren|entgelt|kontoführung|commissione|canone|spese|ücret|masraf|komisyon|biaya|biaya admin|kosten|provisie|комиссия|手续费|수수료|手数料)(?![\p{L}])/iu;
 
 /** Everything the Guardian finds now. → [{ id, kind, title, detail, amount (EGP at stake), action }] */
@@ -57,8 +57,19 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [], lang 
     for (let i = 1; i < list.length; i++) {
       const a = list[i - 1], b = list[i], timed = !!(tm(a) && tm(b)), gap = Math.abs(tm(b) - tm(a));
       if (a.date !== b.date || a.id === b.id || (timed ? gap > 10 * 60000 : a.note !== b.note)) continue;
-      const mixed = (a.source === "notification") !== (b.source === "notification");
-      const sure = timed && !mixed, m = titleCase(merchantOf(b.note)), amt = `${money(b.amount)} ${cur}`;
+      // v10.9.10 (Ali, 28 Nov: "Charged twice at Anthropic" — "I have 2 Claude accounts"): two payments that went to two different
+      // email accounts are two subscriptions, never a double charge; and the same pair every month (both renew on the same day) too
+      const ac = (t) => String((t.evidence && t.evidence.acct) || "").toLowerCase();
+      if (ac(a) && ac(b) && ac(a) !== ac(b)) continue;
+      const mo = a.date.slice(0, 7), pairBefore = [...new Set(list.filter((t) => t.date.slice(0, 7) !== mo).map((t) => t.date))].some((d) => list.filter((t) => t.date === d).length >= 2);
+      if (pairBefore) continue;
+      // a subscription service paid twice the same day by notification, with the account behind each unknown (a bank SMS names no
+      // email account): two accounts / a family member is far more likely than the bank charging twice → ask, never "charged twice"
+      if (SUBS.test(a.note + " " + b.note) && !(ac(a) && ac(a) === ac(b))) { const known = new Set(exp.filter((t) => merchantOf(t.note) === merchantOf(a.note)).map(ac).filter(Boolean)); if (known.size >= 2) continue; a.__subAsk = true; }
+      // the bank's message and the shop's email about ONE payment (two different apps) → ask, never "charged twice"
+      const apps = (t) => String((t.evidence && t.evidence.app) || "").toLowerCase();
+      const mixed = (a.source === "notification") !== (b.source === "notification") || (!!apps(a) && !!apps(b) && apps(a) !== apps(b));
+      const sure = timed && !mixed && !a.__subAsk; delete a.__subAsk; const _ = 0, m = titleCase(merchantOf(b.note)), amt = `${money(b.amount)} ${cur}`;
       add({ id: "double:" + (b.id || k + b.date), kind: "double", sure, amount: b.amount, txns: [brief(a), brief(b)],
         title: sure ? `Charged twice at ${m}` : `Same payment twice at ${m}?`,
         detail: sure ? `${amt} twice on ${b.date} — ask your bank to refund one` : `${amt} twice on ${b.date} — logged twice, or charged twice?`, action: "dispute",

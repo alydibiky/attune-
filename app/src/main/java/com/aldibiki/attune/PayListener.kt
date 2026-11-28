@@ -104,6 +104,9 @@ class PayListener : NotificationListenerService() {
             // in full when the notification's own line is shorter
             try { (ex.getParcelableArray("android.messages")?.lastOrNull() as? android.os.Bundle)?.getCharSequence("text")?.toString()?.let { if (it.length > text.length) text = it } } catch (e: Exception) { }
             val all = "$title $text"
+            // v10.9.10 (Ali: "I have 2 Claude accounts … understand the notification comes from 2 different emails"): Gmail (and most mail
+            // apps) write the account the email went to in the notification's small line — kept with the payment, never shown elsewhere
+            val acct = (ex.getCharSequence("android.subText")?.toString().orEmpty()).let { s -> Regex("[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+").find(s)?.value?.lowercase().orEmpty() }
             // v10.4: every SMS app notification leaves a short trace (who, whether its words were there, whether it was money) — so the
             // page can say exactly why a bank SMS did or didn't reach Money. Never the words of a message that isn't money.
             val sms = WatchMatch.isSms(sbn.packageName)
@@ -114,7 +117,7 @@ class PayListener : NotificationListenerService() {
                 PayLog.add(applicationContext, JSONObject()
                     .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
                     .put("pkg", sbn.packageName).put("app", label)
-                    .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime))
+                    .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime).put("acct", acct))
                 return
             }
             // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
@@ -139,7 +142,7 @@ class PayListener : NotificationListenerService() {
             PayLog.add(applicationContext, JSONObject()
                 .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
                 .put("pkg", sbn.packageName).put("app", label)
-                .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime))
+                .put("title", clean(title).take(200)).put("text", clean(text).take(2000)).put("ts", sbn.postTime).put("acct", acct))
         } catch (e: Exception) { }
     }
 }

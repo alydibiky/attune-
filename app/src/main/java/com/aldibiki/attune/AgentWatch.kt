@@ -349,14 +349,42 @@ class AgentDayJob : android.app.job.JobService() {
 }
 
 class AgentWatchReceiver : BroadcastReceiver() {
+    // v10.9.10 (Ali's Engine log: "BROADCAST OF INTENT ANR … AgentWatchReceiver", 25 + 27 Nov): a round reads up to 40 pages +
+    // the invisible browser, and Android gives a woken receiver only ~60 s (goAsync) before it calls the app "not responding".
+    // The receiver now only hands the round to a job (BgRunJob: up to 10 minutes) and returns at once.
     override fun onReceive(ctx: Context, intent: Intent) {
-        val done = goAsync()
-        Thread {
-            try { val c = ctx.applicationContext
-                // v10.8 (battery): a low battery that isn't charging → this round waits for the next one
-                if (BatteryGuard.low(c)) { BatteryGuard.log(c, "skipped: agents (battery low)"); AgentWatch.arm(c) }
-                else { BatteryGuard.log(c, "agents"); AgentWatch.run(c) }
-            } catch (e: Exception) {} finally { done.finish() }
-        }.start()
+        val c = ctx.applicationContext
+        if (!BgRunJob.start(c, BgRunJob.AGENTS)) { AgentWatch.arm(c) }   // no job service → try next round instead of risking an ANR
     }
+}
+
+/** v10.9.10: one-shot background work an alarm wakes (agents' round, Scout at night). A job may run ~10 minutes; a receiver ~60 s. */
+class BgRunJob : android.app.job.JobService() {
+    companion object {
+        const val AGENTS = 0x5c0b1
+        const val SCOUT = 0x5c0b2
+        /** true = the job is planned (Android runs it as soon as there is a network). */
+        fun start(ctx: Context, id: Int): Boolean = try {
+            val js = ctx.getSystemService(android.app.job.JobScheduler::class.java)
+            if (js == null) false else {
+                val info = android.app.job.JobInfo.Builder(id, android.content.ComponentName(ctx, BgRunJob::class.java))
+                    .setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_ANY).build()
+                js.schedule(info) == android.app.job.JobScheduler.RESULT_SUCCESS
+            }
+        } catch (e: Throwable) { false }
+    }
+    @Volatile private var worker: Thread? = null
+    override fun onStartJob(params: android.app.job.JobParameters): Boolean {
+        val c = applicationContext
+        worker = Thread {
+            try {
+                when (params.jobId) {
+                    AGENTS -> if (BatteryGuard.low(c)) { BatteryGuard.log(c, "skipped: agents (battery low)"); AgentWatch.arm(c) } else { BatteryGuard.log(c, "agents"); AgentWatch.run(c) }
+                    SCOUT -> if (BatteryGuard.low(c)) BatteryGuard.log(c, "skipped: scout (battery low)") else { BatteryGuard.log(c, "scout"); ScoutNight.run(c) }
+                }
+            } catch (e: Throwable) {} finally { try { jobFinished(params, false) } catch (e: Throwable) {} }
+        }.also { it.start() }
+        return true
+    }
+    override fun onStopJob(params: android.app.job.JobParameters): Boolean { try { worker?.interrupt() } catch (e: Throwable) {}; return false }
 }

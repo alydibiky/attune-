@@ -7858,7 +7858,7 @@ const MODE_TITLES = { tables: "Tables", timetable: "Timetable", errands: "Errand
 import { cleanAutoTodos } from "./autopilot.js";   // v9.9.39 the to-do junk, once
 const cleanTodo = (t) => K2.cleanTodo(t);   // v9.9.39 "Remind me to X" → "X"
 const ALERT_ONLY = new Set(["scout"]);   // v9.9.39 sources that only ring (never a to-do / reminder row)
-const PAGE_VERSION = "10.9.9";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "10.9.10";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9293,6 +9293,9 @@ export default function App() {
       const t1 = setTimeout(() => showToast(tr("Sorry — Attune closed by itself last time. Your data is safe.") + tip, 6000), 1500);
       return () => clearTimeout(t1);
     }
+    // v10.9.10 (Ali, 28 Nov: "every time I open the app it's actually annoying"): even with the tester's switch, an ending while Attune
+    // was NOT on screen (the phone's memory manager closing a resting app — signal 9 / LowMem) is only written to the Engine log
+    if (!x.fg) return;
     const t = setTimeout(() => showToast(tr("Attune closed unexpectedly last time: {why}{m}.", { why: tr(x.why), m: x.model ? " (" + x.model + ")" : "" }) + tip + " " + tr("It's in the Engine log — send it from Engine."), 9000), 1500);
     return () => clearTimeout(t);
   }, []);

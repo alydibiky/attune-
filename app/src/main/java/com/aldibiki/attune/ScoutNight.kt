@@ -98,12 +98,10 @@ object ScoutNight {
 }
 
 class ScoutNightReceiver : BroadcastReceiver() {
+    // v10.9.10 (Ali's Engine log: "BROADCAST OF INTENT ANR … ScoutNightReceiver"): up to 30 web searches don't fit a receiver's ~60 s.
+    // The night's run is handed to a job (BgRunJob, up to 10 minutes); if that can't be planned, tomorrow night is armed instead.
     override fun onReceive(ctx: Context, intent: Intent) {
-        val done = goAsync()
-        Thread {
-            try { val c = ctx.applicationContext
-                if (BatteryGuard.low(c)) BatteryGuard.log(c, "skipped: scout (battery low)") else { BatteryGuard.log(c, "scout"); ScoutNight.run(c) }   // v10.8 (battery)
-            } catch (e: Exception) {} finally { done.finish() }
-        }.start()
+        val c = ctx.applicationContext
+        if (!BgRunJob.start(c, BgRunJob.SCOUT)) ScoutNight.arm(c)
     }
 }

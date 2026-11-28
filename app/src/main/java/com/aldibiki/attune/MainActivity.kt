@@ -513,6 +513,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         visible = true
+        bgHandler.removeCallbacks(bgRelease)
         try { WakeService.ensure(this) } catch (e: Exception) {}
         try { Thread { try { PayLog.heal(applicationContext) } catch (e: Exception) {} }.start() } catch (e: Exception) {}   // v9.5: Recall never goes quiet again
         try { BookIngestService.resumeIfPending(this) } catch (e: Exception) {}   // v8.3: books still waiting are read on   // voice phase 3: back on if it was on (the service may have been stopped)
@@ -538,6 +539,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var freedForMemory = false
+    private val BG_RELEASE_MS = 4 * 60_000L
+    private val bgHandler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
+    private val bgRelease = Runnable {
+        if (!visible && Engine.state == Engine.State.READY && !GenService.busy() && Engine.inUse.get() == 0) {
+            freedForMemory = true
+            try { java.io.File(filesDir, "engine.log").appendText("\nMemory (${java.util.Date()}): 4 minutes in the background — the model was let go so Android keeps Attune alive; it reloads when Attune is opened.\n") } catch (e: Exception) {}
+            Engine.stop()
+        }
+    }
     @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
@@ -557,6 +567,11 @@ class MainActivity : AppCompatActivity() {
     // In the background the page's timers (polling, spinners, clocks) only cost battery and heat. Stop them,
     // unless an answer / download / drawing is running: that one must keep going. onResume starts them again.
     override fun onStop() {
+        // v10.9.10 (Ali's Engine log, 24–27 Nov: "the system stopped it (signal 9) · iAwareR[LowMem](service) · 600–875 MB" again and
+        // again, 5–17 minutes after he left the app): the phone's memory manager closes any app that rests in the background with the
+        // model held — so every reopen was a cold start anyway (the page rebuilt AND the model reloaded). After 4 minutes away the
+        // model is let go (nothing being written); the app then rests at ~100–200 MB, stays alive, and the model is back on return.
+        bgHandler.removeCallbacks(bgRelease); bgHandler.postDelayed(bgRelease, BG_RELEASE_MS)
         if (::web.isInitialized && !GenService.busy() && Engine.state != Engine.State.STARTING) web.pauseTimers()   // a model waking up for a message must finish too
         super.onStop()
     }
@@ -573,6 +588,7 @@ class MainActivity : AppCompatActivity() {
         // started while the old one was still stopping never finished). The
         // model lives as long as the app's process; Android reclaims that
         // memory by itself when another app needs it.
+        bgHandler.removeCallbacks(bgRelease)
         voice.stop()
         bridge.release()
         if (::web.isInitialized) try { (web.parent as? android.view.ViewGroup)?.removeView(web); web.destroy() } catch (e: Exception) {}   // (may already be destroyed: page lost)

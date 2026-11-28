@@ -3,7 +3,7 @@
 import fs from "fs";
 const K = (f) => fs.readFileSync(new URL("../../app/src/main/java/com/aldibiki/attune/" + f, import.meta.url), "utf8");
 let fail = 0, n = 0; const ok = (c, m) => { n++; if (!c) { console.log("FAIL " + m); fail++; } };
-const g = K("BatteryGuard.kt"), w = K("WakeWord.kt"), a = K("AgentWatch.kt"), sc = K("ScoutNight.kt"), nb = K("NativeBridge.kt");
+const g = K("BatteryGuard.kt"), w = K("WakeWord.kt"), a = K("AgentWatch.kt"), sc = K("ScoutNight.kt") + K("AgentWatch.kt") /* v10.9.10: the night run moved into BgRunJob (AgentWatch.kt) — a receiver had only ~60 s */, nb = K("NativeBridge.kt");
 ok(/LOW = 15/.test(g) && /isPowerSaveMode/.test(g) && /fun holdMic[^\n]*!charging\(ctx\) && \(saver\(ctx\) \|\| low\(ctx\)\)/.test(g), "the mic holds back on Battery saver or ≤ 15 %, never while charging");
 ok(/BatteryGuard\.holdMic\(this\)\) return false/.test(w), "the wake word asks the guard before listening");
 ok(/ACTION_POWER_SAVE_MODE_CHANGED/.test(w) && /ACTION_BATTERY_LOW/.test(w) && /ACTION_BATTERY_OKAY/.test(w), "…and looks again when Battery saver or the battery level changes");

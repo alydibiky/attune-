@@ -89,7 +89,11 @@ html:not(.att-wide) .att-h1 { display: none; }
 
 /* ---- v10.3 G1 G2 G3 the glass look (Ali's OK, 17 Nov 2026 — spaces.js glassCss sets the tokens). The ground is drawn once, fixed, under
    everything; cards are frosted (real blur on a computer only — att-glass-blur); bars that stick on top stay readable over what scrolls. */
-html.att-glass body { background: var(--g-page) fixed; background-color: transparent }
+/* v10.9.10 (Ali, 28 Nov: "scrolling down is still too glitchy"): `background: … fixed` on the body makes a phone's WebView repaint the
+   whole screen — the gradient and every card's shadow — on every frame of a scroll (it cannot just slide the page). The same ground is
+   now its own fixed layer under the page (body::before, composited once), so a scroll only moves the content. Looks the same. */
+html.att-glass body { background: transparent; background-color: transparent }
+html.att-glass body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: var(--g-page); pointer-events: none; transform: translateZ(0) }
 html.att-glass #root, html.att-glass #root > div { background: transparent }
 html.att-glass .calm .c-card, html.att-glass .calm .c-list { border-color: var(--g-edge); box-shadow: var(--g-shadow) }
 html.att-glass.att-glass-blur .calm .c-card, html.att-glass.att-glass-blur .wk { -webkit-backdrop-filter: blur(14px) saturate(1.15); backdrop-filter: blur(14px) saturate(1.15) }

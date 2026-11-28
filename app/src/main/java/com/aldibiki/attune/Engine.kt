@@ -22,6 +22,8 @@ object Engine {
 
     @Volatile var state: State = State.IDLE
         private set
+    /** v10.9.10: background AI jobs (MindBg, AiNight) using the model right now — MainActivity's 4-minute release waits for them. */
+    val inUse = java.util.concurrent.atomic.AtomicInteger(0)
     @Volatile var error: String? = null
         private set
     @Volatile var modelId: String? = null
